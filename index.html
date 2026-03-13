@@ -811,17 +811,20 @@ function setVuoti(W, key, val){
   if(cfg&&cfg.sharedPool){ W[cfg.sharedPool].vuoti=Math.max(0,val); }
   else { W[key].vuoti=Math.max(0,val); }
 }
-function saveW(obj){
+async function saveW(obj){
   localStorage.setItem(LS_W,JSON.stringify(obj));
   if(!SUPA_OK) return;
-  supaFetch('waste_state','POST',[{id:'waste_state',data:obj}],'?on_conflict=id');
+  // DELETE + upsert per garantire che il cloud rispecchi lo stato attuale
+  await supaFetch('waste_state','DELETE',null,'?id=eq.waste_state');
+  await supaFetch('waste_state','POST',[{id:'waste_state',data:obj}],'?on_conflict=id');
 }
 
 const loadWL=()=>JSON.parse(localStorage.getItem(LS_WL)||'[]');
-function saveWL(arr){
+async function saveWL(arr){
   localStorage.setItem(LS_WL,JSON.stringify(arr));
-  if(!SUPA_OK||!arr.length) return;
-  supaFetch('waste_log','POST',[arr[0]],'?on_conflict=id');
+  if(!SUPA_OK) return;
+  await supaFetch('waste_log','DELETE',null,'?id=neq.____');
+  if(arr.length) await supaFetch('waste_log','POST',arr,'?on_conflict=id');
 }
 
 const genId=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
@@ -841,7 +844,7 @@ async function initialSync(){
     // Sempre sovrascrive localStorage con i dati del cloud (anche se vuoti)
     localStorage.setItem(LS_P, JSON.stringify(prods||[]));
     localStorage.setItem(LS_M, JSON.stringify(movs||[]));
-    if(wRows&&wRows.length) localStorage.setItem(LS_W, JSON.stringify(wRows[0].data));
+    if(wRows&&wRows.length) localStorage.setItem(LS_W, JSON.stringify(wRows[0].data)); // cloud ha dati, usa quelli
     localStorage.setItem(LS_WL, JSON.stringify(wlog||[]));
     localStorage.setItem('ls_ordini', JSON.stringify(ordini||[]));
     updateSyncStatus('ok');
@@ -1338,11 +1341,10 @@ function renderRifiuti(){
   }).join('');
 }
 
-function quickWaste(tipo,azione,qty){
+async function quickWaste(tipo,azione,qty){
   const W=loadW(), w=W[tipo];
   if(azione==='pieno'){
     w.pieni+=qty;
-    // Usa automaticamente un bidone/scatola vuota dal pool corretto
     const disp=getVuotiDisp(W,tipo);
     if(disp>0){ setVuoti(W,tipo,disp-1); }
     else { toast('⚠ Nessun contenitore vuoto disponibile — aggiornare le scorte','warn'); }
@@ -1350,7 +1352,7 @@ function quickWaste(tipo,azione,qty){
   else if(azione==='smaltito'){ if(w.pieni<qty){ toast('Non ci sono contenitori pieni da smaltire','error'); return; } w.pieni-=qty; w.smaltiti+=qty; }
   else if(azione==='vuoto'){ setVuoti(W,tipo,getVuotiDisp(W,tipo)+qty); }
   else if(azione==='vuoto_sub'){ const d=getVuotiDisp(W,tipo); if(d<=0){ toast('Nessun contenitore vuoto da rimuovere','error'); return; } setVuoti(W,tipo,d-qty); }
-  saveW(W);
+  await saveW(W);
   const wl=loadWL();
   const azioneKey=azione==='vuoto'?(qty>0?'vuoto_add':'vuoto_sub'):azione;
   wl.unshift({id:genId(),ts:new Date().toISOString(),tipo,azione:azioneKey,qty:Math.abs(qty),note:''});
@@ -1365,7 +1367,7 @@ function openRifiutiModal(){
   ['r-tipo','r-qty','r-data-smalt','r-note'].forEach(id=>{ const e=document.getElementById(id); if(e) e.value=id==='r-qty'?1:''; });
   document.getElementById('modal-rifiuti').classList.add('open');
 }
-function saveRifiuto(){
+async function saveRifiuto(){
   const tipo=document.getElementById('r-tipo').value;
   const qty=parseInt(document.getElementById('r-qty').value)||1;
   const note=document.getElementById('r-note').value;
@@ -1391,7 +1393,7 @@ function openVuotiModal(){
   document.getElementById('v-cer_180106').value  = W['cer_180106']?.vuoti||0;
   document.getElementById('modal-vuoti').classList.add('open');
 }
-function saveVuoti(){
+async function saveVuoti(){
   const W=loadW();
   W['cer_180103'].vuoti                = parseInt(document.getElementById('v-cer_180103').value)||0;
   W['bidoni_solidi_comuni'].vuoti      = parseInt(document.getElementById('v-pool-comune').value)||0;
@@ -1402,12 +1404,12 @@ function saveVuoti(){
   if(currentView==='dashboard') renderDashboard();
   toast('Contenitori vuoti aggiornati','success');
 }
-function adjustPool(delta){
+async function adjustPool(delta){
   const W=loadW();
   const pool=W['bidoni_solidi_comuni']||{vuoti:0};
   pool.vuoti=Math.max(0,pool.vuoti+delta);
   W['bidoni_solidi_comuni']=pool;
-  saveW(W);
+  await saveW(W);
   const wl=loadWL();
   wl.unshift({id:genId(),ts:new Date().toISOString(),tipo:'pool_comune',azione:delta>0?'vuoto_add':'vuoto_sub',qty:Math.abs(delta),note:'Bidoni plastica condivisi 150110+150202'});
   saveWL(wl);
@@ -1858,11 +1860,11 @@ function precompileOrdine(prodId){
 // ══════════════════════════════════════════
 const LS_ORD = 'ls_ordini';
 const loadOrd = () => JSON.parse(localStorage.getItem(LS_ORD)||'[]');
-function saveOrd(arr){
+async function saveOrd(arr){
   localStorage.setItem(LS_ORD, JSON.stringify(arr));
-  // sync Supabase se configurato
   if(!SUPA_OK) return;
-  if(arr.length) supaFetch('ordini','POST',[arr[0]],'?on_conflict=id');
+  await supaFetch('ordini','DELETE',null,'?id=neq.____');
+  if(arr.length) await supaFetch('ordini','POST',arr,'?on_conflict=id');
 }
 
 let ordiniFilter = 'all';
