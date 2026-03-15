@@ -949,8 +949,20 @@ function showView(v){
   if(v==='report') renderReport();
 }
 function goCategory(cat){
-  invFilter=cat; showView('inventario');
+  invFilter=cat; subFilter='all'; showView('inventario');
   document.querySelectorAll('#inv-filter-bar .f-btn').forEach(b=>b.classList.toggle('active',b.textContent.trim().includes(cat)));
+  _updateSubBar(cat);
+}
+function _updateSubBar(cat){
+  const subBar=document.getElementById('inv-sub-bar');
+  const subs=SUB_FILTERS[cat];
+  if(subs&&subs.length){
+    const lbl=cat==='IHC'?'Tipo:':'Prodotto:';
+    let html='<span style="font-size:11px;color:var(--text3);padding:0 6px;align-self:center">'+lbl+'</span>';
+    html+='<button class="f-btn active" onclick="setSubFilter(&quot;all&quot;,this)">Tutti</button>';
+    subs.forEach(function(s){ html+='<button class="f-btn" onclick="setSubFilter(&quot;'+s+'&quot;,this)">'+s+'</button>'; });
+    subBar.innerHTML=html; subBar.style.display='flex';
+  } else { subBar.style.display='none'; }
 }
 
 // ══════════════════════════════════════════
@@ -1221,16 +1233,7 @@ function setInvFilter(f,btn){
   document.querySelectorAll('#inv-filter-bar .f-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
   // Mostra/aggiorna sub-bar
-  const subBar=document.getElementById('inv-sub-bar');
-  const subs=SUB_FILTERS[f];
-  if(subs&&subs.length){
-    subBar.style.display='flex';
-    subBar.innerHTML=`<span style="font-size:11px;color:var(--text3);padding:0 6px;align-self:center">${f==='IHC'?'Tipo:':'Prodotto:'}</span>`
-      +`<button class="f-btn active" onclick="setSubFilter('all',this)">Tutti</button>`
-      +subs.map(s=>`<button class="f-btn" onclick="setSubFilter('${s}',this)">${s}</button>`).join('');
-  } else {
-    subBar.style.display='none';
-  }
+  _updateSubBar(f);
   renderInv();
 }
 function setFornFilter(f,btn){
