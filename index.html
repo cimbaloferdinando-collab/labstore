@@ -1244,16 +1244,16 @@ function renderInv(){
     <td><span class="cat-badge">${CAT_ICON[p.cat]||'📌'} ${p.cat}</span></td>
     <td class="mono">${p.lotto||'—'}</td>
     <td>${scBadge(p.scadenza)}</td>
-    <td>
-      ${p.qty_init!==undefined ? `<div style="display:flex;align-items:center;gap:6px;margin-bottom:5px"><span style="font-family:'DM Mono',monospace;font-size:13px;color:var(--text3)">${p.qty_init}</span><span style="color:var(--text3);font-size:12px">→</span><span style="font-family:'DM Mono',monospace;font-size:16px;font-weight:600;color:${p.qty<=0?'var(--red)':p.min>0&&p.qty<=p.min?'var(--yellow)':'var(--green)'}">${p.qty}</span></div>` : `<div class="qty-ctrl" style="margin-bottom:4px"><button class="q-btn" onclick="adjQty('${p.id}',-1)">−</button><span class="q-num">${p.qty}</span><button class="q-btn" onclick="adjQty('${p.id}',1)">+</button></div>`}
-      <div style="display:flex;gap:4px;align-items:center">
-        <button class="q-btn" onclick="adjQty('${p.id}',-1)" title="Scarico rapido −1">−</button>
-        <button class="q-btn" onclick="adjQty('${p.id}',1)" title="Carico rapido +1">+</button>
-        ${p.min?`<span style="font-size:10px;color:var(--text3);margin-left:2px">min:${p.min}</span>`:''}
+    <td style="text-align:center">
+      <div style="display:flex;align-items:center;justify-content:center;gap:8px">
+        <span style="font-family:'DM Mono',monospace;font-size:17px;font-weight:700;color:var(--red)">${p.qty_init!==undefined?p.qty_init:'—'}</span>
+        <span style="color:var(--text3);font-size:13px">→</span>
+        <span style="font-family:'DM Mono',monospace;font-size:17px;font-weight:700;color:${p.qty<=0?'var(--red)':p.min>0&&p.qty<=p.min?'var(--yellow)':'var(--green)'}">${p.qty}</span>
       </div>
+      ${p.min?`<div style="font-size:10px;color:var(--text3);margin-top:2px">min: ${p.min}</div>`:''}
     </td>
     <td>${progBar(p)}</td>
-    <td><div style="display:flex;gap:4px"><button class="btn btn-sm" onclick="openEditModal('${p.id}')">✎</button><button class="btn btn-sm btn-danger" onclick="deleteProduct('${p.id}')">✕</button></div></td>
+    <td><div style="display:flex;gap:4px;justify-content:flex-end"><button class="btn btn-sm" onclick="openEditModal('${p.id}')">✎</button><button class="btn btn-sm btn-danger" onclick="deleteProduct('${p.id}')">✕</button></div></td>
   </tr>`).join('');
 }
 function adjQty(id,delta){
