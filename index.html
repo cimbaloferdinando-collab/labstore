@@ -1001,7 +1001,7 @@ function renderDashboard(){
   const liquidiVuoti=(W['cer_180106']?.vuoti||0);
   const ords=loadOrd();
   const ordAperti=ords.filter(o=>o.stato==='inviato'||o.stato==='approvato').length;
-  const totAllerte=critici+esauriti+scaduti+inScad;
+  const totAllerte=critici+inScad;
 
   document.getElementById('stats-grid').innerHTML=`
     <div class="stat-card sc-blue" style="cursor:pointer" onclick="showView('inventario')">
@@ -1010,7 +1010,7 @@ function renderDashboard(){
     </div>
     <div class="stat-card sc-red" style="cursor:pointer" onclick="showView('allerte')">
       <div class="stat-lbl">Allerte attive</div><div class="stat-val red">${totAllerte}</div>
-      <div class="stat-sub">${esauriti} esauriti · ${critici} critici · ${scaduti+inScad} scadenze</div>
+      <div class="stat-sub">${critici} scorta bassa · ${inScad} in scadenza</div>
     </div>
     <div class="stat-card sc-orange" style="cursor:pointer;padding:12px" onclick="showView('rifiuti')">
       <div class="stat-lbl" style="margin-bottom:8px">🗑 Rifiuti</div>
@@ -1034,19 +1034,18 @@ function renderDashboard(){
 
   // Alert banners
   const alerts=[];
-  if(scaduti>0) alerts.push(`<div class="alert red"><span style="font-size:15px">🚨</span><div><div class="alert-title">${scaduti} prodotto/i scaduto/i</div><div class="alert-msg">${prods.filter(p=>daysUntil(p.scadenza)<0).map(p=>p.nome).join(', ')}</div></div></div>`);
-  if(esauriti>0) alerts.push(`<div class="alert red"><span style="font-size:15px">📦</span><div><div class="alert-title">${esauriti} prodotto/i esaurito/i</div><div class="alert-msg">${prods.filter(p=>p.qty<=0).map(p=>p.nome).join(', ')}</div></div></div>`);
-  if(inScad>0) alerts.push(`<div class="alert yellow"><span style="font-size:15px">⚠</span><div><div class="alert-title">${inScad} in scadenza entro 30 giorni</div><div class="alert-msg">${prods.filter(p=>{const d=daysUntil(p.scadenza);return d>=0&&d<=30}).map(p=>p.nome+' ('+fmtDate(p.scadenza)+')').join(', ')}</div></div></div>`);
+  if(critici>0) alerts.push(`<div class="alert yellow"><span style="font-size:15px">⚠</span><div><div class="alert-title">${critici} prodotto/i a scorta bassa</div><div class="alert-msg">${prods.filter(p=>p.min>0&&p.qty<=p.min&&p.qty>0).map(p=>p.nome+' ('+p.qty+' rimasti)').join(', ')}</div></div></div>`);
+  if(inScad>0) alerts.push(`<div class="alert yellow"><span style="font-size:15px">📅</span><div><div class="alert-title">${inScad} in scadenza entro 30 giorni</div><div class="alert-msg">${prods.filter(p=>{const d=daysUntil(p.scadenza);return d>=0&&d<=30}).map(p=>p.nome+' ('+fmtDate(p.scadenza)+')').join(', ')}</div></div></div>`);
   const noVuoti=Object.keys(WASTE_CONFIG).filter(k=>(W[k]?.pieni||0)>0&&getVuotiDisp(W,k)===0).map(k=>WASTE_CONFIG[k].label);
   if(noVuoti.length) alerts.push(`<div class="alert yellow"><span style="font-size:15px">🗑</span><div><div class="alert-title">Contenitori vuoti esauriti</div><div class="alert-msg">${noVuoti.join(', ')}</div></div></div>`);
   document.getElementById('alerts-wrap').innerHTML=alerts.join('');
 
   // Panel 1: allerte
-  const allerteProds=prods.filter(p=>p.qty<=0||(p.min>0&&p.qty<=p.min)||daysUntil(p.scadenza)<0);
+  const allerteProds=prods.filter(p=>(p.min>0&&p.qty<=p.min&&p.qty>0)||(()=>{const d=daysUntil(p.scadenza);return d>=0&&d<=30})());
   const allerteEl=document.getElementById('home-allerte-list');
   if(!allerteProds.length){ allerteEl.innerHTML='<div class="home-empty">✅ Nessuna allerta</div>'; }
   else allerteEl.innerHTML=allerteProds.slice(0,6).map(p=>{
-    const s=p.qty<=0?'<span class="badge bg-red" style="font-size:10px">Esaurito</span>':daysUntil(p.scadenza)<0?'<span class="badge bg-red" style="font-size:10px">Scaduto</span>':'<span class="badge bg-yellow" style="font-size:10px">Critico</span>';
+    const d=daysUntil(p.scadenza); const s=d>=0&&d<=30?`<span class="badge bg-yellow" style="font-size:10px">${d===0?'Oggi':d+'gg'}</span>`:'<span class="badge bg-yellow" style="font-size:10px">Scorta bassa</span>';
     return `<div class="home-list-item" onclick="openSchedaProdotto('${p.id}')"><span style="font-weight:500">${p.nome}</span>${s}</div>`;
   }).join('')+(allerteProds.length>6?`<div class="home-empty" style="cursor:pointer" onclick="showView('allerte')">+${allerteProds.length-6} altri →</div>`:'');
 
