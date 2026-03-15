@@ -252,11 +252,11 @@ select option{background:var(--bg3)}
     <div class="nav-div"></div>
     <div class="nav-lbl">Categorie</div>
     <div class="nav-item" onclick="goCategory('Reagenti')"><span class="nav-icon">🧪</span>Reagenti</div>
-    <div class="nav-item" onclick="goCategory('Anticorpi')"><span class="nav-icon">🔬</span>Anticorpi</div>
+    <div class="nav-item" onclick="goCategory('IHC')"><span class="nav-icon">🔬</span>IHC</div>
     <div class="nav-item" onclick="goCategory('Vetrini')"><span class="nav-icon">🪟</span>Vetrini</div>
     <div class="nav-item" onclick="goCategory('Cassette')"><span class="nav-icon">📁</span>Cassette</div>
     <div class="nav-item" onclick="goCategory('Coloranti')"><span class="nav-icon">🎨</span>Coloranti</div>
-    <div class="nav-item" onclick="goCategory('Monouso')"><span class="nav-icon">🧤</span>Monouso</div>
+    <div class="nav-item" onclick="goCategory('Consumabili')"><span class="nav-icon">🧤</span>Consumabili</div>
     <div class="nav-item" onclick="goCategory('Kit Diagnostici')"><span class="nav-icon">🧰</span>Kit Diag.</div>
     <div class="nav-item" onclick="goCategory('Lame')"><span class="nav-icon">⚔</span>Lame</div>
     <div class="nav-item" onclick="goCategory('Altro')"><span class="nav-icon">📌</span>Altro</div>
@@ -551,8 +551,8 @@ select option{background:var(--bg3)}
       <div class="fg full"><label>Nome Prodotto *</label><input type="text" id="f-nome" placeholder="es. Xilene, Ematossilina Mayer…"></div>
       <div class="fg"><label>Categoria *</label>
         <select id="f-cat"><option value="">Seleziona…</option>
-          <option>Reagenti</option><option>Anticorpi</option><option>Vetrini</option><option>Cassette</option>
-          <option>Coloranti</option><option>Monouso</option><option>Kit Diagnostici</option><option>Lame</option><option>Altro</option>
+          <option>Reagenti</option><option>IHC</option><option>Vetrini</option><option>Cassette</option>
+          <option>Coloranti</option><option>Consumabili</option><<option>Lame</option><option>Altro</option>
         </select></div>
       <div class="fg"><label>Fornitore</label><input type="text" id="f-fornitore" placeholder="es. Dako, Leica…"></div>
       <div class="fg"><label>Codice / Barcode</label><input type="text" id="f-barcode" placeholder="Barcode prodotto"></div>
@@ -1056,7 +1056,7 @@ function renderHomeGrid(){
   const bycat={};
   prods.forEach(p=>{ if(!bycat[p.cat]) bycat[p.cat]=[]; bycat[p.cat].push(p); });
 
-  const catOrder=['Reagenti','Anticorpi','Vetrini','Cassette','Coloranti','Monouso','Kit Diagnostici','Lame','Altro'];
+  const catOrder=['Reagenti','IHC','Vetrini','Cassette','Coloranti','Consumabili','Lame','Altro'];
   const container=document.getElementById('home-cat-grid');
   if(!prods.length){ container.innerHTML='<div class="empty"><div class="e-ico">🔍</div><p>Nessun prodotto trovato</p></div>'; return; }
 
@@ -1609,7 +1609,7 @@ async function analyzeDDT(){
   const sys=`Sei un assistente specializzato nell'analisi di DDT (Documenti di Trasporto) per laboratori di anatomia patologica italiani.
 Analizza l'immagine e restituisci SOLO un array JSON valido (niente testo prima/dopo, niente backtick) con i prodotti:
 [{"nome":"","lotto":"","scadenza":"YYYY-MM-DD","qty":1,"unita":"pz","fornitore":"","barcode":"","cat":"Reagenti"}]
-Categorie valide: Reagenti, Anticorpi, Vetrini, Cassette, Coloranti, Monouso, Kit Diagnostici, Lame, Altro
+Categorie valide: Reagenti, IHC, Vetrini, Cassette, Coloranti, Consumabili, Lame, Altro
 Se non leggi nulla: [{"nome":"Prodotto non riconosciuto","lotto":"","scadenza":"","qty":1,"unita":"pz","fornitore":"","barcode":"","cat":"Altro"}]`;
   try{
     const res=await fetch('https://api.anthropic.com/v1/messages',{
@@ -1633,7 +1633,7 @@ function showDDTResults(items){
     row.innerHTML=`
       <input type="text" value="${esc(item.nome)}" placeholder="Nome" style="flex:2;min-width:120px" data-f="nome" data-i="${i}">
       <select data-f="cat" data-i="${i}" style="width:120px">
-        ${['Reagenti','Anticorpi','Vetrini','Cassette','Coloranti','Monouso','Kit Diagnostici','Lame','Altro'].map(c=>`<option${c===item.cat?' selected':''}>${c}</option>`).join('')}
+        ${['Reagenti','IHC','Vetrini','Cassette','Coloranti','Consumabili','Lame','Altro'].map(c=>`<option${c===item.cat?' selected':''}>${c}</option>`).join('')}
       </select>
       <input type="text" value="${esc(item.lotto)}" placeholder="Lotto" style="width:100px" data-f="lotto" data-i="${i}">
       <input type="date" value="${item.scadenza||''}" style="width:130px" data-f="scadenza" data-i="${i}">
@@ -1650,7 +1650,7 @@ function addDDTRow(){
   const row=document.createElement('div'); row.className='ai-row';
   row.innerHTML=`
     <input type="text" value="" placeholder="Nome prodotto" style="flex:2;min-width:120px" data-f="nome" data-i="${i}">
-    <select data-f="cat" data-i="${i}" style="width:120px">${['Reagenti','Anticorpi','Vetrini','Cassette','Coloranti','Monouso','Kit Diagnostici','Lame','Altro'].map(c=>`<option>${c}</option>`).join('')}</select>
+    <select data-f="cat" data-i="${i}" style="width:120px">${['Reagenti','IHC','Vetrini','Cassette','Coloranti','Consumabili','Lame','Altro'].map(c=>`<option>${c}</option>`).join('')}</select>
     <input type="text" value="" placeholder="Lotto" style="width:100px" data-f="lotto" data-i="${i}">
     <input type="date" value="" style="width:130px" data-f="scadenza" data-i="${i}">
     <input type="number" value="1" min="1" style="width:60px" data-f="qty" data-i="${i}">
