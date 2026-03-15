@@ -868,7 +868,7 @@ document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==
 
 const CAT_ICON={Reagenti:'🧪',IHC:'🔬',Vetrini:'🪟',Cassette:'📁',Coloranti:'🎨',Consumabili:'🧤','Kit Diagnostici':'🧰',Lame:'⚔',Altro:'📌'};
 const FORNITORI_PRINCIPALI=['Epredia','Bio Optica','Ventana','Altro'];
-const SUB_FILTERS={Reagenti:['Alcol 100','Alcool 95','Xilene','Formalina'],IHC:['Anticorpi','Consumabili'],Vetrini:['24x60','24x50','TOMO','P.O. Giallo','P.O. Blu'],Cassette:['Bianche','Blu'],Coloranti:['EA50','Eosina','Ema. Harris','Ema. Mayer','OG6'],Consumabili:['Guanti L','Guanti M','Guanti S','Cytocuvette'],Lame:['A35','HP35','MX35','Forbici'],Altro:['Montante','Paraffina']};
+const SUB_FILTERS={Reagenti:['Alcol 100','Alcool 95','Xilene','Formalina'],IHC:['Anticorpi','Consumabili','Kit Rivelazione'],Vetrini:['24x60','24x50','TOMO','P.O. Giallo','P.O. Blu'],Cassette:['Bianche','Blu'],Coloranti:['EA50','Eosina','Ema. Harris','Ema. Mayer','OG6'],Consumabili:['Guanti L','Guanti M','Guanti S','Cytocuvette'],Lame:['A35','HP35','MX35','Forbici'],Altro:['Montante','Paraffina']};
 const WASTE_CONFIG={
   cer_180103:{label:'CER 180103*',sub:'Rifiuti infetti — lame, materiale biologico, taglienti',icon:'☣',cls:'wc-yellow',color:'var(--yellow)',cer:'180103*',tipo:'Solido',pericoloso:true,
     contenitore:'scatola',contenitoreLabel:'Scatole cartone',contenitoreIcon:'📦',sharedPool:null,
@@ -957,7 +957,10 @@ function goCategory(cat){
 }
 function _updateSubBar(cat){
   const subBar=document.getElementById('inv-sub-bar');
+  const fornBar=document.getElementById('inv-fornitore-bar');
   const subs=SUB_FILTERS[cat];
+  // IHC: nascondi fornitore, mostra solo sottofiltro tipo
+  if(fornBar) fornBar.style.display=(cat==='IHC')?'none':'flex';
   if(subs&&subs.length){
     const lbl=cat==='IHC'?'Tipo:':'Prodotto:';
     let html='<span style="font-size:11px;color:var(--text3);padding:0 6px;align-self:center">'+lbl+'</span>';
@@ -1264,8 +1267,14 @@ function renderInv(){
   }
   if(subFilter!=='all'){
     if(invFilter==='IHC'){
-      if(subFilter==='Anticorpi') prods=prods.filter(p=>(p.subcat||'')!=='Consumabili');
-      else if(subFilter==='Consumabili') prods=prods.filter(p=>(p.subcat||'')==='Consumabili');
+      if(subFilter==='Anticorpi'){
+        const n=p=>( (p.nome||'').toLowerCase() );
+        prods=prods.filter(p=>!['dab','kit','view','optiview','ultraview','bluing','hematoxylin','reaction','buffer','lcs','cc1','cc2','ez prep'].some(k=>n(p).includes(k)));
+      } else if(subFilter==='Consumabili'){
+        prods=prods.filter(p=>['bluing','hematoxylin','reaction buffer','lcs','cc1','cc2','ez prep'].some(k=>(p.nome||'').toLowerCase().includes(k)));
+      } else if(subFilter==='Kit Rivelazione'){
+        prods=prods.filter(p=>['dab','kit','view','optiview','ultraview'].some(k=>(p.nome||'').toLowerCase().includes(k)));
+      }
     } else {
       const kwMap={'Alcol 100':'alcol 100','Alcool 95':'alcool 95','Xilene':'xilene','Formalina':'formalina',
         '24x60':'24','24x50':'24x50','TOMO':'tomo','P.O. Giallo':'giallo','P.O. Blu':'blu',
