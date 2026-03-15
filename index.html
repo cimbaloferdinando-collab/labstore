@@ -340,6 +340,9 @@ select option{background:var(--bg3)}
       <div class="filter-bar" id="inv-sub-bar" style="margin-top:4px;display:none">
         <span style="font-size:11px;color:var(--text3);padding:0 6px;align-self:center" id="inv-sub-label">Sottofiltro:</span>
       </div>
+      <div class="filter-bar" id="inv-sub2-bar" style="margin-top:4px;display:none">
+        <span style="font-size:11px;color:var(--text3);padding:0 6px;align-self:center">Prodotto:</span>
+      </div>
       <div class="card">
         <div class="card-header">
           <span class="card-title" id="inv-count">0 prodotti</span>
@@ -868,6 +871,7 @@ document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==
 
 const CAT_ICON={Reagenti:'🧪',IHC:'🔬',Vetrini:'🪟',Cassette:'📁',Coloranti:'🎨',Consumabili:'🧤','Kit Diagnostici':'🧰',Lame:'⚔',Altro:'📌'};
 const FORNITORI_PRINCIPALI=['Epredia','Bio Optica','Ventana','Altro'];
+const IHC_SUB={'Consumabili':['EzPrep','LCS','Reaction Buffer','CC1','CC2','Option'],'Kit Rivelazione':['OPT View','Ultra View','Bluing','Hema I','Hema II','Option 1']};
 const SUB_FILTERS={Reagenti:['Alcol 100','Alcool 95','Xilene','Formalina'],IHC:['Anticorpi','Consumabili','Kit Rivelazione'],Vetrini:['24x60','24x50','TOMO','P.O. Giallo','P.O. Blu'],Cassette:['Bianche','Blu'],Coloranti:['EA50','Eosina','Ema. Harris','Ema. Mayer','OG6'],Consumabili:['Guanti L','Guanti M','Guanti S','Cytocuvette'],Lame:['A35','HP35','MX35','Forbici'],Altro:['Montante','Paraffina']};
 const WASTE_CONFIG={
   cer_180103:{label:'CER 180103*',sub:'Rifiuti infetti — lame, materiale biologico, taglienti',icon:'☣',cls:'wc-yellow',color:'var(--yellow)',cer:'180103*',tipo:'Solido',pericoloso:true,
@@ -954,6 +958,11 @@ function goCategory(cat){
   document.querySelectorAll('#inv-filter-bar .f-btn').forEach(b=>b.classList.toggle('active',b.textContent.trim().includes(cat)));
   _updateSubBar(cat);
   showView('inventario');
+}
+function _resetSub2Bar(){
+  sub2Filter='all';
+  const b=document.getElementById('inv-sub2-bar');
+  if(b) b.style.display='none';
 }
 function _updateSubBar(cat){
   const subBar=document.getElementById('inv-sub-bar');
@@ -1234,7 +1243,7 @@ function schedaTab(tab, el){
 
 function setInvFilter(f,btn){
   invFilter=f;
-  subFilter='all';
+  subFilter='all'; _resetSub2Bar();
   document.querySelectorAll('#inv-filter-bar .f-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
   // Mostra/aggiorna sub-bar
@@ -1246,10 +1255,25 @@ function setFornFilter(f,btn){
   document.querySelectorAll('#inv-fornitore-bar .f-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active'); renderInv();
 }
-let subFilter='all';
+let subFilter='all', sub2Filter='all';
 function setSubFilter(f,btn){
-  subFilter=f;
+  subFilter=f; sub2Filter='all';
   document.querySelectorAll('#inv-sub-bar .f-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  // Mostra sub2-bar se ci sono sotto-prodotti
+  const sub2Bar=document.getElementById('inv-sub2-bar');
+  const subs2=IHC_SUB[f];
+  if(subs2&&subs2.length){
+    let html='<span style="font-size:11px;color:var(--text3);padding:0 6px;align-self:center">Prodotto:</span>';
+    html+='<button class="f-btn active" onclick="setSub2Filter(&quot;all&quot;,this)">Tutti</button>';
+    subs2.forEach(function(s){ html+='<button class="f-btn" onclick="setSub2Filter(&quot;'+s+'&quot;,this)">'+s+'</button>'; });
+    sub2Bar.innerHTML=html; sub2Bar.style.display='flex';
+  } else { sub2Bar.style.display='none'; }
+  renderInv();
+}
+function setSub2Filter(f,btn){
+  sub2Filter=f;
+  document.querySelectorAll('#inv-sub2-bar .f-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active'); renderInv();
 }
 function setHomeFornFilter(f,btn){
@@ -1268,12 +1292,19 @@ function renderInv(){
   if(subFilter!=='all'){
     if(invFilter==='IHC'){
       if(subFilter==='Anticorpi'){
-        const n=p=>( (p.nome||'').toLowerCase() );
-        prods=prods.filter(p=>!['dab','kit','view','optiview','ultraview','bluing','hematoxylin','reaction','buffer','lcs','cc1','cc2','ez prep'].some(k=>n(p).includes(k)));
+        prods=prods.filter(p=>!['dab','kit','view','optiview','ultraview','bluing','hematoxylin','reaction','buffer','lcs','cc1','cc2','ez prep'].some(k=>(p.nome||'').toLowerCase().includes(k)));
       } else if(subFilter==='Consumabili'){
         prods=prods.filter(p=>['bluing','hematoxylin','reaction buffer','lcs','cc1','cc2','ez prep'].some(k=>(p.nome||'').toLowerCase().includes(k)));
       } else if(subFilter==='Kit Rivelazione'){
         prods=prods.filter(p=>['dab','kit','view','optiview','ultraview'].some(k=>(p.nome||'').toLowerCase().includes(k)));
+      }
+      // sub2Filter: filtra per nome prodotto specifico
+      if(sub2Filter!=='all'){
+        const kwMap={'EzPrep':'ez prep','LCS':'lcs','Reaction Buffer':'reaction','CC1':'cc1','CC2':'cc2',
+          'Option':'option','OPT View':'optiview','Ultra View':'ultraview','Bluing':'bluing',
+          'Hema I':'hematoxylin ','Hema II':'hematoxylin ii','Option 1':'option'};
+        const kw=(kwMap[sub2Filter]||sub2Filter).toLowerCase();
+        prods=prods.filter(p=>(p.nome||'').toLowerCase().includes(kw));
       }
     } else {
       const kwMap={'Alcol 100':'alcol 100','Alcool 95':'alcool 95','Xilene':'xilene','Formalina':'formalina',
