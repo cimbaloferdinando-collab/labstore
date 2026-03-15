@@ -949,9 +949,11 @@ function showView(v){
   if(v==='report') renderReport();
 }
 function goCategory(cat){
-  invFilter=cat; subFilter='all'; showView('inventario');
+  invFilter=cat; subFilter='all';
+  // Prima aggiorna i filtri, POI mostra la view (che chiama renderInv)
   document.querySelectorAll('#inv-filter-bar .f-btn').forEach(b=>b.classList.toggle('active',b.textContent.trim().includes(cat)));
   _updateSubBar(cat);
+  showView('inventario');
 }
 function _updateSubBar(cat){
   const subBar=document.getElementById('inv-sub-bar');
