@@ -111,7 +111,7 @@ td{padding:9px 13px;font-size:13px;vertical-align:middle}
 .filter-bar{display:flex;gap:5px;margin-bottom:12px;flex-wrap:wrap}
 .f-btn{padding:4px 11px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--text2);cursor:pointer;font-size:12px;font-weight:500;transition:all .12s;font-family:'DM Sans',sans-serif}
 .f-btn:hover{border-color:var(--accent2);color:var(--accent)}
-.f-btn.active{background:var(--accent3);color:var(--accent);border-color:var(--accent3);font-weight:600}
+.f-btn.active{background:var(--accent3);color:#ffffff;border-color:var(--accent3);font-weight:600}
 
 /* SEARCH */
 .search-wrap{position:relative}
@@ -321,12 +321,11 @@ select option{background:var(--bg3)}
       <div class="filter-bar" id="inv-filter-bar">
         <button class="f-btn active" onclick="setInvFilter('all',this)">Tutti</button>
         <button class="f-btn" onclick="setInvFilter('Reagenti',this)">🧪 Reagenti</button>
-        <button class="f-btn" onclick="setInvFilter('Anticorpi',this)">🔬 Anticorpi</button>
+        <button class="f-btn" onclick="setInvFilter('IHC',this)">🔬 IHC</button>
         <button class="f-btn" onclick="setInvFilter('Vetrini',this)">🪟 Vetrini</button>
         <button class="f-btn" onclick="setInvFilter('Cassette',this)">📁 Cassette</button>
         <button class="f-btn" onclick="setInvFilter('Coloranti',this)">🎨 Coloranti</button>
-        <button class="f-btn" onclick="setInvFilter('Monouso',this)">🧤 Monouso</button>
-        <button class="f-btn" onclick="setInvFilter('Kit Diagnostici',this)">🧰 Kit</button>
+        <button class="f-btn" onclick="setInvFilter('Consumabili',this)">🧤 Consumabili</button>
         <button class="f-btn" onclick="setInvFilter('Lame',this)">⚔ Lame</button>
         <button class="f-btn" onclick="setInvFilter('Altro',this)">📌 Altro</button>
       </div>
@@ -337,6 +336,9 @@ select option{background:var(--bg3)}
         <button class="f-btn" onclick="setFornFilter('Bio Optica',this)">Bio Optica</button>
         <button class="f-btn" onclick="setFornFilter('Ventana',this)">Ventana</button>
         <button class="f-btn" onclick="setFornFilter('__altri',this)">Altri fornitori</button>
+      </div>
+      <div class="filter-bar" id="inv-sub-bar" style="margin-top:4px;display:none">
+        <span style="font-size:11px;color:var(--text3);padding:0 6px;align-self:center" id="inv-sub-label">Sottofiltro:</span>
       </div>
       <div class="card">
         <div class="card-header">
@@ -864,8 +866,9 @@ setInterval(()=>{ if(document.visibilityState==='visible') initialSync(); },3000
 document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible') initialSync(); });
 
 
-const CAT_ICON={Reagenti:'🧪',Anticorpi:'🔬',Vetrini:'🪟',Cassette:'📁',Coloranti:'🎨',Monouso:'🧤','Kit Diagnostici':'🧰',Lame:'⚔',Altro:'📌'};
+const CAT_ICON={Reagenti:'🧪',IHC:'🔬',Vetrini:'🪟',Cassette:'📁',Coloranti:'🎨',Consumabili:'🧤','Kit Diagnostici':'🧰',Lame:'⚔',Altro:'📌'};
 const FORNITORI_PRINCIPALI=['Epredia','Bio Optica','Ventana','Altro'];
+const SUB_FILTERS={Reagenti:['Alcol 100','Alcool 95','Xilene','Formalina'],IHC:['Anticorpi','Consumabili'],Vetrini:['24x60','24x50','TOMO','P.O. Giallo','P.O. Blu'],Cassette:['Bianche','Blu'],Coloranti:['EA50','Eosina','Ema. Harris','Ema. Mayer','OG6'],Consumabili:['Guanti L','Guanti M','Guanti S','Cytocuvette'],Lame:['A35','HP35','MX35','Forbici'],Altro:['Montante','Paraffina']};
 const WASTE_CONFIG={
   cer_180103:{label:'CER 180103*',sub:'Rifiuti infetti — lame, materiale biologico, taglienti',icon:'☣',cls:'wc-yellow',color:'var(--yellow)',cer:'180103*',tipo:'Solido',pericoloso:true,
     contenitore:'scatola',contenitoreLabel:'Scatole cartone',contenitoreIcon:'📦',sharedPool:null,
@@ -1214,12 +1217,31 @@ function schedaTab(tab, el){
 
 function setInvFilter(f,btn){
   invFilter=f;
+  subFilter='all';
   document.querySelectorAll('#inv-filter-bar .f-btn').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active'); renderInv();
+  btn.classList.add('active');
+  // Mostra/aggiorna sub-bar
+  const subBar=document.getElementById('inv-sub-bar');
+  const subs=SUB_FILTERS[f];
+  if(subs&&subs.length){
+    subBar.style.display='flex';
+    subBar.innerHTML=`<span style="font-size:11px;color:var(--text3);padding:0 6px;align-self:center">${f==='IHC'?'Tipo:':'Prodotto:'}</span>`
+      +`<button class="f-btn active" onclick="setSubFilter('all',this)">Tutti</button>`
+      +subs.map(s=>`<button class="f-btn" onclick="setSubFilter('${s}',this)">${s}</button>`).join('');
+  } else {
+    subBar.style.display='none';
+  }
+  renderInv();
 }
 function setFornFilter(f,btn){
   fornFilter=f;
   document.querySelectorAll('#inv-fornitore-bar .f-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active'); renderInv();
+}
+let subFilter='all';
+function setSubFilter(f,btn){
+  subFilter=f;
+  document.querySelectorAll('#inv-sub-bar .f-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active'); renderInv();
 }
 function setHomeFornFilter(f,btn){
@@ -1234,6 +1256,22 @@ function renderInv(){
   if(fornFilter!=='all'){
     const princ=['Epredia','Bio Optica','Ventana'];
     prods=fornFilter==='__altri'?prods.filter(p=>!princ.includes(p.fornitore)):prods.filter(p=>p.fornitore===fornFilter);
+  }
+  if(subFilter!=='all'){
+    if(invFilter==='IHC'){
+      if(subFilter==='Anticorpi') prods=prods.filter(p=>(p.subcat||'')!=='Consumabili');
+      else if(subFilter==='Consumabili') prods=prods.filter(p=>(p.subcat||'')==='Consumabili');
+    } else {
+      const kwMap={'Alcol 100':'alcol 100','Alcool 95':'alcool 95','Xilene':'xilene','Formalina':'formalina',
+        '24x60':'24','24x50':'24x50','TOMO':'tomo','P.O. Giallo':'giallo','P.O. Blu':'blu',
+        'Bianche':'bianc','Blu':'blu',
+        'EA50':'ea50','Eosina':'eosina','Ema. Harris':'harris','Ema. Mayer':'mayer','OG6':'og6',
+        'Guanti L':'guanti l','Guanti M':'guanti m','Guanti S':'guanti s','Cytocuvette':'cytocuvette',
+        'A35':'a35','HP35':'hp35','MX35':'mx35','Forbici':'forbici',
+        'Montante':'montante','Paraffina':'paraffina'};
+      const kw=(kwMap[subFilter]||subFilter).toLowerCase();
+      prods=prods.filter(p=>(p.nome||'').toLowerCase().includes(kw)||(p.subcat||'').toLowerCase()===subFilter.toLowerCase());
+    }
   }
   if(q) prods=prods.filter(p=>p.nome.toLowerCase().includes(q)||(p.barcode||'').includes(q)||(p.fornitore||'').toLowerCase().includes(q));
   document.getElementById('inv-count').textContent=prods.length+' prodott'+(prods.length===1?'o':'i');
