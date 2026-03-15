@@ -966,6 +966,10 @@ function renderDashboard(){
   const inScad=prods.filter(p=>{const d=daysUntil(p.scadenza);return d>=0&&d<=30}).length;
   const totalPieni=(['cer_180103','cer_150110','cer_150202','cer_180106']).reduce((a,k)=>a+(W[k]?.pieni||0),0);
   const totalVuoti=(W['cer_180103']?.vuoti||0)+(W['bidoni_solidi_comuni']?.vuoti||0)+(W['cer_180106']?.vuoti||0);
+  const solidiPieni=(W['cer_180103']?.pieni||0)+(W['cer_150110']?.pieni||0)+(W['cer_150202']?.pieni||0);
+  const solidiVuoti=(W['cer_180103']?.vuoti||0)+(W['bidoni_solidi_comuni']?.vuoti||0);
+  const liquidiPieni=(W['cer_180106']?.pieni||0);
+  const liquidiVuoti=(W['cer_180106']?.vuoti||0);
   const ords=loadOrd();
   const ordAperti=ords.filter(o=>o.stato==='inviato'||o.stato==='approvato').length;
   const totAllerte=critici+esauriti+scaduti+inScad;
@@ -979,9 +983,20 @@ function renderDashboard(){
       <div class="stat-lbl">Allerte attive</div><div class="stat-val red">${totAllerte}</div>
       <div class="stat-sub">${esauriti} esauriti · ${critici} critici · ${scaduti+inScad} scadenze</div>
     </div>
-    <div class="stat-card sc-orange" style="cursor:pointer" onclick="showView('rifiuti')">
-      <div class="stat-lbl">Bidoni pieni</div><div class="stat-val orange">${totalPieni}</div>
-      <div class="stat-sub">${totalVuoti} contenitori vuoti disponibili</div>
+    <div class="stat-card sc-orange" style="cursor:pointer;padding:12px" onclick="showView('rifiuti')">
+      <div class="stat-lbl" style="margin-bottom:8px">🗑 Rifiuti</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div style="background:rgba(176,80,16,.08);border-radius:6px;padding:8px;text-align:center">
+          <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px">Solidi</div>
+          <div style="font-family:'DM Mono',monospace;font-size:18px;color:var(--orange)">${solidiPieni} <span style="font-size:11px;color:var(--text3)">pieni</span></div>
+          <div style="font-family:'DM Mono',monospace;font-size:14px;color:var(--text2)">${solidiVuoti} <span style="font-size:11px;color:var(--text3)">vuoti</span></div>
+        </div>
+        <div style="background:rgba(26,90,154,.08);border-radius:6px;padding:8px;text-align:center">
+          <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px">Liquidi</div>
+          <div style="font-family:'DM Mono',monospace;font-size:18px;color:var(--blue)">${liquidiPieni} <span style="font-size:11px;color:var(--text3)">pieni</span></div>
+          <div style="font-family:'DM Mono',monospace;font-size:14px;color:var(--text2)">${liquidiVuoti} <span style="font-size:11px;color:var(--text3)">vuoti</span></div>
+        </div>
+      </div>
     </div>
     <div class="stat-card sc-blue" style="cursor:pointer" onclick="showView('ordini')">
       <div class="stat-lbl">Ordini aperti</div><div class="stat-val" style="color:var(--teal)">${ordAperti}</div>
@@ -1055,7 +1070,7 @@ function renderHomeGrid(){
       return `<div class="prod-card ${cls}" onclick="openSchedaProdotto('${p.id}')">
         <div class="prod-card-name">${p.nome}</div>
         <div class="prod-card-cat">${p.fornitore||'—'}</div>
-        <div class="prod-card-qty" style="color:var(--${qs})">${p.qty}</div>
+        <div class="prod-card-qty" style="color:var(--${qs})">${p.qty}${p.qty_init!==undefined&&p.qty_init>0?`<span style="font-size:13px;color:var(--text3);font-weight:400"> / ${p.qty_init}</span>`:''}</div>
         <div class="prod-card-unit">${p.unita||''}${p.min?' · min '+p.min:''}</div>
         ${badges.length?`<div class="prod-card-badges">${badges.join('')}</div>`:''}
       </div>`;
@@ -1229,7 +1244,7 @@ function renderInv(){
     <td><span class="cat-badge">${CAT_ICON[p.cat]||'📌'} ${p.cat}</span></td>
     <td class="mono">${p.lotto||'—'}</td>
     <td>${scBadge(p.scadenza)}</td>
-    <td><div class="qty-ctrl"><button class="q-btn" onclick="adjQty('${p.id}',-1)">−</button><span class="q-num">${p.qty}</span><button class="q-btn" onclick="adjQty('${p.id}',1)">+</button></div>${p.min?`<div style="font-size:11px;color:var(--text3)">min: ${p.min} ${p.unita||''}</div>`:''}</td>
+    <td><div class="qty-ctrl"><button class="q-btn" onclick="adjQty('${p.id}',-1)">−</button><span class="q-num">${p.qty}</span><button class="q-btn" onclick="adjQty('${p.id}',1)">+</button></div>${p.qty_init!==undefined?`<div style="font-size:11px;color:var(--text3);font-family:'DM Mono',monospace">ini: ${p.qty_init}</div>`:''} ${p.min?`<div style="font-size:11px;color:var(--text3)">min: ${p.min} ${p.unita||''}</div>`:''}</td>
     <td>${progBar(p)}</td>
     <td><div style="display:flex;gap:4px"><button class="btn btn-sm" onclick="openEditModal('${p.id}')">✎</button><button class="btn btn-sm btn-danger" onclick="deleteProduct('${p.id}')">✕</button></div></td>
   </tr>`).join('');
@@ -1442,12 +1457,14 @@ function saveProduct(){
   const nome=document.getElementById('f-nome').value.trim();
   const cat=document.getElementById('f-cat').value;
   if(!nome||!cat){ toast('Nome e categoria obbligatori','error'); return; }
+  const qty_new=parseFloat(document.getElementById('f-qty').value)||0;
   const p={id:id||genId(),nome,cat,
     fornitore:document.getElementById('f-fornitore').value.trim(),
     barcode:document.getElementById('f-barcode').value.trim(),
     lotto:document.getElementById('f-lotto').value.trim(),
     scadenza:document.getElementById('f-scadenza').value,
-    qty:parseFloat(document.getElementById('f-qty').value)||0,
+    qty:qty_new,
+    qty_init:id ? (loadP().find(x=>x.id===id)?.qty_init ?? qty_new) : qty_new,
     unita:document.getElementById('f-unita').value.trim(),
     min:parseFloat(document.getElementById('f-min').value)||0,
     pos:document.getElementById('f-pos').value.trim(),
@@ -1479,7 +1496,12 @@ function confirmManualMov(){
   if(!prodId||qty<=0){ toast('Seleziona prodotto e quantità','error'); return; }
   const prods=loadP(), p=prods.find(x=>x.id===prodId); if(!p) return;
   if(manualMovType==='scarico'&&p.qty<qty){ toast('Quantità insufficiente','error'); return; }
-  p.qty=manualMovType==='carico'?p.qty+qty:p.qty-qty;
+  if(manualMovType==='carico'){
+    p.qty=p.qty+qty;
+    if(p.qty_init===undefined) p.qty_init=qty; // prima volta: qty iniziale = quanto caricato
+  } else {
+    p.qty=p.qty-qty;
+  }
   saveP(prods);
   const movs=loadM();
   movs.unshift({id:genId(),ts:new Date().toISOString(),tipo:manualMovType,prod:p.nome,prodId:p.id,qty,lotto:document.getElementById('m-lotto').value,note:document.getElementById('m-note').value});
