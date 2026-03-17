@@ -233,7 +233,7 @@ select option{background:var(--bg3)}
   <div class="hdr-act"><button class="btn" onclick="showView('dashboard')" style="font-weight:600">🏠 Home</button><span id="sync-status" style="font-size:12px;font-family:DM Mono,monospace;padding:4px 8px;border-radius:4px;border:1px solid var(--border);cursor:help" title="Stato sincronizzazione">⬡ Locale</span>
     <button class="btn" onclick="exportCSV()">⬇ CSV</button>
     <button class="btn btn-ok" onclick="openDDTModal()">📷 DDT</button>
-    <button class="btn btn-warn" onclick="openBarcodeModal()">📦 Barcode</button>
+    <button class="btn btn-warn" onclick="openScaricaModal()">⬇ Scarico</button>
     <button class="btn btn-waste" onclick="showView('rifiuti')">🗑 Rifiuti</button>
     <button class="btn btn-primary" onclick="openAddModal()">＋ Prodotto</button>
   </div>
@@ -363,7 +363,7 @@ select option{background:var(--bg3)}
       <div class="page-sub">Storico carichi e scarichi consumabili</div>
       <div style="display:flex;gap:7px;margin-bottom:14px;flex-wrap:wrap">
         <button class="btn btn-ok" onclick="openDDTModal()">📷 Carico da DDT</button>
-        <button class="btn btn-warn" onclick="openBarcodeModal()">📦 Scarico Barcode</button>
+        <button class="btn btn-warn" onclick="openScaricaModal()">⬇ Scarico</button>
         <button class="btn" onclick="openManualMovModal('carico')">＋ Carico manuale</button>
         <button class="btn" onclick="openManualMovModal('scarico')">− Scarico manuale</button>
       </div>
@@ -512,33 +512,71 @@ select option{background:var(--bg3)}
 <!-- ══════════════════════════════
      MODAL: BARCODE SCANNER
 ══════════════════════════════ -->
-<div class="modal-overlay" id="modal-barcode">
-  <div class="modal" style="width:440px">
-    <div class="modal-title">📦 Scarico — Scansione Barcode</div>
-    <p style="color:var(--text2);font-size:13px;margin-bottom:8px">Punta la fotocamera sul codice a barre del prodotto.</p>
-    <div id="barcode-video-wrap">
-      <video id="barcode-video" autoplay playsinline muted></video>
-      <div class="scan-line"></div>
+<div class="modal-overlay" id="modal-scarica">
+  <div class="modal" style="width:480px">
+    <div class="modal-title">⬇ Scarico</div>
+    <!-- Tab bar -->
+    <div class="filter-bar" style="margin-bottom:14px">
+      <button class="f-btn active" id="sc-tab-manuale" onclick="scaricaTab('manuale')">✍ Manuale per lotto</button>
+      <button class="f-btn" id="sc-tab-foto" onclick="scaricaTab('foto')">📷 Foto / Barcode</button>
     </div>
-    <div class="scan-result-box"><span class="sr-label">Codice</span><span class="sr-val" id="scan-code-val">In attesa…</span></div>
-    <div id="bc-match" style="margin-top:9px;display:none">
-      <div style="background:rgba(74,222,128,.08);border:1px solid rgba(74,222,128,.25);border-radius:var(--r);padding:11px">
-        <div style="font-weight:600;color:var(--green);margin-bottom:5px">✓ Prodotto trovato</div>
-        <div id="bc-match-info" style="font-size:13px;color:var(--text2)"></div>
+
+    <!-- TAB MANUALE -->
+    <div id="sc-panel-manuale">
+      <div class="fg" style="margin-bottom:10px">
+        <label>Prodotto</label>
+        <select id="sc-prod" onchange="scaricaSelProd()">
+          <option value="">Seleziona prodotto…</option>
+        </select>
       </div>
-      <div style="margin-top:9px;display:flex;align-items:center;gap:9px">
-        <label style="font-size:11px;color:var(--text3);text-transform:uppercase;font-weight:600;flex-shrink:0">Qtà</label>
-        <input type="number" id="bc-qty" value="1" min="1" style="width:75px">
-        <input type="text" id="bc-note" placeholder="Note" style="flex:1">
+      <div id="sc-lotti-wrap" style="display:none;margin-bottom:10px">
+        <label style="font-size:11px;color:var(--text3);font-weight:600;text-transform:uppercase;display:block;margin-bottom:5px">Lotto</label>
+        <div id="sc-lotti-list"></div>
+      </div>
+      <div id="sc-man-qty-wrap" style="display:none;margin-top:8px">
+        <div style="display:flex;gap:9px;align-items:center">
+          <div class="fg" style="flex:0 0 90px;margin:0">
+            <label>Quantità</label>
+            <input type="number" id="sc-man-qty" value="1" min="1">
+          </div>
+          <div class="fg" style="flex:1;margin:0">
+            <label>Note</label>
+            <input type="text" id="sc-man-note" placeholder="Opzionale">
+          </div>
+        </div>
+      </div>
+      <div id="sc-man-info" style="margin-top:10px"></div>
+    </div>
+
+    <!-- TAB FOTO -->
+    <div id="sc-panel-foto" style="display:none">
+      <p style="color:var(--text2);font-size:13px;margin-bottom:8px">Scansiona il barcode o fotografa l'etichetta con il numero lotto.</p>
+      <div id="barcode-video-wrap">
+        <video id="barcode-video" autoplay playsinline muted></video>
+        <div class="scan-line"></div>
+      </div>
+      <div class="scan-result-box"><span class="sr-label">Codice</span><span class="sr-val" id="scan-code-val">In attesa…</span></div>
+      <div id="bc-match" style="margin-top:9px;display:none">
+        <div style="background:rgba(74,222,128,.08);border:1px solid rgba(74,222,128,.25);border-radius:var(--r);padding:11px">
+          <div style="font-weight:600;color:var(--green);margin-bottom:5px">✓ Prodotto trovato</div>
+          <div id="bc-match-info" style="font-size:13px;color:var(--text2)"></div>
+        </div>
+        <div style="margin-top:9px;display:flex;align-items:center;gap:9px">
+          <label style="font-size:11px;color:var(--text3);font-weight:600;flex-shrink:0">Qtà</label>
+          <input type="number" id="bc-qty" value="1" min="1" style="width:75px">
+          <input type="text" id="bc-note" placeholder="Note" style="flex:1">
+        </div>
+      </div>
+      <div id="bc-nomatch" style="margin-top:9px;display:none">
+        <div style="background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.25);border-radius:var(--r);padding:11px;font-size:13px;color:var(--red)">⚠ Prodotto non trovato in magazzino.</div>
       </div>
     </div>
-    <div id="bc-nomatch" style="margin-top:9px;display:none">
-      <div style="background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.25);border-radius:var(--r);padding:11px;font-size:13px;color:var(--red)">⚠ Prodotto non trovato in magazzino.</div>
-    </div>
+
     <div class="modal-footer">
-      <button class="btn" onclick="closeBarcodeModal()">Chiudi</button>
-      <button class="btn btn-warn" id="bc-add-btn" style="display:none" onclick="addFromBarcode()">＋ Aggiungi prodotto</button>
-      <button class="btn btn-danger" id="bc-scarico-btn" style="display:none" onclick="confirmBarcodeScario()">⬇ Conferma Scarico</button>
+      <button class="btn" onclick="closeScaricaModal()">Chiudi</button>
+      <button class="btn btn-warn" id="bc-add-btn" style="display:none" onclick="addFromBarcode()">＋ Aggiungi</button>
+      <button class="btn btn-danger" id="bc-scarico-btn" style="display:none" onclick="confirmBarcodeScario()">⬇ Conferma Scarico Foto</button>
+      <button class="btn btn-danger" id="sc-man-confirm-btn" style="display:none" onclick="confirmScaricaManuale()">⬇ Conferma Scarico</button>
     </div>
   </div>
 </div>
@@ -1726,18 +1764,86 @@ function confirmDDT(){
 // BARCODE SCANNER
 // ══════════════════════════════════════════
 let codeReader=null, lastCode=null, matchedProd=null;
-function openBarcodeModal(){
-  lastCode=null; matchedProd=null;
-  document.getElementById('scan-code-val').textContent='In attesa…';
-  document.getElementById('bc-match').style.display='none';
-  document.getElementById('bc-nomatch').style.display='none';
+// ── SCARICO MODAL ──
+let scaricaSelectedId=null;
+function openScaricaModal(){
+  lastCode=null; matchedProd=null; scaricaSelectedId=null;
+  // Popola select prodotti raggruppati per nome
+  const sel=document.getElementById('sc-prod');
+  sel.innerHTML='<option value="">Seleziona prodotto…</option>';
+  const prods=loadP();
+  // Raggruppa per nome per mostrare nome una volta
+  const nomi=[...new Set(prods.map(p=>p.nome))].sort();
+  nomi.forEach(n=>{ const o=document.createElement('option'); o.value=n; o.textContent=n; sel.appendChild(o); });
+  document.getElementById('sc-lotti-wrap').style.display='none';
+  document.getElementById('sc-man-qty-wrap').style.display='none';
+  document.getElementById('sc-man-confirm-btn').style.display='none';
+  document.getElementById('sc-man-info').innerHTML='';
+  scaricaTab('manuale');
+  document.getElementById('modal-scarica').classList.add('open');
+}
+function scaricaTab(tab){
+  ['manuale','foto'].forEach(t=>{
+    document.getElementById('sc-tab-'+t).classList.toggle('active',t===tab);
+    document.getElementById('sc-panel-'+t).style.display=t===tab?'':'none';
+  });
+  document.getElementById('sc-man-confirm-btn').style.display='none';
   document.getElementById('bc-scarico-btn').style.display='none';
   document.getElementById('bc-add-btn').style.display='none';
-  document.getElementById('bc-qty').value='1';
-  document.getElementById('bc-note').value='';
-  document.getElementById('modal-barcode').classList.add('open');
-  startBarcodeScanner();
+  if(tab==='foto'){
+    document.getElementById('scan-code-val').textContent='In attesa…';
+    document.getElementById('bc-match').style.display='none';
+    document.getElementById('bc-nomatch').style.display='none';
+    document.getElementById('bc-qty').value='1';
+    document.getElementById('bc-note').value='';
+    startBarcodeScanner();
+  } else {
+    if(codeReader){ try{codeReader.reset();}catch(e){} codeReader=null; }
+  }
 }
+function scaricaSelProd(){
+  const nome=document.getElementById('sc-prod').value;
+  scaricaSelectedId=null;
+  if(!nome){ document.getElementById('sc-lotti-wrap').style.display='none'; document.getElementById('sc-man-qty-wrap').style.display='none'; document.getElementById('sc-man-confirm-btn').style.display='none'; return; }
+  const prods=loadP().filter(p=>p.nome===nome);
+  const wrap=document.getElementById('sc-lotti-list');
+  wrap.innerHTML='';
+  prods.forEach(p=>{
+    const div=document.createElement('div');
+    div.style.cssText='display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid var(--border);border-radius:6px;margin-bottom:5px;cursor:pointer;transition:all .12s';
+    div.innerHTML=`<span style="font-family:'DM Mono',monospace;font-weight:600">${p.lotto||'—'}</span><span style="color:var(--text3);font-size:12px">${p.scadenza?'Scad: '+fmtDate(p.scadenza):''}</span><span style="margin-left:auto;font-family:'DM Mono',monospace;color:var(--green);font-weight:700">${p.qty} ${p.unita||''}</span>`;
+    div.onclick=function(){
+      document.querySelectorAll('#sc-lotti-list div').forEach(d=>{ d.style.background=''; d.style.borderColor='var(--border)'; });
+      div.style.background='rgba(26,90,154,.08)'; div.style.borderColor='var(--accent2)';
+      scaricaSelectedId=p.id;
+      document.getElementById('sc-man-qty-wrap').style.display='';
+      document.getElementById('sc-man-confirm-btn').style.display='';
+      document.getElementById('sc-man-qty').max=p.qty;
+      document.getElementById('sc-man-info').innerHTML=`<div style="font-size:12px;color:var(--text3)">Disponibili: <strong style="color:var(--green)">${p.qty}</strong> ${p.unita||''}</div>`;
+    };
+    wrap.appendChild(div);
+  });
+  document.getElementById('sc-lotti-wrap').style.display='';
+  document.getElementById('sc-man-qty-wrap').style.display='none';
+  document.getElementById('sc-man-confirm-btn').style.display='none';
+}
+function confirmScaricaManuale(){
+  if(!scaricaSelectedId){ toast('Seleziona un lotto','error'); return; }
+  const qty=parseFloat(document.getElementById('sc-man-qty').value)||1;
+  const note=document.getElementById('sc-man-note').value;
+  const prods=loadP(), p=prods.find(x=>x.id===scaricaSelectedId);
+  if(!p){ toast('Prodotto non trovato','error'); return; }
+  if(p.qty<qty){ toast('Quantità insufficiente — disponibili: '+p.qty,'error'); return; }
+  p.qty-=qty; saveP(prods);
+  const movs=loadM(); movs.unshift({id:genId(),ts:new Date().toISOString(),tipo:'scarico',prod:p.nome,prodId:p.id,qty,lotto:p.lotto||'',note:note||'Scarico manuale'}); saveM(movs);
+  closeScaricaModal();
+  if(currentView==='inventario') renderInv();
+  if(currentView==='dashboard') renderDashboard();
+  if(currentView==='movimenti') renderMovimenti();
+  toast('Scarico: '+p.nome+' −'+qty,'info');
+}
+function closeScaricaModal(){ if(codeReader){ try{codeReader.reset();}catch(e){} codeReader=null; } closeModal('modal-scarica'); }
+function openBarcodeModal(){ openScaricaModal(); }
 async function startBarcodeScanner(){
   try{
     const ZXing=window.ZXing; if(!ZXing) throw new Error('no ZXing');
@@ -1772,7 +1878,7 @@ function handleScannedCode(code){
     document.getElementById('bc-add-btn').style.display='';
   }
 }
-function closeBarcodeModal(){ if(codeReader){ try{codeReader.reset();}catch(e){} codeReader=null; } closeModal('modal-barcode'); }
+function closeBarcodeModal(){ closeScaricaModal(); }
 function confirmBarcodeScario(){
   if(!matchedProd) return;
   const qty=parseFloat(document.getElementById('bc-qty').value)||1;
@@ -1890,7 +1996,7 @@ function exportCSV(){
 document.addEventListener('keydown',e=>{
   if(e.key==='Escape'){
     if(document.getElementById('modal-ddt').classList.contains('open')) closeDDTModal();
-    else if(document.getElementById('modal-barcode').classList.contains('open')) closeBarcodeModal();
+    else if(document.getElementById('modal-scarica').classList.contains('open')) closeScaricaModal();
     else document.querySelectorAll('.modal-overlay.open').forEach(m=>m.classList.remove('open'));
   }
 });
