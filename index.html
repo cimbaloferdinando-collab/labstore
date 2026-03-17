@@ -25,8 +25,8 @@ header{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 20p
 /* BUTTONS */
 .btn{padding:6px 13px;border-radius:6px;border:1px solid var(--border2);background:var(--bg3);color:var(--text);cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;transition:all .15s;display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
 .btn:hover{border-color:var(--accent2);color:var(--accent);background:#252d3f}
-.btn-primary{background:var(--accent3);color:var(--accent);border-color:var(--accent3);font-weight:600}
-.btn-primary:hover{background:#4f6fad}
+.btn-primary{background:var(--accent3);color:#ffffff;border-color:var(--accent3);font-weight:600}
+.btn-primary:hover{background:#4f6fad;color:#ffffff}
 .btn-ok{background:rgba(74,222,128,.12);color:var(--green);border-color:rgba(74,222,128,.3)}
 .btn-ok:hover{background:rgba(74,222,128,.2)}
 .btn-warn{background:rgba(251,191,36,.1);color:var(--yellow);border-color:rgba(251,191,36,.3)}
@@ -249,6 +249,7 @@ select option{background:var(--bg3)}
     <div class="nav-item" onclick="showView('allerte')" id="nav-allerte"><span class="nav-icon">🚨</span>Allerte</div>
     <div class="nav-item" onclick="showView('ordini')" id="nav-ordini"><span class="nav-icon">🛒</span>Ordini</div>
     <div class="nav-item" onclick="showView('report')" id="nav-report"><span class="nav-icon">📋</span>Report Mensile</div>
+    <div class="nav-item" onclick="showView('archivio')" id="nav-archivio"><span class="nav-icon">🗂</span>Archivio Ordini</div>
     <div class="nav-div"></div>
     <div class="nav-lbl">Categorie</div>
     <div class="nav-item" onclick="goCategory('Reagenti')"><span class="nav-icon">🧪</span>Reagenti</div>
@@ -459,6 +460,29 @@ select option{background:var(--bg3)}
       <div id="report-content"></div>
     </div>
 
+
+    <!-- ══════ ARCHIVIO ORDINI ══════ -->
+    <div class="view" id="view-archivio">
+      <div class="page-title">Archivio Ordini</div>
+      <div class="page-sub">Storico ordini per fornitore e mese</div>
+      <div style="display:flex;gap:7px;margin-bottom:14px;flex-wrap:wrap;align-items:center">
+        <button class="btn btn-primary" onclick="openArchivioModal()">📷 Importa da foto</button>
+        <select id="arch-filter-mese" onchange="renderArchivio()" style="min-width:130px">
+          <option value="">Tutti i mesi</option>
+        </select>
+        <select id="arch-filter-forn" onchange="renderArchivio()" style="min-width:130px">
+          <option value="">Tutti i fornitori</option>
+        </select>
+        <select id="arch-filter-stato" onchange="renderArchivio()" style="min-width:130px">
+          <option value="">Tutti gli stati</option>
+          <option value="ricevuto">Ricevuto</option>
+          <option value="parziale">Parziale</option>
+          <option value="in attesa">In attesa</option>
+        </select>
+      </div>
+      <div id="archivio-list"></div>
+    </div>
+
   </main>
 </div>
 
@@ -577,6 +601,63 @@ select option{background:var(--bg3)}
       <button class="btn btn-warn" id="bc-add-btn" style="display:none" onclick="addFromBarcode()">＋ Aggiungi</button>
       <button class="btn btn-danger" id="bc-scarico-btn" style="display:none" onclick="confirmBarcodeScario()">⬇ Conferma Scarico Foto</button>
       <button class="btn btn-danger" id="sc-man-confirm-btn" style="display:none" onclick="confirmScaricaManuale()">⬇ Conferma Scarico</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════
+     MODAL: ARCHIVIO ORDINE DA FOTO
+══════════════════════════════ -->
+<div class="modal-overlay" id="modal-archivio">
+  <div class="modal" style="width:560px;max-height:90vh;overflow-y:auto">
+    <div class="modal-title">📷 Importa Ordine da Foto</div>
+    <p style="color:var(--text2);font-size:13px;margin-bottom:12px">Fotografa o carica la stampa dell'ordine — l'AI estrarrà automaticamente tutti i dati.</p>
+    <div style="display:flex;gap:8px;margin-bottom:12px">
+      <button class="btn btn-sm" id="arch-tab-file" onclick="archTab('file')" style="flex:1">📁 Carica file</button>
+      <button class="btn btn-sm" id="arch-tab-cam" onclick="archTab('cam')" style="flex:1">📷 Fotocamera</button>
+    </div>
+    <div id="arch-panel-file">
+      <input type="file" id="arch-file" accept="image/*" onchange="archFileSelected(this)" style="display:none">
+      <div onclick="document.getElementById('arch-file').click()" style="border:2px dashed var(--border2);border-radius:var(--r);padding:28px;text-align:center;cursor:pointer;color:var(--text3)">
+        <div style="font-size:28px;margin-bottom:6px">📄</div>
+        <div>Clicca per selezionare immagine</div>
+        <div style="font-size:11px;margin-top:4px">JPG, PNG, PDF scannerizzato</div>
+      </div>
+    </div>
+    <div id="arch-panel-cam" style="display:none">
+      <video id="arch-video" autoplay playsinline muted style="width:100%;border-radius:var(--r);background:#000;max-height:240px;object-fit:cover"></video>
+      <button class="btn btn-primary" style="width:100%;margin-top:8px" onclick="archSnap()">📸 Scatta</button>
+      <canvas id="arch-canvas" style="display:none"></canvas>
+    </div>
+    <div id="arch-preview-wrap" style="display:none;margin-top:10px">
+      <img id="arch-preview" style="width:100%;border-radius:var(--r);max-height:200px;object-fit:contain;border:1px solid var(--border)">
+    </div>
+    <div id="arch-ai-status" style="display:none;margin-top:10px;text-align:center;color:var(--text2);font-size:13px">
+      <span>🤖 Analisi in corso…</span>
+    </div>
+    <div id="arch-form" style="display:none;margin-top:14px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+        <div class="fg" style="margin:0"><label>N° Ordine</label><input type="text" id="arch-numero"></div>
+        <div class="fg" style="margin:0"><label>Data</label><input type="date" id="arch-data"></div>
+        <div class="fg" style="margin:0"><label>Fornitore</label><input type="text" id="arch-fornitore"></div>
+        <div class="fg" style="margin:0"><label>Stato</label>
+          <select id="arch-stato">
+            <option value="ricevuto">Ricevuto</option>
+            <option value="parziale">Parziale</option>
+            <option value="in attesa">In attesa</option>
+          </select>
+        </div>
+        <div class="fg" style="margin:0"><label>Importo totale (€)</label><input type="number" id="arch-importo" step="0.01"></div>
+        <div class="fg" style="margin:0"><label>Note</label><input type="text" id="arch-note-ord"></div>
+      </div>
+      <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;margin-bottom:6px">Prodotti</div>
+      <div id="arch-righe-wrap"></div>
+      <button class="btn btn-sm" onclick="archAddRiga()" style="margin-top:6px">＋ Aggiungi riga</button>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('modal-archivio');archStopCam()">Annulla</button>
+      <button class="btn btn-primary" id="arch-save-btn" style="display:none" onclick="saveArchivioOrdine()">💾 Salva in archivio</button>
     </div>
   </div>
 </div>
@@ -877,12 +958,13 @@ async function initialSync(){
   if(!SUPA_OK){ updateSyncStatus('off'); return; }
   updateSyncStatus('sync');
   try{
-    const [prods,movs,wRows,wlog,ordini]=await Promise.all([
+    const [prods,movs,wRows,wlog,ordini,arch]=await Promise.all([
       supaFetch('products','GET',null,'?order=nome'),
       supaFetch('movements','GET',null,'?order=ts.desc&limit=200'),
       supaFetch('waste_state','GET',null,'?id=eq.waste_state'),
       supaFetch('waste_log','GET',null,'?order=ts.desc&limit=100'),
-      supaFetch('ordini','GET',null,'?order=creato.desc&limit=200')
+      supaFetch('ordini','GET',null,'?order=creato.desc&limit=200'),
+      supaFetch('archivio_ordini','GET',null,'?order=creato.desc&limit=500')
     ]);
     // Sempre sovrascrive localStorage con i dati del cloud (anche se vuoti)
     localStorage.setItem(LS_P, JSON.stringify(prods||[]));
@@ -890,6 +972,7 @@ async function initialSync(){
     if(wRows&&wRows.length) localStorage.setItem(LS_W, JSON.stringify(wRows[0].data)); // cloud ha dati, usa quelli
     localStorage.setItem(LS_WL, JSON.stringify(wlog||[]));
     localStorage.setItem('ls_ordini', JSON.stringify(ordini||[]));
+    localStorage.setItem(LS_ARCH, JSON.stringify(arch||[]));
     updateSyncStatus('ok');
     // Aggiorna la view corrente
     if(currentView==='dashboard') renderDashboard();
@@ -989,6 +1072,7 @@ function showView(v){
   if(v==='allerte') renderAllerte();
   if(v==='ordini'){ buildProdDatalist(); renderOrdini(); }
   if(v==='report') renderReport();
+  if(v==='archivio') renderArchivio();
 }
 function goCategory(cat){
   invFilter=cat; subFilter='all';
@@ -1893,6 +1977,189 @@ function confirmBarcodeScario(){
 }
 function addFromBarcode(){ closeBarcodeModal(); document.getElementById('f-barcode').value=lastCode||''; openAddModal(); }
 
+
+// ══════════════════════════════════════════
+// ARCHIVIO ORDINI
+// ══════════════════════════════════════════
+const LS_ARCH='ls_archivio_ordini';
+const loadArch=()=>JSON.parse(localStorage.getItem(LS_ARCH)||'[]');
+async function saveArch(arr){
+  localStorage.setItem(LS_ARCH,JSON.stringify(arr));
+  if(!SUPA_OK) return;
+  try{
+    await supaFetch('archivio_ordini','DELETE',null,'?id=neq.____');
+    if(arr.length) await supaFetch('archivio_ordini','POST',arr,'?on_conflict=id');
+  }catch(e){}
+}
+
+let archCamStream=null, archBase64=null;
+
+function openArchivioModal(){
+  archBase64=null;
+  document.getElementById('arch-preview-wrap').style.display='none';
+  document.getElementById('arch-ai-status').style.display='none';
+  document.getElementById('arch-form').style.display='none';
+  document.getElementById('arch-save-btn').style.display='none';
+  document.getElementById('arch-file').value='';
+  archTab('file');
+  document.getElementById('modal-archivio').classList.add('open');
+}
+function archStopCam(){ if(archCamStream){ archCamStream.getTracks().forEach(t=>t.stop()); archCamStream=null; } }
+function archTab(tab){
+  document.getElementById('arch-panel-file').style.display=tab==='file'?'':'none';
+  document.getElementById('arch-panel-cam').style.display=tab==='cam'?'':'none';
+  document.getElementById('arch-tab-file').classList.toggle('active',tab==='file');
+  document.getElementById('arch-tab-cam').classList.toggle('active',tab==='cam');
+  if(tab==='cam'){
+    navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}})
+      .then(s=>{ archCamStream=s; document.getElementById('arch-video').srcObject=s; })
+      .catch(()=>toast('Fotocamera non disponibile','error'));
+  } else { archStopCam(); }
+}
+function archSnap(){
+  const video=document.getElementById('arch-video');
+  const canvas=document.getElementById('arch-canvas');
+  canvas.width=video.videoWidth; canvas.height=video.videoHeight;
+  canvas.getContext('2d').drawImage(video,0,0);
+  archBase64=canvas.toDataURL('image/jpeg',0.85).split(',')[1];
+  document.getElementById('arch-preview').src='data:image/jpeg;base64,'+archBase64;
+  document.getElementById('arch-preview-wrap').style.display='';
+  archStopCam();
+  archAnalyze();
+}
+function archFileSelected(input){
+  const file=input.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    const dataUrl=e.target.result;
+    archBase64=dataUrl.split(',')[1];
+    document.getElementById('arch-preview').src=dataUrl;
+    document.getElementById('arch-preview-wrap').style.display='';
+    archAnalyze();
+  };
+  reader.readAsDataURL(file);
+}
+async function archAnalyze(){
+  if(!archBase64){ toast('Nessuna immagine','error'); return; }
+  document.getElementById('arch-ai-status').style.display='';
+  document.getElementById('arch-form').style.display='none';
+  document.getElementById('arch-save-btn').style.display='none';
+  try{
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:1000,
+        messages:[{role:'user',content:[
+          {type:'image',source:{type:'base64',media_type:'image/jpeg',data:archBase64}},
+          {type:'text',text:`Analizza questo ordine/stampa e restituisci SOLO JSON, nessun testo extra, nessun markdown:
+{"numero":"","data":"YYYY-MM-DD","fornitore":"","importo_totale":0,"righe":[{"prodotto":"","qty":0,"prezzo_unit":0}],"note":""}
+Se un campo non è leggibile usa stringa vuota o 0.`}
+        ]}]
+      })
+    });
+    const data=await resp.json();
+    const text=data.content.map(i=>i.text||'').join('');
+    const clean=text.replace(/```json|```/g,'').trim();
+    const ord=JSON.parse(clean);
+    // Popola form
+    document.getElementById('arch-numero').value=ord.numero||'';
+    document.getElementById('arch-data').value=ord.data||'';
+    document.getElementById('arch-fornitore').value=ord.fornitore||'';
+    document.getElementById('arch-importo').value=ord.importo_totale||'';
+    document.getElementById('arch-note-ord').value=ord.note||'';
+    // Righe prodotti
+    const wrap=document.getElementById('arch-righe-wrap');
+    wrap.innerHTML='';
+    (ord.righe||[]).forEach(r=>archAddRiga(r.prodotto,r.qty,r.prezzo_unit));
+    document.getElementById('arch-ai-status').style.display='none';
+    document.getElementById('arch-form').style.display='';
+    document.getElementById('arch-save-btn').style.display='';
+  }catch(e){
+    document.getElementById('arch-ai-status').innerHTML='<span style="color:var(--red)">⚠ Errore analisi — compila manualmente</span>';
+    document.getElementById('arch-form').style.display='';
+    document.getElementById('arch-save-btn').style.display='';
+  }
+}
+function archAddRiga(prodotto='',qty=1,prezzo=0){
+  const wrap=document.getElementById('arch-righe-wrap');
+  const row=document.createElement('div');
+  row.style.cssText='display:grid;grid-template-columns:1fr 70px 80px 28px;gap:6px;margin-bottom:6px;align-items:center';
+  row.innerHTML=`<input type="text" placeholder="Prodotto" value="${prodotto}" class="arch-r-prod">
+    <input type="number" placeholder="Qtà" value="${qty}" min="0" class="arch-r-qty">
+    <input type="number" placeholder="€ cad." value="${prezzo||''}" step="0.01" min="0" class="arch-r-prezzo">
+    <button class="btn btn-sm btn-danger" onclick="this.parentElement.remove()">✕</button>`;
+  wrap.appendChild(row);
+}
+async function saveArchivioOrdine(){
+  const righe=[...document.querySelectorAll('#arch-righe-wrap > div')].map(row=>({
+    prodotto:row.querySelector('.arch-r-prod').value.trim(),
+    qty:parseFloat(row.querySelector('.arch-r-qty').value)||0,
+    prezzo_unit:parseFloat(row.querySelector('.arch-r-prezzo').value)||0
+  })).filter(r=>r.prodotto);
+  const ord={
+    id:genId(),
+    numero:document.getElementById('arch-numero').value.trim(),
+    data:document.getElementById('arch-data').value,
+    fornitore:document.getElementById('arch-fornitore').value.trim(),
+    stato:document.getElementById('arch-stato').value,
+    importo_totale:parseFloat(document.getElementById('arch-importo').value)||0,
+    note:document.getElementById('arch-note-ord').value.trim(),
+    righe,
+    creato:new Date().toISOString()
+  };
+  if(!ord.fornitore){ toast('Inserisci almeno il fornitore','error'); return; }
+  const arch=loadArch(); arch.unshift(ord); await saveArch(arch);
+  closeModal('modal-archivio'); archStopCam();
+  if(currentView==='archivio') renderArchivio();
+  toast('Ordine salvato in archivio','success');
+}
+
+function renderArchivio(){
+  let arch=loadArch();
+  // Popola filtri
+  const mesi=[...new Set(arch.map(o=>o.data?o.data.slice(0,7):'').filter(Boolean))].sort().reverse();
+  const forn=[...new Set(arch.map(o=>o.fornitore).filter(Boolean))].sort();
+  const selM=document.getElementById('arch-filter-mese');
+  const selF=document.getElementById('arch-filter-forn');
+  const curM=selM.value, curF=selF.value;
+  selM.innerHTML='<option value="">Tutti i mesi</option>'+mesi.map(m=>`<option value="${m}"${m===curM?' selected':''}>${m}</option>`).join('');
+  selF.innerHTML='<option value="">Tutti i fornitori</option>'+forn.map(f=>`<option value="${f}"${f===curF?' selected':''}>${f}</option>`).join('');
+  // Applica filtri
+  const fMese=selM.value, fForn=selF.value, fStato=document.getElementById('arch-filter-stato').value;
+  if(fMese) arch=arch.filter(o=>o.data&&o.data.startsWith(fMese));
+  if(fForn) arch=arch.filter(o=>o.fornitore===fForn);
+  if(fStato) arch=arch.filter(o=>o.stato===fStato);
+  const container=document.getElementById('archivio-list');
+  if(!arch.length){ container.innerHTML='<div class="empty"><div class="e-ico">🗂</div><p>Nessun ordine in archivio</p></div>'; return; }
+  const statoCol={ricevuto:'var(--green)',parziale:'var(--yellow)','in attesa':'var(--text3)'};
+  const statoIco={ricevuto:'✅',parziale:'⚠','in attesa':'⏳'};
+  container.innerHTML=arch.map(o=>`
+    <div class="card" style="margin-bottom:12px;padding:14px">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:10px">
+        <div>
+          <div style="font-weight:700;font-size:15px">${o.numero?'N° '+o.numero+' — ':' '}${o.fornitore||'—'}</div>
+          <div style="font-size:12px;color:var(--text3);margin-top:2px">${o.data?fmtDate(o.data):'Data n.d.'}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <span style="font-size:13px;font-weight:600;color:${statoCol[o.stato]||'var(--text2)'}">${statoIco[o.stato]||''} ${o.stato||'—'}</span>
+          ${o.importo_totale?`<span style="font-family:'DM Mono',monospace;font-size:14px;font-weight:700;color:var(--accent)">€ ${o.importo_totale.toFixed(2)}</span>`:''}
+          <button class="btn btn-sm btn-danger" onclick="deleteArchivioOrdine('${o.id}')">✕</button>
+        </div>
+      </div>
+      ${o.righe&&o.righe.length?`<table style="width:100%;font-size:12px">
+        <thead><tr><th style="text-align:left;padding:4px 6px;color:var(--text3);font-weight:600">Prodotto</th><th style="text-align:right;padding:4px 6px;color:var(--text3);font-weight:600">Qtà</th><th style="text-align:right;padding:4px 6px;color:var(--text3);font-weight:600">€/cad</th><th style="text-align:right;padding:4px 6px;color:var(--text3);font-weight:600">Totale</th></tr></thead>
+        <tbody>${o.righe.map(r=>`<tr><td style="padding:3px 6px">${r.prodotto}</td><td style="text-align:right;padding:3px 6px;font-family:'DM Mono',monospace">${r.qty}</td><td style="text-align:right;padding:3px 6px;font-family:'DM Mono',monospace">${r.prezzo_unit?'€'+r.prezzo_unit.toFixed(2):'—'}</td><td style="text-align:right;padding:3px 6px;font-family:'DM Mono',monospace;font-weight:600">${r.prezzo_unit?'€'+(r.qty*r.prezzo_unit).toFixed(2):'—'}</td></tr>`).join('')}</tbody>
+      </table>`:''}
+      ${o.note?`<div style="margin-top:8px;font-size:12px;color:var(--text2);font-style:italic">${o.note}</div>`:''}
+    </div>`).join('');
+}
+function deleteArchivioOrdine(id){
+  if(!confirm('Eliminare questo ordine dall\'archivio?')) return;
+  const arch=loadArch().filter(o=>o.id!==id); saveArch(arch); renderArchivio();
+  toast('Ordine eliminato','info');
+}
 // ══════════════════════════════════════════
 // REPORT
 // ══════════════════════════════════════════
