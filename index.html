@@ -892,17 +892,21 @@ async function supaFetch(table,method='GET',body=null,query=''){
 const LS_P='ls_products', LS_M='ls_movements', LS_W='ls_waste', LS_WL='ls_waste_log';
 
 const loadP=()=>JSON.parse(localStorage.getItem(LS_P)||'[]');
-async function saveP(arr){
+async function saveP(arr, deletedId){
+  // 1. Salva SEMPRE in localStorage prima di tutto
   localStorage.setItem(LS_P,JSON.stringify(arr));
   if(!SUPA_OK) return;
   updateSyncStatus('sync');
   try{
-    // 1. Delete all existing products on Supabase
-    await supaFetch('products','DELETE',null,'?id=neq.PLACEHOLDER');
-    // 2. Re-insert current state (upsert)
+    // Se c'è un prodotto eliminato, cancellalo puntualmente
+    if(deletedId) await supaFetch('products','DELETE',null,'?id=eq.'+deletedId);
+    // Upsert dell'array corrente (mai delete-all per evitare perdita dati)
     if(arr.length) await supaFetch('products','POST',arr,'?on_conflict=id');
     updateSyncStatus('ok');
-  }catch(e){ updateSyncStatus('err'); }
+  }catch(e){
+    updateSyncStatus('err');
+    // NON sovrascrivere localStorage: i dati locali sono la fonte di verità
+  }
 }
 
 const loadM=()=>JSON.parse(localStorage.getItem(LS_M)||'[]');
@@ -967,8 +971,14 @@ async function initialSync(){
       supaFetch('archivio_ordini','GET',null,'?order=creato.desc&limit=500')
     ]);
     // Sempre sovrascrive localStorage con i dati del cloud (anche se vuoti)
-    localStorage.setItem(LS_P, JSON.stringify(prods||[]));
-    localStorage.setItem(LS_M, JSON.stringify(movs||[]));
+    // Sovrascrive solo se Supabase ha dati — protegge da perdita in caso di errore rete
+    if(prods&&prods.length) localStorage.setItem(LS_P, JSON.stringify(prods));
+    else if(prods&&prods.length===0){
+      // Supabase vuoto ma localStorage ha dati: ricarica da locale (sync non distruttivo)
+      const local=JSON.parse(localStorage.getItem(LS_P)||'[]');
+      if(local.length) await supaFetch('products','POST',local,'?on_conflict=id');
+    }
+    if(movs&&movs.length) localStorage.setItem(LS_M, JSON.stringify(movs));
     if(wRows&&wRows.length) localStorage.setItem(LS_W, JSON.stringify(wRows[0].data)); // cloud ha dati, usa quelli
     localStorage.setItem(LS_WL, JSON.stringify(wlog||[]));
     localStorage.setItem('ls_ordini', JSON.stringify(ordini||[]));
@@ -1469,7 +1479,7 @@ function adjQty(id,delta){
 }
 function deleteProduct(id){
   if(!confirm('Eliminare questo prodotto?')) return;
-  saveP(loadP().filter(p=>p.id!==id)); renderInv(); toast('Prodotto eliminato','info');
+  saveP(loadP().filter(p=>p.id!==id), id); renderInv(); toast('Prodotto eliminato','info');
 }
 
 // ══════════════════════════════════════════
@@ -1779,7 +1789,7 @@ Categorie valide: Reagenti, IHC, Vetrini, Cassette, Coloranti, Consumabili, Lame
 Se non leggi nulla: [{"nome":"Prodotto non riconosciuto","lotto":"","scadenza":"","qty":1,"unita":"pz","fornitore":"","barcode":"","cat":"Altro"}]`;
   try{
     const res=await fetch('https://api.anthropic.com/v1/messages',{
-      method:'POST',headers:{'Content-Type':'application/json'},
+      method:'POST',headers:{'Content-Type':'application/json','x-api-key':'sk-ant-api03-placeholder','anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
       body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:sys,
         messages:[{role:'user',content:[{type:'image',source:{type:'base64',media_type:'image/jpeg',data:ddtBase64}},{type:'text',text:'Analizza questo DDT.'}]}]})
     });
@@ -2047,7 +2057,7 @@ async function archAnalyze(){
   try{
     const resp=await fetch('https://api.anthropic.com/v1/messages',{
       method:'POST',
-      headers:{'Content-Type':'application/json'},
+      headers:{'Content-Type':'application/json','x-api-key':'sk-ant-api03-placeholder','anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
       body:JSON.stringify({
         model:'claude-sonnet-4-20250514',
         max_tokens:1000,
