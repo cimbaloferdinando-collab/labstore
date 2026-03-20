@@ -1179,6 +1179,106 @@ const CAT_ICON={Reagenti:'🧪',IHC:'🔬',Vetrini:'🪟',Cassette:'📁',Colora
 const FORNITORI_PRINCIPALI=['Epredia','Bio Optica','Ventana','Altro'];
 const IHC_SUB={'Consumabili':['EzPrep','LCS','Reaction Buffer','CC1','CC2','Option'],'Kit Rivelazione':['OPT View','Ultra View','Bluing','Hema I','Hema II','Option 1']};
 const SUB_FILTERS={Reagenti:['Alcol 100','Alcool 95','Xilene','Formalina'],IHC:['Anticorpi','Consumabili','Kit Rivelazione'],Vetrini:['24x60','24x50','TOMO','P.O. Giallo','P.O. Blu'],Cassette:['Bianche','Blu'],Coloranti:['EA50','Eosina','Ema. Harris','Ema. Mayer','OG6'],Consumabili:['Guanti L','Guanti M','Guanti S','Cytocuvette'],Lame:['A35','HP35','MX35','Forbici'],Altro:['Montante','Paraffina']};
+
+// Alias semantici: ogni label del sottofiltro → array di keyword da cercare nel nome prodotto
+// Se il nome contiene ALMENO UNO dei keyword, il prodotto appartiene a quel filtro
+const PRODUCT_ALIASES={
+  // ── Reagenti ──
+  'Alcol 100':    ['alcol 100','alcool 100','alcoolpath 100','ethanol 100','etanolo 100','isopropan','ipa 100'],
+  'Alcool 95':    ['alcol 95','alcool 95','alcoolpath 95','ethanol 95','etanolo 95'],
+  'Xilene':       ['xilene','xylene','xylol'],
+  'Formalina':    ['formalina','formalin','formaldeid','formol','nbt'],
+
+  // ── Coloranti ──
+  'EA50':         ['ea50','ea 50','papanicolau ea','orange g ea'],
+  'Eosina':       ['eosina','eosin','eosina g','eosina y','eosin g'],
+  'Ema. Harris':  ['harris','ematossilina harris','ematossilina papanicolau harris','hematoxylin harris','hematoxilylin','harris hematoxylin','papanicolau harris'],
+  'Ema. Mayer':   ['mayer','ematossilina mayer','hematoxylin mayer','mayer hematoxylin','ematossilina mayer'],
+  'OG6':          ['og6','og 6','papanicolau og','orange g6'],
+
+  // ── Vetrini ──
+  '24x60':        ['24x60','24*60','24 x 60','coprioggetto 24x60','copri oggetto 24x60','24/60'],
+  '24x50':        ['24x50','24*50','24 x 50','coprioggetto 24x50','copri oggetto 24x50','24/50'],
+  'TOMO':         ['tomo','porta oggetto tomo'],
+  'P.O. Giallo':  ['giallo','portaoggetto giallo','porta oggetto giallo','yellow'],
+  'P.O. Blu':     ['blu','portaoggetto blu','porta oggetto blu','blue','azzurro'],
+
+  // ── Cassette ──
+  'Bianche':      ['bianca','bianche','white','cassette bianche'],
+  'Blu':          ['blu','blue','cassette blu'],
+
+  // ── Consumabili ──
+  'Guanti L':     ['guanti l','guanto l','glove l',' l '],
+  'Guanti M':     ['guanti m','guanto m','glove m',' m '],
+  'Guanti S':     ['guanti s','guanto s','glove s',' s '],
+  'Cytocuvette':  ['cytocuvette','cuvette','cytocup'],
+
+  // ── Lame ──
+  'A35':          ['a35','feather a35','lame a35','lama a35'],
+  'HP35':         ['hp35','lame hp35','lama hp35'],
+  'MX35':         ['mx35','lame mx35','lama mx35'],
+  'Forbici':      ['forbici','scissors'],
+
+  // ── Altro ──
+  'Montante':     ['montante','mountant','bio mount','biomount','mount','mounting'],
+  'Paraffina':    ['paraffina','paraffin','biowax','wax','cera'],
+
+  // ── IHC sub2 ──
+  'EzPrep':       ['ez prep','ezprep','ez-prep'],
+  'LCS':          ['lcs','low cross'],
+  'Reaction Buffer':['reaction buffer','reaction buff','tampone reazione'],
+  'CC1':          ['cc1',' cc1'],
+  'CC2':          ['cc2',' cc2'],
+  'OPT View':     ['optiview','opti-view','opt view'],
+  'Ultra View':   ['ultraview','ultra-view','ultra view'],
+  'Bluing':       ['bluing','bluing reagent'],
+  'Hema I':       ['hematoxylin ','hematoxylin i','ematossilina i',' hema i'],
+  'Hema II':      ['hematoxylin ii','hematoxilyn ii','ematossilina ii'],
+};
+
+// ══════════════════════════════════════════
+// SMART CATEGORIZER
+// Assegna automaticamente cat e subcat corrette
+// basandosi su nome, fornitore e codice
+// ══════════════════════════════════════════
+function smartCategorize(nome, fornitore, barcode){
+  const n=(nome||'').toLowerCase();
+  const f=(fornitore||'').toLowerCase();
+  const b=(barcode||'').toLowerCase();
+
+  // ── Fornitore determina IHC ──
+  if(f.includes('roche')||f.includes('ventana')||f.includes('dako')||f.includes('leica biosystem')) return 'IHC';
+
+  // ── Lame ──
+  if(/lam[ae]|blade|feather|hp35|mx35|a35|bisturi|forbic/.test(n)) return 'Lame';
+
+  // ── Vetrini ──
+  if(/vetrini|vetri|coprioggetto|copri.oggetto|portaoggetto|porta.oggetto|coverslip|microscop.slide/.test(n)) return 'Vetrini';
+
+  // ── Cassette ──
+  if(/cassett|biopsy cassette/.test(n)) return 'Cassette';
+
+  // ── Consumabili ──
+  if(/guant|glove|nitrile|latex|cytocuvette|cuvette|mascherina|camice|sovrascarpe|contenitor|falcon|provett|beaker/.test(n)) return 'Consumabili';
+
+  // ── Coloranti ──
+  if(/eosina|eosin|ematossilina|hematoxyl|hematoxylin|harris|mayer|giemsa|papanicolau|og6|og 6|ea50|ea 50|colorante|stain|blu di toluidina|May.Gr|gram|ziehl|grocott|pas |alcian|sirius|rosso congo|van gieson|masson/.test(n)) return 'Coloranti';
+
+  // ── Reagenti (tutto il resto chimico) ──
+  if(/paraffin|biowax|wax(?! log)|cera|montante|bio.?mount|biomount|mountant/.test(n)) return 'Altro';
+  if(/alcool|alcol|alcohol|etanol|ethanol|xilene|xylene|formalina|formalin|formaldeid|acetone|metanolo|methanol|isopropan|toluene|cloroform|acido|acid|buffer|tampone|soluzione|solution|fixat|fissativ|diafanizzant|deparaffin/.test(n)) return 'Reagenti';
+
+  return 'Altro';
+}
+
+// Funzione unica di matching semantico
+function matchAlias(prodNome, label){
+  const n=(prodNome||'').toLowerCase();
+  const aliases=PRODUCT_ALIASES[label];
+  if(aliases) return aliases.some(kw=>n.includes(kw));
+  // Fallback: cerca il label stesso nel nome
+  return n.includes(label.toLowerCase());
+}
 const WASTE_CONFIG={
   cer_180103:{label:'CER 180103*',sub:'Rifiuti infetti — lame, materiale biologico, taglienti',icon:'☣',cls:'wc-yellow',color:'var(--yellow)',cer:'180103*',tipo:'Solido',pericoloso:true,
     contenitore:'scatola',contenitoreLabel:'Scatole cartone',contenitoreIcon:'📦',sharedPool:null,
@@ -1607,22 +1707,10 @@ function renderInv(){
       }
       // sub2Filter: filtra per nome prodotto specifico
       if(sub2Filter!=='all'){
-        const kwMap={'EzPrep':'ez prep','LCS':'lcs','Reaction Buffer':'reaction','CC1':'cc1','CC2':'cc2',
-          'Option':'option','OPT View':'optiview','Ultra View':'ultraview','Bluing':'bluing',
-          'Hema I':'hematoxylin ','Hema II':'hematoxylin ii','Option 1':'option'};
-        const kw=(kwMap[sub2Filter]||sub2Filter).toLowerCase();
-        prods=prods.filter(p=>(p.nome||'').toLowerCase().includes(kw));
+        prods=prods.filter(p=>matchAlias(p.nome, sub2Filter));
       }
     } else {
-      const kwMap={'Alcol 100':'alcol 100','Alcool 95':'alcool 95','Xilene':'xilene','Formalina':'formalina',
-        '24x60':'24','24x50':'24x50','TOMO':'tomo','P.O. Giallo':'giallo','P.O. Blu':'blu',
-        'Bianche':'bianc','Blu':'blu',
-        'EA50':'ea50','Eosina':'eosina','Ema. Harris':'harris','Ema. Mayer':'mayer','OG6':'og6',
-        'Guanti L':'guanti l','Guanti M':'guanti m','Guanti S':'guanti s','Cytocuvette':'cytocuvette',
-        'A35':'a35','HP35':'hp35','MX35':'mx35','Forbici':'forbici',
-        'Montante':'montante','Paraffina':'paraffina'};
-      const kw=(kwMap[subFilter]||subFilter).toLowerCase();
-      prods=prods.filter(p=>(p.nome||'').toLowerCase().includes(kw)||(p.subcat||'').toLowerCase()===subFilter.toLowerCase());
+      prods=prods.filter(p=>matchAlias(p.nome, subFilter));
     }
   }
   if(q) prods=prods.filter(p=>p.nome.toLowerCase().includes(q)||(p.barcode||'').includes(q)||(p.fornitore||'').toLowerCase().includes(q));
@@ -1855,8 +1943,11 @@ function saveProduct(){
   const cat=document.getElementById('f-cat').value;
   if(!nome||!cat){ toast('Nome e categoria obbligatori','error'); return; }
   const qty_new=parseFloat(document.getElementById('f-qty').value)||0;
-  const p={id:id||genId(),nome,cat,
-    fornitore:document.getElementById('f-fornitore').value.trim(),
+  // Se cat è Altro o vuoto, prova a determinarlo in modo intelligente
+  const fornitoreVal=document.getElementById('f-fornitore').value.trim();
+  const catFinal=cat&&cat!=='Altro'?cat:smartCategorize(nome,fornitoreVal,document.getElementById('f-barcode').value.trim());
+  const p={id:id||genId(),nome,cat:catFinal,
+    fornitore:fornitoreVal,
     barcode:document.getElementById('f-barcode').value.trim(),
     lotto:document.getElementById('f-lotto').value.trim(),
     scadenza:document.getElementById('f-scadenza').value,
@@ -2017,7 +2108,7 @@ function confirmDDT(){
   rows.forEach(row=>{
     const g=f=>row.querySelector(`[data-f="${f}"]`)?.value?.trim()||'';
     const nome=g('nome'); if(!nome) return;
-    const qty=parseFloat(g('qty'))||1, cat=g('cat')||'Altro', lotto=g('lotto'), scadenza=g('scadenza'), unita=g('unita')||'pz';
+    const qty=parseFloat(g('qty'))||1, catRaw=g('cat')||'', cat=catRaw&&catRaw!=='Altro'?catRaw:smartCategorize(nome,g('fornitore')||'',''), lotto=g('lotto'), scadenza=g('scadenza'), unita=g('unita')||'pz';
     let ex=prods.find(p=>p.nome.toLowerCase()===nome.toLowerCase()&&p.lotto===lotto);
     if(!ex) ex=prods.find(p=>p.nome.toLowerCase()===nome.toLowerCase());
     if(ex){ ex.qty+=qty; if(lotto) ex.lotto=lotto; if(scadenza) ex.scadenza=scadenza;
@@ -2313,8 +2404,10 @@ function confirmCaricaScanFound(){
 
 function confirmCaricaScanNew(){
   const nome=document.getElementById('cs-nome').value.trim();
-  const cat=document.getElementById('cs-cat').value;
-  if(!nome||!cat){ toast('Nome e categoria obbligatori','error'); return; }
+  const catSel=document.getElementById('cs-cat').value;
+  const forn=document.getElementById('cs-fornitore').value.trim();
+  const cat=catSel&&catSel!=='Altro'?catSel:smartCategorize(nome,forn,'');
+  if(!nome){ toast('Nome obbligatorio','error'); return; }
   const qty=parseFloat(document.getElementById('cs-qty-new').value)||1;
   const p={
     id:genId(), nome, cat,
