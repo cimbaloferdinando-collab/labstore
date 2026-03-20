@@ -232,9 +232,13 @@ select option{background:var(--bg3)}
 @media(max-width:800px){.sidebar{display:none}.stats-grid{grid-template-columns:repeat(2,1fr)}.waste-grid{grid-template-columns:1fr}.prod-grid{grid-template-columns:repeat(auto-fill,minmax(160px,1fr))}#home-panels{grid-template-columns:1fr!important}}
 </style>
   <script>
+    // Rimuovi service worker e pulisci cache per forzare aggiornamento
     if('serviceWorker' in navigator){
-      navigator.serviceWorker.register('/sw.js').catch(()=>{});
+      navigator.serviceWorker.getRegistrations().then(regs=>{
+        regs.forEach(r=>r.unregister());
+      });
     }
+    caches.keys().then(keys=>keys.forEach(k=>caches.delete(k)));
   </script>
 </head>
 <body>
