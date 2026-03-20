@@ -270,7 +270,8 @@ select option{background:var(--bg3)}
     <div class="nav-item" onclick="goCategory('Cassette')"><span class="nav-icon">📁</span>Cassette</div>
     <div class="nav-item" onclick="goCategory('Coloranti')"><span class="nav-icon">🎨</span>Coloranti</div>
     <div class="nav-item" onclick="goCategory('Consumabili')"><span class="nav-icon">🧤</span>Consumabili</div>
-    <div class="nav-item" onclick="goCategory('Kit Diagnostici')"><span class="nav-icon">🧰</span>Kit Diag.</div>
+    <div class="nav-item" onclick="goCategory('Kit Colorazioni')"><span class="nav-icon">🔬</span>Kit Colorazioni</div>
+    <div class="nav-item" onclick="goCategory('Kit Colorazioni')"><span class="nav-icon">🧰</span>Kit Colorazioni</div>
     <div class="nav-item" onclick="goCategory('Lame')"><span class="nav-icon">⚔</span>Lame</div>
     <div class="nav-item" onclick="goCategory('Altro')"><span class="nav-icon">📌</span>Altro</div>
   </nav>
@@ -339,6 +340,7 @@ select option{background:var(--bg3)}
         <button class="f-btn" onclick="setInvFilter('Cassette',this)">📁 Cassette</button>
         <button class="f-btn" onclick="setInvFilter('Coloranti',this)">🎨 Coloranti</button>
         <button class="f-btn" onclick="setInvFilter('Consumabili',this)">🧤 Consumabili</button>
+        <button class="f-btn" onclick="setInvFilter('Kit Colorazioni',this)">🔬 Kit Color.</button>
         <button class="f-btn" onclick="setInvFilter('Lame',this)">⚔ Lame</button>
         <button class="f-btn" onclick="setInvFilter('Altro',this)">📌 Altro</button>
       </div>
@@ -729,7 +731,7 @@ select option{background:var(--bg3)}
         <div class="fg"><label>Categoria *</label>
           <select id="cs-cat"><option value="">Seleziona…</option>
             <option>Reagenti</option><option>IHC</option><option>Vetrini</option><option>Cassette</option>
-            <option>Coloranti</option><option>Consumabili</option><option>Lame</option><option>Altro</option>
+            <option>Coloranti</option><option>Consumabili</option><option>Kit Colorazioni</option><option>Lame</option><option>Altro</option>
           </select></div>
         <div class="fg"><label>Fornitore</label><input type="text" id="cs-fornitore" placeholder="Fornitore"></div>
         <div class="fg"><label>Lotto</label><input type="text" id="cs-lotto" placeholder="Numero lotto"></div>
@@ -792,7 +794,7 @@ select option{background:var(--bg3)}
       <div class="fg"><label>Categoria *</label>
         <select id="f-cat"><option value="">Seleziona…</option>
           <option>Reagenti</option><option>IHC</option><option>Vetrini</option><option>Cassette</option>
-          <option>Coloranti</option><option>Consumabili</option><<option>Lame</option><option>Altro</option>
+          <option>Coloranti</option><option>Consumabili</option><option>Kit Colorazioni</option><option>Lame</option><option>Altro</option>
         </select></div>
       <div class="fg"><label>Fornitore</label><input type="text" id="f-fornitore" placeholder="es. Dako, Leica…"></div>
       <div class="fg full"><label>Codici scansionabili</label><input type="text" id="f-barcode" placeholder="Barcode, QR, GS1 — separati da virgola se più di uno"></div>
@@ -1019,6 +1021,32 @@ function enqueue(op){
 }
 
 // Invia tutto quando torna online
+async function forceSync(){
+  // Forza download da Supabase sovrascrivendo il localStorage
+  if(!SUPA_OK||!IS_ONLINE){ toast('Non connesso','error'); return; }
+  updateSyncStatus('sync');
+  try{
+    const [prods,movs,wRows,wlog,ordini,arch]=await Promise.all([
+      supaFetch('products','GET',null,'?order=nome'),
+      supaFetch('movements','GET',null,'?order=ts.desc&limit=200'),
+      supaFetch('waste_state','GET',null,'?id=eq.waste_state'),
+      supaFetch('waste_log','GET',null,'?order=ts.desc&limit=100'),
+      supaFetch('ordini','GET',null,'?order=creato.desc&limit=200'),
+      supaFetch('archivio_ordini','GET',null,'?order=creato.desc&limit=500')
+    ]);
+    if(prods&&prods.length) localStorage.setItem(LS_P, JSON.stringify(prods));
+    if(movs&&movs.length) localStorage.setItem(LS_M, JSON.stringify(movs));
+    if(wRows&&wRows.length) localStorage.setItem(LS_W, JSON.stringify(wRows[0].data));
+    if(wlog) localStorage.setItem(LS_WL, JSON.stringify(wlog));
+    if(ordini) localStorage.setItem('ls_ordini', JSON.stringify(ordini));
+    if(arch) localStorage.setItem(LS_ARCH, JSON.stringify(arch));
+    updateSyncStatus('ok');
+    if(currentView==='dashboard') renderDashboard();
+    if(currentView==='inventario') renderInv();
+    if(currentView==='movimenti') renderMovimenti();
+    toast('✅ Dati aggiornati dal cloud','success');
+  }catch(e){ updateSyncStatus('err'); toast('Errore sync','error'); }
+}
 async function flushQueue(){
   if(!SUPA_OK||!IS_ONLINE) return;
   const q=loadQueue(); if(!q.length){ updateSyncStatus('ok'); return; }
@@ -1176,10 +1204,10 @@ async function initialSync(){
 document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible'&&IS_ONLINE) flushQueue(); });
 
 
-const CAT_ICON={Reagenti:'🧪',IHC:'🔬',Vetrini:'🪟',Cassette:'📁',Coloranti:'🎨',Consumabili:'🧤','Kit Diagnostici':'🧰',Lame:'⚔',Altro:'📌'};
+const CAT_ICON={Reagenti:'🧪',IHC:'🔬',Vetrini:'🪟',Cassette:'📁',Coloranti:'🎨',Consumabili:'🧤','Kit Colorazioni':'🔬',Lame:'⚔',Altro:'📌'};
 const FORNITORI_PRINCIPALI=['Epredia','Bio Optica','Ventana','Altro'];
 const IHC_SUB={'Consumabili':['EzPrep','LCS','Reaction Buffer','CC1','CC2','Option'],'Kit Rivelazione':['OPT View','Ultra View','Bluing','Hema I','Hema II','Option 1']};
-const SUB_FILTERS={Reagenti:['Alcol 100','Alcool 95','Xilene','Formalina'],IHC:['Anticorpi','Consumabili','Kit Rivelazione'],Vetrini:['24x60','24x50','TOMO','P.O. Giallo','P.O. Blu'],Cassette:['Bianche','Blu'],Coloranti:['EA50','Eosina','Ema. Harris','Ema. Mayer','OG6'],Consumabili:['Guanti L','Guanti M','Guanti S','Cytocuvette'],Lame:['A35','HP35','MX35','Forbici'],Altro:['Montante','Paraffina']};
+const SUB_FILTERS={Reagenti:['Alcol 100','Alcool 95','Xilene','Formalina'],IHC:['Anticorpi','Consumabili','Kit Rivelazione'],Vetrini:['24x60','24x50','TOMO','P.O. Giallo','P.O. Blu'],Cassette:['Bianche','Blu'],Coloranti:['EA50','Eosina','Ema. Harris','Ema. Mayer','OG6'],Consumabili:['Guanti L','Guanti M','Guanti S','Cytocuvette'],'Kit Colorazioni':['Giemsa','PAS','Reticolo','Gram','Ziehl','Grocott','Alcian','Masson','Giallo Congo','Van Gieson'],Lame:['A35','HP35','MX35','Forbici'],Altro:['Montante','Paraffina']};
 
 // Alias semantici: ogni label del sottofiltro → array di keyword da cercare nel nome prodotto
 // Se il nome contiene ALMENO UNO dei keyword, il prodotto appartiene a quel filtro
@@ -1223,6 +1251,16 @@ const PRODUCT_ALIASES={
   // ── Altro ──
   'Montante':     ['montante','mountant','bio mount','biomount','mount','mounting'],
   'Paraffina':    ['paraffina','paraffin','biowax','wax','cera'],
+
+  // ── Kit Colorazioni ──
+  'Giemsa':       ['giemsa'],
+  'PAS':          ['pas ','p.a.s','periodic acid'],
+  'Reticolo':     ['reticolo','argentin','silver stain','gordon','gomori'],
+  'Gram':         ['gram ','brown-hopps'],
+  'Ziehl':        ['ziehl','neelsen'],
+  'Grocott':      ['grocott','gms '],
+  'Alcian':       ['alcian','alcian blue'],
+  'Masson':       ['masson','trichrome'],
 
   // ── IHC sub2 ──
   'EzPrep':       ['ez prep','ezprep','ez-prep'],
