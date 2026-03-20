@@ -240,7 +240,7 @@ select option{background:var(--bg3)}
 <body>
 <header>
   <div class="logo">LabStore <span class="logo-badge">AP</span></div>
-  <div class="hdr-act"><button class="btn" onclick="showView('dashboard')" style="font-weight:600">🏠 Home</button><span id="sync-status" style="font-size:12px;font-family:DM Mono,monospace;padding:4px 8px;border-radius:4px;border:1px solid var(--border);cursor:help" title="Stato sincronizzazione">⬡ Locale</span>
+  <div class="hdr-act"><button class="btn" onclick="showView('dashboard')" style="font-weight:600">🏠 Home</button><button class="btn" id="sync-status" onclick="forceSync()" style="font-size:12px;font-family:DM Mono,monospace" title="Clicca per sincronizzare">⬡ Locale</button>
     <button class="btn" onclick="exportCSV()">⬇ CSV</button>
     <button class="btn btn-ok" onclick="openDDTModal()">📷 DDT</button>
     <button class="btn btn-ok" onclick="openCaricaScanModal()">⬆ Carico Scan</button>
@@ -271,7 +271,6 @@ select option{background:var(--bg3)}
     <div class="nav-item" onclick="goCategory('Coloranti')"><span class="nav-icon">🎨</span>Coloranti</div>
     <div class="nav-item" onclick="goCategory('Consumabili')"><span class="nav-icon">🧤</span>Consumabili</div>
     <div class="nav-item" onclick="goCategory('Kit Colorazioni')"><span class="nav-icon">🔬</span>Kit Colorazioni</div>
-    <div class="nav-item" onclick="goCategory('Kit Colorazioni')"><span class="nav-icon">🧰</span>Kit Colorazioni</div>
     <div class="nav-item" onclick="goCategory('Lame')"><span class="nav-icon">⚔</span>Lame</div>
     <div class="nav-item" onclick="goCategory('Altro')"><span class="nav-icon">📌</span>Altro</div>
   </nav>
