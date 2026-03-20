@@ -2,6 +2,10 @@
 <html lang="it">
 <head>
 <meta charset="UTF-8">
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#4a3080">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>LabStore — Magazzino Anatomia Patologica</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Cormorant+Garamond:wght@600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -226,6 +230,11 @@ select option{background:var(--bg3)}
 @media print{header,.sidebar,.btn,.filter-bar,.card-act,.hdr-act{display:none!important}.main{padding:0}.layout{display:block}body{background:#fff;color:#000}}
 @media(max-width:800px){.sidebar{display:none}.stats-grid{grid-template-columns:repeat(2,1fr)}.waste-grid{grid-template-columns:1fr}.prod-grid{grid-template-columns:repeat(auto-fill,minmax(160px,1fr))}#home-panels{grid-template-columns:1fr!important}}
 </style>
+  <script>
+    if('serviceWorker' in navigator){
+      navigator.serviceWorker.register('/sw.js').catch(()=>{});
+    }
+  </script>
 </head>
 <body>
 <header>
@@ -233,6 +242,7 @@ select option{background:var(--bg3)}
   <div class="hdr-act"><button class="btn" onclick="showView('dashboard')" style="font-weight:600">🏠 Home</button><span id="sync-status" style="font-size:12px;font-family:DM Mono,monospace;padding:4px 8px;border-radius:4px;border:1px solid var(--border);cursor:help" title="Stato sincronizzazione">⬡ Locale</span>
     <button class="btn" onclick="exportCSV()">⬇ CSV</button>
     <button class="btn btn-ok" onclick="openDDTModal()">📷 DDT</button>
+    <button class="btn btn-ok" onclick="openCaricaScanModal()">⬆ Carico Scan</button>
     <button class="btn btn-warn" onclick="openScaricaModal()">⬇ Scarico</button>
     <button class="btn btn-waste" onclick="showView('rifiuti')">🗑 Rifiuti</button>
     <button class="btn btn-primary" onclick="openAddModal()">＋ Prodotto</button>
@@ -250,6 +260,7 @@ select option{background:var(--bg3)}
     <div class="nav-item" onclick="showView('ordini')" id="nav-ordini"><span class="nav-icon">🛒</span>Ordini</div>
     <div class="nav-item" onclick="showView('report')" id="nav-report"><span class="nav-icon">📋</span>Report Mensile</div>
     <div class="nav-item" onclick="showView('archivio')" id="nav-archivio"><span class="nav-icon">🗂</span>Archivio Ordini</div>
+    <div class="nav-item" onclick="showView('schede')" id="nav-schede"><span class="nav-icon">📋</span>Schede Tecniche</div>
     <div class="nav-div"></div>
     <div class="nav-lbl">Categorie</div>
     <div class="nav-item" onclick="goCategory('Reagenti')"><span class="nav-icon">🧪</span>Reagenti</div>
@@ -364,7 +375,8 @@ select option{background:var(--bg3)}
       <div class="page-sub">Storico carichi e scarichi consumabili</div>
       <div style="display:flex;gap:7px;margin-bottom:14px;flex-wrap:wrap">
         <button class="btn btn-ok" onclick="openDDTModal()">📷 Carico da DDT</button>
-        <button class="btn btn-warn" onclick="openScaricaModal()">⬇ Scarico</button>
+        <button class="btn btn-ok" onclick="openCaricaScanModal()">⬆ Carico Scan</button>
+    <button class="btn btn-warn" onclick="openScaricaModal()">⬇ Scarico</button>
         <button class="btn" onclick="openManualMovModal('carico')">＋ Carico manuale</button>
         <button class="btn" onclick="openManualMovModal('scarico')">− Scarico manuale</button>
       </div>
@@ -481,6 +493,20 @@ select option{background:var(--bg3)}
         </select>
       </div>
       <div id="archivio-list"></div>
+    </div>
+
+
+    <!-- ══════ SCHEDE TECNICHE ══════ -->
+    <div class="view" id="view-schede">
+      <div class="page-title">Schede Tecniche</div>
+      <div class="page-sub">Archivio schede tecniche per fornitore — scansiona il QR del produttore</div>
+      <div style="display:flex;gap:7px;margin-bottom:14px;flex-wrap:wrap;align-items:center">
+        <button class="btn btn-primary" onclick="openSchedaScanModal()">📷 Scansiona QR Scheda</button>
+        <select id="schede-filter-forn" onchange="renderSchede()" style="min-width:140px">
+          <option value="">Tutti i fornitori</option>
+        </select>
+      </div>
+      <div id="schede-list"></div>
     </div>
 
   </main>
@@ -662,6 +688,97 @@ select option{background:var(--bg3)}
   </div>
 </div>
 
+
+<!-- ══════════════════════════════
+     MODAL: CARICO DA SCAN
+══════════════════════════════ -->
+<div class="modal-overlay" id="modal-carico-scan">
+  <div class="modal" style="width:500px;max-height:90vh;overflow-y:auto">
+    <div class="modal-title">📷 Carico da Scan</div>
+    <p style="color:var(--text2);font-size:13px;margin-bottom:10px">Scansiona il barcode o QR del prodotto. Il sistema rileva automaticamente nome, lotto e scadenza.</p>
+    <div id="cs-video-wrap">
+      <video id="cs-video" autoplay playsinline muted style="width:100%;border-radius:var(--r);background:#000;max-height:220px;object-fit:cover"></video>
+      <div class="scan-line"></div>
+    </div>
+    <div style="margin-top:8px;display:flex;gap:8px">
+      <input type="text" id="cs-manual-code" placeholder="Oppure inserisci codice manualmente…" style="flex:1;font-family:DM Mono,monospace;font-size:13px" onkeydown="if(event.key==='Enter') processCaricaScan(this.value.trim())">
+      <button class="btn btn-primary" onclick="processCaricaScan(document.getElementById('cs-manual-code').value.trim())">Cerca</button>
+    </div>
+    <div class="scan-result-box" style="margin-top:8px"><span class="sr-label">Codice</span><span class="sr-val" id="cs-code-val">In attesa…</span></div>
+
+    <!-- Risultato: prodotto trovato con stesso lotto -->
+    <div id="cs-found" style="display:none;margin-top:10px">
+      <div style="background:rgba(26,122,74,.08);border:1px solid rgba(26,122,74,.25);border-radius:var(--r);padding:11px;margin-bottom:10px">
+        <div style="font-weight:600;color:var(--green);margin-bottom:5px">✓ Prodotto trovato in magazzino</div>
+        <div id="cs-found-info" style="font-size:13px;color:var(--text2)"></div>
+      </div>
+      <div style="display:flex;gap:9px;align-items:center">
+        <div class="fg" style="flex:0 0 90px;margin:0"><label>Quantità</label><input type="number" id="cs-qty" value="1" min="1"></div>
+        <div class="fg" style="flex:1;margin:0"><label>Note</label><input type="text" id="cs-note" placeholder="Es. Da DDT 123"></div>
+      </div>
+    </div>
+
+    <!-- Risultato: nuovo prodotto (lotto diverso o non esiste) -->
+    <div id="cs-new" style="display:none;margin-top:10px">
+      <div style="background:rgba(176,125,16,.08);border:1px solid rgba(176,125,16,.25);border-radius:var(--r);padding:10px;margin-bottom:10px;font-size:13px;color:var(--yellow)">
+        ⚠ Prodotto non trovato o lotto diverso — verifica i dati e salva come nuovo
+      </div>
+      <div class="form-grid">
+        <div class="fg full"><label>Nome Prodotto *</label><input type="text" id="cs-nome" placeholder="Nome prodotto"></div>
+        <div class="fg"><label>Categoria *</label>
+          <select id="cs-cat"><option value="">Seleziona…</option>
+            <option>Reagenti</option><option>IHC</option><option>Vetrini</option><option>Cassette</option>
+            <option>Coloranti</option><option>Consumabili</option><option>Lame</option><option>Altro</option>
+          </select></div>
+        <div class="fg"><label>Fornitore</label><input type="text" id="cs-fornitore" placeholder="Fornitore"></div>
+        <div class="fg"><label>Lotto</label><input type="text" id="cs-lotto" placeholder="Numero lotto"></div>
+        <div class="fg"><label>Scadenza</label><input type="date" id="cs-scadenza"></div>
+        <div class="fg"><label>Quantità *</label><input type="number" id="cs-qty-new" value="1" min="1"></div>
+        <div class="fg"><label>Unità</label><input type="text" id="cs-unita" placeholder="pz, L, ml…" value="pz"></div>
+        <div class="fg"><label>Codici</label><input type="text" id="cs-codici" placeholder="Codici scansionabili"></div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn" onclick="closeCaricaScanModal()">Chiudi</button>
+      <button class="btn btn-ok" id="cs-confirm-found" style="display:none" onclick="confirmCaricaScanFound()">⬆ Aggiorna quantità</button>
+      <button class="btn btn-primary" id="cs-confirm-new" style="display:none" onclick="confirmCaricaScanNew()">＋ Salva nuovo prodotto</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════
+     MODAL: SCANSIONE QR SCHEDA TECNICA
+══════════════════════════════ -->
+<div class="modal-overlay" id="modal-scheda-scan">
+  <div class="modal" style="width:460px">
+    <div class="modal-title">📋 Scansiona QR Scheda Tecnica</div>
+    <p style="color:var(--text2);font-size:13px;margin-bottom:10px">Scansiona il QR che rimanda al sito del produttore.</p>
+    <div id="ss-video-wrap">
+      <video id="ss-video" autoplay playsinline muted style="width:100%;border-radius:var(--r);background:#000;max-height:220px;object-fit:cover"></video>
+      <div class="scan-line"></div>
+    </div>
+    <div style="margin-top:8px;display:flex;gap:8px">
+      <input type="text" id="ss-manual-url" placeholder="Oppure incolla URL manualmente…" style="flex:1;font-size:12px" onkeydown="if(event.key==='Enter') processSchedaUrl(this.value.trim())">
+      <button class="btn btn-primary" onclick="processSchedaUrl(document.getElementById('ss-manual-url').value.trim())">Salva</button>
+    </div>
+    <div class="scan-result-box" style="margin-top:8px"><span class="sr-label">URL</span><span class="sr-val" id="ss-url-val" style="font-size:11px;word-break:break-all">In attesa…</span></div>
+    <div id="ss-form" style="display:none;margin-top:12px">
+      <div class="form-grid">
+        <div class="fg"><label>Fornitore</label><input type="text" id="ss-fornitore" placeholder="es. Bio Optica, Roche…"></div>
+        <div class="fg"><label>Nome prodotto</label><input type="text" id="ss-prodotto" placeholder="es. Eosina G (opzionale)"></div>
+        <div class="fg full"><label>Collega a prodotto in magazzino</label>
+          <select id="ss-link-prod"><option value="">Nessun collegamento</option></select>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeSchedaScanModal()">Chiudi</button>
+      <button class="btn btn-primary" id="ss-save-btn" style="display:none" onclick="saveSchedaTecnica()">💾 Salva scheda</button>
+    </div>
+  </div>
+</div>
+
 <!-- ══════════════════════════════
      MODAL: PRODOTTO
 ══════════════════════════════ -->
@@ -677,7 +794,7 @@ select option{background:var(--bg3)}
           <option>Coloranti</option><option>Consumabili</option><<option>Lame</option><option>Altro</option>
         </select></div>
       <div class="fg"><label>Fornitore</label><input type="text" id="f-fornitore" placeholder="es. Dako, Leica…"></div>
-      <div class="fg"><label>Codice / Barcode</label><input type="text" id="f-barcode" placeholder="Barcode prodotto"></div>
+      <div class="fg full"><label>Codici scansionabili</label><input type="text" id="f-barcode" placeholder="Barcode, QR, GS1 — separati da virgola se più di uno"></div>
       <div class="fg"><label>Numero Lotto</label><input type="text" id="f-lotto" placeholder="es. LOT2024001"></div>
       <div class="fg"><label>Data Scadenza</label><input type="date" id="f-scadenza"></div>
       <div class="fg"><label>Quantità Attuale *</label><input type="number" id="f-qty" placeholder="0" min="0"></div>
@@ -868,18 +985,74 @@ select option{background:var(--bg3)}
 // ══════════════════════════════════════════
 const SUPA_URL = 'https://vaxiuupqxdrgpldgweuw.supabase.co';
 const SUPA_KEY = 'sb_publishable_mWRTRNJwcIRcEIYLtJqJ5A_YvdM9iYH';
-const SUPA_OK  = SUPA_URL.startsWith('https://') && SUPA_KEY.length > 20;
+const SUPA_OK = SUPA_URL.startsWith('https://') && SUPA_KEY.length > 20;
+let IS_ONLINE = navigator.onLine;
+const LS_QUEUE = 'ls_sync_queue';
+
+// Rileva cambio connessione
+window.addEventListener('online',  ()=>{ IS_ONLINE=true;  updateSyncStatus('sync'); flushQueue(); });
+window.addEventListener('offline', ()=>{ IS_ONLINE=false; updateSyncStatus('offline'); updateQueueBadge(); });
 
 function updateSyncStatus(state){
   const el=document.getElementById('sync-status'); if(!el) return;
-  const map={ok:['☁ Sync','var(--green)','Sincronizzato'],sync:['↻ Sync…','var(--yellow)','In sync…'],err:['⚠ Offline','var(--red)','Offline — solo locale'],off:['⬡ Locale','var(--text3)','Supabase non configurato']};
+  const q=loadQueue().length;
+  const map={
+    ok:     ['☁ Sync','var(--green)','Sincronizzato'],
+    sync:   ['↻ Sync…','var(--yellow)','In sync…'],
+    err:    ['⚠ Errore','var(--red)','Errore sync'],
+    offline:['📵 Offline'+(q?' ('+q+' in coda)':''),'var(--orange)','Offline — modifiche in coda'],
+    off:    ['⬡ Locale','var(--text3)','Supabase non configurato']
+  };
   const s=map[state]||map.off; el.textContent=s[0]; el.style.color=s[1]; el.title=s[2];
+}
+
+// ── CODA OFFLINE ──
+function loadQueue(){ return JSON.parse(localStorage.getItem(LS_QUEUE)||'[]'); }
+function saveQueue(q){ localStorage.setItem(LS_QUEUE,JSON.stringify(q)); updateQueueBadge(); }
+function updateQueueBadge(){
+  if(!IS_ONLINE) updateSyncStatus('offline');
+}
+function enqueue(op){
+  const q=loadQueue(); q.push({...op,ts:Date.now()}); saveQueue(q);
+  updateSyncStatus('offline');
+}
+
+// Invia tutto quando torna online
+async function flushQueue(){
+  if(!SUPA_OK||!IS_ONLINE) return;
+  const q=loadQueue(); if(!q.length){ updateSyncStatus('ok'); return; }
+  updateSyncStatus('sync');
+  // Invece di eseguire op per op, pushiamo lo stato corrente di ogni tabella
+  const failed=[];
+  try{
+    const prods=JSON.parse(localStorage.getItem(LS_P)||'[]');
+    const movs=JSON.parse(localStorage.getItem(LS_M)||'[]');
+    const W=JSON.parse(localStorage.getItem(LS_W)||'{}');
+    const ords=JSON.parse(localStorage.getItem('ls_ordini')||'[]');
+    const wlog=JSON.parse(localStorage.getItem(LS_WL)||'[]');
+    // Sync prodotti: upsert tutto
+    if(prods.length) await supaFetch('products','POST',prods,'?on_conflict=id');
+    // Sync movimenti nuovi (ultimi 20)
+    if(movs.length) await supaFetch('movements','POST',movs.slice(0,20),'?on_conflict=id');
+    // Sync waste
+    await supaFetch('waste_state','DELETE',null,'?id=eq.waste_state');
+    if(Object.keys(W).length) await supaFetch('waste_state','POST',[{id:'waste_state',data:W}],'?on_conflict=id');
+    // Sync ordini
+    if(ords.length) await supaFetch('ordini','POST',ords,'?on_conflict=id');
+    // Sync archivio ordini
+    const arch=JSON.parse(localStorage.getItem(LS_ARCH)||'[]');
+    if(arch.length) await supaFetch('archivio_ordini','POST',arch,'?on_conflict=id');
+    saveQueue([]);
+    updateSyncStatus('ok');
+    toast('✅ '+q.length+' modifica/he sincronizzata/e','success');
+  }catch(e){ updateSyncStatus('err'); }
 }
 
 async function supaFetch(table,method='GET',body=null,query=''){
   if(!SUPA_OK) return null;
+  if(!IS_ONLINE && method!=='GET') return null; // offline: non tentare write
   try{
-    const res=await fetch(`${SUPA_URL}/rest/v1/${table}${query}`,{
+    const res=await fetch(SUPA_URL+'/rest/v1/'+table+query,{
       method, body:body?JSON.stringify(body):undefined,
       headers:{'Content-Type':'application/json','apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,'Prefer':'return=representation'}
     });
@@ -893,26 +1066,22 @@ const LS_P='ls_products', LS_M='ls_movements', LS_W='ls_waste', LS_WL='ls_waste_
 
 const loadP=()=>JSON.parse(localStorage.getItem(LS_P)||'[]');
 async function saveP(arr, deletedId){
-  // 1. Salva SEMPRE in localStorage prima di tutto
   localStorage.setItem(LS_P,JSON.stringify(arr));
   if(!SUPA_OK) return;
+  if(!IS_ONLINE){ enqueue({type:'products'}); return; }
   updateSyncStatus('sync');
   try{
-    // Se c'è un prodotto eliminato, cancellalo puntualmente
     if(deletedId) await supaFetch('products','DELETE',null,'?id=eq.'+deletedId);
-    // Upsert dell'array corrente (mai delete-all per evitare perdita dati)
     if(arr.length) await supaFetch('products','POST',arr,'?on_conflict=id');
     updateSyncStatus('ok');
-  }catch(e){
-    updateSyncStatus('err');
-    // NON sovrascrivere localStorage: i dati locali sono la fonte di verità
-  }
+  }catch(e){ enqueue({type:'products'}); }
 }
 
 const loadM=()=>JSON.parse(localStorage.getItem(LS_M)||'[]');
 function saveM(arr){
   localStorage.setItem(LS_M,JSON.stringify(arr));
   if(!SUPA_OK||!arr.length) return;
+  if(!IS_ONLINE){ enqueue({type:'movements'}); return; }
   supaFetch('movements','POST',[arr[0]],'?on_conflict=id');
 }
 
@@ -942,7 +1111,7 @@ function setVuoti(W, key, val){
 async function saveW(obj){
   localStorage.setItem(LS_W,JSON.stringify(obj));
   if(!SUPA_OK) return;
-  // DELETE + upsert per garantire che il cloud rispecchi lo stato attuale
+  if(!IS_ONLINE){ enqueue({type:'waste'}); return; }
   await supaFetch('waste_state','DELETE',null,'?id=eq.waste_state');
   await supaFetch('waste_state','POST',[{id:'waste_state',data:obj}],'?on_conflict=id');
 }
@@ -950,9 +1119,10 @@ async function saveW(obj){
 const loadWL=()=>JSON.parse(localStorage.getItem(LS_WL)||'[]');
 async function saveWL(arr){
   localStorage.setItem(LS_WL,JSON.stringify(arr));
-  if(!SUPA_OK) return;
-  await supaFetch('waste_log','DELETE',null,'?id=neq.____');
-  if(arr.length) await supaFetch('waste_log','POST',arr,'?on_conflict=id');
+  if(!SUPA_OK||!arr.length) return;
+  if(!IS_ONLINE){ enqueue({type:'waste'}); return; }
+  // Upsert solo nuovi movimenti (no delete-all)
+  if(arr.length) await supaFetch('waste_log','POST',arr.slice(0,5),'?on_conflict=id');
 }
 
 const genId=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
@@ -970,16 +1140,22 @@ async function initialSync(){
       supaFetch('ordini','GET',null,'?order=creato.desc&limit=200'),
       supaFetch('archivio_ordini','GET',null,'?order=creato.desc&limit=500')
     ]);
-    // Sempre sovrascrive localStorage con i dati del cloud (anche se vuoti)
-    // Sovrascrive solo se Supabase ha dati — protegge da perdita in caso di errore rete
-    if(prods&&prods.length) localStorage.setItem(LS_P, JSON.stringify(prods));
-    else if(prods&&prods.length===0){
-      // Supabase vuoto ma localStorage ha dati: ricarica da locale (sync non distruttivo)
-      const local=JSON.parse(localStorage.getItem(LS_P)||'[]');
-      if(local.length) await supaFetch('products','POST',local,'?on_conflict=id');
+    // Strategia: il locale è sempre la fonte di verità
+    // Supabase viene usato solo per caricare dati su un dispositivo nuovo/pulito
+    const localP=JSON.parse(localStorage.getItem(LS_P)||'[]');
+    if(localP.length>0){
+      // Ho dati locali: sono la fonte di verità, push su Supabase
+      await supaFetch('products','POST',localP,'?on_conflict=id');
+      // Non sovrascrivere localStorage con Supabase
+    } else if(prods&&prods.length){
+      // Nessun dato locale (primo accesso o dispositivo pulito): scarica da Supabase
+      localStorage.setItem(LS_P, JSON.stringify(prods));
     }
     if(movs&&movs.length) localStorage.setItem(LS_M, JSON.stringify(movs));
-    if(wRows&&wRows.length) localStorage.setItem(LS_W, JSON.stringify(wRows[0].data)); // cloud ha dati, usa quelli
+    // Waste: usa cloud solo se locale è ai valori di default (vuoto/primo accesso)
+    const localW=JSON.parse(localStorage.getItem(LS_W)||'{}');
+    const isDefaultW=!localW.cer_180103||localW.cer_180103.pieni===0;
+    if(wRows&&wRows.length&&isDefaultW) localStorage.setItem(LS_W, JSON.stringify(wRows[0].data));
     localStorage.setItem(LS_WL, JSON.stringify(wlog||[]));
     localStorage.setItem('ls_ordini', JSON.stringify(ordini||[]));
     localStorage.setItem(LS_ARCH, JSON.stringify(arch||[]));
@@ -995,9 +1171,8 @@ async function initialSync(){
   }catch(e){ updateSyncStatus('err'); }
 }
 
-// Polling ogni 30s + rientro tab
-setInterval(()=>{ if(document.visibilityState==='visible') initialSync(); },30000);
-document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible') initialSync(); });
+// Al rientro nella tab: sync solo se online (push locale → cloud, non cloud → locale)
+document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible'&&IS_ONLINE) flushQueue(); });
 
 
 const CAT_ICON={Reagenti:'🧪',IHC:'🔬',Vetrini:'🪟',Cassette:'📁',Coloranti:'🎨',Consumabili:'🧤','Kit Diagnostici':'🧰',Lame:'⚔',Altro:'📌'};
@@ -1083,6 +1258,7 @@ function showView(v){
   if(v==='ordini'){ buildProdDatalist(); renderOrdini(); }
   if(v==='report') renderReport();
   if(v==='archivio') renderArchivio();
+  if(v==='schede') renderSchede();
 }
 function goCategory(cat){
   invFilter=cat; subFilter='all';
@@ -1612,7 +1788,7 @@ async function saveRifiuto(){
   const W=loadW(); W[tipo].pieni+=qty;
   // if already disposed
   if(dataSmalt){ W[tipo].pieni=Math.max(0,W[tipo].pieni-qty); W[tipo].smaltiti+=qty; }
-  saveW(W);
+  await saveW(W);
   const wl=loadWL();
   wl.unshift({id:genId(),ts:new Date().toISOString(),tipo,azione:dataSmalt?'smaltito':'pieno',qty,note});
   saveWL(wl);
@@ -1842,9 +2018,13 @@ function confirmDDT(){
     const g=f=>row.querySelector(`[data-f="${f}"]`)?.value?.trim()||'';
     const nome=g('nome'); if(!nome) return;
     const qty=parseFloat(g('qty'))||1, cat=g('cat')||'Altro', lotto=g('lotto'), scadenza=g('scadenza'), unita=g('unita')||'pz';
-    let ex=prods.find(p=>p.nome.toLowerCase()===nome.toLowerCase());
-    if(ex){ ex.qty+=qty; if(lotto) ex.lotto=lotto; if(scadenza) ex.scadenza=scadenza; }
-    else prods.push({id:genId(),nome,cat,fornitore:'',barcode:'',lotto,scadenza,qty,unita,min:0,pos:'',note:''});
+    let ex=prods.find(p=>p.nome.toLowerCase()===nome.toLowerCase()&&p.lotto===lotto);
+    if(!ex) ex=prods.find(p=>p.nome.toLowerCase()===nome.toLowerCase());
+    if(ex){ ex.qty+=qty; if(lotto) ex.lotto=lotto; if(scadenza) ex.scadenza=scadenza;
+      if(ex.qty_init===undefined) ex.qty_init=qty;
+    } else {
+      prods.push({id:genId(),nome,cat,fornitore:'',barcode:'',lotto,scadenza,qty,qty_init:qty,unita,min:0,pos:'',note:''});
+    }
     movs.unshift({id:genId(),ts:new Date().toISOString(),tipo:'carico',prod:nome,prodId:ex?.id||'',qty,lotto,note:'Da DDT'}); count++;
   });
   saveP(prods); saveM(movs); closeDDTModal();
@@ -1958,7 +2138,10 @@ function handleScannedCode(code){
   if(!code) return;
   document.getElementById('scan-code-val').textContent=code;
   const prods=loadP();
-  matchedProd=prods.find(p=>p.barcode===code||p.nome.toLowerCase()===code.toLowerCase());
+  // Cerca per barcode, lotto, o nome (supporta GS1-128 con lotto embedded)
+  matchedProd=prods.find(p=>p.barcode===code)
+    ||prods.find(p=>p.lotto&&code.includes(p.lotto)&&p.lotto.length>=4)
+    ||prods.find(p=>p.nome.toLowerCase()===code.toLowerCase());
   if(matchedProd){
     document.getElementById('bc-match-info').innerHTML=`<strong>${matchedProd.nome}</strong><br>Qtà: <strong>${matchedProd.qty} ${matchedProd.unita||''}</strong>${matchedProd.lotto?' · Lotto: '+matchedProd.lotto:''}${matchedProd.scadenza?' · Scad: '+fmtDate(matchedProd.scadenza):''}`;
     document.getElementById('bc-match').style.display='block';
@@ -1977,7 +2160,9 @@ function confirmBarcodeScario(){
   if(!matchedProd) return;
   const qty=parseFloat(document.getElementById('bc-qty').value)||1;
   if(matchedProd.qty<qty){ toast('Quantità insufficiente','error'); return; }
-  const prods=loadP(), p=prods.find(x=>x.id===matchedProd.id); p.qty-=qty; saveP(prods);
+  const prods=loadP(), p=prods.find(x=>x.id===matchedProd.id);
+  if(!p){ toast('Prodotto non trovato','error'); return; }
+  p.qty-=qty; saveP(prods);
   const movs=loadM(); movs.unshift({id:genId(),ts:new Date().toISOString(),tipo:'scarico',prod:p.nome,prodId:p.id,qty,lotto:p.lotto||'',note:document.getElementById('bc-note').value||'Scarico barcode'}); saveM(movs);
   closeBarcodeModal();
   if(currentView==='inventario') renderInv();
@@ -1988,18 +2173,292 @@ function confirmBarcodeScario(){
 function addFromBarcode(){ closeBarcodeModal(); document.getElementById('f-barcode').value=lastCode||''; openAddModal(); }
 
 
+
+// ══════════════════════════════════════════
+// GS1-128 PARSER
+// ══════════════════════════════════════════
+function parseGS1(code){
+  // Decodifica codici GS1-128: estrae GTIN (01), lotto (10), scadenza (17)
+  const result={gtin:'',lotto:'',scadenza:'',nome:''};
+  try{
+    let i=0;
+    while(i<code.length){
+      const ai2=code.substr(i,2), ai3=code.substr(i,3);
+      if(ai2==='01'&&code.length-i>=16){ result.gtin=code.substr(i+2,14); i+=16; }
+      else if(ai2==='10'){ // lotto: lunghezza variabile, fino a 20 chars o FNC1
+        i+=2; let lot='';
+        while(i<code.length&&lot.length<20&&code[i]!==''){ lot+=code[i]; i++; }
+        result.lotto=lot;
+      }
+      else if(ai2==='17'&&code.length-i>=8){ // scadenza AAMMGG
+        const raw=code.substr(i+2,6);
+        const y='20'+raw.slice(0,2), m=raw.slice(2,4), d=raw.slice(4,6);
+        result.scadenza=y+'-'+m+'-'+d; i+=8;
+      }
+      else if(ai2==='11'&&code.length-i>=8){ i+=8; } // data produzione
+      else if(ai2==='21'){ i+=2; while(i<code.length&&code[i]!==''&&code.substr(i-20,20).split('').filter(x=>x!=='').length<20) i++; }
+      else { i++; } // salta byte non riconosciuto
+    }
+  }catch(e){}
+  return result;
+}
+
+function isUrl(s){ return s&&(s.startsWith('http://')||s.startsWith('https://')); }
+
+// ══════════════════════════════════════════
+// CARICO DA SCAN
+// ══════════════════════════════════════════
+let csScanReader=null, csMatchedId=null;
+
+function openCaricaScanModal(){
+  csMatchedId=null;
+  ['cs-found','cs-new'].forEach(id=>document.getElementById(id).style.display='none');
+  ['cs-confirm-found','cs-confirm-new'].forEach(id=>document.getElementById(id).style.display='none');
+  document.getElementById('cs-code-val').textContent='In attesa…';
+  document.getElementById('cs-manual-code').value='';
+  document.getElementById('modal-carico-scan').classList.add('open');
+  startCSScan();
+}
+function closeCaricaScanModal(){
+  if(csScanReader){ try{csScanReader.reset();}catch(e){} csScanReader=null; }
+  closeModal('modal-carico-scan');
+}
+async function startCSScan(){
+  try{
+    const ZXing=window.ZXing; if(!ZXing) throw new Error();
+    csScanReader=new ZXing.BrowserMultiFormatReader();
+    const devs=await ZXing.BrowserCodeReader.listVideoInputDevices();
+    const devId=devs.length>1?devs[devs.length-1].deviceId:undefined;
+    csScanReader.decodeFromVideoDevice(devId,'cs-video',(result,err)=>{
+      if(result){ const code=result.getText(); processCaricaScan(code); }
+    });
+  }catch(e){
+    document.getElementById('cs-video-wrap').innerHTML='<p style="padding:12px;color:var(--text2);font-size:13px;text-align:center">Fotocamera non disponibile — usa il campo manuale sotto.</p>';
+  }
+}
+
+function processCaricaScan(code){
+  if(!code) return;
+  if(csScanReader){ try{csScanReader.reset();}catch(e){} csScanReader=null; } // stop scan
+  document.getElementById('cs-code-val').textContent=code.length>60?code.slice(0,60)+'…':code;
+
+  // Se è un URL → scheda tecnica
+  if(isUrl(code)){
+    closeCaricaScanModal();
+    processSchedaUrl(code);
+    openSchedaScanModal(code);
+    return;
+  }
+
+  // Decodifica GS1
+  const gs1=parseGS1(code);
+  const prods=loadP();
+
+  // Cerca per codice esatto, poi lotto, poi GTIN
+  let found=prods.find(p=>{
+    if(!p.barcode) return false;
+    return p.barcode.split(',').map(x=>x.trim()).some(b=>b===code||b===gs1.gtin);
+  });
+  if(!found&&gs1.lotto) found=prods.find(p=>p.lotto===gs1.lotto);
+
+  if(found){
+    // Prodotto trovato — mostra info e chiedi qty
+    csMatchedId=found.id;
+    document.getElementById('cs-found-info').innerHTML=
+      '<strong>'+found.nome+'</strong><br>'+
+      'Lotto: <span style="font-family:DM Mono,monospace">'+( found.lotto||'—')+'</span> · '+
+      'Scadenza: '+(found.scadenza?fmtDate(found.scadenza):'—')+'<br>'+
+      'Qtà attuale: <span style="color:var(--green);font-weight:600">'+found.qty+'</span> '+( found.unita||'');
+    document.getElementById('cs-found').style.display='';
+    document.getElementById('cs-new').style.display='none';
+    document.getElementById('cs-confirm-found').style.display='';
+    document.getElementById('cs-confirm-new').style.display='none';
+    document.getElementById('cs-qty').value='1';
+    document.getElementById('cs-note').value='';
+  } else {
+    // Nuovo prodotto — form precompilato
+    csMatchedId=null;
+    document.getElementById('cs-nome').value=gs1.gtin?'GTIN:'+gs1.gtin:'';
+    document.getElementById('cs-lotto').value=gs1.lotto||'';
+    document.getElementById('cs-scadenza').value=gs1.scadenza||'';
+    document.getElementById('cs-codici').value=code;
+    document.getElementById('cs-cat').value='';
+    document.getElementById('cs-fornitore').value='';
+    document.getElementById('cs-qty-new').value='1';
+    document.getElementById('cs-found').style.display='none';
+    document.getElementById('cs-new').style.display='';
+    document.getElementById('cs-confirm-found').style.display='none';
+    document.getElementById('cs-confirm-new').style.display='';
+  }
+}
+
+function confirmCaricaScanFound(){
+  if(!csMatchedId){ toast('Nessun prodotto selezionato','error'); return; }
+  const qty=parseFloat(document.getElementById('cs-qty').value)||1;
+  const note=document.getElementById('cs-note').value;
+  const prods=loadP(), p=prods.find(x=>x.id===csMatchedId);
+  if(!p){ toast('Prodotto non trovato','error'); return; }
+  p.qty+=qty;
+  if(p.qty_init===undefined) p.qty_init=qty;
+  saveP(prods);
+  const movs=loadM();
+  movs.unshift({id:genId(),ts:new Date().toISOString(),tipo:'carico',prod:p.nome,prodId:p.id,qty,lotto:p.lotto||'',note:note||'Carico da scan'});
+  saveM(movs);
+  closeCaricaScanModal();
+  if(currentView==='inventario') renderInv();
+  if(currentView==='dashboard') renderDashboard();
+  if(currentView==='movimenti') renderMovimenti();
+  toast('Carico: '+p.nome+' +'+qty,'success');
+}
+
+function confirmCaricaScanNew(){
+  const nome=document.getElementById('cs-nome').value.trim();
+  const cat=document.getElementById('cs-cat').value;
+  if(!nome||!cat){ toast('Nome e categoria obbligatori','error'); return; }
+  const qty=parseFloat(document.getElementById('cs-qty-new').value)||1;
+  const p={
+    id:genId(), nome, cat,
+    fornitore:document.getElementById('cs-fornitore').value.trim(),
+    barcode:document.getElementById('cs-codici').value.trim(),
+    lotto:document.getElementById('cs-lotto').value.trim(),
+    scadenza:document.getElementById('cs-scadenza').value,
+    qty, qty_init:qty,
+    unita:document.getElementById('cs-unita').value.trim()||'pz',
+    min:0, pos:'', note:''
+  };
+  const prods=loadP(); prods.push(p); saveP(prods);
+  const movs=loadM();
+  movs.unshift({id:genId(),ts:new Date().toISOString(),tipo:'carico',prod:p.nome,prodId:p.id,qty,lotto:p.lotto||'',note:'Carico da scan — nuovo prodotto'});
+  saveM(movs);
+  closeCaricaScanModal();
+  if(currentView==='inventario') renderInv();
+  if(currentView==='dashboard') renderDashboard();
+  toast('Nuovo prodotto salvato: '+p.nome,'success');
+}
+
+// ══════════════════════════════════════════
+// SCHEDE TECNICHE
+// ══════════════════════════════════════════
+const LS_SCHEDE='ls_schede_tecniche';
+const loadSchede=()=>JSON.parse(localStorage.getItem(LS_SCHEDE)||'[]');
+function saveSchede(arr){ localStorage.setItem(LS_SCHEDE,JSON.stringify(arr)); }
+
+let ssScanReader=null, ssCurrentUrl=null;
+
+function openSchedaScanModal(preUrl){
+  ssCurrentUrl=preUrl||null;
+  document.getElementById('ss-url-val').textContent=preUrl||'In attesa…';
+  document.getElementById('ss-form').style.display=preUrl?'':'none';
+  document.getElementById('ss-save-btn').style.display=preUrl?'':'none';
+  document.getElementById('ss-manual-url').value=preUrl||'';
+  // Popola select prodotti
+  const sel=document.getElementById('ss-link-prod');
+  sel.innerHTML='<option value="">Nessun collegamento</option>';
+  loadP().forEach(p=>{ const o=document.createElement('option'); o.value=p.id; o.textContent=p.nome+(p.lotto?' ('+p.lotto+')':''); sel.appendChild(o); });
+  if(preUrl) prefillSchedaFornitore(preUrl);
+  document.getElementById('modal-scheda-scan').classList.add('open');
+  if(!preUrl) startSSScan();
+}
+function closeSchedaScanModal(){
+  if(ssScanReader){ try{ssScanReader.reset();}catch(e){} ssScanReader=null; }
+  const v=document.getElementById('ss-video'); if(v&&v.srcObject){ v.srcObject.getTracks().forEach(t=>t.stop()); v.srcObject=null; }
+  closeModal('modal-scheda-scan');
+}
+async function startSSScan(){
+  try{
+    const ZXing=window.ZXing; if(!ZXing) throw new Error();
+    ssScanReader=new ZXing.BrowserMultiFormatReader();
+    const devs=await ZXing.BrowserCodeReader.listVideoInputDevices();
+    const devId=devs.length>1?devs[devs.length-1].deviceId:undefined;
+    ssScanReader.decodeFromVideoDevice(devId,'ss-video',(result,err)=>{
+      if(result){ const url=result.getText(); if(isUrl(url)) processSchedaUrl(url); }
+    });
+  }catch(e){
+    document.getElementById('ss-video-wrap').innerHTML='<p style="padding:12px;color:var(--text2);font-size:13px;text-align:center">Fotocamera non disponibile — incolla URL sotto.</p>';
+  }
+}
+function processSchedaUrl(url){
+  if(!isUrl(url)){ toast('Non è un URL valido','error'); return; }
+  if(ssScanReader){ try{ssScanReader.reset();}catch(e){} ssScanReader=null; }
+  ssCurrentUrl=url;
+  document.getElementById('ss-url-val').textContent=url.length>70?url.slice(0,70)+'…':url;
+  document.getElementById('ss-form').style.display='';
+  document.getElementById('ss-save-btn').style.display='';
+  prefillSchedaFornitore(url);
+  // Apri anche la pagina in un nuovo tab
+  window.open(url,'_blank','noopener');
+}
+function prefillSchedaFornitore(url){
+  const known={'bio-optica.it':'Bio Optica','roche.com':'Roche','ventana.com':'Ventana','epredia.com':'Epredia','labfor.it':'LabFor'};
+  for(const [domain,name] of Object.entries(known)){
+    if(url.includes(domain)){ document.getElementById('ss-fornitore').value=name; break; }
+  }
+}
+function saveSchedaTecnica(){
+  if(!ssCurrentUrl){ toast('Nessun URL da salvare','error'); return; }
+  const scheda={
+    id:genId(),
+    url:ssCurrentUrl,
+    fornitore:document.getElementById('ss-fornitore').value.trim()||'Altro',
+    prodotto:document.getElementById('ss-prodotto').value.trim(),
+    prodId:document.getElementById('ss-link-prod').value,
+    data:new Date().toISOString()
+  };
+  const schede=loadSchede(); schede.unshift(scheda); saveSchede(schede);
+  closeSchedaScanModal();
+  if(currentView==='schede') renderSchede();
+  toast('Scheda tecnica salvata','success');
+}
+function deleteScheda(id){
+  if(!confirm('Eliminare questa scheda?')) return;
+  saveSchede(loadSchede().filter(s=>s.id!==id));
+  renderSchede(); toast('Scheda eliminata','info');
+}
+
+function renderSchede(){
+  let schede=loadSchede();
+  const forn=[...new Set(schede.map(s=>s.fornitore))].sort();
+  const sel=document.getElementById('schede-filter-forn');
+  const cur=sel.value;
+  sel.innerHTML='<option value="">Tutti i fornitori</option>'+forn.map(f=>'<option value="'+f+'"'+(f===cur?' selected':'')+'>'+f+'</option>').join('');
+  if(cur) schede=schede.filter(s=>s.fornitore===cur);
+  const container=document.getElementById('schede-list');
+  if(!schede.length){ container.innerHTML='<div class="empty"><div class="e-ico">📋</div><p>Nessuna scheda tecnica salvata</p><p style="font-size:13px;color:var(--text3);margin-top:6px">Scansiona il QR del produttore per aggiungerla</p></div>'; return; }
+  // Raggruppa per fornitore
+  const byForn={};
+  schede.forEach(s=>{ if(!byForn[s.fornitore]) byForn[s.fornitore]=[]; byForn[s.fornitore].push(s); });
+  const prods=loadP();
+  container.innerHTML=Object.entries(byForn).map(([forn,items])=>`
+    <div class="card" style="margin-bottom:14px">
+      <div style="font-weight:700;font-size:15px;margin-bottom:10px;color:var(--accent)">${forn} <span style="font-size:12px;color:var(--text3);font-weight:400">(${items.length} schede)</span></div>
+      ${items.map(s=>{
+        const prod=s.prodId?prods.find(p=>p.id===s.prodId):null;
+        const sid=s.id;
+        return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">
+          <div style="flex:1">
+            <div style="font-weight:500;font-size:13px">${s.prodotto||'Scheda tecnica'}</div>
+            ${prod?'<div style="font-size:11px;color:var(--text3)">Collegata a: '+prod.nome+'</div>':''}
+            <div style="font-size:11px;color:var(--text3);margin-top:2px">${new Date(s.data).toLocaleDateString('it-IT')}</div>
+          </div>
+          <a href="${s.url}" target="_blank" rel="noopener" class="btn btn-sm btn-primary">🔗 Apri</a>
+          <button class="btn btn-sm btn-danger" onclick="deleteScheda('${sid}')">✕</button>
+        </div>`;
+      }).join('')}
+    </div>`).join('');
+}
 // ══════════════════════════════════════════
 // ARCHIVIO ORDINI
 // ══════════════════════════════════════════
 const LS_ARCH='ls_archivio_ordini';
 const loadArch=()=>JSON.parse(localStorage.getItem(LS_ARCH)||'[]');
-async function saveArch(arr){
+async function saveArch(arr, deletedId){
   localStorage.setItem(LS_ARCH,JSON.stringify(arr));
   if(!SUPA_OK) return;
+  if(!IS_ONLINE){ enqueue({type:'archivio'}); return; }
   try{
-    await supaFetch('archivio_ordini','DELETE',null,'?id=neq.____');
+    if(deletedId) await supaFetch('archivio_ordini','DELETE',null,'?id=eq.'+deletedId);
     if(arr.length) await supaFetch('archivio_ordini','POST',arr,'?on_conflict=id');
-  }catch(e){}
+  }catch(e){ enqueue({type:'archivio'}); }
 }
 
 let archCamStream=null, archBase64=null;
@@ -2167,7 +2626,7 @@ function renderArchivio(){
 }
 function deleteArchivioOrdine(id){
   if(!confirm('Eliminare questo ordine dall\'archivio?')) return;
-  const arch=loadArch().filter(o=>o.id!==id); saveArch(arch); renderArchivio();
+  const arch=loadArch().filter(o=>o.id!==id); saveArch(arch,id); renderArchivio();
   toast('Ordine eliminato','info');
 }
 // ══════════════════════════════════════════
@@ -2274,6 +2733,8 @@ document.addEventListener('keydown',e=>{
   if(e.key==='Escape'){
     if(document.getElementById('modal-ddt').classList.contains('open')) closeDDTModal();
     else if(document.getElementById('modal-scarica').classList.contains('open')) closeScaricaModal();
+    else if(document.getElementById('modal-carico-scan').classList.contains('open')) closeCaricaScanModal();
+    else if(document.getElementById('modal-scheda-scan').classList.contains('open')) closeSchedaScanModal();
     else document.querySelectorAll('.modal-overlay.open').forEach(m=>m.classList.remove('open'));
   }
 });
@@ -2354,11 +2815,14 @@ function precompileOrdine(prodId){
 // ══════════════════════════════════════════
 const LS_ORD = 'ls_ordini';
 const loadOrd = () => JSON.parse(localStorage.getItem(LS_ORD)||'[]');
-async function saveOrd(arr){
+async function saveOrd(arr, deletedId){
   localStorage.setItem(LS_ORD, JSON.stringify(arr));
   if(!SUPA_OK) return;
-  await supaFetch('ordini','DELETE',null,'?id=neq.____');
-  if(arr.length) await supaFetch('ordini','POST',arr,'?on_conflict=id');
+  if(!IS_ONLINE){ enqueue({type:'ordini'}); return; }
+  try{
+    if(deletedId) await supaFetch('ordini','DELETE',null,'?id=eq.'+deletedId);
+    if(arr.length) await supaFetch('ordini','POST',arr,'?on_conflict=id');
+  }catch(e){ enqueue({type:'ordini'}); }
 }
 
 let ordiniFilter = 'all';
