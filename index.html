@@ -269,6 +269,7 @@ select option{background:var(--bg3)}
     <!-- Azioni tracciabilità -->
     <button class="btn btn-primary" onclick="openNuovoCampione()">＋ Campione</button>
     <button class="btn btn-primary" onclick="openNuovoCampioneSpec('pap_l')" style="background:var(--orange);border-color:var(--orange)">＋ Pap L</button>
+    <button class="btn btn-primary" onclick="openNuovoCampioneSpec('pap_priv')" style="background:var(--purple);border-color:var(--purple)">＋ Pap Priv.</button>
     <!-- Azioni magazzino -->
     <button class="btn btn-ok" onclick="openCaricaScanModal()">⬆ Carico</button>
     <button class="btn btn-warn" onclick="openScaricaModal()">⬇ Scarico</button>
@@ -577,6 +578,7 @@ select option{background:var(--bg3)}
           <button class="f-btn" onclick="setTraccFilter('citologia',this)">Citologia</button>
           <button class="f-btn" onclick="setTraccFilter('pap',this)">Pap</button>
           <button class="f-btn" onclick="setTraccFilter('pap_l',this)">Pap LupoLab</button>
+          <button class="f-btn" onclick="setTraccFilter('pap_priv',this)">Pap Privato</button>
         </div>
       </div>
       <!-- Ricerca -->
@@ -609,12 +611,7 @@ select option{background:var(--bg3)}
       <div class="page-sub" id="color-stats"></div>
       <div style="display:flex;gap:7px;margin-bottom:14px;flex-wrap:wrap;align-items:center">
         <button class="btn btn-primary" onclick="openNuovoColoratore()">＋ Nuovo Ciclo</button>
-        <div class="filter-bar" style="margin:0" id="color-filter-bar">
-          <button class="f-btn active" onclick="setColorFilter('all',this)">Tutti</button>
-          <button class="f-btn" onclick="setColorFilter('EE',this)">EE</button>
-          <button class="f-btn" onclick="setColorFilter('EE_CIT',this)">EE Cit.</button>
-          <button class="f-btn" onclick="setColorFilter('PAP',this)">PAP</button>
-        </div>
+
         <input type="date" id="color-filter-from" onchange="renderColoratore()" style="max-width:140px" title="Da">
         <input type="date" id="color-filter-to" onchange="renderColoratore()" style="max-width:140px" title="A">
         <div class="search-wrap"><span class="s-ico">🔍</span><input type="text" id="color-search" placeholder="Cerca per ID caso o lotto…" oninput="renderColoratore()"></div>
@@ -865,51 +862,49 @@ select option{background:var(--bg3)}
 </div>
 
 <!-- ══════════════════════════════
-     MODAL: COLORATORE
+     MODAL: COLORATORE (registro giornaliero)
 ══════════════════════════════ -->
 <div class="modal-overlay" id="modal-coloratore">
-  <div class="modal" style="width:600px;max-height:92vh;overflow-y:auto">
-    <div class="modal-title" id="color-modal-title">Nuovo Ciclo Coloratore</div>
+  <div class="modal" style="width:560px;max-height:92vh;overflow-y:auto">
+    <div class="modal-title" id="color-modal-title">Registro Giornaliero Coloratore</div>
     <input type="hidden" id="color-edit-id">
 
     <div style="background:var(--bg3);border-radius:var(--r);padding:12px;margin-bottom:14px">
-      <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px">Informazioni ciclo</div>
       <div class="form-grid">
-        <div class="fg" style="margin:0"><label>Data *</label><input type="date" id="color-data"></div>
-        <div class="fg" style="margin:0"><label>Protocollo *</label>
-          <select id="color-protocollo-reg" onchange="updateColorReagentiDefault()">
-            <option value="EE">EE — Ematossilina Eosina</option>
-            <option value="EE_CIT">EE Citologia</option>
-            <option value="PAP">Papanicolau</option>
-          </select>
+        <div class="fg full" style="margin:0"><label>Data *</label><input type="date" id="color-data"></div>
+        <div class="fg full" style="margin:0"><label>Note</label><input type="text" id="color-note" placeholder="Note generali sul giorno…"></div>
+      </div>
+    </div>
+
+    <!-- CICLI PER TIPO -->
+    <div style="background:var(--bg3);border-radius:var(--r);padding:12px;margin-bottom:14px">
+      <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px">N° cicli per tipo</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+        <div style="text-align:center;background:var(--bg2);border-radius:8px;padding:12px;border:1px solid var(--border)">
+          <div style="font-size:11px;color:var(--blue);font-weight:600;margin-bottom:6px">EE — Istologia</div>
+          <input type="number" id="color-cicli-ee" min="0" value="0" style="width:70px;text-align:center;font-family:DM Mono,monospace;font-size:22px;font-weight:700;border:none;background:transparent;color:var(--blue)">
+          <div style="font-size:10px;color:var(--text3)">cicli</div>
         </div>
-        <div class="fg" style="margin:0"><label>Ora inizio</label><input type="time" id="color-ora-inizio"></div>
-        <div class="fg" style="margin:0"><label>Ora fine</label><input type="time" id="color-ora-fine"></div>
-        <div class="fg full" style="margin:0"><label>Note</label><input type="text" id="color-note" placeholder="Note sul ciclo…"></div>
+        <div style="text-align:center;background:var(--bg2);border-radius:8px;padding:12px;border:1px solid var(--border)">
+          <div style="font-size:11px;color:var(--teal);font-weight:600;margin-bottom:6px">EE — Citologia</div>
+          <input type="number" id="color-cicli-ee-cit" min="0" value="0" style="width:70px;text-align:center;font-family:DM Mono,monospace;font-size:22px;font-weight:700;border:none;background:transparent;color:var(--teal)">
+          <div style="font-size:10px;color:var(--text3)">cicli</div>
+        </div>
+        <div style="text-align:center;background:var(--bg2);border-radius:8px;padding:12px;border:1px solid var(--border)">
+          <div style="font-size:11px;color:var(--purple);font-weight:600;margin-bottom:6px">PAP LupoLab</div>
+          <input type="number" id="color-cicli-pap" min="0" value="0" style="width:70px;text-align:center;font-family:DM Mono,monospace;font-size:22px;font-weight:700;border:none;background:transparent;color:var(--purple)">
+          <div style="font-size:10px;color:var(--text3)">cicli</div>
+        </div>
       </div>
     </div>
 
-    <!-- RANGE CASI -->
+    <!-- REAGENTI CAMBIATI/RABBOCCATI -->
     <div style="background:var(--bg3);border-radius:var(--r);padding:12px;margin-bottom:14px">
-      <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">Range casi colorati</div>
-      <div style="display:flex;gap:8px;margin-bottom:8px">
-        <input type="text" id="color-caso-from" placeholder="Da (es. 2764/26)" style="flex:1;font-family:DM Mono,monospace">
-        <span style="align-self:center;color:var(--text3)">→</span>
-        <input type="text" id="color-caso-to" placeholder="A (es. 2800/26)" style="flex:1;font-family:DM Mono,monospace">
-        <button class="btn btn-sm btn-primary" onclick="addRangeCasiColor()">＋ Range</button>
-      </div>
-      <div style="display:flex;gap:8px;margin-bottom:8px">
-        <input type="text" id="color-caso-singolo" placeholder="Oppure aggiungi singolo ID…" style="flex:1;font-family:DM Mono,monospace" onkeydown="if(event.key==='Enter') addCasoSingoloColor()">
-        <button class="btn btn-sm btn-ok" onclick="addCasoSingoloColor()">＋</button>
-      </div>
-      <div id="color-casi-list" style="display:flex;flex-wrap:wrap;gap:5px;min-height:32px;padding:6px;background:var(--bg2);border:1px solid var(--border);border-radius:6px"></div>
-      <div style="font-size:11px;color:var(--text3);margin-top:4px">N° casi: <span id="color-casi-count" style="font-weight:600;color:var(--accent)">0</span></div>
-    </div>
-
-    <!-- REAGENTI COLORATORE -->
-    <div style="background:var(--bg3);border-radius:var(--r);padding:12px;margin-bottom:14px">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-        <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.8px">Reagenti utilizzati</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <div>
+          <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.8px">Reagenti cambiati/rabboccati</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:2px">Solo se modificati oggi</div>
+        </div>
         <button class="btn btn-sm btn-primary" onclick="addReagenteColor()">＋ Reagente</button>
       </div>
       <div id="color-reagenti-list"></div>
@@ -946,6 +941,7 @@ select option{background:var(--bg3)}
             <option value="citologia">Citologia</option>
             <option value="pap">Pap test</option>
             <option value="pap_l">Pap LupoLab</option>
+            <option value="pap_priv">Pap Privato</option>
           </select>
         </div>
         <div class="fg" style="margin:0">
@@ -3113,7 +3109,7 @@ async function deleteProcCiclo(id){
 }
 
 // ══════════════════════════════════════════
-// COLORATORE
+// COLORATORE — Registro giornaliero
 // ══════════════════════════════════════════
 const LS_COLOR_REG = 'ls_coloratore';
 const loadColoratore = () => JSON.parse(localStorage.getItem(LS_COLOR_REG)||'[]');
@@ -3127,106 +3123,35 @@ async function saveColoratoreReg(arr, deletedId){
   }catch(e){ enqueue({type:'coloratore'}); }
 }
 
-// Reagenti per protocollo coloratore
-const COLOR_REAGENTI_MAP = {
-  EE:     ['eosina','ematossilina','harris','hematoxyl','xilene','alcool 95','alcoolpath 95','alcool 100','alcoolpath 100'],
-  EE_CIT: ['eosina','ematossilina','harris','hematoxyl','xilene','alcool 95','alcoolpath 95','alcool 100','alcoolpath 100'],
-  PAP:    ['ea50','og6','papanicolau og','papanicolau ea','ematossilina harris','harris','mayer','xilene','alcool 95','alcoolpath 95','alcool 100','alcoolpath 100'],
-};
-
-let colorCasiList = [];
-let colorFilterVal = 'all';
-
-function setColorFilter(f,btn){
-  colorFilterVal=f;
-  document.querySelectorAll('#color-filter-bar .f-btn').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-  renderColoratore();
-}
-
 function openNuovoColoratore(preset){
-  colorCasiList = preset?.casi||[];
   document.getElementById('color-edit-id').value = preset?.id||'';
-  document.getElementById('color-modal-title').textContent = preset ? 'Modifica Ciclo Coloratore' : 'Nuovo Ciclo Coloratore';
+  document.getElementById('color-modal-title').textContent = preset ? 'Modifica Registro Coloratore' : 'Registro Giornaliero Coloratore';
   document.getElementById('color-data').value = preset?.data||new Date().toISOString().slice(0,10);
-  document.getElementById('color-protocollo-reg').value = preset?.protocollo||'EE';
-  document.getElementById('color-ora-inizio').value = preset?.ora_inizio||'';
-  document.getElementById('color-ora-fine').value = preset?.ora_fine||'';
   document.getElementById('color-note').value = preset?.note||'';
-  document.getElementById('color-caso-from').value='';
-  document.getElementById('color-caso-to').value='';
-  document.getElementById('color-caso-singolo').value='';
-  renderColorCasiList();
+  document.getElementById('color-cicli-ee').value = preset?.cicli_ee||0;
+  document.getElementById('color-cicli-ee-cit').value = preset?.cicli_ee_cit||0;
+  document.getElementById('color-cicli-pap').value = preset?.cicli_pap||0;
   const rl = document.getElementById('color-reagenti-list');
   rl.innerHTML='';
-  if(preset?.reagenti?.length){ preset.reagenti.forEach(r=>addReagenteColor(r)); }
-  else { updateColorReagentiDefault(); }
+  (preset?.reagenti||[]).forEach(r=>addReagenteColor(r));
   document.getElementById('modal-coloratore').classList.add('open');
 }
 
-function updateColorReagentiDefault(){
-  const proto = document.getElementById('color-protocollo-reg').value;
-  const keywords = COLOR_REAGENTI_MAP[proto]||[];
-  const prods = loadP().filter(p=>{
-    const n=(p.nome||'').toLowerCase();
-    return keywords.some(k=>n.includes(k));
-  });
-  const rl = document.getElementById('color-reagenti-list');
-  rl.innerHTML='';
-  prods.forEach(p=>addReagenteColor({prodId:p.id,lotto:p.lotto,scadenza:p.scadenza}));
-}
-
-function renderColorCasiList(){
-  const el = document.getElementById('color-casi-list');
-  el.innerHTML = colorCasiList.map((id,i)=>`
-    <span style="display:inline-flex;align-items:center;gap:4px;background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:3px 7px;font-family:DM Mono,monospace;font-size:12px">
-      ${id}<button onclick="removeCasoColor(${i})" style="background:none;border:none;cursor:pointer;color:var(--red);font-size:11px;padding:0 0 0 3px">✕</button>
-    </span>`).join('');
-  document.getElementById('color-casi-count').textContent = colorCasiList.length;
-}
-
-function addRangeCasiColor(){
-  const from = document.getElementById('color-caso-from').value.trim();
-  const to = document.getElementById('color-caso-to').value.trim();
-  if(!from){ toast('Inserisci almeno il caso iniziale','error'); return; }
-  if(!to){ colorCasiList.push(from); }
-  else {
-    const parseId = s => { const m=s.match(/^(\d+)\//); return m?parseInt(m[1]):null; };
-    const anno = from.includes('/')? from.split('/')[1] : '';
-    const nFrom = parseId(from), nTo = parseId(to);
-    if(nFrom&&nTo&&nTo>=nFrom){
-      for(let n=nFrom;n<=nTo;n++) colorCasiList.push(n+'/'+anno);
-    } else { colorCasiList.push(from); if(to) colorCasiList.push(to); }
-  }
-  document.getElementById('color-caso-from').value='';
-  document.getElementById('color-caso-to').value='';
-  renderColorCasiList();
-}
-
-function addCasoSingoloColor(){
-  const v = document.getElementById('color-caso-singolo').value.trim();
-  if(!v) return;
-  colorCasiList.push(v);
-  document.getElementById('color-caso-singolo').value='';
-  renderColorCasiList();
-}
-
-function removeCasoColor(i){ colorCasiList.splice(i,1); renderColorCasiList(); }
-
 function addReagenteColor(preset){
   const prods = loadP();
-  const proto = document.getElementById('color-protocollo-reg').value;
-  const keywords = COLOR_REAGENTI_MAP[proto]||[];
-  const filtered = prods.filter(p=>{ const n=(p.nome||'').toLowerCase(); return keywords.some(k=>n.includes(k)); });
-  const all_opts = prods.map(p=>`<option value="${p.id}" ${preset&&preset.prodId===p.id?'selected':''}>${p.nome} [${p.lotto||'—'}]</option>`).join('');
+  const allOpts = prods.map(p=>`<option value="${p.id}" ${preset&&preset.prodId===p.id?'selected':''}>${p.nome} [${p.lotto||'—'}]</option>`).join('');
   const div = document.createElement('div');
   div.className = 'reagente-usato-row';
   div.innerHTML = `
     <select style="flex:2" onchange="updateReagLottoGeneric(this)">
-      <option value="">Seleziona…</option>${all_opts}
+      <option value="">Seleziona reagente…</option>${allOpts}
     </select>
     <span class="reag-lotto" style="font-family:DM Mono,monospace;font-size:11px;color:var(--text2);min-width:70px">${preset?.lotto||'—'}</span>
     <span class="reag-scad" style="font-size:11px;color:var(--text3);min-width:80px">${preset?.scadenza?fmtDate(preset.scadenza):'—'}</span>
+    <select class="reag-stato" style="width:110px">
+      <option value="cambiato" ${preset?.stato==='cambiato'?'selected':''}>Cambiato</option>
+      <option value="rabboccato" ${preset?.stato==='rabboccato'?'selected':''}>Rabboccato</option>
+    </select>
     <button class="btn btn-sm btn-danger" onclick="this.closest('.reagente-usato-row').remove()">✕</button>`;
   document.getElementById('color-reagenti-list').appendChild(div);
   if(preset?.prodId){ const sel=div.querySelector('select'); sel.value=preset.prodId; updateReagLottoGeneric(sel); }
@@ -3236,25 +3161,24 @@ async function saveColoratore(){
   const data = document.getElementById('color-data').value;
   if(!data){ toast('Data obbligatoria','error'); return; }
   const editId = document.getElementById('color-edit-id').value;
-  const ciclo = {
+  const registro = {
     id: editId||genId(),
     data,
-    protocollo: document.getElementById('color-protocollo-reg').value,
-    ora_inizio: document.getElementById('color-ora-inizio').value,
-    ora_fine: document.getElementById('color-ora-fine').value,
     note: document.getElementById('color-note').value.trim(),
-    casi: [...colorCasiList],
+    cicli_ee:     parseInt(document.getElementById('color-cicli-ee').value)||0,
+    cicli_ee_cit: parseInt(document.getElementById('color-cicli-ee-cit').value)||0,
+    cicli_pap:    parseInt(document.getElementById('color-cicli-pap').value)||0,
     reagenti: getReagentiList('color-reagenti-list'),
     modificato: new Date().toISOString()
   };
-  if(!editId) ciclo.creato = new Date().toISOString();
+  if(!editId) registro.creato = new Date().toISOString();
   const arr = loadColoratore();
-  if(editId){ const i=arr.findIndex(x=>x.id===editId); if(i>=0) arr[i]=ciclo; else arr.unshift(ciclo); }
-  else arr.unshift(ciclo);
+  if(editId){ const i=arr.findIndex(x=>x.id===editId); if(i>=0) arr[i]=registro; else arr.unshift(registro); }
+  else arr.unshift(registro);
   await saveColoratoreReg(arr);
   closeModal('modal-coloratore');
   renderColoratore();
-  toast('Ciclo coloratore salvato','success');
+  toast('Registro coloratore salvato','success');
 }
 
 function renderColoratore(){
@@ -3262,47 +3186,66 @@ function renderColoratore(){
   const q = (document.getElementById('color-search')?.value||'').toLowerCase();
   const from = document.getElementById('color-filter-from')?.value;
   const to = document.getElementById('color-filter-to')?.value;
-  if(colorFilterVal!=='all') arr=arr.filter(x=>x.protocollo===colorFilterVal);
   if(from) arr=arr.filter(x=>x.data>=from);
   if(to) arr=arr.filter(x=>x.data<=to);
-  if(q) arr=arr.filter(x=>(x.casi||[]).some(c=>c.toLowerCase().includes(q))||(x.reagenti||[]).some(r=>(r.lotto||'').toLowerCase().includes(q)));
+  if(q) arr=arr.filter(x=>(x.reagenti||[]).some(r=>(r.lotto||'').toLowerCase().includes(q)||(r.nome||'').toLowerCase().includes(q)));
 
-  document.getElementById('color-stats').textContent = loadColoratore().length+' cicli totali';
+  const totEE = arr.reduce((s,x)=>s+(x.cicli_ee||0),0);
+  const totCit = arr.reduce((s,x)=>s+(x.cicli_ee_cit||0),0);
+  const totPap = arr.reduce((s,x)=>s+(x.cicli_pap||0),0);
+  document.getElementById('color-stats').textContent =
+    arr.length+' giorni · EE: '+totEE+' cicli · EE-Cit: '+totCit+' cicli · PAP: '+totPap+' cicli';
+
   const el = document.getElementById('color-list');
-  if(!arr.length){ el.innerHTML='<div class="empty"><div class="e-ico">🎨</div><p>Nessun ciclo registrato</p></div>'; return; }
+  if(!arr.length){ el.innerHTML='<div class="empty"><div class="e-ico">🎨</div><p>Nessun registro</p></div>'; return; }
 
-  const protoLabel = {EE:'EE — Ematossilina Eosina',EE_CIT:'EE Citologia',PAP:'Papanicolau'};
-  const protoColor = {EE:'var(--blue)',EE_CIT:'var(--teal)',PAP:'var(--purple)'};
-  el.innerHTML = arr.map(ciclo=>`
-    <div class="campione-card" style="margin-bottom:10px">
-      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:8px">
+  el.innerHTML = arr.map(reg=>{
+    const totCicli = (reg.cicli_ee||0)+(reg.cicli_ee_cit||0)+(reg.cicli_pap||0);
+    return `<div class="campione-card" style="margin-bottom:10px">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:10px">
         <div>
-          <div style="font-weight:700;font-size:15px;color:${protoColor[ciclo.protocollo]||'var(--accent)'}">🎨 ${protoLabel[ciclo.protocollo]||ciclo.protocollo}</div>
-          <div style="font-size:12px;color:var(--text3)">${fmtDate(ciclo.data)}${ciclo.ora_inizio?' · '+ciclo.ora_inizio+(ciclo.ora_fine?' → '+ciclo.ora_fine:''):''}</div>
+          <div style="font-weight:700;font-size:15px;color:var(--accent)">🎨 ${fmtDate(reg.data)}</div>
+          <div style="font-size:12px;color:var(--text3);margin-top:2px">${totCicli} cicli totali</div>
         </div>
-        <div style="display:flex;gap:5px;align-items:center">
-          <span style="font-family:DM Mono,monospace;font-size:14px;font-weight:700;color:var(--green)">${(ciclo.casi||[]).length} casi</span>
-          <button class="btn btn-sm" onclick="openNuovoColoratore(loadColoratore().find(x=>x.id==='${ciclo.id}'))">✎</button>
-          <button class="btn btn-sm btn-danger" onclick="deleteColorCiclo('${ciclo.id}')">✕</button>
+        <div style="display:flex;gap:5px">
+          <button class="btn btn-sm" onclick="openNuovoColoratore(loadColoratore().find(x=>x.id==='${reg.id}'))">✎</button>
+          <button class="btn btn-sm btn-danger" onclick="deleteColorCiclo('${reg.id}')">✕</button>
         </div>
       </div>
-      <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px">
-        ${(ciclo.casi||[]).map(id=>`<span style="background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:2px 7px;font-family:DM Mono,monospace;font-size:11px">${id}</span>`).join('')}
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:${reg.reagenti?.length?'10px':'0'}">
+        <div style="text-align:center;background:var(--bg3);border-radius:6px;padding:8px">
+          <div style="font-size:10px;color:var(--blue);font-weight:600">EE Istologia</div>
+          <div style="font-family:DM Mono,monospace;font-size:22px;font-weight:700;color:var(--blue)">${reg.cicli_ee||0}</div>
+          <div style="font-size:10px;color:var(--text3)">cicli</div>
+        </div>
+        <div style="text-align:center;background:var(--bg3);border-radius:6px;padding:8px">
+          <div style="font-size:10px;color:var(--teal);font-weight:600">EE Citologia</div>
+          <div style="font-family:DM Mono,monospace;font-size:22px;font-weight:700;color:var(--teal)">${reg.cicli_ee_cit||0}</div>
+          <div style="font-size:10px;color:var(--text3)">cicli</div>
+        </div>
+        <div style="text-align:center;background:var(--bg3);border-radius:6px;padding:8px">
+          <div style="font-size:10px;color:var(--purple);font-weight:600">PAP LupoLab</div>
+          <div style="font-family:DM Mono,monospace;font-size:22px;font-weight:700;color:var(--purple)">${reg.cicli_pap||0}</div>
+          <div style="font-size:10px;color:var(--text3)">cicli</div>
+        </div>
       </div>
-      ${ciclo.reagenti?.length?`<div style="border-top:1px solid var(--border);padding-top:7px">
-        <div style="font-size:11px;color:var(--text3);margin-bottom:5px;font-weight:600">Reagenti:</div>
+      ${reg.reagenti?.length?`<div style="border-top:1px solid var(--border);padding-top:8px">
+        <div style="font-size:11px;color:var(--text3);margin-bottom:5px;font-weight:600">Reagenti modificati:</div>
         <div style="display:flex;flex-wrap:wrap;gap:6px">
-          ${ciclo.reagenti.map(r=>`<span style="font-size:11px;background:rgba(106,32,144,.08);border:1px solid rgba(106,32,144,.2);border-radius:4px;padding:2px 8px"><strong>${r.nome}</strong> · <span style="font-family:DM Mono,monospace">${r.lotto||'—'}</span>${r.scadenza?' · '+fmtDate(r.scadenza):''}</span>`).join('')}
+          ${reg.reagenti.map(r=>`<span style="font-size:11px;background:rgba(106,32,144,.08);border:1px solid rgba(106,32,144,.2);border-radius:4px;padding:2px 8px">
+            <strong>${r.nome}</strong> · <span style="font-family:DM Mono,monospace">${r.lotto||'—'}</span> · ${r.stato||''}
+          </span>`).join('')}
         </div>
       </div>`:''}
-      ${ciclo.note?`<div style="font-size:12px;color:var(--text2);margin-top:6px;font-style:italic">${ciclo.note}</div>`:''}
-    </div>`).join('');
+      ${reg.note?`<div style="font-size:12px;color:var(--text2);margin-top:6px;font-style:italic">${reg.note}</div>`:''}
+    </div>`;
+  }).join('');
 }
 
 async function deleteColorCiclo(id){
-  if(!confirm('Eliminare questo ciclo?')) return;
+  if(!confirm('Eliminare questo registro?')) return;
   await saveColoratoreReg(loadColoratore().filter(x=>x.id!==id), id);
-  renderColoratore(); toast('Ciclo eliminato','info');
+  renderColoratore(); toast('Registro eliminato','info');
 }
 // ══════════════════════════════════════════
 // TRACCIABILITÀ CAMPIONI
@@ -3336,13 +3279,16 @@ function getNextId(tipo){
   const anno = new Date().getFullYear().toString().slice(-2);
   const campioni = loadCampioni();
   if(tipo === 'pap_l'){
+    // Numerazione separata con L finale
     const pap_l = campioni.filter(c=>c.tipo==='pap_l');
     const maxN = pap_l.reduce((m,c)=>{
-      const n = parseInt((c.campione_id||'').split('/')[0])||0;
+      const raw=(c.campione_id||'').replace('L','');
+      const n = parseInt(raw.split('/')[0])||0;
       return Math.max(m,n);
     },0);
     return (maxN+1) + '/' + anno + 'L';
   } else {
+    // Tutti gli altri (istologia, citologia, pap, pap_priv) condividono la numerazione progressiva
     const normali = campioni.filter(c=>c.tipo!=='pap_l');
     const maxN = normali.reduce((m,c)=>{
       const n = parseInt((c.campione_id||'').split('/')[0])||0;
@@ -3599,7 +3545,7 @@ function renderTracciabilita(){
     return;
   }
 
-  const tipoColor = {istologia:'var(--blue)',citologia:'var(--teal)',pap:'var(--purple)',pap_l:'var(--orange)'};
+  const tipoColor = {istologia:'var(--blue)',citologia:'var(--teal)',pap:'var(--purple)',pap_l:'var(--orange)',pap_priv:'var(--red)'};
   const tipoLabel = {istologia:'Istologia',citologia:'Citologia',pap:'Pap',pap_l:'Pap LupoLab'};
   const protLabel = {EE:'EE',EE_CIT:'EE-Cit',PAP:'PAP',IHC:'IHC',GIEM:'Giemsa',PAS:'PAS',RET:'Reticolo',ALTRO:'Altro'};
 
@@ -3632,7 +3578,7 @@ function openDetailCampione(id){
   if(!c) return;
   detailCampioneId = id;
   document.getElementById('detail-title').textContent = '🧬 '+c.campione_id;
-  const tipoLabel = {istologia:'Istologia',citologia:'Citologia',pap:'Pap test',pap_l:'Pap LupoLab'};
+  const tipoLabel = {istologia:'Istologia',citologia:'Citologia',pap:'Pap test',pap_l:'Pap LupoLab',pap_priv:'Pap Privato'};
   const protLabel = {EE:'EE Routine',EE_CIT:'EE Citologia',PAP:'Papanicolau',IHC:'IHC Ventana',GIEM:'Giemsa',PAS:'PAS',RET:'Reticolo argentico',ALTRO:'Altra'};
   const metodoLabel = {EE:'Coloratore auto',EE_CIT:'Coloratore auto',PAP:'Coloratore auto',IHC:'Ventana',GIEM:'Manuale',PAS:'Manuale',RET:'Manuale'};
 
