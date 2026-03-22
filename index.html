@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>LabStore — Magazzino Anatomia Patologica</title>
+<title>LupoLab — Anatomia Patologica</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Cormorant+Garamond:wght@600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/@zxing/library@0.19.1/umd/index.min.js"></script>
 <style>
@@ -51,6 +51,8 @@ header{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 20p
 /* NAV */
 .nav-lbl{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:1.2px;padding:10px 14px 3px}
 .nav-item{display:flex;align-items:center;gap:8px;padding:7px 14px;color:var(--text2);cursor:pointer;font-size:13px;font-weight:500;border-left:2px solid transparent;transition:all .12s;user-select:none}
+#mag-submenu .nav-item,#cat-submenu .nav-item{padding-left:24px;font-size:12px}
+#mag-submenu,#cat-submenu{transition:all .2s}
 .nav-item:hover{color:var(--text);background:rgba(255,255,255,.03)}
 .nav-item.active{color:var(--accent);border-left-color:var(--accent2);background:rgba(107,140,204,.08)}
 .nav-icon{font-size:14px;width:17px;text-align:center;flex-shrink:0}
@@ -228,7 +230,25 @@ select option{background:var(--bg3)}
 /* SPARKLINE */
 .sparkline-wrap{padding:12px 0}
 ::-webkit-scrollbar{width:5px;height:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
-@media print{header,.sidebar,.btn,.filter-bar,.card-act,.hdr-act{display:none!important}.main{padding:0}.layout{display:block}body{background:#fff;color:#000}}
+/* TRACCIABILITÀ */
+.campione-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:14px;margin-bottom:10px;cursor:pointer;transition:all .15s}
+.campione-card:hover{border-color:var(--accent2);transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,0,0,.15)}
+.campione-id{font-family:'DM Mono',monospace;font-size:18px;font-weight:700;color:var(--accent)}
+.campione-tipo{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-top:2px}
+.fase-step{display:flex;gap:12px;margin-bottom:8px;align-items:flex-start}
+.fase-dot{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;margin-top:2px}
+.fase-dot.done{background:rgba(26,122,74,.15);color:var(--green);border:2px solid var(--green)}
+.fase-dot.active{background:rgba(74,140,204,.15);color:var(--blue);border:2px solid var(--blue)}
+.fase-dot.pending{background:var(--bg3);color:var(--text3);border:2px solid var(--border)}
+.fase-content{flex:1}
+.fase-title{font-weight:600;font-size:13px}
+.fase-sub{font-size:11px;color:var(--text3);margin-top:2px}
+.pezzo-row{display:flex;gap:8px;align-items:center;padding:6px 10px;background:var(--bg3);border-radius:6px;margin-bottom:4px}
+.pezzo-label{font-family:'DM Mono',monospace;font-weight:700;font-size:14px;min-width:28px}
+.frammento-chip{display:inline-flex;align-items:center;justify-content:center;width:32px;height:28px;background:var(--bg2);border:1px solid var(--border);border-radius:5px;font-family:'DM Mono',monospace;font-size:11px;font-weight:600;cursor:pointer}
+.frammento-chip.done{background:rgba(26,122,74,.1);border-color:var(--green);color:var(--green)}
+.reagente-usato-row{display:flex;gap:8px;align-items:center;padding:7px 10px;border:1px solid var(--border);border-radius:6px;margin-bottom:5px;background:var(--bg3)}
+@media print{@media print{header,.sidebar,.btn,.filter-bar,.card-act,.hdr-act{display:none!important}.main{padding:0}.layout{display:block}body{background:#fff;color:#000}}
 @media(max-width:800px){.sidebar{display:none}.stats-grid{grid-template-columns:repeat(2,1fr)}.waste-grid{grid-template-columns:1fr}.prod-grid{grid-template-columns:repeat(auto-fill,minmax(160px,1fr))}#home-panels{grid-template-columns:1fr!important}}
 </style>
   <script>
@@ -243,46 +263,74 @@ select option{background:var(--bg3)}
 </head>
 <body>
 <header>
-  <div class="logo">LabStore <span class="logo-badge">AP</span></div>
-  <div class="hdr-act"><button class="btn" onclick="showView('dashboard')" style="font-weight:600">🏠 Home</button><button class="btn" id="sync-status" onclick="forceSync()" style="font-size:12px;font-family:DM Mono,monospace" title="Clicca per sincronizzare">⬡ Locale</button>
-    <button class="btn" onclick="exportCSV()">⬇ CSV</button>
-    <button class="btn btn-ok" onclick="openDDTModal()">📷 DDT</button>
-    <button class="btn btn-ok" onclick="openCaricaScanModal()">⬆ Carico Scan</button>
+  <div class="logo">LupoLab <span class="logo-badge">AP</span></div>
+  <div class="hdr-act">
+    <button class="btn" id="sync-status" onclick="forceSync()" style="font-size:12px;font-family:DM Mono,monospace" title="Clicca per sincronizzare">⬡ Locale</button>
+    <!-- Azioni tracciabilità -->
+    <button class="btn btn-primary" onclick="openNuovoCampione()">＋ Campione</button>
+    <button class="btn btn-primary" onclick="openNuovoCampioneSpec('pap_l')" style="background:var(--orange);border-color:var(--orange)">＋ Pap L</button>
+    <!-- Azioni magazzino -->
+    <button class="btn btn-ok" onclick="openCaricaScanModal()">⬆ Carico</button>
     <button class="btn btn-warn" onclick="openScaricaModal()">⬇ Scarico</button>
-    <button class="btn btn-waste" onclick="showView('rifiuti')">🗑 Rifiuti</button>
+    <button class="btn btn-ok" onclick="openDDTModal()">📷 DDT</button>
+    <button class="btn" onclick="exportCSV()" title="Esporta CSV magazzino">CSV</button>
     <button class="btn btn-primary" onclick="openAddModal()">＋ Prodotto</button>
   </div>
 </header>
 
 <div class="layout">
   <nav class="sidebar">
-    <div class="nav-lbl">Menu</div>
-    <div class="nav-item active" onclick="showView('dashboard')" id="nav-dashboard"><span class="nav-icon">🏠</span>Home</div>
-    <div class="nav-item" onclick="showView('inventario')" id="nav-inventario"><span class="nav-icon">📦</span>Inventario</div>
-    <div class="nav-item" onclick="showView('movimenti')" id="nav-movimenti"><span class="nav-icon">↕</span>Movimenti</div>
-    <div class="nav-item" onclick="showView('rifiuti')" id="nav-rifiuti"><span class="nav-icon">🗑</span>Rifiuti</div>
-    <div class="nav-item" onclick="showView('allerte')" id="nav-allerte"><span class="nav-icon">🚨</span>Allerte</div>
-    <div class="nav-item" onclick="showView('ordini')" id="nav-ordini"><span class="nav-icon">🛒</span>Ordini</div>
-    <div class="nav-item" onclick="showView('report')" id="nav-report"><span class="nav-icon">📋</span>Report Mensile</div>
-    <div class="nav-item" onclick="showView('archivio')" id="nav-archivio"><span class="nav-icon">🗂</span>Archivio Ordini</div>
-    <div class="nav-item" onclick="showView('schede')" id="nav-schede"><span class="nav-icon">📋</span>Schede Tecniche</div>
+    <!-- TRACCIABILITÀ — sezione principale -->
+    <div class="nav-lbl">Tracciabilità</div>
+    <div class="nav-item active" onclick="showView('tracciabilita')" id="nav-tracciabilita"><span class="nav-icon">🧬</span>Campioni</div>
+    <div class="nav-item" onclick="showView('processatore')" id="nav-processatore"><span class="nav-icon">⚗️</span>Processatore</div>
+    <div class="nav-item" onclick="showView('coloratore')" id="nav-coloratore"><span class="nav-icon">🎨</span>Coloratore</div>
+    <div class="nav-item" onclick="showView('dashboard')" id="nav-dashboard"><span class="nav-icon">🏠</span>Dashboard</div>
+
     <div class="nav-div"></div>
-    <div class="nav-lbl">Categorie</div>
-    <div class="nav-item" onclick="goCategory('Reagenti')"><span class="nav-icon">🧪</span>Reagenti</div>
-    <div class="nav-item" onclick="goCategory('IHC')"><span class="nav-icon">🔬</span>IHC</div>
-    <div class="nav-item" onclick="goCategory('Vetrini')"><span class="nav-icon">🪟</span>Vetrini</div>
-    <div class="nav-item" onclick="goCategory('Cassette')"><span class="nav-icon">📁</span>Cassette</div>
-    <div class="nav-item" onclick="goCategory('Coloranti')"><span class="nav-icon">🎨</span>Coloranti</div>
-    <div class="nav-item" onclick="goCategory('Consumabili')"><span class="nav-icon">🧤</span>Consumabili</div>
-    <div class="nav-item" onclick="goCategory('Kit Colorazioni')"><span class="nav-icon">🔬</span>Kit Colorazioni</div>
-    <div class="nav-item" onclick="goCategory('Lame')"><span class="nav-icon">⚔</span>Lame</div>
-    <div class="nav-item" onclick="goCategory('Altro')"><span class="nav-icon">📌</span>Altro</div>
+
+    <!-- MAGAZZINO — sezione secondaria collassabile -->
+    <div class="nav-lbl" onclick="toggleMagazzino()" style="cursor:pointer;display:flex;align-items:center;justify-content:space-between;padding-right:14px">
+      <span>📦 Magazzino</span><span id="mag-arrow">▾</span>
+    </div>
+    <div id="mag-submenu">
+      <div class="nav-item" onclick="showView('inventario')" id="nav-inventario"><span class="nav-icon">📋</span>Inventario</div>
+      <div class="nav-item" onclick="showView('movimenti')" id="nav-movimenti"><span class="nav-icon">↕</span>Movimenti</div>
+      <div class="nav-item" onclick="showView('allerte')" id="nav-allerte"><span class="nav-icon">🚨</span>Allerte</div>
+      <div class="nav-item" onclick="showView('ordini')" id="nav-ordini"><span class="nav-icon">🛒</span>Ordini</div>
+      <div class="nav-item" onclick="showView('archivio')" id="nav-archivio"><span class="nav-icon">🗂</span>Arch. Ordini</div>
+      <div class="nav-item" onclick="showView('schede')" id="nav-schede"><span class="nav-icon">📋</span>Schede Tecniche</div>
+    </div>
+
+    <div class="nav-div"></div>
+
+    <!-- RIFIUTI e REPORT -->
+    <div class="nav-item" onclick="showView('rifiuti')" id="nav-rifiuti"><span class="nav-icon">🗑</span>Rifiuti</div>
+    <div class="nav-item" onclick="showView('report')" id="nav-report"><span class="nav-icon">📊</span>Report</div>
+
+    <div class="nav-div"></div>
+
+    <!-- CATEGORIE MAGAZZINO -->
+    <div class="nav-lbl" onclick="toggleCategorie()" style="cursor:pointer;display:flex;align-items:center;justify-content:space-between;padding-right:14px">
+      <span>Categorie</span><span id="cat-arrow">▾</span>
+    </div>
+    <div id="cat-submenu">
+      <div class="nav-item" onclick="goCategory('Reagenti')"><span class="nav-icon">🧪</span>Reagenti</div>
+      <div class="nav-item" onclick="goCategory('IHC')"><span class="nav-icon">🔬</span>IHC</div>
+      <div class="nav-item" onclick="goCategory('Vetrini')"><span class="nav-icon">🪟</span>Vetrini</div>
+      <div class="nav-item" onclick="goCategory('Cassette')"><span class="nav-icon">📁</span>Cassette</div>
+      <div class="nav-item" onclick="goCategory('Coloranti')"><span class="nav-icon">🎨</span>Coloranti</div>
+      <div class="nav-item" onclick="goCategory('Consumabili')"><span class="nav-icon">🧤</span>Consumabili</div>
+      <div class="nav-item" onclick="goCategory('Kit Colorazioni')"><span class="nav-icon">🔬</span>Kit Color.</div>
+      <div class="nav-item" onclick="goCategory('Lame')"><span class="nav-icon">⚔</span>Lame</div>
+      <div class="nav-item" onclick="goCategory('Altro')"><span class="nav-icon">📌</span>Altro</div>
+    </div>
   </nav>
 
   <main class="main">
 
     <!-- ══════ HOME ══════ -->
-    <div class="view active" id="view-dashboard">
+    <div class="view" id="view-dashboard">
       <div class="page-title">Home</div>
       <div class="page-sub" id="dash-date"></div>
 
@@ -515,6 +563,65 @@ select option{background:var(--bg3)}
       <div id="schede-list"></div>
     </div>
 
+
+    <!-- ══════ TRACCIABILITÀ ══════ -->
+    <div class="view active" id="view-tracciabilita">
+      <div class="page-title">🧬 Tracciabilità Campioni</div>
+      <div class="page-sub" id="tracc-stats"></div>
+      <div style="display:flex;gap:7px;margin-bottom:14px;flex-wrap:wrap;align-items:center">
+        <button class="btn btn-primary" onclick="openNuovoCampione()">＋ Nuovo Campione</button>
+        <button class="btn btn-primary" onclick="openNuovoCampioneSpec('pap_l')">＋ Pap LupoLab</button>
+        <div class="filter-bar" style="margin:0" id="tracc-filter-bar">
+          <button class="f-btn active" onclick="setTraccFilter('all',this)">Tutti</button>
+          <button class="f-btn" onclick="setTraccFilter('istologia',this)">Istologia</button>
+          <button class="f-btn" onclick="setTraccFilter('citologia',this)">Citologia</button>
+          <button class="f-btn" onclick="setTraccFilter('pap',this)">Pap</button>
+          <button class="f-btn" onclick="setTraccFilter('pap_l',this)">Pap LupoLab</button>
+        </div>
+      </div>
+      <!-- Ricerca -->
+      <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+        <div class="search-wrap"><span class="s-ico">🔍</span><input type="text" id="tracc-search" placeholder="Cerca per ID, provenienza…" oninput="renderTracciabilita()"></div>
+        <input type="date" id="tracc-from" onchange="renderTracciabilita()" style="max-width:140px" title="Da">
+        <input type="date" id="tracc-to" onchange="renderTracciabilita()" style="max-width:140px" title="A">
+        <input type="text" id="tracc-search-lotto" placeholder="Cerca per lotto reagente…" oninput="renderTracciabilita()" style="max-width:180px">
+      </div>
+      <div id="tracc-list"></div>
+    </div>
+
+
+    <!-- ══════ PROCESSATORE ══════ -->
+    <div class="view" id="view-processatore">
+      <div class="page-title">⚗️ Registro Processatore</div>
+      <div class="page-sub" id="proc-stats"></div>
+      <div style="display:flex;gap:7px;margin-bottom:14px;flex-wrap:wrap;align-items:center">
+        <button class="btn btn-primary" onclick="openNuovoProcessatore()">＋ Nuovo Ciclo</button>
+        <input type="date" id="proc-filter-from" onchange="renderProcessatore()" style="max-width:140px" title="Da">
+        <input type="date" id="proc-filter-to" onchange="renderProcessatore()" style="max-width:140px" title="A">
+        <div class="search-wrap"><span class="s-ico">🔍</span><input type="text" id="proc-search" placeholder="Cerca per ID caso o lotto…" oninput="renderProcessatore()"></div>
+      </div>
+      <div id="proc-list"></div>
+    </div>
+
+    <!-- ══════ COLORATORE ══════ -->
+    <div class="view" id="view-coloratore">
+      <div class="page-title">🎨 Registro Coloratore</div>
+      <div class="page-sub" id="color-stats"></div>
+      <div style="display:flex;gap:7px;margin-bottom:14px;flex-wrap:wrap;align-items:center">
+        <button class="btn btn-primary" onclick="openNuovoColoratore()">＋ Nuovo Ciclo</button>
+        <div class="filter-bar" style="margin:0" id="color-filter-bar">
+          <button class="f-btn active" onclick="setColorFilter('all',this)">Tutti</button>
+          <button class="f-btn" onclick="setColorFilter('EE',this)">EE</button>
+          <button class="f-btn" onclick="setColorFilter('EE_CIT',this)">EE Cit.</button>
+          <button class="f-btn" onclick="setColorFilter('PAP',this)">PAP</button>
+        </div>
+        <input type="date" id="color-filter-from" onchange="renderColoratore()" style="max-width:140px" title="Da">
+        <input type="date" id="color-filter-to" onchange="renderColoratore()" style="max-width:140px" title="A">
+        <div class="search-wrap"><span class="s-ico">🔍</span><input type="text" id="color-search" placeholder="Cerca per ID caso o lotto…" oninput="renderColoratore()"></div>
+      </div>
+      <div id="color-list"></div>
+    </div>
+
   </main>
 </div>
 
@@ -694,6 +801,215 @@ select option{background:var(--bg3)}
   </div>
 </div>
 
+
+
+
+<!-- ══════════════════════════════
+     MODAL: PROCESSATORE
+══════════════════════════════ -->
+<div class="modal-overlay" id="modal-processatore">
+  <div class="modal" style="width:600px;max-height:92vh;overflow-y:auto">
+    <div class="modal-title" id="proc-modal-title">Nuovo Ciclo Processatore</div>
+    <input type="hidden" id="proc-edit-id">
+
+    <div style="background:var(--bg3);border-radius:var(--r);padding:12px;margin-bottom:14px">
+      <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px">Informazioni ciclo</div>
+      <div class="form-grid">
+        <div class="fg" style="margin:0"><label>Data ciclo *</label><input type="date" id="proc-data"></div>
+        <div class="fg" style="margin:0"><label>Ora inizio</label><input type="time" id="proc-ora-inizio"></div>
+        <div class="fg" style="margin:0"><label>Ora fine</label><input type="time" id="proc-ora-fine"></div>
+        <div class="fg" style="margin:0"><label>Protocollo</label>
+          <select id="proc-protocollo">
+            <option value="standard">Standard notturno</option>
+            <option value="rapido">Rapido</option>
+            <option value="biopsie">Biopsie</option>
+            <option value="altro">Altro</option>
+          </select>
+        </div>
+        <div class="fg full" style="margin:0"><label>Note</label><input type="text" id="proc-note" placeholder="Note sul ciclo…"></div>
+      </div>
+    </div>
+
+    <!-- CASI PROCESSATI -->
+    <div style="background:var(--bg3);border-radius:var(--r);padding:12px;margin-bottom:14px">
+      <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">Casi processati</div>
+      <div style="display:flex;gap:8px;margin-bottom:8px">
+        <input type="text" id="proc-caso-from" placeholder="Da (es. 2764/26)" style="flex:1;font-family:DM Mono,monospace">
+        <span style="align-self:center;color:var(--text3)">→</span>
+        <input type="text" id="proc-caso-to" placeholder="A (es. 2800/26)" style="flex:1;font-family:DM Mono,monospace">
+        <button class="btn btn-sm btn-primary" onclick="addRangeCasiProc()">＋ Range</button>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:8px">
+        <input type="text" id="proc-caso-singolo" placeholder="Oppure aggiungi singolo ID…" style="flex:1;font-family:DM Mono,monospace" onkeydown="if(event.key==='Enter') addCasoSingoloProc()">
+        <button class="btn btn-sm btn-ok" onclick="addCasoSingoloProc()">＋</button>
+      </div>
+      <div id="proc-casi-list" style="display:flex;flex-wrap:wrap;gap:5px;min-height:32px;padding:6px;background:var(--bg2);border:1px solid var(--border);border-radius:6px"></div>
+      <div style="font-size:11px;color:var(--text3);margin-top:4px">N° casi: <span id="proc-casi-count" style="font-weight:600;color:var(--accent)">0</span></div>
+    </div>
+
+    <!-- REAGENTI PROCESSATORE -->
+    <div style="background:var(--bg3);border-radius:var(--r);padding:12px;margin-bottom:14px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.8px">Reagenti processatore</div>
+        <button class="btn btn-sm btn-primary" onclick="addReagenteProc()">＋ Reagente</button>
+      </div>
+      <div style="font-size:11px;color:var(--text3);margin-bottom:8px">Solo se sono stati cambiati/rabboccati</div>
+      <div id="proc-reagenti-list"></div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('modal-processatore')">Annulla</button>
+      <button class="btn btn-primary" onclick="saveProcessatore()">💾 Salva</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════
+     MODAL: COLORATORE
+══════════════════════════════ -->
+<div class="modal-overlay" id="modal-coloratore">
+  <div class="modal" style="width:600px;max-height:92vh;overflow-y:auto">
+    <div class="modal-title" id="color-modal-title">Nuovo Ciclo Coloratore</div>
+    <input type="hidden" id="color-edit-id">
+
+    <div style="background:var(--bg3);border-radius:var(--r);padding:12px;margin-bottom:14px">
+      <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px">Informazioni ciclo</div>
+      <div class="form-grid">
+        <div class="fg" style="margin:0"><label>Data *</label><input type="date" id="color-data"></div>
+        <div class="fg" style="margin:0"><label>Protocollo *</label>
+          <select id="color-protocollo-reg" onchange="updateColorReagentiDefault()">
+            <option value="EE">EE — Ematossilina Eosina</option>
+            <option value="EE_CIT">EE Citologia</option>
+            <option value="PAP">Papanicolau</option>
+          </select>
+        </div>
+        <div class="fg" style="margin:0"><label>Ora inizio</label><input type="time" id="color-ora-inizio"></div>
+        <div class="fg" style="margin:0"><label>Ora fine</label><input type="time" id="color-ora-fine"></div>
+        <div class="fg full" style="margin:0"><label>Note</label><input type="text" id="color-note" placeholder="Note sul ciclo…"></div>
+      </div>
+    </div>
+
+    <!-- RANGE CASI -->
+    <div style="background:var(--bg3);border-radius:var(--r);padding:12px;margin-bottom:14px">
+      <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">Range casi colorati</div>
+      <div style="display:flex;gap:8px;margin-bottom:8px">
+        <input type="text" id="color-caso-from" placeholder="Da (es. 2764/26)" style="flex:1;font-family:DM Mono,monospace">
+        <span style="align-self:center;color:var(--text3)">→</span>
+        <input type="text" id="color-caso-to" placeholder="A (es. 2800/26)" style="flex:1;font-family:DM Mono,monospace">
+        <button class="btn btn-sm btn-primary" onclick="addRangeCasiColor()">＋ Range</button>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:8px">
+        <input type="text" id="color-caso-singolo" placeholder="Oppure aggiungi singolo ID…" style="flex:1;font-family:DM Mono,monospace" onkeydown="if(event.key==='Enter') addCasoSingoloColor()">
+        <button class="btn btn-sm btn-ok" onclick="addCasoSingoloColor()">＋</button>
+      </div>
+      <div id="color-casi-list" style="display:flex;flex-wrap:wrap;gap:5px;min-height:32px;padding:6px;background:var(--bg2);border:1px solid var(--border);border-radius:6px"></div>
+      <div style="font-size:11px;color:var(--text3);margin-top:4px">N° casi: <span id="color-casi-count" style="font-weight:600;color:var(--accent)">0</span></div>
+    </div>
+
+    <!-- REAGENTI COLORATORE -->
+    <div style="background:var(--bg3);border-radius:var(--r);padding:12px;margin-bottom:14px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.8px">Reagenti utilizzati</div>
+        <button class="btn btn-sm btn-primary" onclick="addReagenteColor()">＋ Reagente</button>
+      </div>
+      <div id="color-reagenti-list"></div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('modal-coloratore')">Annulla</button>
+      <button class="btn btn-primary" onclick="saveColoratore()">💾 Salva</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════
+     MODAL: CAMPIONE
+══════════════════════════════ -->
+<div class="modal-overlay" id="modal-campione">
+  <div class="modal" style="width:580px;max-height:92vh;overflow-y:auto">
+    <div class="modal-title" id="campione-modal-title">Nuovo Campione</div>
+    <input type="hidden" id="camp-id-interno">
+
+    <!-- SEZIONE ANAGRAFICA -->
+    <div style="background:var(--bg3);border-radius:var(--r);padding:12px;margin-bottom:14px">
+      <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px">Accettazione</div>
+      <div class="form-grid">
+        <div class="fg" style="margin:0">
+          <label>ID Campione *</label>
+          <input type="text" id="camp-id" placeholder="es. 2764/26" style="font-family:DM Mono,monospace;font-size:15px;font-weight:700">
+        </div>
+        <div class="fg" style="margin:0">
+          <label>Tipo *</label>
+          <select id="camp-tipo">
+            <option value="">Seleziona…</option>
+            <option value="istologia">Istologia</option>
+            <option value="citologia">Citologia</option>
+            <option value="pap">Pap test</option>
+            <option value="pap_l">Pap LupoLab</option>
+          </select>
+        </div>
+        <div class="fg" style="margin:0">
+          <label>Sottotipo citologia</label>
+          <input type="text" id="camp-sottotipo" placeholder="Urinaria, Tiroidea, Pleurica… (campo libero)">
+        </div>
+        <div class="fg" style="margin:0">
+          <label>Data accettazione *</label>
+          <input type="date" id="camp-data">
+        </div>
+        <div class="fg full" style="margin:0">
+          <label>Provenienza / Cliente</label>
+          <input type="text" id="camp-provenienza" placeholder="Reparto, medico richiedente… (lista in arrivo)">
+        </div>
+        <div class="fg full" style="margin:0">
+          <label>Descrizione accettazione</label>
+          <textarea id="camp-desc-acc" rows="2" placeholder="Breve descrizione dei campioni arrivati…"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- PEZZI E FRAMMENTI -->
+    <div style="background:var(--bg3);border-radius:var(--r);padding:12px;margin-bottom:14px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.8px">Pezzi e Frammenti</div>
+        <button class="btn btn-sm btn-primary" onclick="addPezzo()">＋ Pezzo</button>
+      </div>
+      <div id="pezzi-container"></div>
+    </div>
+
+    <!-- COLORAZIONI -->
+    <div style="background:var(--bg3);border-radius:var(--r);padding:12px;margin-bottom:14px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.8px">Colorazioni</div>
+        <button class="btn btn-sm btn-primary" onclick="addColorazione()">＋ Colorazione</button>
+      </div>
+      <div id="colorazioni-container"></div>
+    </div>
+
+    <!-- NOTE GENERALI -->
+    <div class="fg full" style="margin-bottom:14px">
+      <label>Note generali</label>
+      <textarea id="camp-note" rows="2" placeholder="Note aggiuntive…"></textarea>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('modal-campione')">Annulla</button>
+      <button class="btn btn-primary" onclick="saveCampione()">💾 Salva</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: DETTAGLIO CAMPIONE -->
+<div class="modal-overlay" id="modal-campione-detail">
+  <div class="modal" style="width:620px;max-height:92vh;overflow-y:auto">
+    <div class="modal-title" id="detail-title">Campione</div>
+    <div id="detail-content"></div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('modal-campione-detail')">Chiudi</button>
+      <button class="btn btn-primary" onclick="editCampioneDetail()">✎ Modifica</button>
+      <button class="btn btn-danger" onclick="deleteCampioneDetail()">✕ Elimina</button>
+    </div>
+  </div>
+</div>
 
 <!-- ══════════════════════════════
      MODAL: CARICO DA SCAN
@@ -1029,13 +1345,14 @@ async function forceSync(){
   if(!SUPA_OK||!IS_ONLINE){ toast('Non connesso','error'); return; }
   updateSyncStatus('sync');
   try{
-    const [prods,movs,wRows,wlog,ordini,arch]=await Promise.all([
+    const [prods,movs,wRows,wlog,ordini,arch,camp_cloud]=await Promise.all([
       supaFetch('products','GET',null,'?order=nome'),
       supaFetch('movements','GET',null,'?order=ts.desc&limit=200'),
       supaFetch('waste_state','GET',null,'?id=eq.waste_state'),
       supaFetch('waste_log','GET',null,'?order=ts.desc&limit=100'),
       supaFetch('ordini','GET',null,'?order=creato.desc&limit=200'),
-      supaFetch('archivio_ordini','GET',null,'?order=creato.desc&limit=500')
+      supaFetch('archivio_ordini','GET',null,'?order=creato.desc&limit=500'),
+      supaFetch('campioni','GET',null,'?order=data.desc&limit=1000')
     ]);
     if(prods&&prods.length) localStorage.setItem(LS_P, JSON.stringify(prods));
     if(movs&&movs.length) localStorage.setItem(LS_M, JSON.stringify(movs));
@@ -1043,7 +1360,11 @@ async function forceSync(){
     if(wlog) localStorage.setItem(LS_WL, JSON.stringify(wlog));
     if(ordini) localStorage.setItem('ls_ordini', JSON.stringify(ordini));
     if(arch) localStorage.setItem(LS_ARCH, JSON.stringify(arch));
+    const localCamp=JSON.parse(localStorage.getItem(LS_CAMP)||'[]');
+    if(localCamp.length>0){ await supaFetch('campioni','POST',localCamp,'?on_conflict=id'); }
+    else if(camp_cloud&&camp_cloud.length) localStorage.setItem(LS_CAMP, JSON.stringify(camp_cloud));
     updateSyncStatus('ok');
+    if(currentView==='tracciabilita') renderTracciabilita();
     if(currentView==='dashboard') renderDashboard();
     if(currentView==='inventario') renderInv();
     if(currentView==='movimenti') renderMovimenti();
@@ -1074,6 +1395,9 @@ async function flushQueue(){
     // Sync archivio ordini
     const arch=JSON.parse(localStorage.getItem(LS_ARCH)||'[]');
     if(arch.length) await supaFetch('archivio_ordini','POST',arch,'?on_conflict=id');
+    // Sync campioni
+    const camp=JSON.parse(localStorage.getItem(LS_CAMP)||'[]');
+    if(camp.length) await supaFetch('campioni','POST',camp,'?on_conflict=id');
     saveQueue([]);
     updateSyncStatus('ok');
     toast('✅ '+q.length+' modifica/he sincronizzata/e','success');
@@ -1164,13 +1488,14 @@ async function initialSync(){
   if(!SUPA_OK){ updateSyncStatus('off'); return; }
   updateSyncStatus('sync');
   try{
-    const [prods,movs,wRows,wlog,ordini,arch]=await Promise.all([
+    const [prods,movs,wRows,wlog,ordini,arch,camp_cloud]=await Promise.all([
       supaFetch('products','GET',null,'?order=nome'),
       supaFetch('movements','GET',null,'?order=ts.desc&limit=200'),
       supaFetch('waste_state','GET',null,'?id=eq.waste_state'),
       supaFetch('waste_log','GET',null,'?order=ts.desc&limit=100'),
       supaFetch('ordini','GET',null,'?order=creato.desc&limit=200'),
-      supaFetch('archivio_ordini','GET',null,'?order=creato.desc&limit=500')
+      supaFetch('archivio_ordini','GET',null,'?order=creato.desc&limit=500'),
+      supaFetch('campioni','GET',null,'?order=data.desc&limit=1000')
     ]);
     // Strategia: il locale è sempre la fonte di verità
     // Supabase viene usato solo per caricare dati su un dispositivo nuovo/pulito
@@ -1193,6 +1518,7 @@ async function initialSync(){
     localStorage.setItem(LS_ARCH, JSON.stringify(arch||[]));
     updateSyncStatus('ok');
     // Aggiorna la view corrente
+    if(currentView==='tracciabilita') renderTracciabilita();
     if(currentView==='dashboard') renderDashboard();
     if(currentView==='inventario') renderInv();
     if(currentView==='movimenti') renderMovimenti();
@@ -1385,13 +1711,20 @@ function closeModal(id){ document.getElementById(id).classList.remove('open'); }
 // ══════════════════════════════════════════
 // NAVIGATION
 // ══════════════════════════════════════════
-let currentView='dashboard', invFilter='all', fornFilter='all', homeFornFilter='all', manualMovType='carico';
+let currentView='tracciabilita', invFilter='all', fornFilter='all', homeFornFilter='all', manualMovType='carico';
 function showView(v){
   document.querySelectorAll('.view').forEach(e=>e.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(e=>e.classList.remove('active'));
   document.getElementById('view-'+v).classList.add('active');
   const n=document.getElementById('nav-'+v); if(n) n.classList.add('active');
   currentView=v;
+  // Apri submenu magazzino automaticamente se si naviga in una sua voce
+  const magVoci=['inventario','movimenti','allerte','ordini','archivio','schede'];
+  if(magVoci.includes(v)){
+    const sub=document.getElementById('mag-submenu');
+    const ar=document.getElementById('mag-arrow');
+    if(sub&&sub.style.display==='none'){ sub.style.display=''; if(ar) ar.textContent='▾'; }
+  }
   if(v==='dashboard'){ renderDashboard(); }
   if(v==='inventario') renderInv();
   if(v==='movimenti') renderMovimenti();
@@ -1401,6 +1734,9 @@ function showView(v){
   if(v==='report') renderReport();
   if(v==='archivio') renderArchivio();
   if(v==='schede') renderSchede();
+  if(v==='tracciabilita') renderTracciabilita();
+  if(v==='processatore') renderProcessatore();
+  if(v==='coloratore') renderColoratore();
 }
 function goCategory(cat){
   invFilter=cat; subFilter='all';
@@ -2581,6 +2917,809 @@ function renderSchede(){
       }).join('')}
     </div>`).join('');
 }
+
+
+// ══════════════════════════════════════════
+// PROCESSATORE
+// ══════════════════════════════════════════
+const LS_PROC = 'ls_processatore';
+const loadProc = () => JSON.parse(localStorage.getItem(LS_PROC)||'[]');
+async function saveProc(arr, deletedId){
+  localStorage.setItem(LS_PROC, JSON.stringify(arr));
+  if(!SUPA_OK) return;
+  if(!IS_ONLINE){ enqueue({type:'processatore'}); return; }
+  try{
+    if(deletedId) await supaFetch('processatore','DELETE',null,'?id=eq.'+deletedId);
+    if(arr.length) await supaFetch('processatore','POST',arr,'?on_conflict=id');
+  }catch(e){ enqueue({type:'processatore'}); }
+}
+
+// Reagenti tipici processatore dal magazzino
+const PROC_REAGENTI_DEFAULT = ['alcool 95','alcoolpath 95','alcol 95','alcool 100','alcoolpath 100','alcol 100','xilene','xylene','alcol 70'];
+
+let procCasiList = [];
+
+function openNuovoProcessatore(preset){
+  procCasiList = preset?.casi || [];
+  document.getElementById('proc-edit-id').value = preset?.id||'';
+  document.getElementById('proc-modal-title').textContent = preset ? 'Modifica Ciclo Processatore' : 'Nuovo Ciclo Processatore';
+  document.getElementById('proc-data').value = preset?.data || new Date().toISOString().slice(0,10);
+  document.getElementById('proc-ora-inizio').value = preset?.ora_inizio||'';
+  document.getElementById('proc-ora-fine').value = preset?.ora_fine||'';
+  document.getElementById('proc-protocollo').value = preset?.protocollo||'standard';
+  document.getElementById('proc-note').value = preset?.note||'';
+  document.getElementById('proc-caso-from').value='';
+  document.getElementById('proc-caso-to').value='';
+  document.getElementById('proc-caso-singolo').value='';
+  renderProcCasiList();
+  // Reagenti
+  const rl = document.getElementById('proc-reagenti-list');
+  rl.innerHTML='';
+  (preset?.reagenti||[]).forEach(r=>addReagenteProc(r));
+  document.getElementById('modal-processatore').classList.add('open');
+}
+
+function renderProcCasiList(){
+  const el = document.getElementById('proc-casi-list');
+  el.innerHTML = procCasiList.map((id,i)=>`
+    <span style="display:inline-flex;align-items:center;gap:4px;background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:3px 7px;font-family:DM Mono,monospace;font-size:12px">
+      ${id}<button onclick="removeCasoProc(${i})" style="background:none;border:none;cursor:pointer;color:var(--red);font-size:11px;padding:0 0 0 3px">✕</button>
+    </span>`).join('');
+  document.getElementById('proc-casi-count').textContent = procCasiList.length;
+}
+
+function addRangeCasiProc(){
+  const from = document.getElementById('proc-caso-from').value.trim();
+  const to = document.getElementById('proc-caso-to').value.trim();
+  if(!from){ toast('Inserisci almeno il caso iniziale','error'); return; }
+  if(!to){ procCasiList.push(from); }
+  else {
+    // Espandi range: estrai numero progressivo
+    const parseId = s => { const m=s.match(/^(\d+)\//); return m?parseInt(m[1]):null; };
+    const anno = from.includes('/')? from.split('/')[1] : '';
+    const nFrom = parseId(from), nTo = parseId(to);
+    if(nFrom&&nTo&&nTo>=nFrom){
+      for(let n=nFrom;n<=nTo;n++) procCasiList.push(n+'/'+anno);
+    } else { procCasiList.push(from); if(to) procCasiList.push(to); }
+  }
+  document.getElementById('proc-caso-from').value='';
+  document.getElementById('proc-caso-to').value='';
+  renderProcCasiList();
+}
+
+function addCasoSingoloProc(){
+  const v = document.getElementById('proc-caso-singolo').value.trim();
+  if(!v) return;
+  procCasiList.push(v);
+  document.getElementById('proc-caso-singolo').value='';
+  renderProcCasiList();
+}
+
+function removeCasoProc(i){ procCasiList.splice(i,1); renderProcCasiList(); }
+
+function addReagenteProc(preset){
+  const prods = loadP();
+  // Filtra solo reagenti del processatore
+  const filtered = prods.filter(p=>{
+    const n=(p.nome||'').toLowerCase();
+    return PROC_REAGENTI_DEFAULT.some(k=>n.includes(k));
+  });
+  const opts = filtered.map(p=>`<option value="${p.id}" ${preset&&preset.prodId===p.id?'selected':''}>${p.nome} [${p.lotto||'—'}]</option>`).join('');
+  const div = document.createElement('div');
+  div.className = 'reagente-usato-row';
+  div.innerHTML = `
+    <select style="flex:2" onchange="updateReagLottoGeneric(this)">
+      <option value="">Seleziona reagente…</option>${opts}
+    </select>
+    <span class="reag-lotto" style="font-family:DM Mono,monospace;font-size:11px;color:var(--text2);min-width:70px">${preset?.lotto||'—'}</span>
+    <span class="reag-scad" style="font-size:11px;color:var(--text3);min-width:80px">${preset?.scadenza?fmtDate(preset.scadenza):'—'}</span>
+    <select class="reag-stato" style="width:100px">
+      <option value="cambiato" ${preset?.stato==='cambiato'?'selected':''}>Cambiato</option>
+      <option value="rabboccato" ${preset?.stato==='rabboccato'?'selected':''}>Rabboccato</option>
+    </select>
+    <button class="btn btn-sm btn-danger" onclick="this.closest('.reagente-usato-row').remove()">✕</button>`;
+  document.getElementById('proc-reagenti-list').appendChild(div);
+  if(preset?.prodId){ const sel=div.querySelector('select'); sel.value=preset.prodId; updateReagLottoGeneric(sel); }
+}
+
+function updateReagLottoGeneric(sel){
+  const row = sel.closest('.reagente-usato-row');
+  const p = loadP().find(x=>x.id===sel.value);
+  if(p){
+    row.querySelector('.reag-lotto').textContent = p.lotto||'—';
+    row.querySelector('.reag-scad').textContent = p.scadenza?fmtDate(p.scadenza):'—';
+  }
+}
+
+function getReagentiList(containerId){
+  return [...document.querySelectorAll('#'+containerId+' .reagente-usato-row')].map(row=>{
+    const sel = row.querySelector('select');
+    const p = sel?.value ? loadP().find(x=>x.id===sel.value) : null;
+    const stato = row.querySelector('.reag-stato')?.value||'';
+    return p ? {prodId:p.id,nome:p.nome,lotto:p.lotto||'',scadenza:p.scadenza||'',stato} : null;
+  }).filter(Boolean);
+}
+
+async function saveProcessatore(){
+  const data = document.getElementById('proc-data').value;
+  if(!data){ toast('Data obbligatoria','error'); return; }
+  const editId = document.getElementById('proc-edit-id').value;
+  const ciclo = {
+    id: editId||genId(),
+    data,
+    ora_inizio: document.getElementById('proc-ora-inizio').value,
+    ora_fine: document.getElementById('proc-ora-fine').value,
+    protocollo: document.getElementById('proc-protocollo').value,
+    note: document.getElementById('proc-note').value.trim(),
+    casi: [...procCasiList],
+    reagenti: getReagentiList('proc-reagenti-list'),
+    creato: editId ? undefined : new Date().toISOString(),
+    modificato: new Date().toISOString()
+  };
+  if(!editId) ciclo.creato = new Date().toISOString();
+  const arr = loadProc();
+  if(editId){ const i=arr.findIndex(x=>x.id===editId); if(i>=0) arr[i]=ciclo; else arr.unshift(ciclo); }
+  else arr.unshift(ciclo);
+  await saveProc(arr);
+  closeModal('modal-processatore');
+  renderProcessatore();
+  toast('Ciclo processatore salvato','success');
+}
+
+function renderProcessatore(){
+  let arr = loadProc();
+  const q = (document.getElementById('proc-search')?.value||'').toLowerCase();
+  const from = document.getElementById('proc-filter-from')?.value;
+  const to = document.getElementById('proc-filter-to')?.value;
+  if(from) arr=arr.filter(x=>x.data>=from);
+  if(to) arr=arr.filter(x=>x.data<=to);
+  if(q) arr=arr.filter(x=>(x.casi||[]).some(c=>c.toLowerCase().includes(q))||(x.reagenti||[]).some(r=>(r.lotto||'').toLowerCase().includes(q)));
+
+  document.getElementById('proc-stats').textContent = loadProc().length+' cicli totali';
+  const el = document.getElementById('proc-list');
+  if(!arr.length){ el.innerHTML='<div class="empty"><div class="e-ico">⚗️</div><p>Nessun ciclo registrato</p></div>'; return; }
+
+  const protoLabel = {standard:'Standard notturno',rapido:'Rapido',biopsie:'Biopsie',altro:'Altro'};
+  el.innerHTML = arr.map(ciclo=>`
+    <div class="campione-card" style="margin-bottom:10px">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:8px">
+        <div>
+          <div style="font-weight:700;font-size:15px;color:var(--accent)">⚗️ ${fmtDate(ciclo.data)}</div>
+          <div style="font-size:12px;color:var(--text3)">${protoLabel[ciclo.protocollo]||ciclo.protocollo}${ciclo.ora_inizio?' · '+ciclo.ora_inizio+(ciclo.ora_fine?' → '+ciclo.ora_fine:''):''}</div>
+        </div>
+        <div style="display:flex;gap:5px;align-items:center">
+          <span style="font-family:DM Mono,monospace;font-size:14px;font-weight:700;color:var(--green)">${(ciclo.casi||[]).length} casi</span>
+          <button class="btn btn-sm" onclick="openNuovoProcessatore(loadProc().find(x=>x.id==='${ciclo.id}'))">✎</button>
+          <button class="btn btn-sm btn-danger" onclick="deleteProcCiclo('${ciclo.id}')">✕</button>
+        </div>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px">
+        ${(ciclo.casi||[]).map(id=>`<span style="background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:2px 7px;font-family:DM Mono,monospace;font-size:11px">${id}</span>`).join('')}
+      </div>
+      ${ciclo.reagenti?.length?`<div style="border-top:1px solid var(--border);padding-top:7px">
+        <div style="font-size:11px;color:var(--text3);margin-bottom:5px;font-weight:600">Reagenti:</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px">
+          ${ciclo.reagenti.map(r=>`<span style="font-size:11px;background:rgba(26,90,154,.08);border:1px solid rgba(26,90,154,.2);border-radius:4px;padding:2px 8px"><strong>${r.nome}</strong> · <span style="font-family:DM Mono,monospace">${r.lotto||'—'}</span> · ${r.stato||''}</span>`).join('')}
+        </div>
+      </div>`:''}
+      ${ciclo.note?`<div style="font-size:12px;color:var(--text2);margin-top:6px;font-style:italic">${ciclo.note}</div>`:''}
+    </div>`).join('');
+}
+
+async function deleteProcCiclo(id){
+  if(!confirm('Eliminare questo ciclo?')) return;
+  await saveProc(loadProc().filter(x=>x.id!==id), id);
+  renderProcessatore(); toast('Ciclo eliminato','info');
+}
+
+// ══════════════════════════════════════════
+// COLORATORE
+// ══════════════════════════════════════════
+const LS_COLOR_REG = 'ls_coloratore';
+const loadColoratore = () => JSON.parse(localStorage.getItem(LS_COLOR_REG)||'[]');
+async function saveColoratoreReg(arr, deletedId){
+  localStorage.setItem(LS_COLOR_REG, JSON.stringify(arr));
+  if(!SUPA_OK) return;
+  if(!IS_ONLINE){ enqueue({type:'coloratore'}); return; }
+  try{
+    if(deletedId) await supaFetch('coloratore_log','DELETE',null,'?id=eq.'+deletedId);
+    if(arr.length) await supaFetch('coloratore_log','POST',arr,'?on_conflict=id');
+  }catch(e){ enqueue({type:'coloratore'}); }
+}
+
+// Reagenti per protocollo coloratore
+const COLOR_REAGENTI_MAP = {
+  EE:     ['eosina','ematossilina','harris','hematoxyl','xilene','alcool 95','alcoolpath 95','alcool 100','alcoolpath 100'],
+  EE_CIT: ['eosina','ematossilina','harris','hematoxyl','xilene','alcool 95','alcoolpath 95','alcool 100','alcoolpath 100'],
+  PAP:    ['ea50','og6','papanicolau og','papanicolau ea','ematossilina harris','harris','mayer','xilene','alcool 95','alcoolpath 95','alcool 100','alcoolpath 100'],
+};
+
+let colorCasiList = [];
+let colorFilterVal = 'all';
+
+function setColorFilter(f,btn){
+  colorFilterVal=f;
+  document.querySelectorAll('#color-filter-bar .f-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderColoratore();
+}
+
+function openNuovoColoratore(preset){
+  colorCasiList = preset?.casi||[];
+  document.getElementById('color-edit-id').value = preset?.id||'';
+  document.getElementById('color-modal-title').textContent = preset ? 'Modifica Ciclo Coloratore' : 'Nuovo Ciclo Coloratore';
+  document.getElementById('color-data').value = preset?.data||new Date().toISOString().slice(0,10);
+  document.getElementById('color-protocollo-reg').value = preset?.protocollo||'EE';
+  document.getElementById('color-ora-inizio').value = preset?.ora_inizio||'';
+  document.getElementById('color-ora-fine').value = preset?.ora_fine||'';
+  document.getElementById('color-note').value = preset?.note||'';
+  document.getElementById('color-caso-from').value='';
+  document.getElementById('color-caso-to').value='';
+  document.getElementById('color-caso-singolo').value='';
+  renderColorCasiList();
+  const rl = document.getElementById('color-reagenti-list');
+  rl.innerHTML='';
+  if(preset?.reagenti?.length){ preset.reagenti.forEach(r=>addReagenteColor(r)); }
+  else { updateColorReagentiDefault(); }
+  document.getElementById('modal-coloratore').classList.add('open');
+}
+
+function updateColorReagentiDefault(){
+  const proto = document.getElementById('color-protocollo-reg').value;
+  const keywords = COLOR_REAGENTI_MAP[proto]||[];
+  const prods = loadP().filter(p=>{
+    const n=(p.nome||'').toLowerCase();
+    return keywords.some(k=>n.includes(k));
+  });
+  const rl = document.getElementById('color-reagenti-list');
+  rl.innerHTML='';
+  prods.forEach(p=>addReagenteColor({prodId:p.id,lotto:p.lotto,scadenza:p.scadenza}));
+}
+
+function renderColorCasiList(){
+  const el = document.getElementById('color-casi-list');
+  el.innerHTML = colorCasiList.map((id,i)=>`
+    <span style="display:inline-flex;align-items:center;gap:4px;background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:3px 7px;font-family:DM Mono,monospace;font-size:12px">
+      ${id}<button onclick="removeCasoColor(${i})" style="background:none;border:none;cursor:pointer;color:var(--red);font-size:11px;padding:0 0 0 3px">✕</button>
+    </span>`).join('');
+  document.getElementById('color-casi-count').textContent = colorCasiList.length;
+}
+
+function addRangeCasiColor(){
+  const from = document.getElementById('color-caso-from').value.trim();
+  const to = document.getElementById('color-caso-to').value.trim();
+  if(!from){ toast('Inserisci almeno il caso iniziale','error'); return; }
+  if(!to){ colorCasiList.push(from); }
+  else {
+    const parseId = s => { const m=s.match(/^(\d+)\//); return m?parseInt(m[1]):null; };
+    const anno = from.includes('/')? from.split('/')[1] : '';
+    const nFrom = parseId(from), nTo = parseId(to);
+    if(nFrom&&nTo&&nTo>=nFrom){
+      for(let n=nFrom;n<=nTo;n++) colorCasiList.push(n+'/'+anno);
+    } else { colorCasiList.push(from); if(to) colorCasiList.push(to); }
+  }
+  document.getElementById('color-caso-from').value='';
+  document.getElementById('color-caso-to').value='';
+  renderColorCasiList();
+}
+
+function addCasoSingoloColor(){
+  const v = document.getElementById('color-caso-singolo').value.trim();
+  if(!v) return;
+  colorCasiList.push(v);
+  document.getElementById('color-caso-singolo').value='';
+  renderColorCasiList();
+}
+
+function removeCasoColor(i){ colorCasiList.splice(i,1); renderColorCasiList(); }
+
+function addReagenteColor(preset){
+  const prods = loadP();
+  const proto = document.getElementById('color-protocollo-reg').value;
+  const keywords = COLOR_REAGENTI_MAP[proto]||[];
+  const filtered = prods.filter(p=>{ const n=(p.nome||'').toLowerCase(); return keywords.some(k=>n.includes(k)); });
+  const all_opts = prods.map(p=>`<option value="${p.id}" ${preset&&preset.prodId===p.id?'selected':''}>${p.nome} [${p.lotto||'—'}]</option>`).join('');
+  const div = document.createElement('div');
+  div.className = 'reagente-usato-row';
+  div.innerHTML = `
+    <select style="flex:2" onchange="updateReagLottoGeneric(this)">
+      <option value="">Seleziona…</option>${all_opts}
+    </select>
+    <span class="reag-lotto" style="font-family:DM Mono,monospace;font-size:11px;color:var(--text2);min-width:70px">${preset?.lotto||'—'}</span>
+    <span class="reag-scad" style="font-size:11px;color:var(--text3);min-width:80px">${preset?.scadenza?fmtDate(preset.scadenza):'—'}</span>
+    <button class="btn btn-sm btn-danger" onclick="this.closest('.reagente-usato-row').remove()">✕</button>`;
+  document.getElementById('color-reagenti-list').appendChild(div);
+  if(preset?.prodId){ const sel=div.querySelector('select'); sel.value=preset.prodId; updateReagLottoGeneric(sel); }
+}
+
+async function saveColoratore(){
+  const data = document.getElementById('color-data').value;
+  if(!data){ toast('Data obbligatoria','error'); return; }
+  const editId = document.getElementById('color-edit-id').value;
+  const ciclo = {
+    id: editId||genId(),
+    data,
+    protocollo: document.getElementById('color-protocollo-reg').value,
+    ora_inizio: document.getElementById('color-ora-inizio').value,
+    ora_fine: document.getElementById('color-ora-fine').value,
+    note: document.getElementById('color-note').value.trim(),
+    casi: [...colorCasiList],
+    reagenti: getReagentiList('color-reagenti-list'),
+    modificato: new Date().toISOString()
+  };
+  if(!editId) ciclo.creato = new Date().toISOString();
+  const arr = loadColoratore();
+  if(editId){ const i=arr.findIndex(x=>x.id===editId); if(i>=0) arr[i]=ciclo; else arr.unshift(ciclo); }
+  else arr.unshift(ciclo);
+  await saveColoratoreReg(arr);
+  closeModal('modal-coloratore');
+  renderColoratore();
+  toast('Ciclo coloratore salvato','success');
+}
+
+function renderColoratore(){
+  let arr = loadColoratore();
+  const q = (document.getElementById('color-search')?.value||'').toLowerCase();
+  const from = document.getElementById('color-filter-from')?.value;
+  const to = document.getElementById('color-filter-to')?.value;
+  if(colorFilterVal!=='all') arr=arr.filter(x=>x.protocollo===colorFilterVal);
+  if(from) arr=arr.filter(x=>x.data>=from);
+  if(to) arr=arr.filter(x=>x.data<=to);
+  if(q) arr=arr.filter(x=>(x.casi||[]).some(c=>c.toLowerCase().includes(q))||(x.reagenti||[]).some(r=>(r.lotto||'').toLowerCase().includes(q)));
+
+  document.getElementById('color-stats').textContent = loadColoratore().length+' cicli totali';
+  const el = document.getElementById('color-list');
+  if(!arr.length){ el.innerHTML='<div class="empty"><div class="e-ico">🎨</div><p>Nessun ciclo registrato</p></div>'; return; }
+
+  const protoLabel = {EE:'EE — Ematossilina Eosina',EE_CIT:'EE Citologia',PAP:'Papanicolau'};
+  const protoColor = {EE:'var(--blue)',EE_CIT:'var(--teal)',PAP:'var(--purple)'};
+  el.innerHTML = arr.map(ciclo=>`
+    <div class="campione-card" style="margin-bottom:10px">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:8px">
+        <div>
+          <div style="font-weight:700;font-size:15px;color:${protoColor[ciclo.protocollo]||'var(--accent)'}">🎨 ${protoLabel[ciclo.protocollo]||ciclo.protocollo}</div>
+          <div style="font-size:12px;color:var(--text3)">${fmtDate(ciclo.data)}${ciclo.ora_inizio?' · '+ciclo.ora_inizio+(ciclo.ora_fine?' → '+ciclo.ora_fine:''):''}</div>
+        </div>
+        <div style="display:flex;gap:5px;align-items:center">
+          <span style="font-family:DM Mono,monospace;font-size:14px;font-weight:700;color:var(--green)">${(ciclo.casi||[]).length} casi</span>
+          <button class="btn btn-sm" onclick="openNuovoColoratore(loadColoratore().find(x=>x.id==='${ciclo.id}'))">✎</button>
+          <button class="btn btn-sm btn-danger" onclick="deleteColorCiclo('${ciclo.id}')">✕</button>
+        </div>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px">
+        ${(ciclo.casi||[]).map(id=>`<span style="background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:2px 7px;font-family:DM Mono,monospace;font-size:11px">${id}</span>`).join('')}
+      </div>
+      ${ciclo.reagenti?.length?`<div style="border-top:1px solid var(--border);padding-top:7px">
+        <div style="font-size:11px;color:var(--text3);margin-bottom:5px;font-weight:600">Reagenti:</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px">
+          ${ciclo.reagenti.map(r=>`<span style="font-size:11px;background:rgba(106,32,144,.08);border:1px solid rgba(106,32,144,.2);border-radius:4px;padding:2px 8px"><strong>${r.nome}</strong> · <span style="font-family:DM Mono,monospace">${r.lotto||'—'}</span>${r.scadenza?' · '+fmtDate(r.scadenza):''}</span>`).join('')}
+        </div>
+      </div>`:''}
+      ${ciclo.note?`<div style="font-size:12px;color:var(--text2);margin-top:6px;font-style:italic">${ciclo.note}</div>`:''}
+    </div>`).join('');
+}
+
+async function deleteColorCiclo(id){
+  if(!confirm('Eliminare questo ciclo?')) return;
+  await saveColoratoreReg(loadColoratore().filter(x=>x.id!==id), id);
+  renderColoratore(); toast('Ciclo eliminato','info');
+}
+// ══════════════════════════════════════════
+// TRACCIABILITÀ CAMPIONI
+// ══════════════════════════════════════════
+const LS_CAMP = 'ls_campioni';
+const loadCampioni = () => JSON.parse(localStorage.getItem(LS_CAMP)||'[]');
+async function saveCampioni(arr, deletedId){
+  localStorage.setItem(LS_CAMP, JSON.stringify(arr));
+  if(!SUPA_OK) return;
+  if(!IS_ONLINE){ enqueue({type:'campioni'}); return; }
+  try{
+    if(deletedId) await supaFetch('campioni','DELETE',null,'?id=eq.'+deletedId);
+    if(arr.length) await supaFetch('campioni','POST',arr,'?on_conflict=id');
+  }catch(e){ enqueue({type:'campioni'}); }
+}
+
+// Protocolli colorazione
+const PROTOCOLLI_COLOR = [
+  {id:'EE',      label:'EE — Ematossilina Eosina',     metodo:'Coloratore automatico'},
+  {id:'EE_CIT',  label:'EE Citologia',                  metodo:'Coloratore automatico'},
+  {id:'PAP',     label:'Papanicolau',                    metodo:'Coloratore automatico'},
+  {id:'IHC',     label:'IHC — Immunoistochimica',        metodo:'Ventana automatico'},
+  {id:'GIEM',    label:'Giemsa',                         metodo:'Manuale'},
+  {id:'PAS',     label:'PAS',                            metodo:'Manuale'},
+  {id:'RET',     label:'Reticolo argentico',             metodo:'Manuale'},
+  {id:'ALTRO',   label:'Altra colorazione',              metodo:''},
+];
+
+// Contatori progressivi per anno
+function getNextId(tipo){
+  const anno = new Date().getFullYear().toString().slice(-2);
+  const campioni = loadCampioni();
+  if(tipo === 'pap_l'){
+    const pap_l = campioni.filter(c=>c.tipo==='pap_l');
+    const maxN = pap_l.reduce((m,c)=>{
+      const n = parseInt((c.campione_id||'').split('/')[0])||0;
+      return Math.max(m,n);
+    },0);
+    return (maxN+1) + '/' + anno + 'L';
+  } else {
+    const normali = campioni.filter(c=>c.tipo!=='pap_l');
+    const maxN = normali.reduce((m,c)=>{
+      const n = parseInt((c.campione_id||'').split('/')[0])||0;
+      return Math.max(m,n);
+    },0);
+    return (maxN+1) + '/' + anno;
+  }
+}
+
+let traccFilter = 'all';
+let currentPezziCount = 0;
+let editingCampioneId = null;
+
+function setTraccFilter(f, btn){
+  traccFilter = f;
+  document.querySelectorAll('#tracc-filter-bar .f-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderTracciabilita();
+}
+
+function openNuovoCampione(tipo){
+  editingCampioneId = null;
+  currentPezziCount = 0;
+  document.getElementById('campione-modal-title').textContent = 'Nuovo Campione';
+  document.getElementById('camp-id').value = getNextId(tipo||'istologia');
+  document.getElementById('camp-tipo').value = tipo||'istologia';
+  document.getElementById('camp-sottotipo').value = '';
+  document.getElementById('camp-data').value = new Date().toISOString().slice(0,10);
+  document.getElementById('camp-provenienza').value = '';
+  document.getElementById('camp-desc-acc').value = '';
+  document.getElementById('camp-note').value = '';
+  document.getElementById('pezzi-container').innerHTML = '';
+  document.getElementById('colorazioni-container').innerHTML = '';
+  // Aggiorna sottotipo visibility
+  updateSottotipoVisibility();
+  document.getElementById('modal-campione').classList.add('open');
+}
+function openNuovoCampioneSpec(tipo){
+  openNuovoCampione(tipo);
+}
+
+document.addEventListener('DOMContentLoaded', ()=>{
+  const tipoSel = document.getElementById('camp-tipo');
+  if(tipoSel) tipoSel.addEventListener('change', ()=>{
+    const newId = getNextId(tipoSel.value);
+    document.getElementById('camp-id').value = newId;
+    updateSottotipoVisibility();
+  });
+});
+
+function updateSottotipoVisibility(){
+  const tipo = document.getElementById('camp-tipo')?.value;
+  const st = document.getElementById('camp-sottotipo');
+  if(st) st.parentElement.style.display = tipo==='citologia' ? '' : 'none';
+}
+
+// ── PEZZI ──
+function addPezzo(nomePreset, framPreset){
+  const container = document.getElementById('pezzi-container');
+  const lettera = String.fromCharCode(65 + currentPezziCount); // A, B, C...
+  currentPezziCount++;
+  const pid = 'pezzo-'+lettera;
+  const div = document.createElement('div');
+  div.id = pid;
+  div.className = 'pezzo-row';
+  div.style.cssText = 'flex-wrap:wrap;gap:8px;margin-bottom:8px;padding:10px;background:var(--bg3);border-radius:var(--r);border:1px solid var(--border)';
+  div.innerHTML = `
+    <div style="display:flex;align-items:center;gap:8px;width:100%">
+      <span class="pezzo-label" style="color:var(--accent);font-size:16px">${lettera}</span>
+      <input type="text" placeholder="Sede / descrizione (es. Colon sigma)" style="flex:1" id="pezzo-desc-${lettera}" value="${nomePreset||''}">
+      <button class="btn btn-sm btn-danger" onclick="removePezzo('${pid}','${lettera}')">✕</button>
+    </div>
+    <div style="width:100%">
+      <div style="font-size:11px;color:var(--text3);margin-bottom:5px">Frammenti (N° cassette):</div>
+      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap" id="fram-${lettera}">
+        ${(framPreset||[]).map((f,i)=>`<span class="frammento-chip done" title="${f}">${lettera}${i+1}</span>`).join('')}
+        <input type="number" min="1" max="99" placeholder="N°" style="width:60px" id="fram-n-${lettera}" value="1">
+        <button class="btn btn-sm btn-ok" onclick="addFrammenti('${lettera}')">＋ Frammenti</button>
+      </div>
+    </div>`;
+  container.appendChild(div);
+}
+
+function addFrammenti(lettera){
+  const n = parseInt(document.getElementById('fram-n-'+lettera).value)||1;
+  const container = document.getElementById('fram-'+lettera);
+  const existing = container.querySelectorAll('.frammento-chip').length;
+  for(let i=0; i<n; i++){
+    const num = existing+i+1;
+    const chip = document.createElement('span');
+    chip.className = 'frammento-chip done';
+    chip.textContent = lettera+num;
+    chip.title = lettera+num;
+    chip.onclick = ()=>chip.classList.toggle('done');
+    container.insertBefore(chip, container.querySelector('input'));
+  }
+}
+
+function removePezzo(pid, lettera){
+  const el = document.getElementById(pid);
+  if(el){ el.remove(); currentPezziCount--; }
+}
+
+function getPezziData(){
+  const pezzi = [];
+  document.querySelectorAll('[id^="pezzo-"]').forEach(div=>{
+    const lettera = div.id.replace('pezzo-','');
+    if(lettera.length!==1) return;
+    const desc = document.getElementById('pezzo-desc-'+lettera)?.value||'';
+    const frammenti = [...document.querySelectorAll('#fram-'+lettera+' .frammento-chip')].map(c=>c.textContent.trim());
+    pezzi.push({lettera, desc, frammenti});
+  });
+  return pezzi;
+}
+
+// ── COLORAZIONI ──
+function addColorazione(preset){
+  const container = document.getElementById('colorazioni-container');
+  const idx = container.children.length;
+  const div = document.createElement('div');
+  div.style.cssText = 'border:1px solid var(--border);border-radius:var(--r);padding:10px;margin-bottom:8px;background:var(--bg2)';
+  div.innerHTML = `
+    <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
+      <select style="flex:1" class="color-protocollo" onchange="toggleColorReagenti(this)">
+        ${PROTOCOLLI_COLOR.map(p=>`<option value="${p.id}" ${preset&&preset.protocollo===p.id?'selected':''}>${p.label}</option>`).join('')}
+      </select>
+      <input type="date" class="color-data" value="${preset?.data||new Date().toISOString().slice(0,10)}" style="width:140px">
+      <button class="btn btn-sm btn-danger" onclick="this.closest('div[style]').remove()">✕</button>
+    </div>
+    <div class="color-reagenti-wrap">
+      <div style="font-size:11px;color:var(--text3);margin-bottom:5px">Reagenti usati (da magazzino):</div>
+      <div class="color-reagenti-list">
+        ${(preset?.reagenti||[]).map(r=>makeReagenteRow(r)).join('')}
+      </div>
+      <button class="btn btn-sm" onclick="addReagenteRow(this)">＋ Reagente</button>
+    </div>`;
+  container.appendChild(div);
+  toggleColorReagenti(div.querySelector('.color-protocollo'));
+}
+
+function toggleColorReagenti(sel){
+  const wrap = sel.closest('div[style]').querySelector('.color-reagenti-wrap');
+  const auto = ['EE','EE_CIT','PAP'].includes(sel.value);
+  // Per coloratori automatici mostra reagenti ma con nota
+  const note = wrap.querySelector('.auto-note');
+  if(auto && !note){
+    const n = document.createElement('div');
+    n.className = 'auto-note';
+    n.style.cssText = 'font-size:11px;color:var(--yellow);margin-bottom:5px';
+    n.textContent = '⚡ Coloratore automatico — registra i lotti delle vaschette';
+    wrap.insertBefore(n, wrap.firstChild);
+  } else if(!auto && note){ note.remove(); }
+}
+
+function makeReagenteRow(r){
+  const prods = loadP();
+  const opts = prods.map(p=>`<option value="${p.id}" ${r&&r.prodId===p.id?'selected':''}>${p.nome} [${p.lotto||'—'}]</option>`).join('');
+  return `<div class="reagente-usato-row">
+    <select style="flex:2" class="reag-prod" onchange="updateReagLotto(this)">
+      <option value="">Seleziona prodotto…</option>${opts}
+    </select>
+    <span class="reag-lotto" style="font-family:DM Mono,monospace;font-size:11px;color:var(--text2);min-width:70px">${r?.lotto||'—'}</span>
+    <span class="reag-scad" style="font-size:11px;color:var(--text3);min-width:80px">${r?.scadenza?fmtDate(r.scadenza):'—'}</span>
+    <button class="btn btn-sm btn-danger" onclick="this.closest('.reagente-usato-row').remove()">✕</button>
+  </div>`;
+}
+
+function addReagenteRow(btn){
+  const list = btn.previousElementSibling;
+  const div = document.createElement('div');
+  div.innerHTML = makeReagenteRow(null);
+  list.appendChild(div.firstElementChild||div);
+}
+
+function updateReagLotto(sel){
+  const row = sel.closest('.reagente-usato-row');
+  const p = loadP().find(x=>x.id===sel.value);
+  if(p){
+    row.querySelector('.reag-lotto').textContent = p.lotto||'—';
+    row.querySelector('.reag-scad').textContent = p.scadenza?fmtDate(p.scadenza):'—';
+  }
+}
+
+function getColorazioniData(){
+  return [...document.querySelectorAll('#colorazioni-container > div')].map(div=>{
+    const protocollo = div.querySelector('.color-protocollo')?.value||'';
+    const data = div.querySelector('.color-data')?.value||'';
+    const reagenti = [...div.querySelectorAll('.reagente-usato-row')].map(row=>{
+      const sel = row.querySelector('.reag-prod');
+      const p = sel?.value ? loadP().find(x=>x.id===sel.value) : null;
+      return p ? {prodId:p.id, nome:p.nome, lotto:p.lotto||'', scadenza:p.scadenza||''} : null;
+    }).filter(Boolean);
+    return {protocollo, data, reagenti};
+  });
+}
+
+// ── SALVA CAMPIONE ──
+async function saveCampione(){
+  const id_campo = document.getElementById('camp-id').value.trim();
+  const tipo = document.getElementById('camp-tipo').value;
+  if(!id_campo||!tipo){ toast('ID e tipo obbligatori','error'); return; }
+  const campione = {
+    id: editingCampioneId || genId(),
+    campione_id: id_campo,
+    tipo,
+    sottotipo: document.getElementById('camp-sottotipo').value.trim(),
+    data: document.getElementById('camp-data').value,
+    provenienza: document.getElementById('camp-provenienza').value.trim(),
+    desc_accettazione: document.getElementById('camp-desc-acc').value.trim(),
+    pezzi: getPezziData(),
+    colorazioni: getColorazioniData(),
+    note: document.getElementById('camp-note').value.trim(),
+    creato: editingCampioneId ? undefined : new Date().toISOString(),
+    modificato: new Date().toISOString()
+  };
+  if(!editingCampioneId) campione.creato = new Date().toISOString();
+  const campioni = loadCampioni();
+  if(editingCampioneId){
+    const idx = campioni.findIndex(c=>c.id===editingCampioneId);
+    if(idx>=0) campioni[idx]=campione; else campioni.unshift(campione);
+  } else {
+    campioni.unshift(campione);
+  }
+  await saveCampioni(campioni);
+  closeModal('modal-campione');
+  renderTracciabilita();
+  toast((editingCampioneId?'Campione aggiornato':'Campione salvato')+': '+id_campo,'success');
+  editingCampioneId = null;
+}
+
+// ── RENDER LISTA ──
+function renderTracciabilita(){
+  let campioni = loadCampioni();
+  const q = (document.getElementById('tracc-search')?.value||'').toLowerCase();
+  const from = document.getElementById('tracc-from')?.value;
+  const to = document.getElementById('tracc-to')?.value;
+  const lotto = (document.getElementById('tracc-search-lotto')?.value||'').toLowerCase();
+
+  if(traccFilter!=='all') campioni = campioni.filter(c=>c.tipo===traccFilter);
+  if(q) campioni = campioni.filter(c=>(c.campione_id||'').toLowerCase().includes(q)||(c.provenienza||'').toLowerCase().includes(q)||(c.desc_accettazione||'').toLowerCase().includes(q));
+  if(from) campioni = campioni.filter(c=>c.data>=from);
+  if(to) campioni = campioni.filter(c=>c.data<=to);
+  if(lotto) campioni = campioni.filter(c=>(c.colorazioni||[]).some(col=>(col.reagenti||[]).some(r=>(r.lotto||'').toLowerCase().includes(lotto))));
+
+  // Stats
+  const all = loadCampioni();
+  const oggi = new Date().toISOString().slice(0,10);
+  const oggi_n = all.filter(c=>c.data===oggi).length;
+  document.getElementById('tracc-stats').textContent = all.length+' campioni totali · '+oggi_n+' oggi';
+
+  const container = document.getElementById('tracc-list');
+  if(!campioni.length){
+    container.innerHTML = '<div class="empty"><div class="e-ico">🧬</div><p>Nessun campione trovato</p></div>';
+    return;
+  }
+
+  const tipoColor = {istologia:'var(--blue)',citologia:'var(--teal)',pap:'var(--purple)',pap_l:'var(--orange)'};
+  const tipoLabel = {istologia:'Istologia',citologia:'Citologia',pap:'Pap',pap_l:'Pap LupoLab'};
+  const protLabel = {EE:'EE',EE_CIT:'EE-Cit',PAP:'PAP',IHC:'IHC',GIEM:'Giemsa',PAS:'PAS',RET:'Reticolo',ALTRO:'Altro'};
+
+  container.innerHTML = campioni.map(camp=>{
+    const nPezzi = (camp.pezzi||[]).length;
+    const nFram = (camp.pezzi||[]).reduce((s,p)=>s+(p.frammenti||[]).length,0);
+    const colStr = (camp.colorazioni||[]).map(c=>protLabel[c.protocollo]||c.protocollo).join(', ');
+    return `<div class="campione-card" onclick="openDetailCampione('${camp.id}')">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
+        <div>
+          <div class="campione-id">${camp.campione_id}</div>
+          <div class="campione-tipo" style="color:${tipoColor[camp.tipo]||'var(--text3)'}">${tipoLabel[camp.tipo]||camp.tipo}${camp.sottotipo?' · '+camp.sottotipo:''}</div>
+          ${camp.provenienza?`<div style="font-size:12px;color:var(--text2);margin-top:3px">📍 ${camp.provenienza}</div>`:''}
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:12px;color:var(--text3)">${fmtDate(camp.data)}</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:3px">${nPezzi} pezz${nPezzi===1?'o':'i'} · ${nFram} frammenti</div>
+          ${colStr?`<div style="font-size:11px;color:var(--accent2);margin-top:2px">${colStr}</div>`:''}
+        </div>
+      </div>
+      ${camp.desc_accettazione?`<div style="font-size:12px;color:var(--text2);margin-top:7px;border-top:1px solid var(--border);padding-top:7px">${camp.desc_accettazione}</div>`:''}
+    </div>`;
+  }).join('');
+}
+
+// ── DETTAGLIO ──
+let detailCampioneId = null;
+function openDetailCampione(id){
+  const c = loadCampioni().find(x=>x.id===id);
+  if(!c) return;
+  detailCampioneId = id;
+  document.getElementById('detail-title').textContent = '🧬 '+c.campione_id;
+  const tipoLabel = {istologia:'Istologia',citologia:'Citologia',pap:'Pap test',pap_l:'Pap LupoLab'};
+  const protLabel = {EE:'EE Routine',EE_CIT:'EE Citologia',PAP:'Papanicolau',IHC:'IHC Ventana',GIEM:'Giemsa',PAS:'PAS',RET:'Reticolo argentico',ALTRO:'Altra'};
+  const metodoLabel = {EE:'Coloratore auto',EE_CIT:'Coloratore auto',PAP:'Coloratore auto',IHC:'Ventana',GIEM:'Manuale',PAS:'Manuale',RET:'Manuale'};
+
+  let html = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">
+      <div><div style="font-size:11px;color:var(--text3)">Tipo</div><div style="font-weight:600">${tipoLabel[c.tipo]||c.tipo}${c.sottotipo?' — '+c.sottotipo:''}</div></div>
+      <div><div style="font-size:11px;color:var(--text3)">Data</div><div style="font-weight:600">${fmtDate(c.data)}</div></div>
+      <div><div style="font-size:11px;color:var(--text3)">Provenienza</div><div style="font-weight:600">${c.provenienza||'—'}</div></div>
+      <div><div style="font-size:11px;color:var(--text3)">Frammenti totali</div><div style="font-weight:600">${(c.pezzi||[]).reduce((s,p)=>s+(p.frammenti||[]).length,0)}</div></div>
+    </div>`;
+
+  if(c.desc_accettazione){
+    html += `<div style="background:var(--bg3);border-radius:var(--r);padding:10px;margin-bottom:12px;font-size:13px;color:var(--text2)"><strong>Accettazione:</strong> ${c.desc_accettazione}</div>`;
+  }
+
+  if(c.pezzi?.length){
+    html += `<div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;margin-bottom:8px">Pezzi e Frammenti</div>`;
+    c.pezzi.forEach(p=>{
+      html += `<div style="background:var(--bg3);border-radius:6px;padding:9px 12px;margin-bottom:6px">
+        <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px">
+          <span style="font-family:DM Mono,monospace;font-weight:700;font-size:15px;color:var(--accent)">${p.lettera}</span>
+          <span style="font-size:13px">${p.desc||'—'}</span>
+        </div>
+        <div style="display:flex;gap:4px;flex-wrap:wrap">${(p.frammenti||[]).map(f=>`<span class="frammento-chip done">${f}</span>`).join('')}</div>
+      </div>`;
+    });
+  }
+
+  if(c.colorazioni?.length){
+    html += `<div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;margin:12px 0 8px">Colorazioni</div>`;
+    c.colorazioni.forEach(col=>{
+      html += `<div style="border:1px solid var(--border);border-radius:var(--r);padding:10px;margin-bottom:8px">
+        <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+          <div style="font-weight:600">${protLabel[col.protocollo]||col.protocollo}</div>
+          <div style="font-size:11px;color:var(--text3)">${metodoLabel[col.protocollo]||''} · ${fmtDate(col.data)}</div>
+        </div>`;
+      if(col.reagenti?.length){
+        html += `<table style="width:100%;font-size:12px"><thead><tr>
+          <th style="text-align:left;padding:3px 6px;color:var(--text3)">Reagente</th>
+          <th style="text-align:left;padding:3px 6px;color:var(--text3)">Lotto</th>
+          <th style="text-align:left;padding:3px 6px;color:var(--text3)">Scadenza</th>
+        </tr></thead><tbody>`;
+        col.reagenti.forEach(r=>{
+          html += `<tr><td style="padding:3px 6px">${r.nome}</td><td style="padding:3px 6px;font-family:DM Mono,monospace">${r.lotto||'—'}</td><td style="padding:3px 6px;font-size:11px">${r.scadenza?fmtDate(r.scadenza):'—'}</td></tr>`;
+        });
+        html += '</tbody></table>';
+      }
+      html += '</div>';
+    });
+  }
+
+  if(c.note){ html += `<div style="margin-top:10px;font-size:12px;color:var(--text2);font-style:italic">${c.note}</div>`; }
+
+  document.getElementById('detail-content').innerHTML = html;
+  document.getElementById('modal-campione-detail').classList.add('open');
+}
+
+function editCampioneDetail(){
+  const c = loadCampioni().find(x=>x.id===detailCampioneId);
+  if(!c) return;
+  closeModal('modal-campione-detail');
+  editingCampioneId = c.id;
+  currentPezziCount = 0;
+  document.getElementById('campione-modal-title').textContent = 'Modifica Campione';
+  document.getElementById('camp-id').value = c.campione_id||'';
+  document.getElementById('camp-tipo').value = c.tipo||'istologia';
+  document.getElementById('camp-sottotipo').value = c.sottotipo||'';
+  document.getElementById('camp-data').value = c.data||'';
+  document.getElementById('camp-provenienza').value = c.provenienza||'';
+  document.getElementById('camp-desc-acc').value = c.desc_accettazione||'';
+  document.getElementById('camp-note').value = c.note||'';
+  document.getElementById('pezzi-container').innerHTML = '';
+  document.getElementById('colorazioni-container').innerHTML = '';
+  (c.pezzi||[]).forEach(p=>addPezzo(p.desc, p.frammenti));
+  (c.colorazioni||[]).forEach(col=>addColorazione(col));
+  updateSottotipoVisibility();
+  document.getElementById('modal-campione').classList.add('open');
+}
+
+async function deleteCampioneDetail(){
+  if(!confirm('Eliminare questo campione?')) return;
+  const campioni = loadCampioni().filter(x=>x.id!==detailCampioneId);
+  await saveCampioni(campioni, detailCampioneId);
+  closeModal('modal-campione-detail');
+  renderTracciabilita();
+  toast('Campione eliminato','info');
+}
 // ══════════════════════════════════════════
 // ARCHIVIO ORDINI
 // ══════════════════════════════════════════
@@ -2864,10 +4003,28 @@ function exportCSV(){
 // ══════════════════════════════════════════
 // INIT
 // ══════════════════════════════════════════
+function toggleMagazzino(){
+  const el=document.getElementById('mag-submenu');
+  const ar=document.getElementById('mag-arrow');
+  const hidden=el.style.display==='none';
+  el.style.display=hidden?'':'none';
+  ar.textContent=hidden?'▾':'▸';
+}
+function toggleCategorie(){
+  const el=document.getElementById('cat-submenu');
+  const ar=document.getElementById('cat-arrow');
+  const hidden=el.style.display==='none';
+  el.style.display=hidden?'':'none';
+  ar.textContent=hidden?'▾':'▸';
+}
 document.addEventListener('keydown',e=>{
   if(e.key==='Escape'){
     if(document.getElementById('modal-ddt').classList.contains('open')) closeDDTModal();
     else if(document.getElementById('modal-scarica').classList.contains('open')) closeScaricaModal();
+    else if(document.getElementById('modal-processatore').classList.contains('open')) closeModal('modal-processatore');
+    else if(document.getElementById('modal-coloratore').classList.contains('open')) closeModal('modal-coloratore');
+    else if(document.getElementById('modal-campione').classList.contains('open')) closeModal('modal-campione');
+    else if(document.getElementById('modal-campione-detail').classList.contains('open')) closeModal('modal-campione-detail');
     else if(document.getElementById('modal-carico-scan').classList.contains('open')) closeCaricaScanModal();
     else if(document.getElementById('modal-scheda-scan').classList.contains('open')) closeSchedaScanModal();
     else document.querySelectorAll('.modal-overlay.open').forEach(m=>m.classList.remove('open'));
