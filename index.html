@@ -265,6 +265,7 @@ select option{background:var(--bg3)}
 <header>
   <div class="logo">LupoLab <span class="logo-badge">AP</span></div>
   <div class="hdr-act">
+    <button class="btn" onclick="showView('dashboard')" style="font-weight:600">🏠 Home</button>
     <button class="btn" id="sync-status" onclick="forceSync()" style="font-size:12px;font-family:DM Mono,monospace" title="Clicca per sincronizzare">⬡ Locale</button>
     <!-- Azioni tracciabilità -->
     <button class="btn btn-primary" onclick="openNuovoCampione()">＋ Campione</button>
@@ -337,6 +338,27 @@ select option{background:var(--bg3)}
 
       <!-- Stat cards -->
       <div class="stats-grid" id="stats-grid"></div>
+
+      <!-- Sezione Tracciabilità oggi -->
+      <div class="card" style="margin-bottom:14px;padding:14px;cursor:pointer" onclick="showView('tracciabilita')">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <div style="font-weight:700;font-size:14px;color:var(--accent)">🧬 Campioni</div>
+          <div style="font-size:11px;color:var(--text3)">Oggi / Mese corrente</div>
+        </div>
+        <div id="home-tracc-oggi"></div>
+      </div>
+
+      <!-- Processatore + Coloratore -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
+        <div class="card" style="padding:14px;cursor:pointer" onclick="showView('processatore')">
+          <div style="font-weight:700;font-size:14px;color:var(--accent);margin-bottom:8px">⚗️ Processatore</div>
+          <div id="home-proc-oggi"></div>
+        </div>
+        <div class="card" style="padding:14px;cursor:pointer" onclick="showView('coloratore')">
+          <div style="font-weight:700;font-size:14px;color:var(--accent);margin-bottom:8px">🎨 Coloratore</div>
+          <div id="home-color-oggi"></div>
+        </div>
+      </div>
 
       <!-- Alert banners -->
       <div id="alerts-wrap"></div>
@@ -1769,6 +1791,26 @@ function _updateSubBar(cat){
 // HOME — render dashboard completa
 // ══════════════════════════════════════════
 function renderDashboard(){
+  // ── Dati tracciabilità ──
+  const campioni = loadCampioni();
+  const oggi = new Date().toISOString().slice(0,10);
+  const campOggi = campioni.filter(c=>c.data===oggi);
+  const campMese = campioni.filter(c=>c.data&&c.data.slice(0,7)===oggi.slice(0,7));
+  const istOggi = campOggi.filter(c=>c.tipo==='istologia').length;
+  const citOggi = campOggi.filter(c=>c.tipo==='citologia').length;
+  const papOggi = campOggi.filter(c=>c.tipo==='pap'||c.tipo==='pap_priv').length;
+  const papLOggi = campOggi.filter(c=>c.tipo==='pap_l').length;
+
+  // ── Dati processatore ──
+  const procArr = loadProc();
+  const procOggi = procArr.find(x=>x.data===oggi);
+  const procMese = procArr.filter(x=>x.data&&x.data.slice(0,7)===oggi.slice(0,7));
+  const totCasiProcMese = procMese.reduce((s,x)=>s+(x.casi||[]).length,0);
+
+  // ── Dati coloratore ──
+  const colorArr = loadColoratore();
+  const colorOggi = colorArr.find(x=>x.data===oggi);
+  const colorMese = colorArr.filter(x=>x.data&&x.data.slice(0,7)===oggi.slice(0,7));
   const prods=loadP(), W=loadW(), now=new Date();
   document.getElementById('dash-date').textContent='Aggiornato '+now.toLocaleDateString('it-IT',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
 
@@ -1814,6 +1856,46 @@ function renderDashboard(){
       <div class="stat-lbl">Ordini aperti</div><div class="stat-val" style="color:var(--teal)">${ordAperti}</div>
       <div class="stat-sub">in attesa di risposta</div>
     </div>`;
+
+  // ── Sezioni Tracciabilità / Processatore / Coloratore ──
+  const oggi2=new Date().toISOString().slice(0,10);
+  const mese2=oggi2.slice(0,7);
+  const campOggi2=campioni.filter(x=>x.data===oggi2);
+  const campMese2=campioni.filter(x=>x.data&&x.data.slice(0,7)===mese2);
+  const procOggi2=procArr.find(x=>x.data===oggi2);
+  const colorOggi2=colorArr.find(x=>x.data===oggi2);
+  const totCasiMese=procMese.reduce((s,x)=>s+(x.casi||[]).length,0);
+  const totEEMese=colorMese.reduce((s,x)=>s+(x.cicli_ee||0),0);
+  const totCitMese=colorMese.reduce((s,x)=>s+(x.cicli_ee_cit||0),0);
+  const totPapMese=colorMese.reduce((s,x)=>s+(x.cicli_pap||0),0);
+  ['home-tracc-oggi','home-proc-oggi','home-color-oggi'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML='';});
+  const tEl=document.getElementById('home-tracc-oggi');
+  if(tEl){
+    const rows=[
+      {label:'ISTOLOGIA',color:'var(--blue)',oggi:campOggi2.filter(x=>x.tipo==='istologia').length,mese:campMese2.filter(x=>x.tipo==='istologia').length},
+      {label:'CITOLOGIA',color:'var(--teal)',oggi:campOggi2.filter(x=>x.tipo==='citologia').length,mese:campMese2.filter(x=>x.tipo==='citologia').length},
+      {label:'PAP',color:'var(--purple)',oggi:campOggi2.filter(x=>x.tipo==='pap'||x.tipo==='pap_priv').length,mese:campMese2.filter(x=>x.tipo==='pap'||x.tipo==='pap_priv').length},
+      {label:'PAP LUPOLAB',color:'var(--orange)',oggi:campOggi2.filter(x=>x.tipo==='pap_l').length,mese:campMese2.filter(x=>x.tipo==='pap_l').length},
+    ];
+    tEl.innerHTML='<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">'+
+      rows.map(r=>'<div style="text-align:center;background:var(--bg3);border-radius:8px;padding:10px;cursor:pointer" onclick="showView(&quot;tracciabilita&quot;)">'+
+        '<div style="font-size:10px;color:'+r.color+';font-weight:600;margin-bottom:4px">'+r.label+'</div>'+
+        '<div style="font-family:DM Mono,monospace;font-size:24px;font-weight:700;color:'+r.color+'">'+r.oggi+'</div>'+
+        '<div style="font-size:10px;color:var(--text3)">oggi &middot; '+r.mese+' mese</div></div>').join('')+'</div>';
+  }
+  const pEl=document.getElementById('home-proc-oggi');
+  if(pEl) pEl.innerHTML=procOggi2
+    ?'<div style="display:flex;align-items:center;gap:12px"><span style="font-family:DM Mono,monospace;font-size:22px;font-weight:700;color:var(--green)">'+(procOggi2.casi||[]).length+'</span><span style="color:var(--text2)">casi · '+( procOggi2.protocollo||'')+'</span><span style="margin-left:auto;font-size:11px;color:var(--text3)">'+totCasiMese+' questo mese</span></div>'
+    :'<div style="color:var(--text3);font-size:13px">Nessun ciclo oggi &middot; '+totCasiMese+' casi questo mese</div>';
+  const cEl=document.getElementById('home-color-oggi');
+  if(cEl) cEl.innerHTML='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">'+
+    [['EE Ist.','var(--blue)',colorOggi2?colorOggi2.cicli_ee||0:0,totEEMese],
+     ['EE Cit.','var(--teal)',colorOggi2?colorOggi2.cicli_ee_cit||0:0,totCitMese],
+     ['PAP L.','var(--purple)',colorOggi2?colorOggi2.cicli_pap||0:0,totPapMese]].map(r=>
+      '<div style="text-align:center;background:var(--bg3);border-radius:6px;padding:8px">'+
+      '<div style="font-size:10px;color:'+r[1]+';font-weight:600">'+r[0]+'</div>'+
+      '<div style="font-family:DM Mono,monospace;font-size:20px;font-weight:700;color:'+r[1]+'">'+r[2]+'</div>'+
+      '<div style="font-size:10px;color:var(--text3)">'+r[3]+' mese</div></div>').join('')+'</div>';
 
   // Alert banners
   const alerts=[];
