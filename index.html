@@ -176,6 +176,17 @@ textarea{resize:vertical;min-height:60px}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
 ::-webkit-scrollbar-thumb:hover{background:var(--text3)}
+.hdr-sep{width:1px;height:22px;background:rgba(255,255,255,.2);margin:0 4px;flex-shrink:0}
+/* Sidebar scrollbar e hover */
+.sidebar{scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.1) transparent}
+/* Nav active state più visibile */
+.nav-item.active{color:var(--accent2);border-left-color:var(--accent2);background:var(--accent-light);font-weight:600}
+/* Dashboard come voce speciale */
+#nav-dashboard.active{color:var(--accent);background:linear-gradient(90deg,var(--accent-light),transparent)}
+/* Label nav non selezionabile */
+.nav-lbl{user-select:none}
+/* Hover su logo */
+.logo:hover{opacity:.85}
 @media(max-width:900px){.sidebar{display:none}.stats-grid{grid-template-columns:repeat(2,1fr)}.waste-grid{grid-template-columns:1fr}.prod-grid{grid-template-columns:repeat(auto-fill,minmax(160px,1fr))}#home-panels{grid-template-columns:1fr!important}.form-grid{grid-template-columns:1fr}.main{padding:14px}}
 @media print{header,.sidebar,.btn,.filter-bar,.hdr-act{display:none!important}.main{padding:0}.layout{display:block}body{background:#fff;color:#000}}
 </style>
@@ -191,32 +202,31 @@ textarea{resize:vertical;min-height:60px}
 </head>
 <body>
 <header>
-  <div class="logo">LupoLab <span class="logo-badge">AP</span></div>
+  <div class="logo" onclick="showView('dashboard')" style="cursor:pointer">LupoLab <span class="logo-badge">AP</span></div>
   <div class="hdr-act">
-    <button class="btn" onclick="showView('dashboard')" style="font-weight:600">🏠 Home</button>
-    <button class="btn" onclick="showView('dashboard')" title="Home">🏠</button>
-    <button class="btn" id="sync-status" onclick="forceSync()" style="font-size:12px;font-family:'DM Mono',monospace" title="Clicca per sincronizzare">⬡ Locale</button>
-    <!-- Azioni tracciabilità -->
-    <button class="btn btn-primary" onclick="openNuovoCampione()">＋ Campione</button>
-    <button class="btn btn-primary" onclick="openNuovoCampioneSpec('pap_l')" style="background:var(--orange);border-color:var(--orange)">＋ Pap L</button>
-    <button class="btn btn-primary" onclick="openNuovoCampioneSpec('pap_priv')" style="background:var(--purple);border-color:var(--purple)">＋ Pap Priv.</button>
-    <!-- Azioni magazzino -->
-    <button class="btn btn-ok" onclick="openCaricaScanModal()">⬆ Carico</button>
-    <button class="btn btn-warn" onclick="openScaricaModal()">⬇ Scarico</button>
-    <button class="btn btn-ok" onclick="openDDTModal()">📷 DDT</button>
-    <button class="btn" onclick="exportCSV()" title="Esporta CSV magazzino">CSV</button>
-    <button class="btn btn-primary" onclick="openAddModal()">＋ Prodotto</button>
+    <button class="btn" id="sync-status" onclick="forceSync()" style="font-size:11px;font-family:'DM Mono',monospace" title="Sincronizza con cloud">⬡ Locale</button>
+    <div style="width:1px;height:20px;background:rgba(255,255,255,.15);margin:0 4px"></div>
+    <button class="btn btn-primary" onclick="openNuovoCampione()" title="Nuovo campione">＋ Campione</button>
+    <button class="btn" onclick="openNuovoCampioneSpec('pap_l')" style="background:rgba(234,88,12,.2);color:#fdba74;border-color:rgba(234,88,12,.3)">＋ Pap L</button>
+    <button class="btn" onclick="openNuovoCampioneSpec('pap_priv')" style="background:rgba(124,58,237,.2);color:#c4b5fd;border-color:rgba(124,58,237,.3)">＋ Pap Priv.</button>
+    <div style="width:1px;height:20px;background:rgba(255,255,255,.15);margin:0 4px"></div>
+    <button class="btn btn-ok" onclick="openCaricaScanModal()" title="Carico da scan">⬆ Carico</button>
+    <button class="btn btn-warn" onclick="openScaricaModal()" title="Scarico manuale">⬇ Scarico</button>
+    <button class="btn" onclick="openDDTModal()" title="Importa da foto">📷 DDT</button>
+    <button class="btn btn-primary" onclick="openAddModal()" title="Aggiungi prodotto">＋ Prodotto</button>
   </div>
 </header>
 
 <div class="layout">
   <nav class="sidebar">
-    <!-- TRACCIABILITÀ — sezione principale -->
+    <!-- HOME -->
+    <div class="nav-item active" onclick="showView('dashboard')" id="nav-dashboard"><span class="nav-icon">🏠</span>Dashboard</div>
+    <div class="nav-div"></div>
+    <!-- TRACCIABILITÀ -->
     <div class="nav-lbl">Tracciabilità</div>
-    <div class="nav-item active" onclick="showView('tracciabilita')" id="nav-tracciabilita"><span class="nav-icon">🧬</span>Campioni</div>
+    <div class="nav-item" onclick="showView('tracciabilita')" id="nav-tracciabilita"><span class="nav-icon">🧬</span>Campioni</div>
     <div class="nav-item" onclick="showView('processatore')" id="nav-processatore"><span class="nav-icon">⚗️</span>Processatore</div>
     <div class="nav-item" onclick="showView('coloratore')" id="nav-coloratore"><span class="nav-icon">🎨</span>Coloratore</div>
-    <div class="nav-item" onclick="showView('dashboard')" id="nav-dashboard"><span class="nav-icon">🏠</span>Dashboard</div>
 
     <div class="nav-div"></div>
 
@@ -224,7 +234,7 @@ textarea{resize:vertical;min-height:60px}
     <div class="nav-lbl clickable" onclick="toggleMagazzino()">
       <span>📦 Magazzino</span><span id="mag-arrow">▾</span>
     </div>
-    <div id="mag-submenu">
+    <div id="mag-submenu" style="display:block">
       <div class="nav-item" onclick="showView('inventario')" id="nav-inventario"><span class="nav-icon">📋</span>Inventario</div>
       <div class="nav-item" onclick="showView('movimenti')" id="nav-movimenti"><span class="nav-icon">↕</span>Movimenti</div>
       <div class="nav-item" onclick="showView('allerte')" id="nav-allerte"><span class="nav-icon">🚨</span>Allerte</div>
@@ -245,7 +255,7 @@ textarea{resize:vertical;min-height:60px}
     <div class="nav-lbl clickable" onclick="toggleCategorie()">
       <span>Categorie</span><span id="cat-arrow">▾</span>
     </div>
-    <div id="cat-submenu">
+    <div id="cat-submenu" style="display:block">
       <div class="nav-item" onclick="goCategory('Reagenti')"><span class="nav-icon">🧪</span>Reagenti</div>
       <div class="nav-item" onclick="goCategory('IHC')"><span class="nav-icon">🔬</span>IHC</div>
       <div class="nav-item" onclick="goCategory('Vetrini')"><span class="nav-icon">🪟</span>Vetrini</div>
@@ -1730,15 +1740,17 @@ let currentView='dashboard', invFilter='all', fornFilter='all', homeFornFilter='
 function showView(v){
   document.querySelectorAll('.view').forEach(e=>e.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(e=>e.classList.remove('active'));
-  document.getElementById('view-'+v).classList.add('active');
+  const viewEl = document.getElementById('view-'+v);
+  if(!viewEl){ console.warn('View not found: view-'+v); return; }
+  viewEl.classList.add('active');
   const n=document.getElementById('nav-'+v); if(n) n.classList.add('active');
   currentView=v;
-  // Apri submenu magazzino automaticamente se si naviga in una sua voce
+  // Apri submenu magazzino automaticamente
   const magVoci=['inventario','movimenti','allerte','ordini','archivio','schede'];
   if(magVoci.includes(v)){
     const sub=document.getElementById('mag-submenu');
     const ar=document.getElementById('mag-arrow');
-    if(sub&&sub.style.display==='none'){ sub.style.display=''; if(ar) ar.textContent='▾'; }
+    if(sub && sub.style.display==='none'){ sub.style.display='block'; if(ar) ar.textContent='▾'; }
   }
   if(v==='dashboard'){ renderDashboard(); }
   if(v==='inventario') renderInv();
@@ -4204,16 +4216,20 @@ function exportCSV(){
 function toggleMagazzino(){
   const el=document.getElementById('mag-submenu');
   const ar=document.getElementById('mag-arrow');
-  const hidden=el.style.display==='none';
-  el.style.display=hidden?'':'none';
-  ar.textContent=hidden?'▾':'▸';
+  if(!el) return;
+  const hidden = el.style.display==='none' || el.style.display==='';
+  // Prima apertura: display è '' (default block) — considera aperto
+  const isOpen = el.style.display!=='none';
+  el.style.display = isOpen ? 'none' : 'block';
+  if(ar) ar.textContent = isOpen ? '▸' : '▾';
 }
 function toggleCategorie(){
   const el=document.getElementById('cat-submenu');
   const ar=document.getElementById('cat-arrow');
-  const hidden=el.style.display==='none';
-  el.style.display=hidden?'':'none';
-  ar.textContent=hidden?'▾':'▸';
+  if(!el) return;
+  const isOpen = el.style.display!=='none';
+  el.style.display = isOpen ? 'none' : 'block';
+  if(ar) ar.textContent = isOpen ? '▸' : '▾';
 }
 document.addEventListener('keydown',e=>{
   if(e.key==='Escape'){
@@ -4542,7 +4558,6 @@ renderDashboard();
 initialSync();
 
 }
-
 }
 </script>
 </body>
