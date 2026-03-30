@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- LabStore v4 - 20260325-coloratore-v2 -->
+<!-- LabStore v4 - 20260320-1931 -->
 <html lang="it">
 <head>
 <meta charset="UTF-8">
@@ -296,7 +296,6 @@ textarea{resize:vertical;min-height:60px}
             <select id="quick-tipo">
               <option value="istologia">Istologia</option>
               <option value="citologia">Citologia</option>
-              <option value="citologia_cen">Citologia centrifugata</option>
               <option value="pap_l">Pap LupoLab</option>
               <option value="pap_priv">Pap Privato</option>
             </select>
@@ -558,7 +557,6 @@ textarea{resize:vertical;min-height:60px}
           <button class="f-btn active" onclick="setTraccFilter('all',this)">Tutti</button>
           <button class="f-btn" onclick="setTraccFilter('istologia',this)">Istologia</button>
           <button class="f-btn" onclick="setTraccFilter('citologia',this)">Citologia</button>
-          <button class="f-btn" onclick="setTraccFilter('citologia_cen',this)">Cit. Centrifugata</button>
           <button class="f-btn" onclick="setTraccFilter('pap',this)">Pap</button>
           <button class="f-btn" onclick="setTraccFilter('pap_l',this)">Pap LupoLab</button>
           <button class="f-btn" onclick="setTraccFilter('pap_priv',this)">Pap Privato</button>
@@ -845,10 +843,10 @@ textarea{resize:vertical;min-height:60px}
 </div>
 
 <!-- ══════════════════════════════
-     MODAL: COLORATORE (registro giornaliero — v2 blocchi dinamici)
+     MODAL: COLORATORE (registro giornaliero)
 ══════════════════════════════ -->
 <div class="modal-overlay" id="modal-coloratore">
-  <div class="modal" style="width:660px;max-height:92vh;overflow-y:auto">
+  <div class="modal" style="width:600px;max-height:92vh;overflow-y:auto">
     <div class="modal-title" id="color-modal-title">Registro Coloratore</div>
     <input type="hidden" id="color-edit-id">
 
@@ -856,28 +854,60 @@ textarea{resize:vertical;min-height:60px}
     <div style="background:var(--bg3);border-radius:var(--r);padding:12px;margin-bottom:14px">
       <div class="form-grid">
         <div class="fg" style="margin:0"><label>Data *</label><input type="date" id="color-data"></div>
-        <div class="fg" style="margin:0"><label>Note giornata</label><input type="text" id="color-note" placeholder="Note…"></div>
+        <div class="fg" style="margin:0"><label>Note</label><input type="text" id="color-note" placeholder="Note…"></div>
       </div>
     </div>
 
-    <!-- BLOCCHI PROTOCOLLO DINAMICI -->
+    <!-- N° CICLI PER TIPO -->
     <div style="background:var(--bg3);border-radius:var(--r);padding:12px;margin-bottom:14px">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-        <div>
-          <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.8px">Protocolli eseguiti</div>
-          <div style="font-size:11px;color:var(--text3);margin-top:2px">Un blocco per ogni protocollo di colorazione usato oggi</div>
+      <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px">N° cicli effettuati</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+        <div style="text-align:center;background:var(--bg2);border-radius:8px;padding:12px;border:1px solid var(--border)">
+          <div style="font-size:11px;color:var(--blue);font-weight:600;margin-bottom:6px">EE — Istologia</div>
+          <input type="number" id="color-cicli-ee" min="0" value="0" style="width:70px;text-align:center;font-family:DM Mono,monospace;font-size:22px;font-weight:700;border:none;background:transparent;color:var(--blue)">
+          <div style="font-size:10px;color:var(--text3)">cicli</div>
         </div>
-        <button class="btn btn-sm btn-primary" onclick="addBloccoProtocollo()">＋ Protocollo</button>
+        <div style="text-align:center;background:var(--bg2);border-radius:8px;padding:12px;border:1px solid var(--border)">
+          <div style="font-size:11px;color:var(--teal);font-weight:600;margin-bottom:6px">EE — Citologia</div>
+          <input type="number" id="color-cicli-ee-cit" min="0" value="0" style="width:70px;text-align:center;font-family:DM Mono,monospace;font-size:22px;font-weight:700;border:none;background:transparent;color:var(--teal)">
+          <div style="font-size:10px;color:var(--text3)">cicli</div>
+        </div>
+        <div style="text-align:center;background:var(--bg2);border-radius:8px;padding:12px;border:1px solid var(--border)">
+          <div style="font-size:11px;color:var(--purple);font-weight:600;margin-bottom:6px">PAP LupoLab</div>
+          <input type="number" id="color-cicli-pap" min="0" value="0" style="width:70px;text-align:center;font-family:DM Mono,monospace;font-size:22px;font-weight:700;border:none;background:transparent;color:var(--purple)">
+          <div style="font-size:10px;color:var(--text3)">cicli</div>
+        </div>
       </div>
-      <div id="color-blocchi-container"></div>
+    </div>
+
+    <!-- RANGE CASI PER TIPO -->
+    <div style="background:var(--bg3);border-radius:var(--r);padding:12px;margin-bottom:14px">
+      <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px">Range ID casi lavorati</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+        <div style="background:var(--bg2);border-radius:8px;padding:10px;border:1px solid var(--border)">
+          <div style="font-size:11px;color:var(--blue);font-weight:600;margin-bottom:6px">Istologia</div>
+          <input type="text" id="color-range-ist-from" placeholder="Da es. 2764/26" style="width:100%;margin-bottom:5px;font-family:DM Mono,monospace;font-size:12px">
+          <input type="text" id="color-range-ist-to" placeholder="A es. 2800/26" style="width:100%;font-family:DM Mono,monospace;font-size:12px">
+        </div>
+        <div style="background:var(--bg2);border-radius:8px;padding:10px;border:1px solid var(--border)">
+          <div style="font-size:11px;color:var(--teal);font-weight:600;margin-bottom:6px">Citologia</div>
+          <input type="text" id="color-range-cit-from" placeholder="Da es. 2764/26" style="width:100%;margin-bottom:5px;font-family:DM Mono,monospace;font-size:12px">
+          <input type="text" id="color-range-cit-to" placeholder="A es. 2800/26" style="width:100%;font-family:DM Mono,monospace;font-size:12px">
+        </div>
+        <div style="background:var(--bg2);border-radius:8px;padding:10px;border:1px solid var(--border)">
+          <div style="font-size:11px;color:var(--purple);font-weight:600;margin-bottom:6px">Pap LupoLab</div>
+          <input type="text" id="color-range-pap-from" placeholder="Da es. 100/26L" style="width:100%;margin-bottom:5px;font-family:DM Mono,monospace;font-size:12px">
+          <input type="text" id="color-range-pap-to" placeholder="A es. 150/26L" style="width:100%;font-family:DM Mono,monospace;font-size:12px">
+        </div>
+      </div>
     </div>
 
     <!-- REAGENTI ATTIVI NEL COLORATORE QUEL GIORNO -->
     <div style="background:var(--bg3);border-radius:var(--r);padding:12px;margin-bottom:14px">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
         <div>
-          <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.8px">Reagenti / coloranti presenti nel coloratore</div>
-          <div style="font-size:11px;color:var(--text3);margin-top:2px">Tutti i reagenti attivi nelle vaschette quel giorno — con lotto</div>
+          <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.8px">Reagenti presenti nel coloratore</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:2px">Tutti i reagenti attivi nelle vaschette quel giorno</div>
         </div>
         <div style="display:flex;gap:5px">
           <button class="btn btn-sm" onclick="precompileReagentiColoratore()">⟳ Auto</button>
@@ -915,8 +945,7 @@ textarea{resize:vertical;min-height:60px}
           <select id="camp-tipo">
             <option value="">Seleziona…</option>
             <option value="istologia">Istologia</option>
-            <option value="citologia">Citologia generale</option>
-            <option value="citologia_cen">Citologia — centrifugato</option>
+            <option value="citologia">Citologia</option>
             <option value="pap">Pap test</option>
             <option value="pap_l">Pap LupoLab</option>
             <option value="pap_priv">Pap Privato</option>
@@ -948,37 +977,6 @@ textarea{resize:vertical;min-height:60px}
         <button class="btn btn-sm btn-primary" onclick="addPezzo()">＋ Pezzo</button>
       </div>
       <div id="pezzi-container"></div>
-    </div>
-
-    <!-- CAMPIONAMENTO — n° blocchetti prodotti (solo istologia) -->
-    <div id="camp-campionamento-section" style="background:var(--bg3);border-radius:var(--r);padding:12px;margin-bottom:14px;display:none">
-      <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px">Campionamento</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-        <div class="fg" style="margin:0">
-          <label>N° blocchetti prodotti</label>
-          <input type="number" id="camp-n-blocchetti" min="0" value="0" style="font-family:DM Mono,monospace;font-size:16px;font-weight:700">
-        </div>
-        <div class="fg" style="margin:0">
-          <label>Operatore campionamento</label>
-          <input type="text" id="camp-op-campionamento" placeholder="Nome operatore">
-        </div>
-        <div class="fg full" style="margin:0">
-          <label>Note campionamento</label>
-          <textarea id="camp-note-campionamento" rows="2" placeholder="Descrizione macro, particolarità riscontrate…"></textarea>
-        </div>
-      </div>
-    </div>
-
-    <!-- CITOLOGICI ASSOCIATI (es. liquido di lavaggio a biopsia vescicale) -->
-    <div id="camp-cit-associati-section" style="background:var(--bg3);border-radius:var(--r);padding:12px;margin-bottom:14px;display:none">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-        <div>
-          <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.8px">Citologici associati</div>
-          <div style="font-size:11px;color:var(--text3);margin-top:2px">Es. liquido di lavaggio associato a biopsia vescicale</div>
-        </div>
-        <button class="btn btn-sm btn-primary" onclick="addCitAssociato()">＋ Aggiungi</button>
-      </div>
-      <div id="cit-associati-container"></div>
     </div>
 
     <!-- COLORAZIONI -->
@@ -1346,21 +1344,43 @@ function enqueue(op){
 
 // Invia tutto quando torna online
 async function forceSync(){
-  // Forza download da Supabase sovrascrivendo il localStorage
+  // Sincronizzazione bidirezionale con merge: non sovrascrive mai i dati locali
   if(!SUPA_OK||!IS_ONLINE){ toast('Non connesso','error'); return; }
   updateSyncStatus('sync');
   try{
     const [prods,movs,wRows,wlog,ordini,arch,camp_cloud]=await Promise.all([
       supaFetch('products','GET',null,'?order=nome'),
-      supaFetch('movements','GET',null,'?order=ts.desc&limit=200'),
+      supaFetch('movements','GET',null,'?order=ts.desc&limit=500'),
       supaFetch('waste_state','GET',null,'?id=eq.waste_state'),
       supaFetch('waste_log','GET',null,'?order=ts.desc&limit=100'),
       supaFetch('ordini','GET',null,'?order=creato.desc&limit=200'),
       supaFetch('archivio_ordini','GET',null,'?order=creato.desc&limit=500'),
       supaFetch('campioni','GET',null,'?order=data.desc&limit=1000')
     ]);
-    if(prods&&prods.length) localStorage.setItem(LS_P, JSON.stringify(prods));
-    if(movs&&movs.length) localStorage.setItem(LS_M, JSON.stringify(movs));
+    // -- PRODOTTI: merge locale + cloud, locale ha priorita'
+    const localP = JSON.parse(localStorage.getItem(LS_P)||'[]');
+    if(prods&&prods.length){
+      const localIds = new Set(localP.map(p=>p.id));
+      const onlyCloud = prods.filter(p=>!localIds.has(p.id));
+      const merged = [...localP, ...onlyCloud];
+      _setCache(LS_P, merged);
+      localStorage.setItem(LS_P, JSON.stringify(merged));
+      if(localP.length) await supaFetch('products','POST',localP,'?on_conflict=id');
+    } else if(localP.length){
+      await supaFetch('products','POST',localP,'?on_conflict=id');
+    }
+    // -- MOVIMENTI: merge locale + cloud senza perdere nessun record
+    const localM = JSON.parse(localStorage.getItem(LS_M)||'[]');
+    if(movs&&movs.length){
+      const cloudIds = new Set(movs.map(m=>m.id));
+      const onlyLocal = localM.filter(m=>!cloudIds.has(m.id));
+      const merged = [...onlyLocal, ...movs].sort((a,b)=>new Date(b.ts)-new Date(a.ts));
+      _setCache(LS_M, merged);
+      localStorage.setItem(LS_M, JSON.stringify(merged));
+      if(onlyLocal.length) await supaFetch('movements','POST',onlyLocal,'?on_conflict=id');
+    } else if(localM.length){
+      await supaFetch('movements','POST',localM.slice(0,100),'?on_conflict=id');
+    }
     if(wRows&&wRows.length) localStorage.setItem(LS_W, JSON.stringify(wRows[0].data));
     if(wlog) localStorage.setItem(LS_WL, JSON.stringify(wlog));
     if(ordini) localStorage.setItem('ls_ordini', JSON.stringify(ordini));
@@ -1374,7 +1394,11 @@ async function forceSync(){
     if(currentView==='dashboard') renderDashboard();
     if(currentView==='inventario') renderInv();
     if(currentView==='movimenti') renderMovimenti();
-    toast('✅ Dati aggiornati dal cloud','success');
+    if(currentView==='rifiuti') renderRifiuti();
+    if(currentView==='allerte') renderAllerte();
+    if(currentView==='ordini') renderOrdini();
+    if(currentView==='report') renderReport();
+    toast('Dati sincronizzati correttamente','success');
   }catch(e){ updateSyncStatus('err'); toast('Errore sync','error'); }
 }
 async function flushQueue(){
@@ -1452,11 +1476,13 @@ async function saveP(arr, deletedId){
 }
 
 const loadM=()=>_getCache(LS_M,'[]');
-function saveM(arr){
+function saveM(arr, newMovements){
   _setCache(LS_M,arr);
   if(!SUPA_OK||!arr.length) return;
   if(!IS_ONLINE){ enqueue({type:'movements'}); return; }
-  supaFetch('movements','POST',[arr[0]],'?on_conflict=id');
+  // Invia tutti i nuovi movimenti passati esplicitamente, oppure l'intero array
+  const toSync = newMovements ? (Array.isArray(newMovements)?newMovements:[newMovements]) : arr.slice(0,50);
+  if(toSync.length) supaFetch('movements','POST',toSync,'?on_conflict=id');
 }
 
 function loadW(){
@@ -1535,7 +1561,15 @@ async function initialSync(){
       // Nessun dato locale (primo accesso o dispositivo pulito): scarica da Supabase
       localStorage.setItem(LS_P, JSON.stringify(prods));
     }
-    if(movs&&movs.length) localStorage.setItem(LS_M, JSON.stringify(movs));
+    // Movimenti: merge locale + cloud, non sovrascrivere mai quelli locali
+    if(movs&&movs.length){
+      const localM2 = JSON.parse(localStorage.getItem(LS_M)||'[]');
+      const cloudIds2 = new Set(movs.map(m=>m.id));
+      const onlyLocal2 = localM2.filter(m=>!cloudIds2.has(m.id));
+      const mergedM = [...onlyLocal2, ...movs].sort((a,b)=>new Date(b.ts)-new Date(a.ts));
+      localStorage.setItem(LS_M, JSON.stringify(mergedM));
+      if(onlyLocal2.length) supaFetch('movements','POST',onlyLocal2,'?on_conflict=id');
+    }
     // Waste: usa cloud solo se locale è ai valori di default (vuoto/primo accesso)
     const localW=JSON.parse(localStorage.getItem(LS_W)||'{}');
     const isDefaultW=!localW.cer_180103||localW.cer_180103.pieni===0;
@@ -1888,8 +1922,8 @@ function renderHomeCampioniOggi(){
     el.innerHTML='<div style="color:var(--text3);font-size:12px">Nessun caso registrato oggi</div>';
     return;
   }
-  const tipoColor={istologia:'var(--blue)',citologia:'var(--teal)',citologia_cen:'var(--teal)',pap:'var(--purple)',pap_l:'var(--orange)',pap_priv:'var(--red)'};
-  const tipoLabel={istologia:'IST',citologia:'CIT',citologia_cen:'CIT-C',pap:'PAP',pap_l:'PAP-L',pap_priv:'PAP-P'};
+  const tipoColor={istologia:'var(--blue)',citologia:'var(--teal)',pap:'var(--purple)',pap_l:'var(--orange)',pap_priv:'var(--red)'};
+  const tipoLabel={istologia:'IST',citologia:'CIT',pap:'PAP',pap_l:'PAP-L',pap_priv:'PAP-P'};
   el.innerHTML='<div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:4px">'+
     oggi_camp.map(c=>`<span onclick="openDetailCampione('${c.id}')" style="cursor:pointer;display:inline-flex;align-items:center;gap:5px;background:var(--bg3);border:1px solid var(--border);border-radius:5px;padding:3px 9px;font-size:12px">
       <span style="font-family:DM Mono,monospace;font-weight:700">${c.campione_id}</span>
@@ -2072,7 +2106,6 @@ function renderHomeGrid(){
 
   const catOrder=['Reagenti','IHC','Vetrini','Cassette','Coloranti','Consumabili','Lame','Altro'];
   const container=document.getElementById('home-cat-grid');
-  if(!container) return;
   if(!prods.length){ container.innerHTML='<div class="empty"><div class="e-ico">🔍</div><p>Nessun prodotto trovato</p></div>'; return; }
 
   container.innerHTML=catOrder.filter(cat=>bycat[cat]).map(cat=>{
@@ -2320,7 +2353,8 @@ function adjQty(id,delta){
   const prods=loadP(), p=prods.find(x=>x.id===id); if(!p) return;
   const nq=Math.max(0,p.qty+delta); if(nq===p.qty) return;
   p.qty=nq; saveP(prods);
-  const movs=loadM(); movs.unshift({id:genId(),ts:new Date().toISOString(),tipo:delta>0?'carico':'scarico',prod:p.nome,prodId:p.id,qty:Math.abs(delta),lotto:p.lotto||'',note:'Aggiustamento rapido'}); saveM(movs);
+  const newMov={id:genId(),ts:new Date().toISOString(),tipo:delta>0?'carico':'scarico',prod:p.nome,prodId:p.id,qty:Math.abs(delta),lotto:p.lotto||'',note:'Aggiustamento rapido'};
+  const movs=loadM(); movs.unshift(newMov); saveM(movs, newMov);
   renderInv();
 }
 function deleteProduct(id){
@@ -2333,6 +2367,8 @@ function deleteProduct(id){
 // ══════════════════════════════════════════
 function renderMovimenti(){
   if(!document.getElementById('movimenti-table')) return;
+  // Invalida la cache per leggere sempre i dati più aggiornati
+  delete _cache[LS_M];
   const movs=loadM(), tb=document.getElementById('mov-tbody');
   if(!movs.length){ tb.innerHTML=`<tr><td colspan="6"><div class="empty"><div class="e-ico">↕</div><p>Nessun movimento registrato</p></div></td></tr>`; return; }
   tb.innerHTML=movs.slice(0,200).map(m=>{
@@ -2574,9 +2610,10 @@ function confirmManualMov(){
     p.qty=p.qty-qty;
   }
   saveP(prods);
+  const newMov={id:genId(),ts:new Date().toISOString(),tipo:manualMovType,prod:p.nome,prodId:p.id,qty,lotto:document.getElementById('m-lotto').value,note:document.getElementById('m-note').value};
   const movs=loadM();
-  movs.unshift({id:genId(),ts:new Date().toISOString(),tipo:manualMovType,prod:p.nome,prodId:p.id,qty,lotto:document.getElementById('m-lotto').value,note:document.getElementById('m-note').value});
-  saveM(movs); closeModal('modal-mov');
+  movs.unshift(newMov);
+  saveM(movs, newMov); closeModal('modal-mov');
   renderMovimenti();
   if(currentView==='inventario') renderInv();
   toast(`${manualMovType==='carico'?'Carico':'Scarico'} registrato`,manualMovType==='carico'?'success':'info');
@@ -2687,7 +2724,7 @@ function addDDTRow(){
 function confirmDDT(){
   const rows=document.querySelectorAll('#ddt-rows .ai-row');
   if(!rows.length){ toast('Nessun prodotto da caricare','error'); return; }
-  const prods=loadP(), movs=loadM(); let count=0;
+  const prods=loadP(), movs=loadM(); let count=0; const newMovs=[];
   rows.forEach(row=>{
     const g=f=>row.querySelector(`[data-f="${f}"]`)?.value?.trim()||'';
     const nome=g('nome'); if(!nome) return;
@@ -2699,9 +2736,10 @@ function confirmDDT(){
     } else {
       prods.push({id:genId(),nome,cat,fornitore:'',barcode:'',lotto,scadenza,qty,qty_init:qty,unita,min:0,pos:'',note:''});
     }
-    movs.unshift({id:genId(),ts:new Date().toISOString(),tipo:'carico',prod:nome,prodId:ex?.id||'',qty,lotto,note:'Da DDT'}); count++;
+    const m={id:genId(),ts:new Date().toISOString(),tipo:'carico',prod:nome,prodId:ex?.id||'',qty,lotto,note:'Da DDT'};
+    movs.unshift(m); newMovs.push(m); count++;
   });
-  saveP(prods); saveM(movs); closeDDTModal();
+  saveP(prods); saveM(movs, newMovs); closeDDTModal();
   if(currentView==='inventario') renderInv();
   if(currentView==='dashboard') renderDashboard();
   if(currentView==='movimenti') renderMovimenti();
@@ -2783,7 +2821,8 @@ function confirmScaricaManuale(){
   if(!p){ toast('Prodotto non trovato','error'); return; }
   if(p.qty<qty){ toast('Quantità insufficiente — disponibili: '+p.qty,'error'); return; }
   p.qty-=qty; saveP(prods);
-  const movs=loadM(); movs.unshift({id:genId(),ts:new Date().toISOString(),tipo:'scarico',prod:p.nome,prodId:p.id,qty,lotto:p.lotto||'',note:note||'Scarico manuale'}); saveM(movs);
+  const newMov={id:genId(),ts:new Date().toISOString(),tipo:'scarico',prod:p.nome,prodId:p.id,qty,lotto:p.lotto||'',note:note||'Scarico manuale'};
+  const movs=loadM(); movs.unshift(newMov); saveM(movs, newMov);
   closeScaricaModal();
   if(currentView==='inventario') renderInv();
   if(currentView==='dashboard') renderDashboard();
@@ -2837,7 +2876,8 @@ function confirmBarcodeScario(){
   const prods=loadP(), p=prods.find(x=>x.id===matchedProd.id);
   if(!p){ toast('Prodotto non trovato','error'); return; }
   p.qty-=qty; saveP(prods);
-  const movs=loadM(); movs.unshift({id:genId(),ts:new Date().toISOString(),tipo:'scarico',prod:p.nome,prodId:p.id,qty,lotto:p.lotto||'',note:document.getElementById('bc-note').value||'Scarico barcode'}); saveM(movs);
+  const newMov={id:genId(),ts:new Date().toISOString(),tipo:'scarico',prod:p.nome,prodId:p.id,qty,lotto:p.lotto||'',note:document.getElementById('bc-note').value||'Scarico barcode'};
+  const movs=loadM(); movs.unshift(newMov); saveM(movs, newMov);
   closeBarcodeModal();
   if(currentView==='inventario') renderInv();
   if(currentView==='dashboard') renderDashboard();
@@ -2975,9 +3015,10 @@ function confirmCaricaScanFound(){
   p.qty+=qty;
   if(p.qty_init===undefined) p.qty_init=qty;
   saveP(prods);
+  const newMov={id:genId(),ts:new Date().toISOString(),tipo:'carico',prod:p.nome,prodId:p.id,qty,lotto:p.lotto||'',note:note||'Carico da scan'};
   const movs=loadM();
-  movs.unshift({id:genId(),ts:new Date().toISOString(),tipo:'carico',prod:p.nome,prodId:p.id,qty,lotto:p.lotto||'',note:note||'Carico da scan'});
-  saveM(movs);
+  movs.unshift(newMov);
+  saveM(movs, newMov);
   closeCaricaScanModal();
   if(currentView==='inventario') renderInv();
   if(currentView==='dashboard') renderDashboard();
@@ -3003,12 +3044,14 @@ function confirmCaricaScanNew(){
     min:0, pos:'', note:''
   };
   const prods=loadP(); prods.push(p); saveP(prods);
+  const newMov={id:genId(),ts:new Date().toISOString(),tipo:'carico',prod:p.nome,prodId:p.id,qty,lotto:p.lotto||'',note:'Carico da scan — nuovo prodotto'};
   const movs=loadM();
-  movs.unshift({id:genId(),ts:new Date().toISOString(),tipo:'carico',prod:p.nome,prodId:p.id,qty,lotto:p.lotto||'',note:'Carico da scan — nuovo prodotto'});
-  saveM(movs);
+  movs.unshift(newMov);
+  saveM(movs, newMov);
   closeCaricaScanModal();
   if(currentView==='inventario') renderInv();
   if(currentView==='dashboard') renderDashboard();
+  if(currentView==='movimenti') renderMovimenti();
   toast('Nuovo prodotto salvato: '+p.nome,'success');
 }
 
@@ -3363,157 +3406,22 @@ function openNuovoColoratore(preset){
   document.getElementById('color-modal-title').textContent = preset ? 'Modifica Registro Coloratore' : 'Registro Coloratore';
   document.getElementById('color-data').value = preset?.data||new Date().toISOString().slice(0,10);
   document.getElementById('color-note').value = preset?.note||'';
-
-  // Blocchi protocollo
-  const bc = document.getElementById('color-blocchi-container');
-  bc.innerHTML = '';
-  if(preset?.blocchi?.length){
-    preset.blocchi.forEach(b => addBloccoProtocollo(b));
-  } else {
-    // Default: apri con un blocco EE Istologia vuoto
-    addBloccoProtocollo({protocollo:'EE', cicli:0, ranges:[], vetrini:0});
-  }
-
+  document.getElementById('color-cicli-ee').value = preset?.cicli_ee||0;
+  document.getElementById('color-cicli-ee-cit').value = preset?.cicli_ee_cit||0;
+  document.getElementById('color-cicli-pap').value = preset?.cicli_pap||0;
+  // Range casi
+  document.getElementById('color-range-ist-from').value = preset?.range_ist?.from||'';
+  document.getElementById('color-range-ist-to').value   = preset?.range_ist?.to||'';
+  document.getElementById('color-range-cit-from').value = preset?.range_cit?.from||'';
+  document.getElementById('color-range-cit-to').value   = preset?.range_cit?.to||'';
+  document.getElementById('color-range-pap-from').value = preset?.range_pap?.from||'';
+  document.getElementById('color-range-pap-to').value   = preset?.range_pap?.to||'';
   // Reagenti
   const rl = document.getElementById('color-reagenti-list');
   rl.innerHTML='';
   if(preset?.reagenti?.length){ preset.reagenti.forEach(r=>addReagenteColor(r)); }
   else { precompileReagentiColoratore(); }
   document.getElementById('modal-coloratore').classList.add('open');
-}
-
-// Colori per protocollo nel blocco
-const PROTO_COLORS = {EE:'var(--blue)',EE_CIT:'var(--teal)',PAP:'var(--purple)',IHC:'var(--orange)',GIEM:'var(--green)',PAS:'var(--teal)',RET:'var(--text2)',ALTRO:'var(--text2)'};
-
-function addBloccoProtocollo(preset){
-  const bc = document.getElementById('color-blocchi-container');
-  const idx = bc.children.length;
-  const div = document.createElement('div');
-  div.className = 'color-blocco';
-  div.style.cssText = 'background:var(--bg2);border:1.5px solid var(--border);border-radius:var(--r);padding:12px;margin-bottom:10px;position:relative';
-
-  const protoOpts = PROTOCOLLI_COLOR.map(p =>
-    `<option value="${p.id}" ${preset?.protocollo===p.id?'selected':''}>${p.label}</option>`
-  ).join('');
-
-  // Costruisce i range già salvati
-  const rangesHtml = (preset?.ranges||[]).map(r => makeRangeRow(r)).join('');
-
-  div.innerHTML = `
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
-      <select class="blocco-protocollo" style="flex:1;font-weight:600" onchange="updateBloccoColor(this)">
-        ${protoOpts}
-      </select>
-      <button class="btn btn-sm btn-danger" onclick="this.closest('.color-blocco').remove()" title="Rimuovi protocollo">✕</button>
-    </div>
-    <div style="display:grid;grid-template-columns:80px 1fr;gap:10px;align-items:start">
-      <div style="text-align:center;background:var(--bg3);border-radius:8px;padding:10px;border:1px solid var(--border)">
-        <div class="blocco-proto-lbl" style="font-size:10px;font-weight:600;margin-bottom:5px;color:var(--blue)">Cicli</div>
-        <input type="number" class="blocco-cicli" min="0" value="${preset?.cicli||0}"
-          style="width:100%;text-align:center;font-family:DM Mono,monospace;font-size:22px;font-weight:700;border:none;background:transparent;color:var(--blue)">
-      </div>
-      <div>
-        <div style="font-size:11px;color:var(--text3);font-weight:600;margin-bottom:5px">Range casi + N° vetrini</div>
-        <div class="blocco-ranges">${rangesHtml}</div>
-        <div style="display:flex;gap:6px;margin-top:5px;align-items:center">
-          <input type="text" class="blocco-range-from" placeholder="Da (es. 4)" style="width:90px;font-family:DM Mono,monospace;font-size:12px">
-          <span style="color:var(--text3);font-size:12px">→</span>
-          <input type="text" class="blocco-range-to" placeholder="A (es. 13)" style="width:90px;font-family:DM Mono,monospace;font-size:12px">
-          <input type="number" class="blocco-range-vetrini" placeholder="Vetrini" min="0" style="width:80px;font-family:DM Mono,monospace;font-size:12px" title="N° vetrini per questo range">
-          <button class="btn btn-sm btn-ok" onclick="addRangeAlBlocco(this)" title="Aggiungi range">＋</button>
-        </div>
-        <div style="font-size:10px;color:var(--text3);margin-top:4px">Puoi aggiungere più intervalli non consecutivi</div>
-      </div>
-    </div>`;
-  bc.appendChild(div);
-  updateBloccoColor(div.querySelector('.blocco-protocollo'));
-}
-
-function makeRangeRow(r){
-  return `<div class="range-row" style="display:inline-flex;align-items:center;gap:4px;background:var(--bg4);border:1px solid var(--border2);border-radius:5px;padding:3px 8px;margin:2px;font-size:12px;font-family:DM Mono,monospace">
-    <span>${r.from}${r.to&&r.to!==r.from?' → '+r.to:''}</span>
-    ${r.vetrini?`<span style="color:var(--text3);font-size:11px">(${r.vetrini}vtr)</span>`:''}
-    <span onclick="this.closest('.range-row').remove()" style="cursor:pointer;color:var(--text3);margin-left:3px;font-size:11px">✕</span>
-  </div>`;
-}
-
-function addRangeAlBlocco(btn){
-  const blocco = btn.closest('.color-blocco');
-  const from = blocco.querySelector('.blocco-range-from').value.trim();
-  const to   = blocco.querySelector('.blocco-range-to').value.trim();
-  const vetr = blocco.querySelector('.blocco-range-vetrini').value.trim();
-  if(!from){ toast('Inserisci almeno il valore "Da"','error'); return; }
-  const rangesEl = blocco.querySelector('.blocco-ranges');
-  rangesEl.insertAdjacentHTML('beforeend', makeRangeRow({from, to:to||from, vetrini:parseInt(vetr)||0}));
-  blocco.querySelector('.blocco-range-from').value='';
-  blocco.querySelector('.blocco-range-to').value='';
-  blocco.querySelector('.blocco-range-vetrini').value='';
-}
-
-function updateBloccoColor(sel){
-  const blocco = sel.closest('.color-blocco');
-  const color = PROTO_COLORS[sel.value]||'var(--text2)';
-  const lbl = blocco.querySelector('.blocco-proto-lbl');
-  const cicliInput = blocco.querySelector('.blocco-cicli');
-  if(lbl) lbl.style.color = color;
-  if(cicliInput) cicliInput.style.color = color;
-}
-
-function getBlocchiData(){
-  return [...document.querySelectorAll('#color-blocchi-container .color-blocco')].map(blocco => {
-    const protocollo = blocco.querySelector('.blocco-protocollo')?.value||'';
-    const cicli = parseInt(blocco.querySelector('.blocco-cicli')?.value)||0;
-    const ranges = [...blocco.querySelectorAll('.range-row')].map(row => {
-      const spans = row.querySelectorAll('span');
-      // Parse from range-row text: "X → Y (Nvtr)"
-      const parts = spans[0]?.textContent.split(' → ');
-      const vetriniMatch = spans[1]?.textContent.match(/(\d+)/);
-      return {
-        from: parts?.[0]?.trim()||'',
-        to: parts?.[1]?.trim()||parts?.[0]?.trim()||'',
-        vetrini: vetriniMatch ? parseInt(vetriniMatch[1]) : 0
-      };
-    });
-    const totVetrini = ranges.reduce((s,r)=>s+(r.vetrini||0),0);
-    return {protocollo, cicli, ranges, vetrini_totali: totVetrini};
-  });
-}
-
-async function saveColoratore(){
-  const data = document.getElementById('color-data').value;
-  if(!data){ toast('Data obbligatoria','error'); return; }
-  const editId = document.getElementById('color-edit-id').value;
-  const blocchi = getBlocchiData();
-
-  // Retrocompatibilità: mantieni i vecchi campi per dashboard/home
-  const eeB   = blocchi.find(b=>b.protocollo==='EE');
-  const citB  = blocchi.find(b=>b.protocollo==='EE_CIT');
-  const papB  = blocchi.find(b=>b.protocollo==='PAP');
-  const range1st = b => b?.ranges?.[0]||null;
-
-  const registro = {
-    id: editId||genId(),
-    data,
-    note: document.getElementById('color-note').value.trim(),
-    blocchi,
-    // Campi legacy per compatibilità con dashboard/home esistente
-    cicli_ee:     eeB?.cicli||0,
-    cicli_ee_cit: citB?.cicli||0,
-    cicli_pap:    papB?.cicli||0,
-    range_ist: range1st(eeB)  ? {from: range1st(eeB).from,  to: range1st(eeB).to}  : {},
-    range_cit: range1st(citB) ? {from: range1st(citB).from, to: range1st(citB).to} : {},
-    range_pap: range1st(papB) ? {from: range1st(papB).from, to: range1st(papB).to} : {},
-    reagenti: getReagentiList('color-reagenti-list'),
-    modificato: new Date().toISOString()
-  };
-  if(!editId) registro.creato = new Date().toISOString();
-  const arr = loadColoratore();
-  if(editId){ const i=arr.findIndex(x=>x.id===editId); if(i>=0) arr[i]=registro; else arr.unshift(registro); }
-  else arr.unshift(registro);
-  await saveColoratoreReg(arr);
-  closeModal('modal-coloratore');
-  renderColoratore();
-  toast('Registro coloratore salvato','success');
 }
 
 // Precompila reagenti del coloratore dal magazzino (coloranti EE e PAP)
@@ -3550,6 +3458,33 @@ function addReagenteColor(preset){
   if(preset?.prodId){ const sel=div.querySelector('select'); sel.value=preset.prodId; updateReagLottoGeneric(sel); }
 }
 
+async function saveColoratore(){
+  const data = document.getElementById('color-data').value;
+  if(!data){ toast('Data obbligatoria','error'); return; }
+  const editId = document.getElementById('color-edit-id').value;
+  const registro = {
+    id: editId||genId(),
+    data,
+    note: document.getElementById('color-note').value.trim(),
+    cicli_ee:     parseInt(document.getElementById('color-cicli-ee').value)||0,
+    cicli_ee_cit: parseInt(document.getElementById('color-cicli-ee-cit').value)||0,
+    cicli_pap:    parseInt(document.getElementById('color-cicli-pap').value)||0,
+    range_ist: { from: document.getElementById('color-range-ist-from').value.trim(), to: document.getElementById('color-range-ist-to').value.trim() },
+    range_cit: { from: document.getElementById('color-range-cit-from').value.trim(), to: document.getElementById('color-range-cit-to').value.trim() },
+    range_pap: { from: document.getElementById('color-range-pap-from').value.trim(), to: document.getElementById('color-range-pap-to').value.trim() },
+    reagenti: getReagentiList('color-reagenti-list'),
+    modificato: new Date().toISOString()
+  };
+  if(!editId) registro.creato = new Date().toISOString();
+  const arr = loadColoratore();
+  if(editId){ const i=arr.findIndex(x=>x.id===editId); if(i>=0) arr[i]=registro; else arr.unshift(registro); }
+  else arr.unshift(registro);
+  await saveColoratoreReg(arr);
+  closeModal('modal-coloratore');
+  renderColoratore();
+  toast('Registro coloratore salvato','success');
+}
+
 function renderColoratore(){
   const _colorList=document.getElementById('color-list'); if(!_colorList) return;
   let arr = loadColoratore();
@@ -3558,54 +3493,17 @@ function renderColoratore(){
   const to = document.getElementById('color-filter-to')?.value;
   if(from) arr=arr.filter(x=>x.data>=from);
   if(to) arr=arr.filter(x=>x.data<=to);
-  if(q) arr=arr.filter(x=>
-    (x.reagenti||[]).some(r=>(r.lotto||'').toLowerCase().includes(q)||(r.nome||'').toLowerCase().includes(q))||
-    (x.blocchi||[]).some(b=>(b.ranges||[]).some(r=>(r.from||'').toLowerCase().includes(q)||(r.to||'').toLowerCase().includes(q)))
-  );
+  if(q) arr=arr.filter(x=>(x.reagenti||[]).some(r=>(r.lotto||'').toLowerCase().includes(q)||(r.nome||'').toLowerCase().includes(q)));
 
   const all = loadColoratore();
-  // Totali da blocchi
-  const sumBlocchi = (field) => all.reduce((s,x)=>{
-    if(x.blocchi?.length) return s + x.blocchi.filter(b=>b.protocollo===field).reduce((ss,b)=>ss+(b.cicli||0),0);
-    return s + (x[field==='EE'?'cicli_ee':field==='EE_CIT'?'cicli_ee_cit':'cicli_pap']||0);
-  },0);
-  const totEE  = sumBlocchi('EE');
-  const totCit = sumBlocchi('EE_CIT');
-  const totPap = sumBlocchi('PAP');
-
-  const _cs=document.getElementById('color-stats');
-  if(_cs) _cs.textContent=
+  const totEE = all.reduce((s,x)=>s+(x.cicli_ee||0),0);
+  const totCit = all.reduce((s,x)=>s+(x.cicli_ee_cit||0),0);
+  const totPap = all.reduce((s,x)=>s+(x.cicli_pap||0),0);
+  const el = document.getElementById('color-list');
+  {const _cs=document.getElementById('color-stats');if(_cs)_cs.textContent=
     `${all.length} giorni registrati · EE: ${totEE} cicli · EE-Cit: ${totCit} cicli · PAP: ${totPap} cicli`;
 
-  const el = document.getElementById('color-list');
   if(!arr.length){ el.innerHTML='<div class="empty"><div class="e-ico">🎨</div><p>Nessun registro</p></div>'; return; }
-
-  const protLabel = {EE:'EE',EE_CIT:'EE-Cit',PAP:'PAP',IHC:'IHC',GIEM:'Giemsa',PAS:'PAS',RET:'Reticolo',ALTRO:'Altro'};
-  const protColor = {EE:'var(--blue)',EE_CIT:'var(--teal)',PAP:'var(--purple)',IHC:'var(--orange)',GIEM:'var(--green)',PAS:'var(--teal)',RET:'var(--text2)',ALTRO:'var(--text2)'};
-
-  const fmtRanges = (ranges) => {
-    if(!ranges?.length) return '—';
-    return ranges.map(r=>`${r.from}${r.to&&r.to!==r.from?'→'+r.to:''}${r.vetrini?` <span style="color:var(--text3);font-size:10px">(${r.vetrini}vtr)</span>`:''}`).join(' &nbsp;');
-  };
-
-  const fmtBlocchi = (reg) => {
-    // Usa blocchi se presenti, altrimenti retrocompatibilità legacy
-    if(reg.blocchi?.length){
-      return reg.blocchi.map(b=>`
-        <div style="display:flex;gap:6px;align-items:baseline;margin-bottom:3px">
-          <span style="font-size:11px;font-weight:700;color:${protColor[b.protocollo]||'var(--text2)'};min-width:52px">${protLabel[b.protocollo]||b.protocollo}</span>
-          <span style="font-family:DM Mono,monospace;font-size:13px;font-weight:700;color:${protColor[b.protocollo]||'var(--text2)'}">${b.cicli||0}</span>
-          <span style="font-size:10px;color:var(--text3)">cicl${b.cicli===1?'o':'i'}</span>
-          <span style="font-family:DM Mono,monospace;font-size:11px;color:var(--text3)">${fmtRanges(b.ranges)}</span>
-        </div>`).join('');
-    }
-    // Legacy fallback
-    const rows = [];
-    if(reg.cicli_ee)     rows.push(`<div style="display:flex;gap:6px;align-items:baseline;margin-bottom:2px"><span style="font-size:11px;font-weight:700;color:var(--blue);min-width:52px">EE</span><span style="font-family:DM Mono,monospace;font-size:13px;font-weight:700;color:var(--blue)">${reg.cicli_ee}</span><span style="font-size:10px;color:var(--text3)">cicli</span></div>`);
-    if(reg.cicli_ee_cit) rows.push(`<div style="display:flex;gap:6px;align-items:baseline;margin-bottom:2px"><span style="font-size:11px;font-weight:700;color:var(--teal);min-width:52px">EE-Cit</span><span style="font-family:DM Mono,monospace;font-size:13px;font-weight:700;color:var(--teal)">${reg.cicli_ee_cit}</span><span style="font-size:10px;color:var(--text3)">cicli</span></div>`);
-    if(reg.cicli_pap)    rows.push(`<div style="display:flex;gap:6px;align-items:baseline;margin-bottom:2px"><span style="font-size:11px;font-weight:700;color:var(--purple);min-width:52px">PAP</span><span style="font-family:DM Mono,monospace;font-size:13px;font-weight:700;color:var(--purple)">${reg.cicli_pap}</span><span style="font-size:10px;color:var(--text3)">cicli</span></div>`);
-    return rows.join('')||'—';
-  };
 
   const statoReag=(reg,prev)=>{
     if(!prev||!prev.reagenti?.length) return {label:'🆕 Nuovo',cls:'bg-blue'};
@@ -3615,12 +3513,18 @@ function renderColoratore(){
     const hasNew=(reg.reagenti||[]).some(r=>!(prev.reagenti||[]).find(p=>(p.lotto||p.nome)===(r.lotto||r.nome)));
     return hasNew ? {label:'🔄 Cambiato',cls:'bg-red'} : {label:'➕ Rabboccato',cls:'bg-yellow'};
   };
+  const rng=r=>r?.from?(r.from+(r.to&&r.to!==r.from?' → '+String(r.to).split('/')[0]:'')):'—';
 
   el.innerHTML=`<div style="overflow-x:auto">
   <table>
     <thead><tr>
       <th>Data</th>
-      <th>Protocolli — Cicli — Range casi</th>
+      <th style="color:var(--blue);text-align:center">EE Ist.</th>
+      <th style="color:var(--blue)">Range Ist.</th>
+      <th style="color:var(--teal);text-align:center">EE Cit.</th>
+      <th style="color:var(--teal)">Range Cit.</th>
+      <th style="color:var(--purple);text-align:center">PAP</th>
+      <th style="color:var(--purple)">Range PAP</th>
       <th>Reagenti</th>
       <th style="width:70px"></th>
     </tr></thead>
@@ -3629,11 +3533,15 @@ function renderColoratore(){
         const prev=arr[i+1]||null;
         const stato=statoReag(reg,prev);
         return `<tr>
-          <td style="font-weight:600;white-space:nowrap;vertical-align:top;padding-top:12px">${fmtDate(reg.data)}</td>
-          <td style="vertical-align:top;padding-top:10px">${fmtBlocchi(reg)}</td>
-          <td style="vertical-align:top;padding-top:12px"><span class="badge ${stato.cls}" style="font-size:11px">${stato.label}</span>
-            ${(reg.reagenti||[]).length?`<div style="font-size:11px;color:var(--text3);margin-top:4px">${(reg.reagenti||[]).slice(0,3).map(r=>`<span style="font-family:DM Mono,monospace">${r.lotto||r.nome||'—'}</span>`).join(', ')}${reg.reagenti.length>3?' +altro':''}</div>`:''}</td>
-          <td style="white-space:nowrap;vertical-align:top;padding-top:10px">
+          <td style="font-weight:600;white-space:nowrap">${fmtDate(reg.data)}</td>
+          <td style="text-align:center;font-family:'DM Mono',monospace;font-weight:700;color:var(--blue)">${reg.cicli_ee||0}</td>
+          <td style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text3)">${rng(reg.range_ist)}</td>
+          <td style="text-align:center;font-family:'DM Mono',monospace;font-weight:700;color:var(--teal)">${reg.cicli_ee_cit||0}</td>
+          <td style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text3)">${rng(reg.range_cit)}</td>
+          <td style="text-align:center;font-family:'DM Mono',monospace;font-weight:700;color:var(--purple)">${reg.cicli_pap||0}</td>
+          <td style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text3)">${rng(reg.range_pap)}</td>
+          <td><span class="badge ${stato.cls}" style="font-size:11px">${stato.label}</span></td>
+          <td style="white-space:nowrap">
             <button class="btn btn-sm" onclick="openNuovoColoratore(loadColoratore().find(x=>x.id==='${reg.id}'))">✎</button>
             <button class="btn btn-sm btn-danger" onclick="deleteColorCiclo('${reg.id}')">✕</button>
           </td>
@@ -3723,12 +3631,7 @@ function openNuovoCampione(tipo){
   document.getElementById('camp-note').value = '';
   document.getElementById('pezzi-container').innerHTML = '';
   document.getElementById('colorazioni-container').innerHTML = '';
-  // Nuovi campi campionamento
-  document.getElementById('camp-n-blocchetti').value = '0';
-  document.getElementById('camp-op-campionamento').value = '';
-  document.getElementById('camp-note-campionamento').value = '';
-  document.getElementById('cit-associati-container').innerHTML = '';
-  // Aggiorna visibility sezioni
+  // Aggiorna sottotipo visibility
   updateSottotipoVisibility();
   document.getElementById('modal-campione').classList.add('open');
 }
@@ -3748,44 +3651,7 @@ document.addEventListener('DOMContentLoaded', ()=>{
 function updateSottotipoVisibility(){
   const tipo = document.getElementById('camp-tipo')?.value;
   const st = document.getElementById('camp-sottotipo');
-  // Sottotipo citologia visibile per citologia e citologia_cen
-  if(st) st.parentElement.style.display = (tipo==='citologia'||tipo==='citologia_cen') ? '' : 'none';
-
-  // Sezione campionamento: solo istologia
-  const campSect = document.getElementById('camp-campionamento-section');
-  if(campSect) campSect.style.display = tipo==='istologia' ? '' : 'none';
-
-  // Citologici associati: solo istologia
-  const citSect = document.getElementById('camp-cit-associati-section');
-  if(citSect) citSect.style.display = tipo==='istologia' ? '' : 'none';
-
-  // Pezzi e frammenti: solo istologia
-  const pezziSect = document.getElementById('pezzi-container')?.closest('div[style*="background"]');
-  if(pezziSect) pezziSect.style.display = tipo==='istologia' ? '' : 'none';
-}
-
-// ── CITOLOGICI ASSOCIATI ──
-function addCitAssociato(preset){
-  const container = document.getElementById('cit-associati-container');
-  const div = document.createElement('div');
-  div.style.cssText = 'display:flex;gap:8px;align-items:center;padding:8px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-sm);margin-bottom:6px';
-  div.innerHTML = `
-    <span style="font-size:14px">🔬</span>
-    <div class="fg" style="flex:1;margin:0">
-      <input type="text" class="cit-ass-desc" placeholder="Es. Liquido di lavaggio vescicale" value="${preset?.desc||''}" style="width:100%">
-    </div>
-    <div class="fg" style="flex:0 0 130px;margin:0">
-      <input type="text" class="cit-ass-id" placeholder="ID caso (es. 2765/26)" value="${preset?.id_caso||''}" style="font-family:DM Mono,monospace;font-size:12px">
-    </div>
-    <button class="btn btn-sm btn-danger" onclick="this.closest('div[style]').remove()">✕</button>`;
-  container.appendChild(div);
-}
-
-function getCitAssociatiData(){
-  return [...document.querySelectorAll('#cit-associati-container > div')].map(div=>({
-    desc: div.querySelector('.cit-ass-desc')?.value?.trim()||'',
-    id_caso: div.querySelector('.cit-ass-id')?.value?.trim()||''
-  })).filter(x=>x.desc||x.id_caso);
+  if(st) st.parentElement.style.display = tipo==='citologia' ? '' : 'none';
 }
 
 // ── PEZZI ──
@@ -3943,14 +3809,6 @@ async function saveCampione(){
     desc_accettazione: document.getElementById('camp-desc-acc').value.trim(),
     pezzi: getPezziData(),
     colorazioni: getColorazioniData(),
-    // Campionamento (istologia)
-    campionamento: tipo==='istologia' ? {
-      n_blocchetti: parseInt(document.getElementById('camp-n-blocchetti').value)||0,
-      operatore: document.getElementById('camp-op-campionamento').value.trim(),
-      note: document.getElementById('camp-note-campionamento').value.trim()
-    } : null,
-    // Citologici associati (istologia)
-    cit_associati: tipo==='istologia' ? getCitAssociatiData() : [],
     note: document.getElementById('camp-note').value.trim(),
     creato: editingCampioneId ? undefined : new Date().toISOString(),
     modificato: new Date().toISOString()
@@ -3989,8 +3847,7 @@ function renderTracciabilita(){
   const all = loadCampioni();
   const oggi = new Date().toISOString().slice(0,10);
   const oggi_n = all.filter(c=>c.data===oggi).length;
-  const _ts=document.getElementById('tracc-stats');
-  if(_ts) _ts.textContent= all.length+' campioni totali · '+oggi_n+' oggi';
+  {const _ts=document.getElementById('tracc-stats');if(_ts)_ts.textContent= all.length+' campioni totali · '+oggi_n+' oggi';
 
   const container = document.getElementById('tracc-list');
   if(!campioni.length){
@@ -3998,8 +3855,8 @@ function renderTracciabilita(){
     return;
   }
 
-  const tipoColor = {istologia:'var(--blue)',citologia:'var(--teal)',citologia_cen:'var(--teal)',pap:'var(--purple)',pap_l:'var(--orange)',pap_priv:'var(--red)'};
-  const tipoLabel = {istologia:'Istologia',citologia:'Citologia',citologia_cen:'Citologia centrifugata',pap:'Pap',pap_l:'Pap LupoLab',pap_priv:'Pap Privato'};
+  const tipoColor = {istologia:'var(--blue)',citologia:'var(--teal)',pap:'var(--purple)',pap_l:'var(--orange)',pap_priv:'var(--red)'};
+  const tipoLabel = {istologia:'Istologia',citologia:'Citologia',pap:'Pap',pap_l:'Pap LupoLab'};
   const protLabel = {EE:'EE',EE_CIT:'EE-Cit',PAP:'PAP',IHC:'IHC',GIEM:'Giemsa',PAS:'PAS',RET:'Reticolo',ALTRO:'Altro'};
 
   container.innerHTML = campioni.map(camp=>{
@@ -4031,7 +3888,7 @@ function openDetailCampione(id){
   if(!c) return;
   detailCampioneId = id;
   document.getElementById('detail-title').textContent = '🧬 '+c.campione_id;
-  const tipoLabel = {istologia:'Istologia',citologia:'Citologia',citologia_cen:'Citologia centrifugata',pap:'Pap test',pap_l:'Pap LupoLab',pap_priv:'Pap Privato'};
+  const tipoLabel = {istologia:'Istologia',citologia:'Citologia',pap:'Pap test',pap_l:'Pap LupoLab',pap_priv:'Pap Privato'};
   const protLabel = {EE:'EE Routine',EE_CIT:'EE Citologia',PAP:'Papanicolau',IHC:'IHC Ventana',GIEM:'Giemsa',PAS:'PAS',RET:'Reticolo argentico',ALTRO:'Altra'};
   const metodoLabel = {EE:'Coloratore auto',EE_CIT:'Coloratore auto',PAP:'Coloratore auto',IHC:'Ventana',GIEM:'Manuale',PAS:'Manuale',RET:'Manuale'};
 
@@ -4083,31 +3940,6 @@ function openDetailCampione(id){
     });
   }
 
-  // Campionamento (solo istologia)
-  if(c.tipo==='istologia' && c.campionamento){
-    const cam = c.campionamento;
-    if(cam.n_blocchetti||cam.operatore||cam.note){
-      html += `<div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;margin:12px 0 8px">Campionamento</div>
-      <div style="background:var(--bg3);border-radius:var(--r);padding:10px;margin-bottom:10px;display:flex;gap:16px;flex-wrap:wrap">
-        ${cam.n_blocchetti?`<div><div style="font-size:10px;color:var(--text3)">Blocchetti prodotti</div><div style="font-family:DM Mono,monospace;font-size:18px;font-weight:700;color:var(--accent)">${cam.n_blocchetti}</div></div>`:''}
-        ${cam.operatore?`<div><div style="font-size:10px;color:var(--text3)">Operatore</div><div style="font-size:13px;font-weight:500">${cam.operatore}</div></div>`:''}
-        ${cam.note?`<div style="flex:1;min-width:200px"><div style="font-size:10px;color:var(--text3)">Note</div><div style="font-size:12px;color:var(--text2)">${cam.note}</div></div>`:''}
-      </div>`;
-    }
-  }
-
-  // Citologici associati (solo istologia)
-  if(c.tipo==='istologia' && c.cit_associati?.length){
-    html += `<div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;margin:12px 0 8px">Citologici associati</div>`;
-    c.cit_associati.forEach(ca=>{
-      html += `<div style="display:flex;gap:10px;align-items:center;padding:7px 10px;background:var(--teal-bg);border:1px solid rgba(8,145,178,.2);border-radius:var(--r-sm);margin-bottom:5px;font-size:13px">
-        <span>🔬</span>
-        <span style="flex:1">${ca.desc||'—'}</span>
-        ${ca.id_caso?`<span style="font-family:DM Mono,monospace;font-size:12px;color:var(--teal)">${ca.id_caso}</span>`:''}
-      </div>`;
-    });
-  }
-
   if(c.note){ html += `<div style="margin-top:10px;font-size:12px;color:var(--text2);font-style:italic">${c.note}</div>`; }
 
   document.getElementById('detail-content').innerHTML = html;
@@ -4132,13 +3964,6 @@ function editCampioneDetail(){
   document.getElementById('colorazioni-container').innerHTML = '';
   (c.pezzi||[]).forEach(p=>addPezzo(p.desc, p.frammenti));
   (c.colorazioni||[]).forEach(col=>addColorazione(col));
-  // Campionamento
-  document.getElementById('camp-n-blocchetti').value = c.campionamento?.n_blocchetti||0;
-  document.getElementById('camp-op-campionamento').value = c.campionamento?.operatore||'';
-  document.getElementById('camp-note-campionamento').value = c.campionamento?.note||'';
-  // Citologici associati
-  document.getElementById('cit-associati-container').innerHTML='';
-  (c.cit_associati||[]).forEach(ca=>addCitAssociato(ca));
   updateSottotipoVisibility();
   document.getElementById('modal-campione').classList.add('open');
 }
@@ -4735,16 +4560,19 @@ function confirmRicezione(id){
   // Carica i prodotti in magazzino
   const prods = loadP();
   const movs = loadM();
+  const newMovs = [];
   o.righe.forEach(r=>{
     const p = prods.find(x=>x.nome.toLowerCase()===r.nome.toLowerCase());
     if(p){ p.qty += r.qty; }
-    movs.unshift({id:genId(),ts:new Date().toISOString(),tipo:'carico',prod:r.nome,prodId:p?.id||'',qty:r.qty,lotto:'',note:`Ricezione ordine ${o.num}`});
+    const m={id:genId(),ts:new Date().toISOString(),tipo:'carico',prod:r.nome,prodId:p?.id||'',qty:r.qty,lotto:'',note:`Ricezione ordine ${o.num}`};
+    movs.unshift(m); newMovs.push(m);
   });
-  saveP(prods); saveM(movs); saveOrd(ords);
+  saveP(prods); saveM(movs, newMovs); saveOrd(ords);
   closeModal('modal-ordine-detail');
   renderOrdini();
   if(currentView==='inventario') renderInv();
   if(currentView==='dashboard') renderDashboard();
+  if(currentView==='movimenti') renderMovimenti();
   toast(`Ordine ${o.num} ricevuto — ${o.righe.length} prodotto/i caricati`,'success');
 }
 
@@ -4780,6 +4608,8 @@ buildProdDatalist();
 renderDashboard();
 initialSync();
 
+}
+}
 </script>
 </body>
 </html>
