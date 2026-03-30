@@ -1415,8 +1415,8 @@ async function flushQueue(){
     const wlog=JSON.parse(localStorage.getItem(LS_WL)||'[]');
     // Sync prodotti: upsert tutto
     if(prods.length) await supaFetch('products','POST',prods,'?on_conflict=id');
-    // Sync movimenti nuovi (ultimi 20)
-    if(movs.length) await supaFetch('movements','POST',movs.slice(0,20),'?on_conflict=id');
+    // Sync movimenti: invia tutti (non solo 20)
+    if(movs.length) await supaFetch('movements','POST',movs.slice(0,500),'?on_conflict=id');
     // Sync waste
     await supaFetch('waste_state','DELETE',null,'?id=eq.waste_state');
     if(Object.keys(W).length) await supaFetch('waste_state','POST',[{id:'waste_state',data:W}],'?on_conflict=id');
@@ -1430,6 +1430,10 @@ async function flushQueue(){
     if(camp.length) await supaFetch('campioni','POST',camp,'?on_conflict=id');
     saveQueue([]);
     updateSyncStatus('ok');
+    _invalidateAll();
+    if(currentView==='movimenti') renderMovimenti();
+    if(currentView==='inventario') renderInv();
+    if(currentView==='dashboard') renderDashboard();
     toast('✅ '+q.length+' modifica/he sincronizzata/e','success');
   }catch(e){ updateSyncStatus('err'); }
 }
@@ -1792,7 +1796,7 @@ function showView(v){
   }
   if(v==='dashboard'){ renderDashboard(); }
   if(v==='inventario') renderInv();
-  if(v==='movimenti') renderMovimenti();
+  if(v==='movimenti'){ delete _cache[LS_M]; renderMovimenti(); }
   if(v==='rifiuti') renderRifiuti();
   if(v==='allerte') renderAllerte();
   if(v==='ordini'){ buildProdDatalist(); renderOrdini(); }
@@ -2366,14 +2370,15 @@ function deleteProduct(id){
 // MOVIMENTI
 // ══════════════════════════════════════════
 function renderMovimenti(){
-  if(!document.getElementById('movimenti-table')) return;
-  // Invalida la cache per leggere sempre i dati più aggiornati
+  const tb=document.getElementById('mov-tbody');
+  if(!tb) return;
+  // Invalida la cache per leggere sempre i dati più aggiornati dal localStorage
   delete _cache[LS_M];
-  const movs=loadM(), tb=document.getElementById('mov-tbody');
+  const movs=loadM();
   if(!movs.length){ tb.innerHTML=`<tr><td colspan="6"><div class="empty"><div class="e-ico">↕</div><p>Nessun movimento registrato</p></div></td></tr>`; return; }
-  tb.innerHTML=movs.slice(0,200).map(m=>{
+  tb.innerHTML=movs.slice(0,500).map(m=>{
     const badge=m.tipo==='carico'?'<span class="badge bg-green">⬆ Carico</span>':'<span class="badge bg-red">⬇ Scarico</span>';
-    return `<tr><td class="mono" style="font-size:12px">${fmtTs(m.ts)}</td><td>${badge}</td><td><strong>${m.prod}</strong></td><td class="mono">${m.qty}</td><td class="mono">${m.lotto||'—'}</td><td style="color:var(--text2);font-size:12px">${m.note||'—'}</td></tr>`;
+    return `<tr><td class="mono" style="font-size:12px">${fmtTs(m.ts)}</td><td>${badge}</td><td><strong>${m.prod||'—'}</strong></td><td class="mono">${m.qty}</td><td class="mono">${m.lotto||'—'}</td><td style="color:var(--text2);font-size:12px">${m.note||'—'}</td></tr>`;
   }).join('');
 }
 function clearMovimenti(){ if(!confirm('Svuotare lo storico?')) return; saveM([]); renderMovimenti(); toast('Storico svuotato','info'); }
