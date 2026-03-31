@@ -274,93 +274,148 @@ textarea{resize:vertical;min-height:60px}
 
     <!-- ══════ HOME ══════ -->
     <div class="view active" id="view-dashboard">
-      <div class="page-title">Home</div>
-      <div class="page-sub" id="dash-date"></div>
-
-      <!-- Stat cards -->
-      <div class="stats-grid" id="stats-grid"></div>
-
-      <!-- WIDGET RAPIDO: Registra caso al volo -->
-      <div class="card" style="margin-bottom:14px;padding:14px">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-          <div style="font-weight:700;font-size:14px;color:var(--accent)">🧬 Registra caso rapido</div>
-          <button class="btn btn-sm" onclick="showView('tracciabilita')">Tutti i casi →</button>
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr auto;gap:8px;align-items:end">
-          <div class="fg" style="margin:0">
-            <label>ID Caso *</label>
-            <input type="text" id="quick-id" placeholder="es. 2764/26" style="font-family:DM Mono,monospace;font-weight:700">
-          </div>
-          <div class="fg" style="margin:0">
-            <label>Tipo *</label>
-            <select id="quick-tipo">
-              <option value="istologia">Istologia</option>
-              <option value="citologia">Citologia</option>
-              <option value="pap_l">Pap LupoLab</option>
-              <option value="pap_priv">Pap Privato</option>
-            </select>
-          </div>
-          <div class="fg" style="margin:0">
-            <label>Provenienza</label>
-            <input type="text" id="quick-prov" placeholder="Reparto / medico">
-          </div>
-          <div class="fg" style="margin:0">
-            <label>Descrizione breve</label>
-            <input type="text" id="quick-desc" placeholder="es. Biopsia colon">
-          </div>
-          <button class="btn btn-primary" onclick="saveQuickCaso()" style="height:36px;margin-bottom:0">＋</button>
-        </div>
-        <div id="home-tracc-oggi" style="margin-top:10px"></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;flex-wrap:wrap;gap:8px">
+        <div class="page-title" style="margin:0">Dashboard</div>
+        <div id="dash-date" style="font-size:12px;color:var(--text3);font-family:'DM Mono',monospace"></div>
       </div>
+      <div style="color:var(--text3);font-size:12px;margin-bottom:18px" id="dash-sub"></div>
 
-      <!-- COLORATORE: tabella giornaliera -->
-      <div class="card" style="margin-bottom:14px;padding:14px">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-          <div style="font-weight:700;font-size:14px;color:var(--accent)">🎨 Coloratore</div>
+      <!-- ── RIGA 1: KPI principali ── -->
+      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:16px" id="stats-grid"></div>
+
+      <!-- ── RIGA 2: Tracciabilità oggi (wide) ── -->
+      <div class="card" style="margin-bottom:14px">
+        <div class="card-header" style="padding:12px 16px">
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="font-size:16px">🧬</span>
+            <span class="card-title">Tracciabilità campioni</span>
+          </div>
           <div style="display:flex;gap:6px">
-            <button class="btn btn-sm btn-primary" onclick="openNuovoColoratore()">＋ Nuovo</button>
-            <button class="btn btn-sm" onclick="showView('coloratore')">Storico →</button>
+            <button class="btn btn-sm btn-primary" onclick="openNuovoCampione()">＋ Nuovo</button>
+            <button class="btn btn-sm" onclick="showView('tracciabilita')">Tutti →</button>
           </div>
         </div>
-        <div id="home-color-oggi" style="margin-bottom:10px"></div>
-        <div id="home-color-table"></div>
+        <div style="padding:14px">
+          <!-- Registra rapido -->
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr auto;gap:8px;margin-bottom:12px;align-items:end">
+            <div class="fg" style="margin:0"><label>ID Caso *</label><input type="text" id="quick-id" placeholder="es. 2764/26" style="font-family:'DM Mono',monospace;font-weight:700"></div>
+            <div class="fg" style="margin:0"><label>Tipo *</label>
+              <select id="quick-tipo">
+                <option value="istologia">Istologia</option>
+                <option value="citologia">Citologia</option>
+                <option value="pap_l">Pap LupoLab</option>
+                <option value="pap_priv">Pap Privato</option>
+              </select>
+            </div>
+            <div class="fg" style="margin:0"><label>Provenienza</label><input type="text" id="quick-prov" placeholder="Reparto / medico"></div>
+            <div class="fg" style="margin:0"><label>Descrizione</label><input type="text" id="quick-desc" placeholder="es. Biopsia colon"></div>
+            <button class="btn btn-primary" onclick="saveQuickCaso()" style="height:36px">＋</button>
+          </div>
+          <!-- Contatori oggi/mese -->
+          <div id="home-tracc-oggi"></div>
+          <!-- Casi registrati oggi -->
+          <div id="home-tracc-casi" style="margin-top:8px"></div>
+        </div>
       </div>
 
-      <!-- PROCESSATORE + ALLERTE magazzino -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
-        <div class="card" style="padding:14px">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-            <div style="font-weight:700;font-size:14px;color:var(--accent)">⚗️ Processatore</div>
-            <button class="btn btn-sm" onclick="showView('processatore')">Storico →</button>
+      <!-- ── RIGA 3: Coloratore + Processatore (50/50) ── -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+
+        <!-- COLORATORE -->
+        <div class="card">
+          <div class="card-header" style="padding:12px 16px">
+            <div style="display:flex;align-items:center;gap:8px"><span style="font-size:15px">🎨</span><span class="card-title">Coloratore</span></div>
+            <div style="display:flex;gap:6px">
+              <button class="btn btn-sm btn-primary" onclick="openNuovoColoratore()">＋ Nuovo</button>
+              <button class="btn btn-sm" onclick="showView('coloratore')">Storico →</button>
+            </div>
           </div>
-          <div id="home-proc-oggi"></div>
+          <div style="padding:12px">
+            <div id="home-color-oggi" style="margin-bottom:10px"></div>
+            <div id="home-color-table"></div>
+          </div>
         </div>
-        <div class="card" style="padding:14px">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-            <div style="font-weight:700;font-size:14px;color:var(--accent)">🚨 Magazzino</div>
-            <button class="btn btn-sm" onclick="showView('allerte')">Tutte →</button>
+
+        <!-- PROCESSATORE -->
+        <div class="card">
+          <div class="card-header" style="padding:12px 16px">
+            <div style="display:flex;align-items:center;gap:8px"><span style="font-size:15px">⚗️</span><span class="card-title">Processatore</span></div>
+            <div style="display:flex;gap:6px">
+              <button class="btn btn-sm btn-primary" onclick="openNuovoProcessatore()">＋ Nuovo</button>
+              <button class="btn btn-sm" onclick="showView('processatore')">Storico →</button>
+            </div>
           </div>
-          <div id="home-allerte-list" style="padding:4px 0"></div>
+          <div style="padding:12px" id="home-proc-oggi"></div>
         </div>
       </div>
 
-      <!-- Alert banners -->
+      <!-- ── RIGA 4: Magazzino + Rifiuti (60/40) ── -->
+      <div style="display:grid;grid-template-columns:3fr 2fr;gap:14px;margin-bottom:14px">
+
+        <!-- MAGAZZINO DETTAGLIO -->
+        <div class="card">
+          <div class="card-header" style="padding:12px 16px">
+            <div style="display:flex;align-items:center;gap:8px"><span style="font-size:15px">📦</span><span class="card-title">Stato Magazzino</span></div>
+            <div style="display:flex;gap:6px">
+              <button class="btn btn-sm btn-warn" onclick="openScaricaModal()">⬇ Scarico</button>
+              <button class="btn btn-sm btn-ok" onclick="openCaricaScanModal()">⬆ Carico</button>
+              <button class="btn btn-sm" onclick="showView('inventario')">Inventario →</button>
+            </div>
+          </div>
+          <div style="padding:12px">
+            <div id="dash-mag-categorie" style="margin-bottom:10px"></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+              <div>
+                <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.7px;margin-bottom:6px">🚨 Allerte attive</div>
+                <div id="home-allerte-list"></div>
+              </div>
+              <div>
+                <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.7px;margin-bottom:6px">⏰ In scadenza (30gg)</div>
+                <div id="home-scadenze-list"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- RIFIUTI DETTAGLIO -->
+        <div class="card">
+          <div class="card-header" style="padding:12px 16px">
+            <div style="display:flex;align-items:center;gap:8px"><span style="font-size:15px">🗑</span><span class="card-title">Rifiuti</span></div>
+            <div style="display:flex;gap:6px">
+              <button class="btn btn-sm btn-waste" onclick="openRifiutiModal()">＋ Pieno</button>
+              <button class="btn btn-sm" onclick="showView('rifiuti')">Dettaglio →</button>
+            </div>
+          </div>
+          <div style="padding:12px" id="dash-rifiuti-detail"></div>
+        </div>
+      </div>
+
+      <!-- ── RIGA 5: Ordini + Movimenti recenti ── -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+        <div class="card">
+          <div class="card-header" style="padding:12px 16px">
+            <div style="display:flex;align-items:center;gap:8px"><span style="font-size:15px">🛒</span><span class="card-title">Ordini aperti</span></div>
+            <div style="display:flex;gap:6px">
+              <button class="btn btn-sm btn-primary" onclick="openOrdineModal()">＋ Nuovo</button>
+              <button class="btn btn-sm" onclick="showView('ordini')">Tutti →</button>
+            </div>
+          </div>
+          <div style="padding:12px" id="home-ordini-list"></div>
+        </div>
+        <div class="card">
+          <div class="card-header" style="padding:12px 16px">
+            <div style="display:flex;align-items:center;gap:8px"><span style="font-size:15px">↕</span><span class="card-title">Movimenti recenti</span></div>
+            <button class="btn btn-sm" onclick="showView('movimenti')">Tutti →</button>
+          </div>
+          <div style="padding:12px" id="dash-movimenti-recenti"></div>
+        </div>
+      </div>
+
+      <!-- ── Alert banners ── -->
       <div id="alerts-wrap"></div>
 
-      <!-- Griglia prodotti per categoria -->
-      <div id="home-cat-grid" style="margin-bottom:14px"></div>
-
-      <!-- 2-col: scadenze + ordini -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px">
-        <div class="card" style="margin:0;padding:14px">
-          <div class="card-header" style="margin-bottom:8px"><span class="card-title">⏰ In scadenza (30gg)</span></div>
-          <div id="home-scadenze-list" style="padding:4px 0"></div>
-        </div>
-        <div class="card" style="margin:0;padding:14px">
-          <div class="card-header" style="margin-bottom:8px"><span class="card-title">🛒 Ordini aperti</span><button class="btn btn-sm" onclick="showView('ordini')">Tutti →</button></div>
-          <div id="home-ordini-list" style="padding:4px 0"></div>
-        </div>
-      </div>
+      <!-- Griglia prodotti per categoria (nascosta, usata da renderHomeGrid) -->
+      <div id="home-cat-grid" style="display:none"></div>
 
     </div>
 
@@ -2047,161 +2102,304 @@ function renderHomeCampioniOggi(){
 
 function renderDashboard(){
   if(!document.getElementById('stats-grid')) return;
-  // ── Dati tracciabilità ──
-  const campioni = loadCampioni();
+
+  // ── Raccolta dati ──
   const oggi = new Date().toISOString().slice(0,10);
-  const campOggi = campioni.filter(c=>c.data===oggi);
-  const campMese = campioni.filter(c=>c.data&&c.data.slice(0,7)===oggi.slice(0,7));
-  const istOggi = campOggi.filter(c=>c.tipo==='istologia').length;
-  const citOggi = campOggi.filter(c=>c.tipo==='citologia').length;
-  const papOggi = campOggi.filter(c=>c.tipo==='pap'||c.tipo==='pap_priv').length;
-  const papLOggi = campOggi.filter(c=>c.tipo==='pap_l').length;
+  const mese = oggi.slice(0,7);
+  const now = new Date();
 
-  // ── Dati processatore ──
-  const procArr = loadProc();
-  const procOggi = procArr.find(x=>x.data===oggi);
-  const procMese = procArr.filter(x=>x.data&&x.data.slice(0,7)===oggi.slice(0,7));
-  const totCasiProcMese = procMese.reduce((s,x)=>s+(x.casi||[]).length,0);
+  const campioni  = loadCampioni();
+  const procArr   = loadProc();
+  const colorArr  = loadColoratore();
+  const prods     = loadP();
+  const W         = loadW();
+  const ords      = loadOrd();
+  const movs      = loadM();
 
-  // ── Dati coloratore ──
-  const colorArr = loadColoratore();
+  const campOggi  = campioni.filter(c=>c.data===oggi);
+  const campMese  = campioni.filter(c=>c.data&&c.data.slice(0,7)===mese);
+  const procOggi  = procArr.find(x=>x.data===oggi);
+  const procMese  = procArr.filter(x=>x.data&&x.data.slice(0,7)===mese);
   const colorOggi = colorArr.find(x=>x.data===oggi);
-  const colorMese = colorArr.filter(x=>x.data&&x.data.slice(0,7)===oggi.slice(0,7));
-  const prods=loadP(), W=loadW(), now=new Date();
-  {const _dd=document.getElementById('dash-date');if(_dd)_dd.textContent='Aggiornato '+now.toLocaleDateString('it-IT',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  const colorMese = colorArr.filter(x=>x.data&&x.data.slice(0,7)===mese);
 
-  const critici=prods.filter(p=>p.min>0&&p.qty<=p.min&&p.qty>0).length;
-  const esauriti=prods.filter(p=>p.qty<=0).length;
-  const scaduti=prods.filter(p=>daysUntil(p.scadenza)<0).length;
-  const inScad=prods.filter(p=>{const d=daysUntil(p.scadenza);return d>=0&&d<=30}).length;
-  const totalPieni=(['cer_180103','cer_150110','cer_150202','cer_180106']).reduce((a,k)=>a+(W[k]?.pieni||0),0);
-  const totalVuoti=(W['cer_180103']?.vuoti||0)+(W['bidoni_solidi_comuni']?.vuoti||0)+(W['cer_180106']?.vuoti||0);
-  const solidiPieni=(W['cer_180103']?.pieni||0)+(W['cer_150110']?.pieni||0)+(W['cer_150202']?.pieni||0);
-  const solidiVuoti=(W['cer_180103']?.vuoti||0)+(W['bidoni_solidi_comuni']?.vuoti||0);
-  const liquidiPieni=(W['cer_180106']?.pieni||0);
-  const liquidiVuoti=(W['cer_180106']?.vuoti||0);
-  const ords=loadOrd();
-  const ordAperti=ords.filter(o=>o.stato==='inviato'||o.stato==='approvato').length;
-  const totAllerte=critici+inScad;
+  const critici   = prods.filter(p=>p.min>0&&p.qty<=p.min&&p.qty>0);
+  const esauriti  = prods.filter(p=>p.qty<=0);
+  const scaduti   = prods.filter(p=>daysUntil(p.scadenza)<0);
+  const inScad    = prods.filter(p=>{const d=daysUntil(p.scadenza);return d>=0&&d<=30;});
+  const totAllerte = critici.length + esauriti.length + scaduti.length;
 
+  const ordAperti = ords.filter(o=>o.stato==='inviato'||o.stato==='approvato');
+  const totCasiMese = procMese.reduce((s,x)=>s+(x.casi||[]).length,0);
+  const totEEMese   = colorMese.reduce((s,x)=>s+(x.cicli_ee||0),0);
+  const totCitMese  = colorMese.reduce((s,x)=>s+(x.cicli_ee_cit||0),0);
+  const totPapMese  = colorMese.reduce((s,x)=>s+(x.cicli_pap||0),0);
+  const totCampMese = campMese.length;
+
+  const solidiPieni = (W['cer_180103']?.pieni||0)+(W['cer_150110']?.pieni||0)+(W['cer_150202']?.pieni||0);
+  const liquidiPieni = W['cer_180106']?.pieni||0;
+  const solidiVuoti = (W['cer_180103']?.vuoti||0)+(W['bidoni_solidi_comuni']?.vuoti||0);
+  const liquidiVuoti = W['cer_180106']?.vuoti||0;
+  const noVuotiAlert = Object.keys(WASTE_CONFIG).filter(k=>(W[k]?.pieni||0)>0&&getVuotiDisp(W,k)===0);
+
+  // ── Data header ──
+  const _dd=document.getElementById('dash-date');
+  if(_dd) _dd.textContent=now.toLocaleDateString('it-IT',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  const _ds=document.getElementById('dash-sub');
+  if(_ds) _ds.textContent=`${campOggi.length} campioni oggi · ${totCasiMese} casi processati questo mese`;
+
+  // ── KPI cards (5 colonne) ──
+  const kpiWarn = totAllerte>0?'var(--red)':'var(--green)';
+  const rifiutiWarn = noVuotiAlert.length>0?'var(--red)':solidiPieni+liquidiPieni>0?'var(--orange)':'var(--text3)';
   document.getElementById('stats-grid').innerHTML=`
-    <div class="stat-card sc-blue" style="cursor:pointer" onclick="showView('inventario')">
-      <div class="stat-lbl">Prodotti a magazzino</div><div class="stat-val blue">${prods.length}</div>
+    <div class="stat-card sc-blue" onclick="showView('tracciabilita')" style="cursor:pointer">
+      <div class="stat-lbl">Campioni oggi</div>
+      <div class="stat-val blue">${campOggi.length}</div>
+      <div class="stat-sub">${totCampMese} questo mese</div>
+    </div>
+    <div class="stat-card sc-green" onclick="showView('inventario')" style="cursor:pointer">
+      <div class="stat-lbl">Prodotti a magazzino</div>
+      <div class="stat-val green">${prods.length}</div>
       <div class="stat-sub">${[...new Set(prods.map(p=>p.cat))].length} categorie</div>
     </div>
-    <div class="stat-card sc-red" style="cursor:pointer" onclick="showView('allerte')">
-      <div class="stat-lbl">Allerte attive</div><div class="stat-val red">${totAllerte}</div>
-      <div class="stat-sub">${critici} scorta bassa · ${inScad} in scadenza</div>
+    <div class="stat-card sc-red" onclick="showView('allerte')" style="cursor:pointer">
+      <div class="stat-lbl">Allerte magazzino</div>
+      <div class="stat-val" style="color:${kpiWarn}">${totAllerte}</div>
+      <div class="stat-sub">${esauriti.length} esauriti · ${critici.length} scorta bassa · ${scaduti.length} scaduti</div>
     </div>
-    <div class="stat-card sc-orange" style="cursor:pointer;padding:12px" onclick="showView('rifiuti')">
-      <div class="stat-lbl" style="margin-bottom:8px">🗑 Rifiuti</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-        <div style="background:rgba(176,80,16,.08);border-radius:6px;padding:8px;text-align:center">
-          <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px">Solidi</div>
-          <div style="font-family:'DM Mono',monospace;font-size:18px;color:var(--orange)">${solidiPieni} <span style="font-size:11px;color:var(--text3)">pieni</span></div>
-          <div style="font-family:'DM Mono',monospace;font-size:14px;color:var(--text2)">${solidiVuoti} <span style="font-size:11px;color:var(--text3)">vuoti</span></div>
-        </div>
-        <div style="background:rgba(26,90,154,.08);border-radius:6px;padding:8px;text-align:center">
-          <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px">Liquidi</div>
-          <div style="font-family:'DM Mono',monospace;font-size:18px;color:var(--blue)">${liquidiPieni} <span style="font-size:11px;color:var(--text3)">pieni</span></div>
-          <div style="font-family:'DM Mono',monospace;font-size:14px;color:var(--text2)">${liquidiVuoti} <span style="font-size:11px;color:var(--text3)">vuoti</span></div>
-        </div>
-      </div>
+    <div class="stat-card sc-orange" onclick="showView('rifiuti')" style="cursor:pointer">
+      <div class="stat-lbl">Rifiuti pieni</div>
+      <div class="stat-val" style="color:${rifiutiWarn}">${solidiPieni+liquidiPieni}</div>
+      <div class="stat-sub">${solidiPieni} solidi · ${liquidiPieni} liquidi${noVuotiAlert.length?' · ⚠ vuoti esauriti':''}</div>
     </div>
-    <div class="stat-card sc-blue" style="cursor:pointer" onclick="showView('ordini')">
-      <div class="stat-lbl">Ordini aperti</div><div class="stat-val" style="color:var(--teal)">${ordAperti}</div>
-      <div class="stat-sub">in attesa di risposta</div>
+    <div class="stat-card sc-blue" onclick="showView('ordini')" style="cursor:pointer">
+      <div class="stat-lbl">Ordini aperti</div>
+      <div class="stat-val" style="color:var(--teal)">${ordAperti.length}</div>
+      <div class="stat-sub">in attesa risposta</div>
     </div>`;
 
-  // ── Sezioni Tracciabilità / Processatore / Coloratore ──
-  const oggi2=new Date().toISOString().slice(0,10);
-  const mese2=oggi2.slice(0,7);
-  const campOggi2=campioni.filter(x=>x.data===oggi2);
-  const campMese2=campioni.filter(x=>x.data&&x.data.slice(0,7)===mese2);
-  const procOggi2=procArr.find(x=>x.data===oggi2);
-  const colorOggi2=colorArr.find(x=>x.data===oggi2);
-  const totCasiMese=procMese.reduce((s,x)=>s+(x.casi||[]).length,0);
-  const totEEMese=colorMese.reduce((s,x)=>s+(x.cicli_ee||0),0);
-  const totCitMese=colorMese.reduce((s,x)=>s+(x.cicli_ee_cit||0),0);
-  const totPapMese=colorMese.reduce((s,x)=>s+(x.cicli_pap||0),0);
-  ['home-tracc-oggi','home-proc-oggi','home-color-oggi'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML='';});
+  // ── Tracciabilità: contatori oggi/mese ──
   const tEl=document.getElementById('home-tracc-oggi');
   if(tEl){
     const rows=[
-      {label:'ISTOLOGIA',color:'var(--blue)',oggi:campOggi2.filter(x=>x.tipo==='istologia').length,mese:campMese2.filter(x=>x.tipo==='istologia').length},
-      {label:'CITOLOGIA',color:'var(--teal)',oggi:campOggi2.filter(x=>x.tipo==='citologia').length,mese:campMese2.filter(x=>x.tipo==='citologia').length},
-      {label:'PAP',color:'var(--purple)',oggi:campOggi2.filter(x=>x.tipo==='pap'||x.tipo==='pap_priv').length,mese:campMese2.filter(x=>x.tipo==='pap'||x.tipo==='pap_priv').length},
-      {label:'PAP LUPOLAB',color:'var(--orange)',oggi:campOggi2.filter(x=>x.tipo==='pap_l').length,mese:campMese2.filter(x=>x.tipo==='pap_l').length},
+      {label:'IST',full:'Istologia',color:'var(--blue)',   oggi:campOggi.filter(x=>x.tipo==='istologia').length, mese:campMese.filter(x=>x.tipo==='istologia').length},
+      {label:'CIT',full:'Citologia',color:'var(--teal)',   oggi:campOggi.filter(x=>x.tipo==='citologia').length, mese:campMese.filter(x=>x.tipo==='citologia').length},
+      {label:'PAP',full:'Pap Priv.', color:'var(--purple)',oggi:campOggi.filter(x=>x.tipo==='pap'||x.tipo==='pap_priv').length,mese:campMese.filter(x=>x.tipo==='pap'||x.tipo==='pap_priv').length},
+      {label:'PAP-L',full:'Pap Lab',color:'var(--orange)', oggi:campOggi.filter(x=>x.tipo==='pap_l').length, mese:campMese.filter(x=>x.tipo==='pap_l').length},
     ];
     tEl.innerHTML='<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">'+
-      rows.map(r=>'<div style="text-align:center;background:var(--bg3);border-radius:8px;padding:10px;cursor:pointer" onclick="showView(&quot;tracciabilita&quot;)">'+
-        '<div style="font-size:10px;color:'+r.color+';font-weight:600;margin-bottom:4px">'+r.label+'</div>'+
-        '<div style="font-family:DM Mono,monospace;font-size:24px;font-weight:700;color:'+r.color+'">'+r.oggi+'</div>'+
-        '<div style="font-size:10px;color:var(--text3)">oggi &middot; '+r.mese+' mese</div></div>').join('')+'</div>';
+      rows.map(r=>`<div style="text-align:center;background:var(--bg3);border-radius:8px;padding:10px 6px;cursor:pointer" onclick="showView('tracciabilita')">
+        <div style="font-size:10px;color:${r.color};font-weight:700;letter-spacing:.5px;margin-bottom:3px">${r.full}</div>
+        <div style="font-family:'DM Mono',monospace;font-size:26px;font-weight:700;color:${r.color};line-height:1">${r.oggi}</div>
+        <div style="font-size:10px;color:var(--text3);margin-top:3px">${r.mese} questo mese</div>
+      </div>`).join('')+'</div>';
   }
-  const pEl=document.getElementById('home-proc-oggi');
-  if(pEl) pEl.innerHTML=procOggi2
-    ?'<div style="display:flex;align-items:center;gap:12px"><span style="font-family:DM Mono,monospace;font-size:22px;font-weight:700;color:var(--green)">'+(procOggi2.casi||[]).length+'</span><span style="color:var(--text2)">casi · '+( procOggi2.protocollo||'')+'</span><span style="margin-left:auto;font-size:11px;color:var(--text3)">'+totCasiMese+' questo mese</span></div>'
-    :'<div style="color:var(--text3);font-size:13px">Nessun ciclo oggi &middot; '+totCasiMese+' casi questo mese</div>';
-  const cEl=document.getElementById('home-color-oggi');
-  if(cEl) cEl.innerHTML='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">'+
-    [['EE Ist.','var(--blue)',colorOggi2?colorOggi2.cicli_ee||0:0,totEEMese],
-     ['EE Cit.','var(--teal)',colorOggi2?colorOggi2.cicli_ee_cit||0:0,totCitMese],
-     ['PAP L.','var(--purple)',colorOggi2?colorOggi2.cicli_pap||0:0,totPapMese]].map(r=>
-      '<div style="text-align:center;background:var(--bg3);border-radius:6px;padding:8px">'+
-      '<div style="font-size:10px;color:'+r[1]+';font-weight:600">'+r[0]+'</div>'+
-      '<div style="font-family:DM Mono,monospace;font-size:20px;font-weight:700;color:'+r[1]+'">'+r[2]+'</div>'+
-      '<div style="font-size:10px;color:var(--text3)">'+r[3]+' mese</div></div>').join('')+'</div>';
 
-  // Alert banners
-  const alerts=[];
-  if(critici>0) alerts.push(`<div class="alert yellow"><span style="font-size:15px">⚠</span><div><div class="alert-title">${critici} prodotto/i a scorta bassa</div><div class="alert-msg">${prods.filter(p=>p.min>0&&p.qty<=p.min&&p.qty>0).map(p=>p.nome+' ('+p.qty+' rimasti)').join(', ')}</div></div></div>`);
-  if(inScad>0) alerts.push(`<div class="alert yellow"><span style="font-size:15px">📅</span><div><div class="alert-title">${inScad} in scadenza entro 30 giorni</div><div class="alert-msg">${prods.filter(p=>{const d=daysUntil(p.scadenza);return d>=0&&d<=30}).map(p=>p.nome+' ('+fmtDate(p.scadenza)+')').join(', ')}</div></div></div>`);
-  const noVuoti=Object.keys(WASTE_CONFIG).filter(k=>(W[k]?.pieni||0)>0&&getVuotiDisp(W,k)===0).map(k=>WASTE_CONFIG[k].label);
-  if(noVuoti.length) alerts.push(`<div class="alert yellow"><span style="font-size:15px">🗑</span><div><div class="alert-title">Contenitori vuoti esauriti</div><div class="alert-msg">${noVuoti.join(', ')}</div></div></div>`);
-  document.getElementById('alerts-wrap').innerHTML=alerts.join('');
-
-  // Panel 1: allerte
-  const allerteProds=prods.filter(p=>(p.min>0&&p.qty<=p.min&&p.qty>0)||(()=>{const d=daysUntil(p.scadenza);return d>=0&&d<=30})());
-  const allerteEl=document.getElementById('home-allerte-list');
-  if(!allerteProds.length){ allerteEl.innerHTML='<div class="home-empty">✅ Nessuna allerta</div>'; }
-  else allerteEl.innerHTML=allerteProds.slice(0,6).map(p=>{
-    const d=daysUntil(p.scadenza); const s=d>=0&&d<=30?`<span class="badge bg-yellow" style="font-size:10px">${d===0?'Oggi':d+'gg'}</span>`:'<span class="badge bg-yellow" style="font-size:10px">Scorta bassa</span>';
-    return `<div class="home-list-item" onclick="openSchedaProdotto('${p.id}')"><span style="font-weight:500">${p.nome}</span>${s}</div>`;
-  }).join('')+(allerteProds.length>6?`<div class="home-empty" style="cursor:pointer" onclick="showView('allerte')">+${allerteProds.length-6} altri →</div>`:'');
-
-  // Panel 2: in scadenza
-  const scadEl=document.getElementById('home-scadenze-list');
-  const scadProds=prods.filter(p=>p.scadenza&&daysUntil(p.scadenza)>=0&&daysUntil(p.scadenza)<=30).sort((a,b)=>daysUntil(a.scadenza)-daysUntil(b.scadenza));
-  if(!scadProds.length){ scadEl.innerHTML='<div class="home-empty">✅ Nessuna scadenza imminente</div>'; }
-  else scadEl.innerHTML=scadProds.slice(0,6).map(p=>{
-    const d=daysUntil(p.scadenza);
-    return `<div class="home-list-item" onclick="openSchedaProdotto('${p.id}')"><span style="font-weight:500">${p.nome}</span><span style="color:var(--yellow);font-family:'DM Mono',monospace;font-size:11px">${d===0?'oggi':d+'gg'}</span></div>`;
-  }).join('')+(scadProds.length>6?`<div class="home-empty">+${scadProds.length-6} altri</div>`:'');
-
-  // Panel 3: ordini aperti
-  const ordEl=document.getElementById('home-ordini-list');
-  const ordOpen=ords.filter(o=>o.stato!=='ricevuto'&&o.stato!=='annullato').slice(0,6);
-  const statoIco={bozza:'📝',inviato:'📤',approvato:'✅'};
-  if(!ordOpen.length){ ordEl.innerHTML='<div class="home-empty">Nessun ordine in corso</div>'; }
-  else ordEl.innerHTML=ordOpen.map(o=>`<div class="home-list-item" onclick="showView('ordini')"><span style="font-weight:500">${o.num||'—'}<small style="color:var(--text3);margin-left:5px">${o.righe?.length||0} prodotti</small></span><span>${statoIco[o.stato]||''} <span style="font-size:11px;color:var(--text2)">${o.stato}</span></span></div>`).join('');
-
-  // Product grid
-  renderHomeGrid();
-  renderHomeColoratore();
-  renderHomeCampioniOggi();
-  // Processatore ultimo
-  const procEl = document.getElementById('home-proc-oggi');
-  if(procEl){
-    const lastProc = loadProc()[0];
-    if(!lastProc){ procEl.innerHTML='<div style="color:var(--text3);font-size:13px">Nessun ciclo registrato</div>'; }
-    else{
-      const protoLabel={standard:'Standard notturno',rapido:'Rapido',biopsie:'Biopsie',altro:'Altro'};
-      procEl.innerHTML=`<div style="font-size:13px"><div style="font-weight:600">${fmtDate(lastProc.data)} — ${protoLabel[lastProc.protocollo]||lastProc.protocollo}</div><div style="font-size:12px;color:var(--text3);margin-top:3px">${lastProc.casi?.length||0} casi · ${lastProc.reagenti?.length||0} reagenti tracciati</div></div>`;
+  // ── Casi registrati oggi (chip) ──
+  const casiEl=document.getElementById('home-tracc-casi');
+  if(casiEl){
+    if(!campOggi.length){
+      casiEl.innerHTML='<div style="color:var(--text3);font-size:12px;padding:4px 0">Nessun caso registrato oggi</div>';
+    } else {
+      const tipoColor={istologia:'var(--blue)',citologia:'var(--teal)',pap:'var(--purple)',pap_l:'var(--orange)',pap_priv:'var(--red)'};
+      const tipoLabel={istologia:'IST',citologia:'CIT',pap:'PAP',pap_l:'PAP-L',pap_priv:'PAP-P'};
+      casiEl.innerHTML='<div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:2px">'+
+        campOggi.map(c=>`<span onclick="openDetailCampione('${c.id}')" style="cursor:pointer;display:inline-flex;align-items:center;gap:5px;background:var(--bg3);border:1px solid var(--border);border-radius:5px;padding:3px 9px;font-size:12px">
+          <span style="font-family:'DM Mono',monospace;font-weight:700">${c.campione_id}</span>
+          <span style="font-size:10px;color:${tipoColor[c.tipo]||'var(--text3)'};font-weight:600">${tipoLabel[c.tipo]||c.tipo}</span>
+          ${c.provenienza?`<span style="font-size:10px;color:var(--text3)">${c.provenienza}</span>`:''}
+        </span>`).join('')+
+      '</div>';
     }
   }
-}
 
+  // ── Coloratore oggi ──
+  const cEl=document.getElementById('home-color-oggi');
+  if(cEl){
+    const cicli=[
+      ['EE Ist.','var(--blue)',  colorOggi?colorOggi.cicli_ee||0:0,     totEEMese],
+      ['EE Cit.','var(--teal)', colorOggi?colorOggi.cicli_ee_cit||0:0, totCitMese],
+      ['PAP L.', 'var(--purple)',colorOggi?colorOggi.cicli_pap||0:0,    totPapMese],
+    ];
+    cEl.innerHTML='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">'+
+      cicli.map(r=>`<div style="text-align:center;background:var(--bg3);border-radius:6px;padding:8px">
+        <div style="font-size:10px;color:${r[1]};font-weight:600;margin-bottom:2px">${r[0]}</div>
+        <div style="font-family:'DM Mono',monospace;font-size:22px;font-weight:700;color:${r[1]}">${r[2]}</div>
+        <div style="font-size:10px;color:var(--text3)">${r[3]} mese</div>
+      </div>`).join('')+'</div>';
+  }
+  renderHomeColoratore();
+
+  // ── Processatore ──
+  const pEl=document.getElementById('home-proc-oggi');
+  if(pEl){
+    const protoLabel={standard:'Standard notturno',rapido:'Rapido',biopsie:'Biopsie',altro:'Altro'};
+    if(procOggi){
+      pEl.innerHTML=`
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;padding:10px;background:var(--green-bg);border-radius:8px;border:1px solid #a7f3d0">
+          <span style="font-family:'DM Mono',monospace;font-size:28px;font-weight:700;color:var(--green)">${(procOggi.casi||[]).length}</span>
+          <div><div style="font-weight:600;font-size:13px;color:var(--green)">Ciclo di oggi</div>
+          <div style="font-size:12px;color:var(--text2)">${protoLabel[procOggi.protocollo]||procOggi.protocollo}</div></div>
+          <span style="margin-left:auto;font-size:11px;color:var(--text3)">${procOggi.ora_inizio||''}${procOggi.ora_fine?' → '+procOggi.ora_fine:''}</span>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px">
+          <div style="background:var(--bg3);border-radius:6px;padding:8px;text-align:center">
+            <div style="font-size:10px;color:var(--text3)">Casi oggi</div>
+            <div style="font-family:'DM Mono',monospace;font-weight:700;color:var(--green)">${(procOggi.casi||[]).length}</div>
+          </div>
+          <div style="background:var(--bg3);border-radius:6px;padding:8px;text-align:center">
+            <div style="font-size:10px;color:var(--text3)">Cicli mese</div>
+            <div style="font-family:'DM Mono',monospace;font-weight:700;color:var(--accent)">${procMese.length}</div>
+          </div>
+          <div style="background:var(--bg3);border-radius:6px;padding:8px;text-align:center">
+            <div style="font-size:10px;color:var(--text3)">Casi mese</div>
+            <div style="font-family:'DM Mono',monospace;font-weight:700;color:var(--accent)">${totCasiMese}</div>
+          </div>
+        </div>
+        ${procOggi.reagenti?.length?`<div style="margin-top:8px;font-size:11px;color:var(--text3)">🧪 Reagenti: ${procOggi.reagenti.map(r=>r.nome+(r.lotto?' ['+r.lotto+']':'')).join(', ')}</div>`:''}`;
+    } else {
+      const lastProc=procArr[0];
+      pEl.innerHTML=`
+        <div style="color:var(--text3);font-size:12px;margin-bottom:10px;padding:8px;background:var(--bg3);border-radius:6px">Nessun ciclo registrato oggi</div>
+        ${lastProc?`<div style="font-size:12px"><div style="font-weight:600;color:var(--text2);margin-bottom:3px">Ultimo ciclo: ${fmtDate(lastProc.data)}</div>
+        <div style="color:var(--text3)">${protoLabel[lastProc.protocollo]||lastProc.protocollo} · ${(lastProc.casi||[]).length} casi</div></div>`:''}
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:10px">
+          <div style="background:var(--bg3);border-radius:6px;padding:8px;text-align:center">
+            <div style="font-size:10px;color:var(--text3)">Cicli mese</div>
+            <div style="font-family:'DM Mono',monospace;font-weight:700;color:var(--accent)">${procMese.length}</div>
+          </div>
+          <div style="background:var(--bg3);border-radius:6px;padding:8px;text-align:center">
+            <div style="font-size:10px;color:var(--text3)">Casi mese</div>
+            <div style="font-family:'DM Mono',monospace;font-weight:700;color:var(--accent)">${totCasiMese}</div>
+          </div>
+        </div>`;
+    }
+  }
+
+  // ── Magazzino: barre per categoria ──
+  const magEl=document.getElementById('dash-mag-categorie');
+  if(magEl){
+    const catOrder=['Reagenti','IHC','Vetrini','Cassette','Coloranti','Consumabili','Lame','Altro'];
+    const catColors={'Reagenti':'var(--blue)','IHC':'var(--purple)','Vetrini':'var(--teal)','Cassette':'var(--orange)','Coloranti':'var(--green)','Consumabili':'var(--yellow)','Lame':'var(--red)','Altro':'var(--text3)'};
+    const bycat={};
+    prods.forEach(p=>{ if(!bycat[p.cat]) bycat[p.cat]={tot:0,crit:0,scad:0}; bycat[p.cat].tot++; if((p.min>0&&p.qty<=p.min)||p.qty<=0) bycat[p.cat].crit++; if(daysUntil(p.scadenza)<0) bycat[p.cat].scad++; });
+    const cats=catOrder.filter(c=>bycat[c]);
+    magEl.innerHTML='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:6px">'+
+      cats.map(cat=>{
+        const d=bycat[cat];
+        const haProb=d.crit>0||d.scad>0;
+        return `<div onclick="showView('inventario');setInvFilter('${cat}',document.querySelector('#inv-filter-bar .f-btn:nth-child(${catOrder.indexOf(cat)+2})'))" style="cursor:pointer;background:var(--bg3);border-radius:8px;padding:8px;border:1.5px solid ${haProb?'var(--red)':'var(--border)'}">
+          <div style="font-size:10px;color:${catColors[cat]||'var(--text3)'};font-weight:700;margin-bottom:3px">${CAT_ICON[cat]||'📌'} ${cat}</div>
+          <div style="font-family:'DM Mono',monospace;font-size:18px;font-weight:700;color:var(--text)">${d.tot}</div>
+          ${haProb?`<div style="font-size:10px;color:var(--red);margin-top:2px">${d.crit>0?d.crit+' critici':''}${d.scad>0?' '+d.scad+' scaduti':''}</div>`:'<div style="font-size:10px;color:var(--green);margin-top:2px">✓ ok</div>'}
+        </div>`;
+      }).join('')+'</div>';
+  }
+
+  // ── Allerte list ──
+  const allerteEl=document.getElementById('home-allerte-list');
+  if(allerteEl){
+    const allerteProds=[...esauriti,...critici,...scaduti].slice(0,6);
+    if(!allerteProds.length){ allerteEl.innerHTML='<div class="home-empty">✅ Nessuna allerta</div>'; }
+    else allerteEl.innerHTML=allerteProds.map(p=>{
+      const tags=[];
+      if(p.qty<=0) tags.push('<span class="badge bg-red" style="font-size:9px">Esaurito</span>');
+      else if(p.min>0&&p.qty<=p.min) tags.push('<span class="badge bg-yellow" style="font-size:9px">Scorta</span>');
+      if(daysUntil(p.scadenza)<0) tags.push('<span class="badge bg-red" style="font-size:9px">Scaduto</span>');
+      return `<div class="home-list-item" onclick="openSchedaProdotto('${p.id}')"><span style="font-weight:500;font-size:12px">${p.nome}</span><span style="display:flex;gap:3px">${tags.join('')}</span></div>`;
+    }).join('')+(critici.length+esauriti.length+scaduti.length>6?`<div class="home-empty" style="cursor:pointer" onclick="showView('allerte')">+${critici.length+esauriti.length+scaduti.length-6} altri →</div>`:'');
+  }
+
+  // ── Scadenze ──
+  const scadEl=document.getElementById('home-scadenze-list');
+  if(scadEl){
+    const scadProds=inScad.sort((a,b)=>daysUntil(a.scadenza)-daysUntil(b.scadenza)).slice(0,6);
+    if(!scadProds.length){ scadEl.innerHTML='<div class="home-empty">✅ Nessuna scadenza imminente</div>'; }
+    else scadEl.innerHTML=scadProds.map(p=>{
+      const d=daysUntil(p.scadenza);
+      const col=d<=7?'var(--red)':'var(--yellow)';
+      return `<div class="home-list-item" onclick="openSchedaProdotto('${p.id}')"><span style="font-size:12px;font-weight:500">${p.nome}</span><span style="color:${col};font-family:'DM Mono',monospace;font-size:11px">${d===0?'oggi':d+'gg'}</span></div>`;
+    }).join('')+(inScad.length>6?`<div class="home-empty">+${inScad.length-6} altri</div>`:'');
+  }
+
+  // ── Rifiuti dettaglio ──
+  const rifEl=document.getElementById('dash-rifiuti-detail');
+  if(rifEl){
+    const cerItems=[
+      {key:'cer_180103',ico:'☣',label:'180103*',color:'var(--yellow)'},
+      {key:'cer_150110',ico:'🧴',label:'150110*',color:'var(--orange)'},
+      {key:'cer_150202',ico:'🧤',label:'150202*',color:'var(--red)'},
+      {key:'cer_180106',ico:'💧',label:'180106*',color:'var(--blue)'},
+    ];
+    const poolVuoti=W['bidoni_solidi_comuni']?.vuoti||0;
+    rifEl.innerHTML=`
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px">
+        <div style="background:rgba(234,88,12,.08);border-radius:8px;padding:10px;text-align:center">
+          <div style="font-size:10px;color:var(--orange);font-weight:600;margin-bottom:3px">SOLIDI PIENI</div>
+          <div style="font-family:'DM Mono',monospace;font-size:26px;font-weight:700;color:var(--orange)">${solidiPieni}</div>
+        </div>
+        <div style="background:rgba(37,99,235,.08);border-radius:8px;padding:10px;text-align:center">
+          <div style="font-size:10px;color:var(--blue);font-weight:600;margin-bottom:3px">LIQUIDI PIENI</div>
+          <div style="font-family:'DM Mono',monospace;font-size:26px;font-weight:700;color:var(--blue)">${liquidiPieni}</div>
+        </div>
+      </div>
+      ${cerItems.map(c=>{
+        const w=W[c.key]||{pieni:0,smaltiti:0};
+        const vuoti=getVuotiDisp(W,c.key);
+        const warn=w.pieni>0&&vuoti===0;
+        return `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)">
+          <span style="font-size:14px">${c.ico}</span>
+          <span style="font-size:11px;color:var(--text2);flex:1">CER ${c.label}</span>
+          <span style="font-family:'DM Mono',monospace;font-size:12px;color:${w.pieni>0?c.color:'var(--text4)'}">P:${w.pieni}</span>
+          <span style="font-family:'DM Mono',monospace;font-size:12px;color:${vuoti===0?'var(--red)':'var(--green)'}">V:${vuoti}</span>
+          ${warn?'<span style="font-size:10px;color:var(--red)">⚠</span>':''}
+        </div>`;
+      }).join('')}
+      <div style="margin-top:8px;padding:6px 8px;background:var(--bg3);border-radius:6px;font-size:11px;color:var(--text2)">
+        🗑 Pool bidoni plastica condivisi: <strong style="color:${poolVuoti===0?'var(--red)':'var(--green)'}">${poolVuoti} vuoti</strong>
+      </div>
+      ${noVuotiAlert.length?`<div style="margin-top:6px;padding:6px 8px;background:var(--red-bg);border-radius:6px;font-size:11px;color:var(--red);border:1px solid #fca5a5">⚠ Vuoti esauriti per: ${noVuotiAlert.map(k=>WASTE_CONFIG[k].label).join(', ')}</div>`:''}`;
+  }
+
+  // ── Ordini aperti ──
+  const ordEl=document.getElementById('home-ordini-list');
+  if(ordEl){
+    const ordOpen=ords.filter(o=>o.stato!=='ricevuto'&&o.stato!=='annullato').slice(0,6);
+    const statoIco={bozza:'📝',inviato:'📤',approvato:'✅'};
+    const statoBg={bozza:'var(--bg3)',inviato:'var(--blue-bg)',approvato:'var(--green-bg)'};
+    if(!ordOpen.length){ ordEl.innerHTML='<div class="home-empty">Nessun ordine in corso</div>'; }
+    else ordEl.innerHTML=ordOpen.map(o=>`
+      <div class="home-list-item" onclick="showView('ordini')" style="align-items:flex-start">
+        <div><div style="font-weight:600;font-size:13px">${o.num||'—'}</div>
+        <div style="font-size:11px;color:var(--text3)">${o.fornitore||'—'} · ${o.righe?.length||0} prodotti</div></div>
+        <span style="background:${statoBg[o.stato]||'var(--bg3)'};padding:2px 7px;border-radius:10px;font-size:11px">${statoIco[o.stato]||''} ${o.stato}</span>
+      </div>`).join('');
+  }
+
+  // ── Movimenti recenti ──
+  const movEl=document.getElementById('dash-movimenti-recenti');
+  if(movEl){
+    const recenti=movs.slice(0,8);
+    if(!recenti.length){ movEl.innerHTML='<div class="home-empty">Nessun movimento registrato</div>'; }
+    else movEl.innerHTML=recenti.map(m=>{
+      const isCarico=m.tipo==='carico';
+      return `<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--border)">
+        <span style="font-size:13px">${isCarico?'⬆':'⬇'}</span>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${m.prod||'—'}</div>
+          <div style="font-size:10px;color:var(--text3)">${fmtTs(m.ts)}</div>
+        </div>
+        <span style="font-family:'DM Mono',monospace;font-size:12px;font-weight:700;color:${isCarico?'var(--green)':'var(--red)'}">${isCarico?'+':'−'}${m.qty}</span>
+      </div>`;
+    }).join('');
+  }
+
+  // ── Alert banners ──
+  const alerts=[];
+  if(esauriti.length) alerts.push(`<div class="alert red"><span style="font-size:15px">🔴</span><div><div class="alert-title">${esauriti.length} prodotto/i esauriti</div><div class="alert-msg">${esauriti.slice(0,5).map(p=>p.nome).join(', ')}${esauriti.length>5?' e altri…':''}</div></div></div>`);
+  if(critici.length) alerts.push(`<div class="alert yellow"><span style="font-size:15px">⚠</span><div><div class="alert-title">${critici.length} prodotto/i a scorta bassa</div><div class="alert-msg">${critici.slice(0,5).map(p=>p.nome+' ('+p.qty+' rimasti)').join(', ')}</div></div></div>`);
+  if(noVuotiAlert.length) alerts.push(`<div class="alert yellow"><span style="font-size:15px">🗑</span><div><div class="alert-title">Contenitori vuoti esauriti</div><div class="alert-msg">${noVuotiAlert.map(k=>WASTE_CONFIG[k].label).join(', ')}</div></div></div>`);
+  document.getElementById('alerts-wrap').innerHTML=alerts.join('');
 }
 
 function renderHomeGrid(){
