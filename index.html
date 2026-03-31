@@ -322,6 +322,7 @@ textarea{resize:vertical;min-height:60px}
             <button class="btn btn-sm" onclick="showView('coloratore')">Storico →</button>
           </div>
         </div>
+        <div id="home-color-oggi" style="margin-bottom:10px"></div>
         <div id="home-color-table"></div>
       </div>
 
@@ -345,6 +346,9 @@ textarea{resize:vertical;min-height:60px}
 
       <!-- Alert banners -->
       <div id="alerts-wrap"></div>
+
+      <!-- Griglia prodotti per categoria -->
+      <div id="home-cat-grid" style="margin-bottom:14px"></div>
 
       <!-- 2-col: scadenze + ordini -->
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px">
@@ -1314,6 +1318,16 @@ const SUPA_OK = SUPA_URL.startsWith('https://') && SUPA_KEY.length > 20;
 let IS_ONLINE = navigator.onLine;
 const LS_QUEUE = 'ls_sync_queue';
 
+// ── CHIAVE AI (Anthropic) ──
+// Imposta la tua chiave API su Supabase o salvala qui:
+// localStorage.setItem('ai_api_key', 'sk-ant-api03-...')
+function getAIKey(){
+  const stored = localStorage.getItem('ai_api_key')||'';
+  if(stored && stored.startsWith('sk-ant-')) return stored;
+  return ''; // placeholder o non configurata
+}
+function isAIConfigured(){ return getAIKey().length > 20; }
+
 // Rileva cambio connessione
 window.addEventListener('online',  ()=>{ IS_ONLINE=true;  updateSyncStatus('sync'); flushQueue(); });
 window.addEventListener('offline', ()=>{ IS_ONLINE=false; updateSyncStatus('offline'); updateQueueBadge(); });
@@ -1344,20 +1358,24 @@ function enqueue(op){
 
 // Invia tutto quando torna online
 async function forceSync(){
-  // Sincronizzazione bidirezionale con merge: non sovrascrive mai i dati locali
-  if(!SUPA_OK||!IS_ONLINE){ toast('Non connesso','error'); return; }
+  if(!SUPA_OK||!IS_ONLINE){ toast('Non connesso o Supabase non configurato','error'); return; }
   updateSyncStatus('sync');
+  const errors=[];
   try{
-    const [prods,movs,wRows,wlog,ordini,arch,camp_cloud]=await Promise.all([
+    // 1. DOWNLOAD dal cloud
+    const [prods,movs,wRows,wlog,ordini,arch,camp_cloud,proc_cloud,color_cloud]=await Promise.all([
       supaFetch('products','GET',null,'?order=nome'),
       supaFetch('movements','GET',null,'?order=ts.desc&limit=500'),
       supaFetch('waste_state','GET',null,'?id=eq.waste_state'),
       supaFetch('waste_log','GET',null,'?order=ts.desc&limit=100'),
       supaFetch('ordini','GET',null,'?order=creato.desc&limit=200'),
       supaFetch('archivio_ordini','GET',null,'?order=creato.desc&limit=500'),
-      supaFetch('campioni','GET',null,'?order=data.desc&limit=1000')
+      supaFetch('campioni','GET',null,'?order=data.desc&limit=1000'),
+      supaFetch('processatore','GET',null,'?order=data.desc&limit=500'),
+      supaFetch('coloratore','GET',null,'?order=data.desc&limit=500')
     ]);
-    // -- PRODOTTI: merge locale + cloud, locale ha priorita'
+
+    // 2. PRODOTTI: merge locale + cloud
     const localP = JSON.parse(localStorage.getItem(LS_P)||'[]');
     if(prods&&prods.length){
       const localIds = new Set(localP.map(p=>p.id));
@@ -1365,11 +1383,13 @@ async function forceSync(){
       const merged = [...localP, ...onlyCloud];
       _setCache(LS_P, merged);
       localStorage.setItem(LS_P, JSON.stringify(merged));
-      if(localP.length) await supaFetch('products','POST',localP,'?on_conflict=id');
-    } else if(localP.length){
-      await supaFetch('products','POST',localP,'?on_conflict=id');
     }
-    // -- MOVIMENTI: merge locale + cloud senza perdere nessun record
+    if(localP.length){
+      const r=await supaFetch('products','POST',localP,'?on_conflict=id');
+      if(!r) errors.push('prodotti');
+    }
+
+    // 3. MOVIMENTI: merge locale + cloud
     const localM = JSON.parse(localStorage.getItem(LS_M)||'[]');
     if(movs&&movs.length){
       const cloudIds = new Set(movs.map(m=>m.id));
@@ -1377,19 +1397,70 @@ async function forceSync(){
       const merged = [...onlyLocal, ...movs].sort((a,b)=>new Date(b.ts)-new Date(a.ts));
       _setCache(LS_M, merged);
       localStorage.setItem(LS_M, JSON.stringify(merged));
-      if(onlyLocal.length) await supaFetch('movements','POST',onlyLocal,'?on_conflict=id');
+      if(onlyLocal.length){
+        const r=await supaFetch('movements','POST',onlyLocal,'?on_conflict=id');
+        if(!r) errors.push('movimenti');
+      }
     } else if(localM.length){
-      await supaFetch('movements','POST',localM.slice(0,100),'?on_conflict=id');
+      const r=await supaFetch('movements','POST',localM.slice(0,500),'?on_conflict=id');
+      if(!r) errors.push('movimenti');
     }
+
+    // 4. WASTE
     if(wRows&&wRows.length) localStorage.setItem(LS_W, JSON.stringify(wRows[0].data));
     if(wlog) localStorage.setItem(LS_WL, JSON.stringify(wlog));
+
+    // 5. ORDINI
     if(ordini) localStorage.setItem('ls_ordini', JSON.stringify(ordini));
     if(arch) localStorage.setItem(LS_ARCH, JSON.stringify(arch));
+
+    // 6. CAMPIONI
     const localCamp=JSON.parse(localStorage.getItem(LS_CAMP)||'[]');
-    if(localCamp.length>0){ await supaFetch('campioni','POST',localCamp,'?on_conflict=id'); }
-    else if(camp_cloud&&camp_cloud.length) localStorage.setItem(LS_CAMP, JSON.stringify(camp_cloud));
+    if(localCamp.length>0){
+      const r=await supaFetch('campioni','POST',localCamp,'?on_conflict=id');
+      if(!r) errors.push('campioni');
+    } else if(camp_cloud&&camp_cloud.length){
+      localStorage.setItem(LS_CAMP, JSON.stringify(camp_cloud));
+    }
+
+    // 7. PROCESSATORE: merge locale + cloud
+    const localProc=JSON.parse(localStorage.getItem(LS_PROC)||'[]');
+    if(proc_cloud&&proc_cloud.length){
+      const cloudProcIds=new Set(proc_cloud.map(x=>x.id));
+      const onlyLocalProc=localProc.filter(x=>!cloudProcIds.has(x.id));
+      const mergedProc=[...onlyLocalProc,...proc_cloud].sort((a,b)=>b.data.localeCompare(a.data));
+      _setCache(LS_PROC, mergedProc);
+      localStorage.setItem(LS_PROC, JSON.stringify(mergedProc));
+      if(onlyLocalProc.length){ const r=await supaFetch('processatore','POST',onlyLocalProc,'?on_conflict=id'); if(!r) errors.push('processatore'); }
+    } else if(localProc.length){
+      const r=await supaFetch('processatore','POST',localProc,'?on_conflict=id');
+      if(!r) errors.push('processatore');
+    }
+
+    // 8. COLORATORE: merge locale + cloud
+    const localColor=JSON.parse(localStorage.getItem(LS_COLOR_REG)||'[]');
+    if(color_cloud&&color_cloud.length){
+      const cloudColorIds=new Set(color_cloud.map(x=>x.id));
+      const onlyLocalColor=localColor.filter(x=>!cloudColorIds.has(x.id));
+      const mergedColor=[...onlyLocalColor,...color_cloud].sort((a,b)=>b.data.localeCompare(a.data));
+      _setCache(LS_COLOR_REG, mergedColor);
+      localStorage.setItem(LS_COLOR_REG, JSON.stringify(mergedColor));
+      if(onlyLocalColor.length){ const r=await supaFetch('coloratore','POST',onlyLocalColor,'?on_conflict=id'); if(!r) errors.push('coloratore'); }
+    } else if(localColor.length){
+      const r=await supaFetch('coloratore','POST',localColor,'?on_conflict=id');
+      if(!r) errors.push('coloratore');
+    }
+
     _invalidateAll();
-    updateSyncStatus('ok');
+    if(errors.length){
+      updateSyncStatus('err');
+      toast('⚠ Sync parziale — errore su: '+errors.join(', '),'warn');
+      console.error('[Sync] Errori su tabelle:', errors);
+    } else {
+      updateSyncStatus('ok');
+      toast('Dati sincronizzati correttamente','success');
+    }
+    // Aggiorna la view corrente
     if(currentView==='tracciabilita') renderTracciabilita();
     if(currentView==='dashboard') renderDashboard();
     if(currentView==='inventario') renderInv();
@@ -1398,8 +1469,11 @@ async function forceSync(){
     if(currentView==='allerte') renderAllerte();
     if(currentView==='ordini') renderOrdini();
     if(currentView==='report') renderReport();
-    toast('Dati sincronizzati correttamente','success');
-  }catch(e){ updateSyncStatus('err'); toast('Errore sync','error'); }
+  }catch(e){
+    console.error('[forceSync] errore inatteso:', e);
+    updateSyncStatus('err');
+    toast('Errore sync: '+e.message,'error');
+  }
 }
 async function flushQueue(){
   if(!SUPA_OK||!IS_ONLINE) return;
@@ -1428,27 +1502,39 @@ async function flushQueue(){
     // Sync campioni
     const camp=JSON.parse(localStorage.getItem(LS_CAMP)||'[]');
     if(camp.length) await supaFetch('campioni','POST',camp,'?on_conflict=id');
+    // Sync processatore
+    const proc=JSON.parse(localStorage.getItem(LS_PROC)||'[]');
+    if(proc.length) await supaFetch('processatore','POST',proc,'?on_conflict=id');
+    // Sync coloratore
+    const color=JSON.parse(localStorage.getItem(LS_COLOR_REG)||'[]');
+    if(color.length) await supaFetch('coloratore','POST',color,'?on_conflict=id');
     saveQueue([]);
     updateSyncStatus('ok');
     _invalidateAll();
     if(currentView==='movimenti') renderMovimenti();
     if(currentView==='inventario') renderInv();
     if(currentView==='dashboard') renderDashboard();
+    if(currentView==='processatore') renderProcessatore();
+    if(currentView==='coloratore') renderColoratore();
     toast('✅ '+q.length+' modifica/he sincronizzata/e','success');
   }catch(e){ updateSyncStatus('err'); }
 }
 
 async function supaFetch(table,method='GET',body=null,query=''){
   if(!SUPA_OK) return null;
-  if(!IS_ONLINE && method!=='GET') return null; // offline: non tentare write
+  if(!IS_ONLINE && method!=='GET') return null;
   try{
     const res=await fetch(SUPA_URL+'/rest/v1/'+table+query,{
       method, body:body?JSON.stringify(body):undefined,
       headers:{'Content-Type':'application/json','apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,'Prefer':'return=representation'}
     });
-    if(!res.ok) return null;
+    if(!res.ok){
+      const errText = await res.text().catch(()=>'');
+      console.warn(`[Supabase] ${method} ${table}${query} → ${res.status}:`, errText);
+      return null;
+    }
     const t=await res.text(); return t?JSON.parse(t):true;
-  }catch(e){ return null; }
+  }catch(e){ console.warn('[Supabase] fetch error:', e.message); return null; }
 }
 
 // ── DATA LAYER — In-memory cache + localStorage + Supabase ──
@@ -1545,14 +1631,16 @@ async function initialSync(){
   if(!SUPA_OK){ updateSyncStatus('off'); return; }
   updateSyncStatus('sync');
   try{
-    const [prods,movs,wRows,wlog,ordini,arch,camp_cloud]=await Promise.all([
+    const [prods,movs,wRows,wlog,ordini,arch,camp_cloud,proc_cloud,color_cloud]=await Promise.all([
       supaFetch('products','GET',null,'?order=nome'),
       supaFetch('movements','GET',null,'?order=ts.desc&limit=200'),
       supaFetch('waste_state','GET',null,'?id=eq.waste_state'),
       supaFetch('waste_log','GET',null,'?order=ts.desc&limit=100'),
       supaFetch('ordini','GET',null,'?order=creato.desc&limit=200'),
       supaFetch('archivio_ordini','GET',null,'?order=creato.desc&limit=500'),
-      supaFetch('campioni','GET',null,'?order=data.desc&limit=1000')
+      supaFetch('campioni','GET',null,'?order=data.desc&limit=1000'),
+      supaFetch('processatore','GET',null,'?order=data.desc&limit=500'),
+      supaFetch('coloratore','GET',null,'?order=data.desc&limit=500')
     ]);
     // Strategia: il locale è sempre la fonte di verità
     // Supabase viene usato solo per caricare dati su un dispositivo nuovo/pulito
@@ -1581,6 +1669,24 @@ async function initialSync(){
     localStorage.setItem(LS_WL, JSON.stringify(wlog||[]));
     localStorage.setItem('ls_ordini', JSON.stringify(ordini||[]));
     localStorage.setItem(LS_ARCH, JSON.stringify(arch||[]));
+    // Processatore: merge locale + cloud
+    const localProc2=JSON.parse(localStorage.getItem(LS_PROC)||'[]');
+    if(proc_cloud&&proc_cloud.length){
+      const cloudPIds=new Set(proc_cloud.map(x=>x.id));
+      const onlyLP=localProc2.filter(x=>!cloudPIds.has(x.id));
+      const merged=[...onlyLP,...proc_cloud].sort((a,b)=>b.data.localeCompare(a.data));
+      _setCache(LS_PROC,merged); localStorage.setItem(LS_PROC,JSON.stringify(merged));
+      if(onlyLP.length) supaFetch('processatore','POST',onlyLP,'?on_conflict=id');
+    } else if(localProc2.length){ supaFetch('processatore','POST',localProc2,'?on_conflict=id'); }
+    // Coloratore: merge locale + cloud
+    const localColor2=JSON.parse(localStorage.getItem(LS_COLOR_REG)||'[]');
+    if(color_cloud&&color_cloud.length){
+      const cloudCIds=new Set(color_cloud.map(x=>x.id));
+      const onlyLC=localColor2.filter(x=>!cloudCIds.has(x.id));
+      const merged=[...onlyLC,...color_cloud].sort((a,b)=>b.data.localeCompare(a.data));
+      _setCache(LS_COLOR_REG,merged); localStorage.setItem(LS_COLOR_REG,JSON.stringify(merged));
+      if(onlyLC.length) supaFetch('coloratore','POST',onlyLC,'?on_conflict=id');
+    } else if(localColor2.length){ supaFetch('coloratore','POST',localColor2,'?on_conflict=id'); }
     updateSyncStatus('ok');
     // Aggiorna la view corrente
     if(currentView==='tracciabilita') renderTracciabilita();
@@ -1591,6 +1697,8 @@ async function initialSync(){
     if(currentView==='allerte') renderAllerte();
     if(currentView==='ordini') renderOrdini();
     if(currentView==='report') renderReport();
+    if(currentView==='processatore') renderProcessatore();
+    if(currentView==='coloratore') renderColoratore();
   }catch(e){ updateSyncStatus('err'); }
 }
 
@@ -2671,6 +2779,14 @@ function processDDTFile(file){
 }
 async function analyzeDDT(){
   if(!ddtBase64){ toast('Nessuna immagine','error'); return; }
+  if(!isAIConfigured()){
+    toast('Chiave AI non configurata — apri la console e usa: localStorage.setItem(\'ai_api_key\',\'sk-ant-...\')','warn',6000);
+    document.getElementById('ddt-proc').style.display='none';
+    document.getElementById('ddt-results').style.display='block';
+    document.getElementById('ddt-rows').innerHTML='<div style="padding:12px;color:var(--yellow);font-size:13px">⚠ Funzione AI non attiva. Inserisci i prodotti manualmente usando il pulsante ＋ sotto.</div>';
+    document.getElementById('ddt-confirm-btn').style.display='';
+    return;
+  }
   document.getElementById('ddt-proc').style.display='block';
   document.getElementById('ddt-results').style.display='none';
   document.getElementById('ddt-confirm-btn').style.display='none';
@@ -2681,7 +2797,7 @@ Categorie valide: Reagenti, IHC, Vetrini, Cassette, Coloranti, Consumabili, Lame
 Se non leggi nulla: [{"nome":"Prodotto non riconosciuto","lotto":"","scadenza":"","qty":1,"unita":"pz","fornitore":"","barcode":"","cat":"Altro"}]`;
   try{
     const res=await fetch('https://api.anthropic.com/v1/messages',{
-      method:'POST',headers:{'Content-Type':'application/json','x-api-key':'sk-ant-api03-placeholder','anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      method:'POST',headers:{'Content-Type':'application/json','x-api-key':getAIKey(),'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
       body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:sys,
         messages:[{role:'user',content:[{type:'image',source:{type:'base64',media_type:'image/jpeg',data:ddtBase64}},{type:'text',text:'Analizza questo DDT.'}]}]})
     });
@@ -3179,6 +3295,7 @@ function renderSchede(){
 const LS_PROC = 'ls_processatore';
 const loadProc=()=>_getCache(LS_PROC,'[]');
 async function saveProc(arr, deletedId){
+  _setCache(LS_PROC, arr);
   localStorage.setItem(LS_PROC, JSON.stringify(arr));
   if(!SUPA_OK) return;
   if(!IS_ONLINE){ enqueue({type:'processatore'}); return; }
@@ -3236,8 +3353,8 @@ function addRangeCasiProc(){
       for(let n=nFrom;n<=nTo;n++) procCasiList.push(n+'/'+anno);
     } else { procCasiList.push(from); if(to) procCasiList.push(to); }
   }
-  document.getElementById('proc-caso-from').value=preset?.casi_da||'';
-  document.getElementById('proc-caso-to').value=preset?.casi_a||'';
+  document.getElementById('proc-caso-from').value='';
+  document.getElementById('proc-caso-to').value='';
   renderProcCasiList();
 }
 
@@ -3397,6 +3514,7 @@ async function deleteProcCiclo(id){
 const LS_COLOR_REG = 'ls_coloratore';
 const loadColoratore=()=>_getCache(LS_COLOR_REG,'[]');
 async function saveColoratoreReg(arr, deletedId){
+  _setCache(LS_COLOR_REG, arr);
   localStorage.setItem(LS_COLOR_REG, JSON.stringify(arr));
   if(!SUPA_OK) return;
   if(!IS_ONLINE){ enqueue({type:'coloratore'}); return; }
@@ -4045,13 +4163,20 @@ function archFileSelected(input){
 }
 async function archAnalyze(){
   if(!archBase64){ toast('Nessuna immagine','error'); return; }
+  if(!isAIConfigured()){
+    document.getElementById('arch-ai-status').style.display='none';
+    document.getElementById('arch-form').style.display='';
+    document.getElementById('arch-save-btn').style.display='';
+    document.getElementById('arch-ai-status').innerHTML='<span style="color:var(--yellow)">⚠ Chiave AI non configurata — compila il form manualmente</span>';
+    return;
+  }
   document.getElementById('arch-ai-status').style.display='';
   document.getElementById('arch-form').style.display='none';
   document.getElementById('arch-save-btn').style.display='none';
   try{
     const resp=await fetch('https://api.anthropic.com/v1/messages',{
       method:'POST',
-      headers:{'Content-Type':'application/json','x-api-key':'sk-ant-api03-placeholder','anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      headers:{'Content-Type':'application/json','x-api-key':getAIKey(),'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
       body:JSON.stringify({
         model:'claude-sonnet-4-20250514',
         max_tokens:1000,
@@ -4067,13 +4192,11 @@ Se un campo non è leggibile usa stringa vuota o 0.`}
     const text=data.content.map(i=>i.text||'').join('');
     const clean=text.replace(/```json|```/g,'').trim();
     const ord=JSON.parse(clean);
-    // Popola form
     document.getElementById('arch-numero').value=ord.numero||'';
     document.getElementById('arch-data').value=ord.data||'';
     document.getElementById('arch-fornitore').value=ord.fornitore||'';
     document.getElementById('arch-importo').value=ord.importo_totale||'';
     document.getElementById('arch-note-ord').value=ord.note||'';
-    // Righe prodotti
     const wrap=document.getElementById('arch-righe-wrap');
     wrap.innerHTML='';
     (ord.righe||[]).forEach(r=>archAddRiga(r.prodotto,r.qty,r.prezzo_unit));
@@ -4301,7 +4424,7 @@ document.querySelectorAll('.modal-overlay').forEach(overlay=>{
   overlay.addEventListener('click',e=>{
     if(e.target!==overlay) return;
     if(overlay.id==='modal-ddt') closeDDTModal();
-    else if(overlay.id==='modal-barcode') closeBarcodeModal();
+    else if(overlay.id==='modal-scarica') closeScaricaModal();
     else overlay.classList.remove('open');
   });
 });
@@ -4322,7 +4445,8 @@ function setAllerteFilter(f, btn){
   renderAllerte();
 }
 function renderAllerte(){
-  if(!document.getElementById('allerte-list')) return;
+  const tb = document.getElementById('allerte-tbody');
+  if(!tb) return;
   let prods = loadP();
   const esauriti   = p => p.qty <= 0;
   const critici    = p => p.min > 0 && p.qty > 0 && p.qty <= p.min;
@@ -4337,7 +4461,6 @@ function renderAllerte(){
   else filtered = prods.filter(p => esauriti(p)||critici(p)||scaduti(p)||inscadenza(p));
 
   document.getElementById('allerte-count').textContent = filtered.length + ' prodotto/i';
-  const tb = document.getElementById('allerte-tbody');
   if(!filtered.length){
     tb.innerHTML = `<tr><td colspan="8"><div class="empty"><div class="e-ico">✅</div><p>Nessuna allerta attiva</p></div></td></tr>`;
     return;
@@ -4446,9 +4569,25 @@ function openOrdineModal(mode='new', prodId=null){
   document.getElementById('ordine-rows').innerHTML = '';
 
   if(mode==='da_allerte'){
-    // Pre-popola con tutti i prodotti critici
-    const critici = loadP().filter(p=>(p.min>0&&p.qty<=p.min)||p.qty<=0);
-    critici.forEach(p => addOrdineRowData(p.nome, p.fornitore||'', Math.max(1, (p.min-p.qty)+p.min)));
+    // Pre-popola con tutti i prodotti critici: esauriti, scorta bassa, scaduti o in scadenza
+    const critici = loadP().filter(p=>{
+      const scorta = p.qty<=0 || (p.min>0 && p.qty<=p.min);
+      const scad = daysUntil(p.scadenza) < 0;
+      return scorta || scad;
+    });
+    if(critici.length){
+      // Se ci sono prodotti esauriti, imposta urgenza alta
+      const haEsauriti = critici.some(p=>p.qty<=0);
+      if(haEsauriti) document.getElementById('o-urgenza').value='urgente';
+      document.getElementById('o-note').value='Ordine da allerte magazzino — '+critici.length+' prodotto/i critici';
+      critici.forEach(p=>{
+        const qOrd = p.min>0 ? Math.max(1,(p.min-p.qty)+p.min) : 1;
+        addOrdineRowData(p.nome, p.fornitore||'', qOrd);
+      });
+    } else {
+      addOrdineRowData('','',1);
+      toast('Nessun prodotto critico al momento','info');
+    }
   } else if(mode==='da_prodotto' && prodId){
     const p = loadP().find(x=>x.id===prodId);
     if(p) addOrdineRowData(p.nome, p.fornitore||'', Math.max(1,(p.min-p.qty)+p.min));
