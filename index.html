@@ -1364,6 +1364,32 @@ textarea{resize:vertical;min-height:60px}
 <div id="toast-container"></div>
 
 <script>
+
+// ══ DATI IMPORTATI DA CSV 2026 ══
+(function(){
+  const importedProds = [{"id": "d75c7822828b", "nome": "Alcol 100", "cat": "Reagenti", "fornitore": "Epredia", "barcode": "6215SS-LP", "lotto": "243316", "scadenza": "", "qty": 3, "qty_init": 4, "unita": "5L", "min": 0, "pos": "", "note": ""}, {"id": "3ae33805abfb", "nome": "Alcoolpath 100", "cat": "Reagenti", "fornitore": "Bio Optica", "barcode": "06-10030Q", "lotto": "25209", "scadenza": "2030-07-28", "qty": 2, "qty_init": 1, "unita": "CNF DA 4", "min": 0, "pos": "", "note": ""}, {"id": "8ce16b7a265c", "nome": "Alcoolpath 95", "cat": "Reagenti", "fornitore": "Epredia", "barcode": "06-10031Q", "lotto": "265364", "scadenza": "2030-01-26", "qty": 3, "qty_init": 1, "unita": "CNF DA 4", "min": 0, "pos": "", "note": ""}, {"id": "c9f293f75ded", "nome": "Formalina 10% Neutra Tamponata", "cat": "Reagenti", "fornitore": "Bio Optica", "barcode": "05-K01009", "lotto": "26055", "scadenza": "2028-02-24", "qty": 2, "qty_init": 2, "unita": "TANICA DA 10L", "min": 0, "pos": "", "note": ""}, {"id": "1789c8121bc6", "nome": "Xilene", "cat": "Reagenti", "fornitore": "Bio Optica", "barcode": "6615-LP", "lotto": "25253-2", "scadenza": "2028-09-10", "qty": 4, "qty_init": 4, "unita": "5L", "min": 0, "pos": "", "note": ""}, {"id": "1e465191b79b", "nome": "Anti Cd3", "cat": "IHC", "fornitore": "Roche", "barcode": "05479258001", "lotto": "N02426", "scadenza": "2027-02-18", "qty": 1, "qty_init": 1, "unita": "50 test", "min": 0, "pos": "", "note": ""}, {"id": "88799810e5f7", "nome": "Anti Cd5", "cat": "IHC", "fornitore": "Roche", "barcode": "05929903001", "lotto": "N07241", "scadenza": "2027-04-03", "qty": 1, "qty_init": 1, "unita": "50 test", "min": 0, "pos": "", "note": ""}, {"id": "9678f22345cf", "nome": "Anti-Keratin (IHC)", "cat": "IHC", "fornitore": "Roche", "barcode": "05479266001", "lotto": "M26883", "scadenza": "2026-11-21", "qty": 1, "qty_init": 1, "unita": "", "min": 0, "pos": "", "note": ""}, {"id": "de8647d20212", "nome": "Anti-PSA (IHC)", "cat": "IHC", "fornitore": "Roche", "barcode": "05266939001", "lotto": "M22068", "scadenza": "2026-10-14", "qty": 1, "qty_init": 1, "unita": "", "min": 0, "pos": "", "note": ""}, {"id": "7c90ec46cfc7", "nome": "Bcc", "cat": "IHC", "fornitore": "Roche", "barcode": "06364497001", "lotto": "M25989", "scadenza": "2026-11-20", "qty": 1, "qty_init": 1, "unita": "50 TEST", "min": 0, "pos": "", "note": ""}, {"id": "39a5c56b90e1", "nome": "Bluing", "cat": "IHC", "fornitore": "Roche", "barcode": "05266769001", "lotto": "N01096", "scadenza": "2027-03-06", "qty": 1, "qty_init": 1, "unita": "", "min": 0, "pos": "", "note": ""}, {"id": "361a17e02056", "nome": "CC1", "cat": "IHC", "fornitore": "Roche", "barcode": "05279801001", "lotto": "M27211", "scadenza": "2026-12-06", "qty": 1, "qty_init": 1, "unita": "", "min": 0, "pos": "", "note": ""}, {"id": "69db855da209", "nome": "CC2", "cat": "IHC", "fornitore": "Roche", "barcode": "05279798001", "lotto": "M29906", "scadenza": "2027-02-02", "qty": 2, "qty_init": 2, "unita": "FLACONE DA 2L", "min": 0, "pos": "", "note": ""}, {"id": "67f63ba471fc", "nome": "Citokeratin 5/6", "cat": "IHC", "fornitore": "Roche", "barcode": "06478441001", "lotto": "N01164", "scadenza": "2027-03-09", "qty": 1, "qty_init": 1, "unita": "", "min": 0, "pos": "", "note": ""}, {"id": "36f05fef8450", "nome": "Ck20", "cat": "IHC", "fornitore": "Roche", "barcode": "05587760001", "lotto": "N01151", "scadenza": "2027-02-20", "qty": 1, "qty_init": 1, "unita": "50 TEST", "min": 0, "pos": "", "note": ""}, {"id": "2528e260c2fe", "nome": "Cyclin D1 (IHC)", "cat": "IHC", "fornitore": "Roche", "barcode": "05862949001", "lotto": "M29900Z", "scadenza": "2027-02-03", "qty": 1, "qty_init": 1, "unita": "50 test", "min": 0, "pos": "", "note": ""}, {"id": "641170aa7928", "nome": "DAB Detection Kit", "cat": "IHC", "fornitore": "Roche", "barcode": "06396500001", "lotto": "N06930", "scadenza": "2027-03-26", "qty": 1, "qty_init": 1, "unita": "", "min": 0, "pos": "", "note": ""}, {"id": "071a416fe40a", "nome": "EZ Prep", "cat": "IHC", "fornitore": "Roche", "barcode": "05279771001", "lotto": "N06132", "scadenza": "2027-04-14", "qty": 1, "qty_init": 1, "unita": "FLACONE DA 2L", "min": 0, "pos": "", "note": ""}, {"id": "edd4ae2a87b6", "nome": "Hematoxylin", "cat": "IHC", "fornitore": "Roche", "barcode": "05266726001", "lotto": "M27447", "scadenza": "2026-07-14", "qty": 1, "qty_init": 1, "unita": "", "min": 0, "pos": "", "note": ""}, {"id": "f376a188c85e", "nome": "Hematoxylin Ii", "cat": "IHC", "fornitore": "Roche", "barcode": "05277965001", "lotto": "N01042", "scadenza": "2026-07-28", "qty": 1, "qty_init": 1, "unita": "", "min": 0, "pos": "", "note": ""}, {"id": "ceaea1bdf3bd", "nome": "Ki67", "cat": "IHC", "fornitore": "Roche", "barcode": "05278384001", "lotto": "M25553", "scadenza": "2027-01-13", "qty": 1, "qty_init": 1, "unita": "", "min": 0, "pos": "", "note": ""}, {"id": "09dc4f8b0b27", "nome": "LCS - Low Cross Buffer", "cat": "IHC", "fornitore": "Roche", "barcode": "05264839001", "lotto": "M29306", "scadenza": "2026-07-26", "qty": 2, "qty_init": 2, "unita": "Flacone da 2L", "min": 0, "pos": "", "note": ""}, {"id": "184c60621bf3", "nome": "Optiview DAB Kit", "cat": "IHC", "fornitore": "Roche", "barcode": "06396500001", "lotto": "N9023", "scadenza": "2027-03-26", "qty": 1, "qty_init": 1, "unita": "250 TEST", "min": 0, "pos": "", "note": ""}, {"id": "392e88a44b63", "nome": "P53", "cat": "IHC", "fornitore": "Roche", "barcode": "05267102001", "lotto": "N00602", "scadenza": "2027-01-29", "qty": 1, "qty_init": 1, "unita": "", "min": 0, "pos": "", "note": ""}, {"id": "a161c4098f73", "nome": "P63", "cat": "IHC", "fornitore": "Roche", "barcode": "05867061001", "lotto": "N00128", "scadenza": "2027-02-12", "qty": 1, "qty_init": 1, "unita": "", "min": 0, "pos": "", "note": ""}, {"id": "05c0b74f863f", "nome": "Pax 5", "cat": "IHC", "fornitore": "Roche", "barcode": "05552729001", "lotto": "N10216", "scadenza": "2027-06-05", "qty": 1, "qty_init": 1, "unita": "50 test", "min": 0, "pos": "", "note": ""}, {"id": "7f9143c12728", "nome": "Reaction Buffer", "cat": "IHC", "fornitore": "Roche", "barcode": "05353955001", "lotto": "N03230", "scadenza": "2027-03-03", "qty": 1, "qty_init": 1, "unita": "", "min": 0, "pos": "", "note": ""}, {"id": "67356c2550e7", "nome": "Ultraview Universal DAB Kit", "cat": "IHC", "fornitore": "Roche", "barcode": "05269806001", "lotto": "N06904", "scadenza": "2027-03-09", "qty": 1, "qty_init": 1, "unita": "250 test", "min": 0, "pos": "", "note": ""}, {"id": "938ae02b2924", "nome": "Vetrini Coprioggetto 24x50", "cat": "Vetrini", "fornitore": "Bio Optica", "barcode": "09-2050", "lotto": "240915", "scadenza": "", "qty": 4, "qty_init": 5, "unita": "CNF DA 1000 PZ", "min": 0, "pos": "", "note": ""}, {"id": "975fad667171", "nome": "Vetrini Coprioggetto 24x60", "cat": "Vetrini", "fornitore": "Bio Optica", "barcode": "09-2060", "lotto": "240615", "scadenza": "", "qty": 1, "qty_init": 9, "unita": "CONF. 1000 PZ", "min": 0, "pos": "", "note": ""}, {"id": "d68608828c42", "nome": "Vetrini Portaoggetto", "cat": "Vetrini", "fornitore": "Bio Optica", "barcode": "09-1040", "lotto": "241205", "scadenza": "2027-12-31", "qty": 2, "qty_init": 3, "unita": "CONF 2500PZ", "min": 0, "pos": "", "note": ""}, {"id": "0f3d3aca3031", "nome": "Bio Cassette", "cat": "Cassette", "fornitore": "Bio Optica", "barcode": "07-7100", "lotto": "110887", "scadenza": "", "qty": 3, "qty_init": 2, "unita": "CNF DA 1500 PZ", "min": 0, "pos": "", "note": ""}, {"id": "f721fa2bec29", "nome": "EA50", "cat": "Coloranti", "fornitore": "Epredia", "barcode": "6766001", "lotto": "157712", "scadenza": "2027-08-27", "qty": 4, "qty_init": 4, "unita": "FLACONE DA 1L", "min": 0, "pos": "", "note": ""}, {"id": "324428a65727", "nome": "Eosina", "cat": "Coloranti", "fornitore": "Epredia", "barcode": "7111", "lotto": "156867", "scadenza": "2027-01-31", "qty": 4, "qty_init": 4, "unita": "0,5l", "min": 0, "pos": "", "note": ""}, {"id": "97e7a0897d90", "nome": "Eosina G Soluzione Acquosa", "cat": "Coloranti", "fornitore": "Bio Optica", "barcode": "05-10007/L", "lotto": "25293", "scadenza": "2027-10-17", "qty": 2, "qty_init": 1, "unita": "FLACONE DA 1L", "min": 0, "pos": "", "note": ""}, {"id": "59e507803aad", "nome": "Giemsa", "cat": "Coloranti", "fornitore": "Bio Optica", "barcode": "04-090803", "lotto": "25198", "scadenza": "2027-07-24", "qty": 1, "qty_init": 1, "unita": "75 TEST", "min": 0, "pos": "", "note": ""}, {"id": "b837567c3b2b", "nome": "Harris Ematossilina", "cat": "Coloranti", "fornitore": "Epredia", "barcode": "6765001", "lotto": "154237", "scadenza": "2026-11-19", "qty": 1, "qty_init": 1, "unita": "1 L", "min": 0, "pos": "", "note": ""}, {"id": "93c39e159546", "nome": "Hematoxilylin 5L", "cat": "Coloranti", "fornitore": "Epredia", "barcode": "7211L", "lotto": "155910", "scadenza": "2026-12-29", "qty": 1, "qty_init": 1, "unita": "5L", "min": 0, "pos": "", "note": ""}, {"id": "bc684b9ec8eb", "nome": "Mayer", "cat": "Coloranti", "fornitore": "Bio Optica", "barcode": "05-06002/L", "lotto": "26033", "scadenza": "2028-02-02", "qty": 1, "qty_init": 1, "unita": "FLACONE DA 1L", "min": 0, "pos": "", "note": ""}, {"id": "cd88fba5848b", "nome": "OG6", "cat": "Coloranti", "fornitore": "LabFor", "barcode": "6766005", "lotto": "HX31799588", "scadenza": "2026-02-28", "qty": 0, "qty_init": 2, "unita": "1 L", "min": 0, "pos": "", "note": ""}, {"id": "31a79f148791", "nome": "Papanicolau EA50", "cat": "Coloranti", "fornitore": "Bio Optica", "barcode": "05-12019/L", "lotto": "25076", "scadenza": "2027-03-17", "qty": 1, "qty_init": 2, "unita": "FALCONE DA 1 L", "min": 0, "pos": "", "note": ""}, {"id": "9559f3aaf022", "nome": "Papanicolau Ematossilina Harris", "cat": "Coloranti", "fornitore": "Bio Optica", "barcode": "05-12011/L", "lotto": "25302", "scadenza": "2027-10-29", "qty": 2, "qty_init": 1, "unita": "FLACONE DA 1L", "min": 0, "pos": "", "note": ""}, {"id": "14954a4f6684", "nome": "Papanicolau OG6", "cat": "Coloranti", "fornitore": "Bio Optica", "barcode": "05-12013/L", "lotto": "25206", "scadenza": "2027-07-25", "qty": 1, "qty_init": 2, "unita": "FLACONE DA 1L", "min": 0, "pos": "", "note": ""}, {"id": "56ca5306419d", "nome": "Cytocuvette", "cat": "Consumabili", "fornitore": "Bio Optica", "barcode": "14-070", "lotto": "108671", "scadenza": "", "qty": 1, "qty_init": 1, "unita": "CNF DA 500 PZ", "min": 0, "pos": "", "note": ""}, {"id": "6854d737845a", "nome": "Lame Feather A35", "cat": "Lame", "fornitore": "Bio Optica", "barcode": "01-A35", "lotto": "25099041P", "scadenza": "", "qty": 4, "qty_init": 3, "unita": "DISPENSER 50PZ", "min": 0, "pos": "", "note": ""}, {"id": "a3271c0f8eb8", "nome": "Lame HP35", "cat": "Lame", "fornitore": "Epredia", "barcode": "3153735", "lotto": "5G0069", "scadenza": "", "qty": 1, "qty_init": 1, "unita": "CNF DA 50", "min": 0, "pos": "", "note": ""}, {"id": "7fff9d9f2e42", "nome": "Lame MX35", "cat": "Lame", "fornitore": "Epredia", "barcode": "3053835", "lotto": "5F0022", "scadenza": "", "qty": 1, "qty_init": 1, "unita": "CNF DA 50", "min": 0, "pos": "", "note": ""}, {"id": "665558d0f2ed", "nome": "Bio Mount (Montante)", "cat": "Altro", "fornitore": "Bio Optica", "barcode": "05-BMHM100", "lotto": "26043", "scadenza": "2028-02-12", "qty": 6, "qty_init": 5, "unita": "FALCONE DA 100ML", "min": 0, "pos": "", "note": ""}, {"id": "f1a6b267d0cd", "nome": "Biowax (Paraffina)", "cat": "Altro", "fornitore": "Bio Optica", "barcode": "08-7960", "lotto": "241741", "scadenza": "2027-10-10", "qty": 1, "qty_init": 1, "unita": "CNF DA 8X1KG", "min": 0, "pos": "", "note": ""}];
+  const importedMovs  = [{"id": "0f8105408a9f", "ts": "2025-06-05T08:00:00.000Z", "tipo": "carico", "prod": "Ck20", "prodId": "36f05fef8450", "qty": 1, "lotto": "N01151", "note": "Ordine 7/R/2025 — DDT 9635062897"}, {"id": "3bf43144acce", "ts": "2025-06-05T08:00:00.000Z", "tipo": "carico", "prod": "Bcc", "prodId": "7c90ec46cfc7", "qty": 1, "lotto": "M25989", "note": "Ordine 7/R/2025 — DDT 9635062897"}, {"id": "f614de937431", "ts": "2025-06-06T08:00:00.000Z", "tipo": "carico", "prod": "Vetrini Coprioggetto 24x60", "prodId": "975fad667171", "qty": 4, "lotto": "240615", "note": "Ordine 7/BIO/2025 — DDT 25S07424"}, {"id": "de0eef32bd48", "ts": "2025-06-06T08:00:00.000Z", "tipo": "carico", "prod": "Bio Cassette", "prodId": "0f3d3aca3031", "qty": 2, "lotto": "109313", "note": "Ordine 7/BIO/2025 — DDT 25S07424"}, {"id": "7736bcdb94ea", "ts": "2025-06-06T08:00:00.000Z", "tipo": "carico", "prod": "Cytocuvette", "prodId": "56ca5306419d", "qty": 1, "lotto": "107965", "note": "Ordine 7/BIO/2025 — DDT 25S07424"}, {"id": "6d8e2047d0cd", "ts": "2025-06-06T08:00:00.000Z", "tipo": "carico", "prod": "Biowax (Paraffina)", "prodId": "f1a6b267d0cd", "qty": 1, "lotto": "240693", "note": "Ordine 7/BIO/2025 — DDT 25S07424"}, {"id": "d5ca09b1a801", "ts": "2025-06-16T08:00:00.000Z", "tipo": "carico", "prod": "Papanicolau OG6", "prodId": "14954a4f6684", "qty": 2, "lotto": "25085", "note": "Ordine 5/BIO/2025 — DDT 25S07833"}, {"id": "4a73ba0ec3cd", "ts": "2025-06-18T08:00:00.000Z", "tipo": "carico", "prod": "Alcoolpath 100", "prodId": "3ae33805abfb", "qty": 1, "lotto": "25108", "note": "Ordine 7/bio/2025 — DDT 25S08020"}, {"id": "f52b038928b8", "ts": "2025-06-18T08:00:00.000Z", "tipo": "carico", "prod": "Alcoolpath 95", "prodId": "8ce16b7a265c", "qty": 1, "lotto": "25042", "note": "Ordine 7/bio/2025 — DDT 25S08020"}, {"id": "4f3d14e1d30c", "ts": "2025-06-18T08:00:00.000Z", "tipo": "carico", "prod": "Xilene", "prodId": "1789c8121bc6", "qty": 1, "lotto": "25112", "note": "Ordine 7/bio/2025 — DDT 25S08020"}, {"id": "e86a88b1f6fa", "ts": "2025-06-18T08:00:00.000Z", "tipo": "carico", "prod": "Papanicolau Ematossilina Harris", "prodId": "9559f3aaf022", "qty": 1, "lotto": "25079", "note": "Ordine 7/bio/2025 — DDT 25S08020"}, {"id": "ee12113af048", "ts": "2025-06-18T08:00:00.000Z", "tipo": "carico", "prod": "Eosina G Soluzione Acquosa", "prodId": "97e7a0897d90", "qty": 1, "lotto": "25164", "note": "Ordine 7/bio/2025 — DDT 25S08020"}, {"id": "2e383d070db9", "ts": "2025-06-18T08:00:00.000Z", "tipo": "carico", "prod": "Mayer", "prodId": "bc684b9ec8eb", "qty": 1, "lotto": "25132", "note": "Ordine 7/bio/2025 — DDT 25S08020"}, {"id": "42cd21d118f2", "ts": "2025-06-18T08:00:00.000Z", "tipo": "carico", "prod": "Formalina 10% Neutra Tamponata", "prodId": "c9f293f75ded", "qty": 2, "lotto": "25163", "note": "Ordine 7/bio/2025 — DDT 25S08020"}, {"id": "42cd21d118f2", "ts": "2025-06-18T08:00:00.000Z", "tipo": "carico", "prod": "Formalina 10% Neutra Tamponata", "prodId": "c9f293f75ded", "qty": 2, "lotto": "25162", "note": "Ordine 7/bio/2025 — DDT 25S08020"}, {"id": "b28b7a5f8874", "ts": "2025-07-04T08:00:00.000Z", "tipo": "carico", "prod": "Alcoolpath 95", "prodId": "8ce16b7a265c", "qty": 2, "lotto": "25169", "note": "Ordine 8/BIO/2025 — DDT 25s08981"}, {"id": "53338f7f2158", "ts": "2025-07-04T08:00:00.000Z", "tipo": "carico", "prod": "Xilene", "prodId": "1789c8121bc6", "qty": 2, "lotto": "25169", "note": "Ordine 8/BIO/2025 — DDT 25s08981"}, {"id": "6db50aa8bdc1", "ts": "2025-07-04T08:00:00.000Z", "tipo": "carico", "prod": "Papanicolau Ematossilina Harris", "prodId": "9559f3aaf022", "qty": 2, "lotto": "25079", "note": "Ordine 8/BIO/2025 — DDT 25s08981"}, {"id": "278a824595ec", "ts": "2025-07-04T08:00:00.000Z", "tipo": "carico", "prod": "Eosina G Soluzione Acquosa", "prodId": "97e7a0897d90", "qty": 2, "lotto": "25164", "note": "Ordine 8/BIO/2025 — DDT 25s08981"}, {"id": "902debed04f9", "ts": "2025-07-04T08:00:00.000Z", "tipo": "carico", "prod": "Vetrini Coprioggetto 24x50", "prodId": "938ae02b2924", "qty": 2, "lotto": "240915", "note": "Ordine 8/BIO/2025 — DDT 25S09012"}, {"id": "e909c5ab3fc2", "ts": "2025-07-04T08:00:00.000Z", "tipo": "carico", "prod": "Vetrini Coprioggetto 24x60", "prodId": "975fad667171", "qty": 2, "lotto": "240615", "note": "Ordine 8/BIO/2025 — DDT 25S09012"}, {"id": "93a003de366c", "ts": "2025-07-04T08:00:00.000Z", "tipo": "carico", "prod": "Lame Feather A35", "prodId": "6854d737845a", "qty": 1, "lotto": "25010026P", "note": "Ordine 8/BIO/2025 — DDT 25S09012"}, {"id": "8b5e7441ffa5", "ts": "2025-07-04T08:00:00.000Z", "tipo": "carico", "prod": "Vetrini Portaoggetto", "prodId": "d68608828c42", "qty": 1, "lotto": "241205", "note": "Ordine 8/BIO/2025 — DDT 25S09012"}, {"id": "83d2b769c03c", "ts": "2025-07-04T08:00:00.000Z", "tipo": "carico", "prod": "Biowax (Paraffina)", "prodId": "f1a6b267d0cd", "qty": 1, "lotto": "240693", "note": "Ordine 8/BIO/2025 — DDT 25S09012"}, {"id": "19ce77802832", "ts": "2025-07-02T08:00:00.000Z", "tipo": "carico", "prod": "Anti-PSA (IHC)", "prodId": "de8647d20212", "qty": 1, "lotto": "M22068", "note": "Ordine 8/R/2025 — DDT 202500006675"}, {"id": "76544b41abfa", "ts": "2025-07-03T08:00:00.000Z", "tipo": "carico", "prod": "Anti-Keratin (IHC)", "prodId": "9678f22345cf", "qty": 1, "lotto": "M26883", "note": "Ordine 8/R/2025 — DDT 9635074897"}, {"id": "9471dcf46edc", "ts": "2025-07-03T08:00:00.000Z", "tipo": "carico", "prod": "Citokeratin 5/6", "prodId": "67f63ba471fc", "qty": 1, "lotto": "N01164", "note": "Ordine 8/R/2025 — DDT 9635074897"}, {"id": "1165a79f3cf5", "ts": "2025-07-03T08:00:00.000Z", "tipo": "carico", "prod": "Ki67", "prodId": "ceaea1bdf3bd", "qty": 1, "lotto": "M25553", "note": "Ordine 8/R/2025 — DDT 9635074897"}, {"id": "990048cf43e3", "ts": "2025-07-03T08:00:00.000Z", "tipo": "carico", "prod": "P53", "prodId": "392e88a44b63", "qty": 1, "lotto": "N00602", "note": "Ordine 8/R/2025 — DDT 9635074897"}, {"id": "d23a67b449c4", "ts": "2025-07-03T08:00:00.000Z", "tipo": "carico", "prod": "P63", "prodId": "a161c4098f73", "qty": 1, "lotto": "N00128", "note": "Ordine 8/R/2025 — DDT 9635074897"}, {"id": "70dd3a2fa8d1", "ts": "2025-07-03T08:00:00.000Z", "tipo": "carico", "prod": "Hematoxylin", "prodId": "edd4ae2a87b6", "qty": 1, "lotto": "M27447", "note": "Ordine 8/R/2025 — DDT 9635074897"}, {"id": "99db9c5241a4", "ts": "2025-07-03T08:00:00.000Z", "tipo": "carico", "prod": "Hematoxylin Ii", "prodId": "f376a188c85e", "qty": 1, "lotto": "N01042", "note": "Ordine 8/R/2025 — DDT 9635074897"}, {"id": "faab7fedb9fe", "ts": "2025-07-03T08:00:00.000Z", "tipo": "carico", "prod": "Bluing", "prodId": "39a5c56b90e1", "qty": 1, "lotto": "N01096", "note": "Ordine 8/R/2025 — DDT 9635074897"}, {"id": "0a45491c2992", "ts": "2025-07-03T08:00:00.000Z", "tipo": "carico", "prod": "Reaction Buffer", "prodId": "7f9143c12728", "qty": 1, "lotto": "N03230", "note": "Ordine 8/R/2025 — DDT 9635074897"}, {"id": "5e6271fa6aa6", "ts": "2025-07-03T08:00:00.000Z", "tipo": "carico", "prod": "CC1", "prodId": "361a17e02056", "qty": 1, "lotto": "M27211", "note": "Ordine 8/R/2025 — DDT 9635074897"}, {"id": "0844e7ba0535", "ts": "2025-07-17T08:00:00.000Z", "tipo": "carico", "prod": "Bio Mount (Montante)", "prodId": "665558d0f2ed", "qty": 5, "lotto": "25197", "note": "Ordine 7/BIO/2025 — DDT 25S09717"}, {"id": "df43e1b6bcbf", "ts": "2025-07-18T08:00:00.000Z", "tipo": "carico", "prod": "Bio Mount (Montante)", "prodId": "665558d0f2ed", "qty": 3, "lotto": "25197", "note": "Ordine 8/BIO/2025 — DDT 25S09793"}, {"id": "c4c391e39c5e", "ts": "2025-07-18T08:00:00.000Z", "tipo": "carico", "prod": "Papanicolau EA50", "prodId": "31a79f148791", "qty": 2, "lotto": "25196", "note": "Ordine 8/BIO/2025 — DDT 25S09793"}, {"id": "d7e83fdbf88a", "ts": "2025-07-22T08:00:00.000Z", "tipo": "carico", "prod": "Giemsa", "prodId": "59e507803aad", "qty": 1, "lotto": "25198", "note": "Ordine 7/BIO/25 — DDT 25s09873"}, {"id": "1720ea9372dc", "ts": "2025-08-01T08:00:00.000Z", "tipo": "carico", "prod": "DAB Detection Kit", "prodId": "641170aa7928", "qty": 1, "lotto": "N06930", "note": "Ordine 10/R/2025 — DDT 9635087785"}, {"id": "3c750f628cc6", "ts": "2025-07-29T08:00:00.000Z", "tipo": "carico", "prod": "Papanicolau OG6", "prodId": "14954a4f6684", "qty": 3, "lotto": "25163", "note": "Ordine 8/BIO/2025 — DDT 25S10372"}, {"id": "b266e4629b93", "ts": "2025-07-28T08:00:00.000Z", "tipo": "carico", "prod": "Alcoolpath 100", "prodId": "3ae33805abfb", "qty": 2, "lotto": "25206_2", "note": "Ordine 8/BIO/2025 — DDT 25S10331"}, {"id": "9beac851d0f9", "ts": "2025-08-27T08:00:00.000Z", "tipo": "carico", "prod": "Vetrini Coprioggetto 24x50", "prodId": "938ae02b2924", "qty": 3, "lotto": "240915", "note": "Ordine 9/BIO/2025 — DDT 25S11403"}, {"id": "8eb7c91261e2", "ts": "2025-08-27T08:00:00.000Z", "tipo": "carico", "prod": "Vetrini Coprioggetto 24x60", "prodId": "975fad667171", "qty": 2, "lotto": "240615", "note": "Ordine 9/BIO/2025 — DDT 25S11403"}, {"id": "8169bcc68d15", "ts": "2025-08-27T08:00:00.000Z", "tipo": "carico", "prod": "Biowax (Paraffina)", "prodId": "f1a6b267d0cd", "qty": 1, "lotto": "241741", "note": "Ordine 9/BIO/2025 — DDT 25S11403"}, {"id": "70088f8f4c8e", "ts": "2025-08-27T08:00:00.000Z", "tipo": "carico", "prod": "Cytocuvette", "prodId": "56ca5306419d", "qty": 1, "lotto": "108671", "note": "Ordine 9/BIO/2025 — DDT 25S11403"}, {"id": "c13503fb3257", "ts": "2025-08-27T08:00:00.000Z", "tipo": "carico", "prod": "Alcoolpath 100", "prodId": "3ae33805abfb", "qty": 2, "lotto": "25211", "note": "Ordine 9/BIO/2025 — DDT 25S11416"}, {"id": "3ffbcb19fbe0", "ts": "2025-08-27T08:00:00.000Z", "tipo": "carico", "prod": "Alcoolpath 95", "prodId": "8ce16b7a265c", "qty": 2, "lotto": "25206_1", "note": "Ordine 9/BIO/2025 — DDT 25S11416"}, {"id": "e9f045814a4a", "ts": "2025-08-27T08:00:00.000Z", "tipo": "carico", "prod": "Xilene", "prodId": "1789c8121bc6", "qty": 2, "lotto": "25212_2", "note": "Ordine 9/BIO/2025 — DDT 25S11416"}, {"id": "e5a4830e1eb7", "ts": "2025-08-27T08:00:00.000Z", "tipo": "carico", "prod": "Papanicolau OG6", "prodId": "14954a4f6684", "qty": 1, "lotto": "25206", "note": "Ordine 9/BIO/2025 — DDT 25S11416"}, {"id": "5f8dadd5a960", "ts": "2025-08-27T08:00:00.000Z", "tipo": "carico", "prod": "Papanicolau EA50", "prodId": "31a79f148791", "qty": 1, "lotto": "25196", "note": "Ordine 9/BIO/2025 — DDT 25S11416"}, {"id": "ed2bf46e6f80", "ts": "2025-08-27T08:00:00.000Z", "tipo": "carico", "prod": "Papanicolau Ematossilina Harris", "prodId": "9559f3aaf022", "qty": 1, "lotto": "25176", "note": "Ordine 9/BIO/2025 — DDT 25S11416"}, {"id": "ab2f3e6721d8", "ts": "2025-08-27T08:00:00.000Z", "tipo": "carico", "prod": "Eosina G Soluzione Acquosa", "prodId": "97e7a0897d90", "qty": 1, "lotto": "25164", "note": "Ordine 9/BIO/2025 — DDT 25S11416"}, {"id": "9302c245e134", "ts": "2025-08-27T08:00:00.000Z", "tipo": "carico", "prod": "Bio Mount (Montante)", "prodId": "665558d0f2ed", "qty": 2, "lotto": "25197", "note": "Ordine 9/BIO/2025 — DDT 25S11416"}, {"id": "a303ed4a7ac5", "ts": "2025-09-04T08:00:00.000Z", "tipo": "carico", "prod": "Optiview DAB Kit", "prodId": "184c60621bf3", "qty": 1, "lotto": "N9023", "note": "Ordine 11/R/2025 — DDT 6935099002"}, {"id": "ae5da69cf02f", "ts": "2025-09-09T08:00:00.000Z", "tipo": "carico", "prod": "Ultraview Universal DAB Kit", "prodId": "67356c2550e7", "qty": 1, "lotto": "N06904", "note": "Ordine 12/R/2025 — DDT 9635100856"}, {"id": "92759d9f2584", "ts": "2025-09-15T08:00:00.000Z", "tipo": "carico", "prod": "Anti Cd3", "prodId": "1e465191b79b", "qty": 1, "lotto": "N02426", "note": "Ordine 13/R/2025 — DDT 9635103330"}, {"id": "ded455e6620a", "ts": "2025-09-15T08:00:00.000Z", "tipo": "carico", "prod": "Anti Cd5", "prodId": "88799810e5f7", "qty": 1, "lotto": "N07241", "note": "Ordine 13/R/2025 — DDT 9635103330"}, {"id": "a542ed080261", "ts": "2025-09-15T08:00:00.000Z", "tipo": "carico", "prod": "Cyclin D1 (IHC)", "prodId": "2528e260c2fe", "qty": 1, "lotto": "M29900Z", "note": "Ordine 13/R/2025 — DDT 9635103330"}, {"id": "d44b9b610c28", "ts": "2025-09-15T08:00:00.000Z", "tipo": "carico", "prod": "Pax 5", "prodId": "05c0b74f863f", "qty": 1, "lotto": "N10216", "note": "Ordine 13/R/2025 — DDT 9635103330"}, {"id": "aa301c37b04f", "ts": "2025-09-18T08:00:00.000Z", "tipo": "carico", "prod": "LCS - Low Cross Buffer", "prodId": "09dc4f8b0b27", "qty": 2, "lotto": "M29309", "note": "Ordine 14/R/2025 — DDT 9635105056"}, {"id": "c7167e43e2e5", "ts": "2025-10-07T08:00:00.000Z", "tipo": "carico", "prod": "CC2", "prodId": "69db855da209", "qty": 2, "lotto": "M29906", "note": "Ordine 15/R/2025 — DDT 9635114013"}, {"id": "4a04773d3661", "ts": "2025-10-07T08:00:00.000Z", "tipo": "carico", "prod": "EZ Prep", "prodId": "071a416fe40a", "qty": 1, "lotto": "N06132", "note": "Ordine 15/R/2025 — DDT 9635114013"}, {"id": "17fda2c57299", "ts": "2025-10-07T08:00:00.000Z", "tipo": "carico", "prod": "CC1", "prodId": "361a17e02056", "qty": 1, "lotto": "M27211", "note": "Ordine 15/R/2025 — DDT 9635114013"}, {"id": "f88fc23b0a99", "ts": "2025-10-07T08:00:00.000Z", "tipo": "carico", "prod": "LCS - Low Cross Buffer", "prodId": "09dc4f8b0b27", "qty": 2, "lotto": "M29306", "note": "Ordine 15/R/2025 — DDT 9635114013"}, {"id": "95692e0a126c", "ts": "2025-10-14T08:00:00.000Z", "tipo": "carico", "prod": "Xilene", "prodId": "1789c8121bc6", "qty": 1, "lotto": "25253-2", "note": "Ordine 11/BIO/2025 — DDT 25S13425"}, {"id": "624868ca1a1c", "ts": "2025-10-14T08:00:00.000Z", "tipo": "carico", "prod": "Xilene", "prodId": "1789c8121bc6", "qty": 2, "lotto": "25276", "note": "Ordine 11/BIO/2025 — DDT 25S13425"}, {"id": "35d816dff196", "ts": "2025-10-14T08:00:00.000Z", "tipo": "carico", "prod": "Alcoolpath 100", "prodId": "3ae33805abfb", "qty": 3, "lotto": "2526_2", "note": "Ordine 11/BIO/2025 — DDT 25S13425"}, {"id": "3169dbad052e", "ts": "2025-10-14T08:00:00.000Z", "tipo": "carico", "prod": "Papanicolau Ematossilina Harris", "prodId": "9559f3aaf022", "qty": 2, "lotto": "25274", "note": "Ordine 11/BIO/2025 — DDT 25S13425"}, {"id": "a301f76c5f7c", "ts": "2025-10-14T08:00:00.000Z", "tipo": "carico", "prod": "Formalina 10% Neutra Tamponata", "prodId": "c9f293f75ded", "qty": 4, "lotto": "25232", "note": "Ordine 11/BIO/2025 — DDT 25S13425"}, {"id": "8adf79d2161c", "ts": "2025-10-14T08:00:00.000Z", "tipo": "carico", "prod": "Eosina G Soluzione Acquosa", "prodId": "97e7a0897d90", "qty": 2, "lotto": "25240", "note": "Ordine 11/BIO/2025 — DDT 25S13425"}, {"id": "164c71d8c04f", "ts": "2025-10-15T08:00:00.000Z", "tipo": "carico", "prod": "Mayer", "prodId": "bc684b9ec8eb", "qty": 3, "lotto": "25219", "note": "Ordine 11/BIO/2025 — DDT 25S13448"}, {"id": "f7651929e131", "ts": "2025-10-15T08:00:00.000Z", "tipo": "carico", "prod": "Alcoolpath 100", "prodId": "3ae33805abfb", "qty": 1, "lotto": "25209", "note": "Ordine 11/BIO/2025 — DDT 25S13448"}, {"id": "9241ae8d9c91", "ts": "2025-10-15T08:00:00.000Z", "tipo": "carico", "prod": "Xilene", "prodId": "1789c8121bc6", "qty": 1, "lotto": "25276", "note": "Ordine 11/BIO/2025 — DDT 25S13448"}, {"id": "531ea12b0a18", "ts": "2025-11-28T08:00:00.000Z", "tipo": "carico", "prod": "Papanicolau OG6", "prodId": "14954a4f6684", "qty": 1, "lotto": "25206", "note": "Ordine 12/BIO/2025 — DDT 25S15506"}, {"id": "028b08f339f5", "ts": "2025-11-28T08:00:00.000Z", "tipo": "carico", "prod": "Papanicolau EA50", "prodId": "31a79f148791", "qty": 1, "lotto": "25076", "note": "Ordine 12/BIO/2025 — DDT 25S15506"}, {"id": "cc4a7ea08756", "ts": "2025-11-28T08:00:00.000Z", "tipo": "carico", "prod": "Eosina G Soluzione Acquosa", "prodId": "97e7a0897d90", "qty": 1, "lotto": "25293", "note": "Ordine 12/BIO/2025 — DDT 25S15506"}, {"id": "089c0b8cd1eb", "ts": "2025-12-16T08:00:00.000Z", "tipo": "carico", "prod": "Xilene", "prodId": "1789c8121bc6", "qty": 2, "lotto": "25253-2", "note": "Ordine 13/BIO/2025 — DDT 25S16330"}, {"id": "6acb3550ecc3", "ts": "2025-12-16T08:00:00.000Z", "tipo": "carico", "prod": "Eosina G Soluzione Acquosa", "prodId": "97e7a0897d90", "qty": 2, "lotto": "25293", "note": "Ordine 13/BIO/2025 — DDT 25S16330"}, {"id": "761af040703e", "ts": "2025-12-16T08:00:00.000Z", "tipo": "carico", "prod": "Papanicolau Ematossilina Harris", "prodId": "9559f3aaf022", "qty": 2, "lotto": "25302", "note": "Ordine 13/BIO/2025 — DDT 25S16330"}, {"id": "9330206bd3f3", "ts": "2025-12-16T08:00:00.000Z", "tipo": "carico", "prod": "Lame Feather A35", "prodId": "6854d737845a", "qty": 2, "lotto": "25050919P", "note": "Ordine 13/bio/2025 — DDT 25s16273"}, {"id": "37a4f7cdc087", "ts": "2025-12-22T08:00:00.000Z", "tipo": "carico", "prod": "Bio Cassette", "prodId": "0f3d3aca3031", "qty": 3, "lotto": "110887", "note": "Ordine 13/BIO/2025 — DDT 25S16639"}, {"id": "7fdd29a337d1", "ts": "2026-02-11T08:00:00.000Z", "tipo": "carico", "prod": "Vetrini Coprioggetto 24x60", "prodId": "975fad667171", "qty": 1, "lotto": "250515", "note": "Ordine 1/BIO/2026 — DDT 26S01728"}, {"id": "ccf343ee8b68", "ts": "2026-02-11T08:00:00.000Z", "tipo": "carico", "prod": "Vetrini Coprioggetto 24x50", "prodId": "938ae02b2924", "qty": 1, "lotto": "250715", "note": "Ordine 1/BIO/2026 — DDT 26S01728"}, {"id": "18a6b4501b34", "ts": "2026-02-27T08:00:00.000Z", "tipo": "carico", "prod": "Formalina 10% Neutra Tamponata", "prodId": "c9f293f75ded", "qty": 3, "lotto": "26055", "note": "Ordine 1/BIO/2026 — DDT 26S02660"}, {"id": "29a140c28ce3", "ts": "2026-02-27T08:00:00.000Z", "tipo": "carico", "prod": "Mayer", "prodId": "bc684b9ec8eb", "qty": 1, "lotto": "26033", "note": "Ordine 1/BIO/2026 — DDT 26S02660"}, {"id": "e3d7733ad050", "ts": "2026-03-05T08:00:00.000Z", "tipo": "carico", "prod": "Bio Mount (Montante)", "prodId": "665558d0f2ed", "qty": 6, "lotto": "26043", "note": "Ordine 2/Bio/2026 — DDT 26S03018"}, {"id": "0cefea35fcc1", "ts": "2026-03-05T08:00:00.000Z", "tipo": "carico", "prod": "Lame Feather A35", "prodId": "6854d737845a", "qty": 2, "lotto": "25099041P", "note": "Ordine 2/Bio/2026 — DDT 26S03049"}];
+  // Carica solo se il magazzino è vuoto o se i prodotti hanno ID diversi
+  const existing = JSON.parse(localStorage.getItem('ls_products') || '[]');
+  const existingIds = new Set(existing.map(p => p.id));
+  const newProds = importedProds.filter(p => !existingIds.has(p.id));
+  if (existing.length === 0) {
+    // Prima installazione: carica tutto
+    localStorage.setItem('ls_products', JSON.stringify(importedProds));
+    const existingMovs = JSON.parse(localStorage.getItem('ls_movements') || '[]');
+    const existingMovIds = new Set(existingMovs.map(m => m.id));
+    const newMovs = importedMovs.filter(m => !existingMovIds.has(m.id));
+    if (newMovs.length) {
+      localStorage.setItem('ls_movements', JSON.stringify([...newMovs, ...existingMovs]));
+    }
+    console.log('[Import CSV] Caricati ' + importedProds.length + ' prodotti e ' + importedMovs.length + ' movimenti');
+  } else if (newProds.length > 0) {
+    // Aggiungi solo i prodotti nuovi
+    localStorage.setItem('ls_products', JSON.stringify([...existing, ...newProds]));
+    console.log('[Import CSV] Aggiunti ' + newProds.length + ' nuovi prodotti');
+  }
+})();
+
 // ══════════════════════════════════════════
 // SUPABASE CONFIG — sostituisci con le tue chiavi
 // ══════════════════════════════════════════
@@ -1578,69 +1604,175 @@ async function flushQueue(){
 async function supaFetch(table,method='GET',body=null,query=''){
   if(!SUPA_OK) return null;
   if(!IS_ONLINE && method!=='GET') return null;
+  // Timeout: 10s per GET, 15s per write
+  const timeoutMs = method==='GET' ? 10000 : 15000;
+  const controller = new AbortController();
+  const timer = setTimeout(()=>controller.abort(), timeoutMs);
   try{
     const res=await fetch(SUPA_URL+'/rest/v1/'+table+query,{
       method, body:body?JSON.stringify(body):undefined,
+      signal: controller.signal,
       headers:{'Content-Type':'application/json','apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,'Prefer':'return=representation'}
     });
+    clearTimeout(timer);
     if(!res.ok){
       const errText = await res.text().catch(()=>'');
       console.warn(`[Supabase] ${method} ${table}${query} → ${res.status}:`, errText);
       return null;
     }
     const t=await res.text(); return t?JSON.parse(t):true;
-  }catch(e){ console.warn('[Supabase] fetch error:', e.message); return null; }
+  }catch(e){
+    clearTimeout(timer);
+    if(e.name==='AbortError'){
+      console.warn(`[Supabase] Timeout (${timeoutMs}ms): ${method} ${table}`);
+    } else {
+      console.warn('[Supabase] fetch error:', e.message);
+    }
+    return null;
+  }
 }
 
 // ── DATA LAYER — In-memory cache + localStorage + Supabase ──
 const LS_P='ls_products', LS_M='ls_movements', LS_W='ls_waste', LS_WL='ls_waste_log';
+const LS_ARCH='ls_archivio_ordini';
+const LS_ORD='ls_ordini';
+const LS_CAMP='ls_campioni';
+const LS_PROC='ls_processatore';
+const LS_COLOR_REG='ls_coloratore';
 
-// Cache in memoria: evita JSON.parse ripetuti (loadP() chiamata 40+ volte per render)
+// ── VALIDATORI — garantiscono struttura minima dei record ──
+function _validateProduct(p){
+  if(!p||typeof p!=='object') return false;
+  if(!p.id||typeof p.id!=='string') return false;
+  if(!p.nome||typeof p.nome!=='string') return false;
+  if(typeof p.qty!=='number'||isNaN(p.qty)) p.qty=0;
+  if(typeof p.min!=='number'||isNaN(p.min)) p.min=0;
+  if(!p.cat) p.cat='Altro';
+  return true;
+}
+function _validateMovement(m){
+  if(!m||typeof m!=='object') return false;
+  if(!m.id||typeof m.id!=='string') return false;
+  if(!m.tipo||!['carico','scarico'].includes(m.tipo)) return false;
+  if(typeof m.qty!=='number'||isNaN(m.qty)||m.qty<0) return false;
+  return true;
+}
+function _sanitizeArray(arr, validator){
+  if(!Array.isArray(arr)) return [];
+  return arr.filter(item=>{ try{ return validator(item); }catch(e){ return false; } });
+}
+
+// ── LETTURA SICURA localStorage — se corrotto, non crasha ──
+function _safeRead(key, fallback='[]'){
+  try{
+    const raw=localStorage.getItem(key);
+    if(!raw) return JSON.parse(fallback);
+    const parsed=JSON.parse(raw);
+    // Se il dato atteso è un array ma abbiamo qualcos'altro, resetta
+    if(fallback==='[]'&&!Array.isArray(parsed)){
+      console.warn('[DataLayer] '+key+' corrotto (non array), ripristino a []');
+      localStorage.removeItem(key);
+      return [];
+    }
+    return parsed;
+  }catch(e){
+    console.error('[DataLayer] JSON corrotto in '+key+', ripristino a fallback:', e.message);
+    // Backup del dato corrotto prima di cancellarlo
+    try{ localStorage.setItem(key+'_backup_'+Date.now(), localStorage.getItem(key)||''); }catch(_){}
+    localStorage.removeItem(key);
+    return JSON.parse(fallback);
+  }
+}
+
+// ── SCRITTURA SICURA localStorage — gestisce quota exceeded ──
+function _safeWrite(key, val){
+  try{
+    localStorage.setItem(key, JSON.stringify(val));
+    return true;
+  }catch(e){
+    if(e.name==='QuotaExceededError'){
+      console.error('[DataLayer] localStorage pieno! Pulizia voci vecchie...');
+      // Rimuovi i backup accumulati per liberare spazio
+      Object.keys(localStorage).filter(k=>k.includes('_backup_')).forEach(k=>localStorage.removeItem(k));
+      try{ localStorage.setItem(key, JSON.stringify(val)); return true; }catch(_){}
+      toast('⚠ Spazio locale esaurito — alcuni dati non salvati','error',5000);
+    }else{
+      console.error('[DataLayer] Errore scrittura '+key+':', e.message);
+    }
+    return false;
+  }
+}
+
+// ── RETRY su Supabase — riprova 3 volte con backoff ──
+async function _supaWithRetry(table, method, body, query, maxRetries=3){
+  for(let i=0; i<maxRetries; i++){
+    const res=await supaFetch(table, method, body, query);
+    if(res!==null) return res;
+    if(i<maxRetries-1){
+      await new Promise(r=>setTimeout(r, 500*(i+1))); // 500ms, 1000ms, 1500ms
+    }
+  }
+  return null;
+}
+
+// ── Cache in memoria: evita JSON.parse ripetuti ──
 const _cache={};
 function _getCache(key,fallback='[]'){
   if(!Object.prototype.hasOwnProperty.call(_cache,key)){
-    try{ _cache[key]=JSON.parse(localStorage.getItem(key)||fallback); }
-    catch(e){ _cache[key]=JSON.parse(fallback); }
+    _cache[key]=_safeRead(key, fallback);
   }
   return _cache[key];
 }
-function _setCache(key,val){ _cache[key]=val; localStorage.setItem(key,JSON.stringify(val)); }
+function _setCache(key,val){
+  _cache[key]=val;
+  _safeWrite(key, val);
+}
 function _invalidateAll(){ Object.keys(_cache).forEach(k=>delete _cache[k]); }
 
-const loadP=()=>_getCache(LS_P,'[]');
+const loadP=()=>_sanitizeArray(_getCache(LS_P,'[]'), _validateProduct);
 async function saveP(arr, deletedId){
-  _setCache(LS_P,arr);
+  const clean=_sanitizeArray(arr, _validateProduct);
+  _setCache(LS_P, clean);
   if(!SUPA_OK) return;
   if(!IS_ONLINE){ enqueue({type:'products'}); return; }
   updateSyncStatus('sync');
-  try{
-    if(deletedId) await supaFetch('products','DELETE',null,'?id=eq.'+deletedId);
-    if(arr.length) await supaFetch('products','POST',arr,'?on_conflict=id');
+  const ok1=deletedId ? await _supaWithRetry('products','DELETE',null,'?id=eq.'+deletedId) : true;
+  const ok2=clean.length ? await _supaWithRetry('products','POST',clean,'?on_conflict=id') : true;
+  if(!ok1||!ok2){
+    enqueue({type:'products'});
+    toast('⚠ Prodotti salvati in locale — sync in coda','warn');
+  } else {
     updateSyncStatus('ok');
-  }catch(e){ enqueue({type:'products'}); }
+  }
 }
 
-const loadM=()=>_getCache(LS_M,'[]');
+const loadM=()=>_sanitizeArray(_getCache(LS_M,'[]'), _validateMovement);
 function saveM(arr, newMovements){
-  _setCache(LS_M,arr);
-  if(!SUPA_OK||!arr.length) return;
+  const clean=_sanitizeArray(arr, _validateMovement);
+  _setCache(LS_M, clean);
+  if(!SUPA_OK||!clean.length) return;
   if(!IS_ONLINE){ enqueue({type:'movements'}); return; }
-  // Invia tutti i nuovi movimenti passati esplicitamente, oppure l'intero array
-  const toSync = newMovements ? (Array.isArray(newMovements)?newMovements:[newMovements]) : arr.slice(0,50);
-  if(toSync.length) supaFetch('movements','POST',toSync,'?on_conflict=id');
+  const toSync=newMovements?(Array.isArray(newMovements)?newMovements:[newMovements]):clean.slice(0,50);
+  const validToSync=_sanitizeArray(toSync, _validateMovement);
+  if(validToSync.length){
+    _supaWithRetry('movements','POST',validToSync,'?on_conflict=id').then(ok=>{
+      if(!ok){ enqueue({type:'movements'}); toast('⚠ Movimenti salvati in locale — sync in coda','warn'); }
+    });
+  }
 }
 
 function loadW(){
   const def={
-    cer_180103:{pieni:0,vuoti:3,smaltiti:0},   // scatole cartone dedicate
-    cer_150110:{pieni:0,smaltiti:0},             // bidone condiviso — vuoti gestiti da pool
-    cer_150202:{pieni:0,smaltiti:0},             // bidone condiviso — vuoti gestiti da pool
-    cer_180106:{pieni:0,vuoti:2,smaltiti:0},    // taniche dedicate
-    bidoni_solidi_comuni:{vuoti:4}               // pool condiviso 150110+150202
+    cer_180103:{pieni:0,vuoti:3,smaltiti:0},
+    cer_150110:{pieni:0,smaltiti:0},
+    cer_150202:{pieni:0,smaltiti:0},
+    cer_180106:{pieni:0,vuoti:2,smaltiti:0},
+    bidoni_solidi_comuni:{vuoti:4}
   };
-  const stored=JSON.parse(localStorage.getItem(LS_W)||'{}');
-  Object.keys(def).forEach(k=>{ if(!stored[k]) stored[k]=def[k]; });
-  return stored;
+  const stored=_safeRead(LS_W,'{}');
+  const obj=typeof stored==='object'&&!Array.isArray(stored)?stored:{};
+  Object.keys(def).forEach(k=>{ if(!obj[k]) obj[k]=def[k]; });
+  return obj;
 }
 // Helper: restituisce i vuoti disponibili per un tipo (pool condiviso o proprio)
 function getVuotiDisp(W, key){
@@ -1941,34 +2073,58 @@ function closeModal(id){ document.getElementById(id).classList.remove('open'); }
 // ══════════════════════════════════════════
 // NAVIGATION
 // ══════════════════════════════════════════
+// ── safeRender: esegue una funzione render catturando errori ──
+// Se la funzione crasha, mostra un messaggio nella view invece di pagina bianca
+function safeRender(fn, viewId){
+  try{
+    fn();
+  }catch(e){
+    console.error('[Render] Errore in '+viewId+':', e);
+    const container = viewId ? document.getElementById('view-'+viewId) : null;
+    if(container){
+      // Mostra errore nella view senza bloccare il resto dell'app
+      const errBox = container.querySelector('.render-error');
+      if(!errBox){
+        const div = document.createElement('div');
+        div.className='render-error';
+        div.style.cssText='margin:20px;padding:16px;background:var(--red-bg);border:1px solid #fca5a5;border-radius:var(--r);color:var(--red)';
+        div.innerHTML='<strong>⚠ Errore di visualizzazione</strong><br><span style="font-size:12px;opacity:.8">'+e.message+'</span><br><button class="btn btn-sm" style="margin-top:8px" onclick="this.parentElement.remove();safeRender(()=>'+fn.name+'(),\''+viewId+'\')">🔄 Riprova</button>';
+        container.insertBefore(div, container.firstChild);
+      }
+    }
+    toast('Errore nella pagina '+viewId+' — vedi dettaglio in alto','error');
+  }
+}
+
 let currentView='dashboard', invFilter='all', fornFilter='all', homeFornFilter='all', manualMovType='carico';
 function showView(v){
   document.querySelectorAll('.view').forEach(e=>e.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(e=>e.classList.remove('active'));
   const viewEl = document.getElementById('view-'+v);
-  if(!viewEl){ console.warn('View not found: view-'+v); return; }
+  if(!viewEl){ console.warn('View not found: view-'+v); toast('Pagina "'+v+'" non trovata','error'); return; }
   viewEl.classList.add('active');
+  // Rimuovi eventuali errori precedenti della stessa view
+  viewEl.querySelectorAll('.render-error').forEach(e=>e.remove());
   const n=document.getElementById('nav-'+v); if(n) n.classList.add('active');
   currentView=v;
-  // Apri submenu magazzino automaticamente
   const magVoci=['inventario','movimenti','allerte','ordini','archivio','schede'];
   if(magVoci.includes(v)){
     const sub=document.getElementById('mag-submenu');
     const ar=document.getElementById('mag-arrow');
     if(sub && sub.style.display==='none'){ sub.style.display='block'; if(ar) ar.textContent='▾'; }
   }
-  if(v==='dashboard'){ renderDashboard(); }
-  if(v==='inventario') renderInv();
-  if(v==='movimenti'){ delete _cache[LS_M]; renderMovimenti(); }
-  if(v==='rifiuti') renderRifiuti();
-  if(v==='allerte') renderAllerte();
-  if(v==='ordini'){ buildProdDatalist(); renderOrdini(); }
-  if(v==='report') renderReport();
-  if(v==='archivio') renderArchivio();
-  if(v==='schede') renderSchede();
-  if(v==='tracciabilita') renderTracciabilita();
-  if(v==='processatore') renderProcessatore();
-  if(v==='coloratore') renderColoratore();
+  if(v==='dashboard')    safeRender(renderDashboard, 'dashboard');
+  if(v==='inventario')   safeRender(renderInv, 'inventario');
+  if(v==='movimenti'){   delete _cache[LS_M]; safeRender(renderMovimenti, 'movimenti'); }
+  if(v==='rifiuti')      safeRender(renderRifiuti, 'rifiuti');
+  if(v==='allerte')      safeRender(renderAllerte, 'allerte');
+  if(v==='ordini'){      buildProdDatalist(); safeRender(renderOrdini, 'ordini'); }
+  if(v==='report')       safeRender(renderReport, 'report');
+  if(v==='archivio')     safeRender(renderArchivio, 'archivio');
+  if(v==='schede')       safeRender(renderSchede, 'schede');
+  if(v==='tracciabilita') safeRender(renderTracciabilita, 'tracciabilita');
+  if(v==='processatore') safeRender(renderProcessatore, 'processatore');
+  if(v==='coloratore')   safeRender(renderColoratore, 'coloratore');
 }
 function goCategory(cat){
   invFilter=cat; subFilter='all';
@@ -2288,7 +2444,7 @@ function renderDashboard(){
       cats.map(cat=>{
         const d=bycat[cat];
         const haProb=d.crit>0||d.scad>0;
-        return `<div onclick="showView('inventario');setInvFilter('${cat}',document.querySelector('#inv-filter-bar .f-btn:nth-child(${catOrder.indexOf(cat)+2})'))" style="cursor:pointer;background:var(--bg3);border-radius:8px;padding:8px;border:1.5px solid ${haProb?'var(--red)':'var(--border)'}">
+        return `<div onclick="goCategory('${cat}')" style="cursor:pointer;background:var(--bg3);border-radius:8px;padding:8px;border:1.5px solid ${haProb?'var(--red)':'var(--border)'}">`;
           <div style="font-size:10px;color:${catColors[cat]||'var(--text3)'};font-weight:700;margin-bottom:3px">${CAT_ICON[cat]||'📌'} ${cat}</div>
           <div style="font-family:'DM Mono',monospace;font-size:18px;font-weight:700;color:var(--text)">${d.tot}</div>
           ${haProb?`<div style="font-size:10px;color:var(--red);margin-top:2px">${d.crit>0?d.crit+' critici':''}${d.scad>0?' '+d.scad+' scaduti':''}</div>`:'<div style="font-size:10px;color:var(--green);margin-top:2px">✓ ok</div>'}
@@ -2403,6 +2559,8 @@ function renderDashboard(){
 }
 
 function renderHomeGrid(){
+  const container=document.getElementById('home-cat-grid');
+  if(!container || container.style.display==='none') return; // non più usata nella nuova dashboard
   const q=(document.getElementById('home-search')?.value||'').toLowerCase();
   let prods=loadP();
   if(q) prods=prods.filter(p=>p.nome.toLowerCase().includes(q)||(p.fornitore||'').toLowerCase().includes(q)||(p.barcode||'').includes(q));
@@ -2909,25 +3067,32 @@ function openManualMovModal(tipo){
   document.getElementById('modal-mov').classList.add('open');
 }
 function confirmManualMov(){
-  const prodId=document.getElementById('m-prod').value;
-  const qty=parseFloat(document.getElementById('m-qty').value)||0;
-  if(!prodId||qty<=0){ toast('Seleziona prodotto e quantità','error'); return; }
-  const prods=loadP(), p=prods.find(x=>x.id===prodId); if(!p) return;
-  if(manualMovType==='scarico'&&p.qty<qty){ toast('Quantità insufficiente','error'); return; }
-  if(manualMovType==='carico'){
-    p.qty=p.qty+qty;
-    if(p.qty_init===undefined) p.qty_init=qty; // prima volta: qty iniziale = quanto caricato
-  } else {
-    p.qty=p.qty-qty;
-  }
-  saveP(prods);
-  const newMov={id:genId(),ts:new Date().toISOString(),tipo:manualMovType,prod:p.nome,prodId:p.id,qty,lotto:document.getElementById('m-lotto').value,note:document.getElementById('m-note').value};
-  const movs=loadM();
-  movs.unshift(newMov);
-  saveM(movs, newMov); closeModal('modal-mov');
-  renderMovimenti();
-  if(currentView==='inventario') renderInv();
-  toast(`${manualMovType==='carico'?'Carico':'Scarico'} registrato`,manualMovType==='carico'?'success':'info');
+  try{
+    const prodId=document.getElementById('m-prod').value;
+    const qty=parseFloat(document.getElementById('m-qty').value);
+    if(!prodId){ toast('Seleziona un prodotto','error'); return; }
+    if(!qty||isNaN(qty)||qty<=0){ toast('Inserisci una quantità valida maggiore di zero','error'); return; }
+    if(qty>99999){ toast('Quantità troppo elevata','error'); return; }
+    const qtyR=Math.round(qty*100)/100; // max 2 decimali
+    const prods=loadP(), p=prods.find(x=>x.id===prodId);
+    if(!p){ toast('Prodotto non trovato in magazzino','error'); return; }
+    if(manualMovType==='scarico'){
+      if(p.qty<=0){ toast('Prodotto già esaurito','error'); return; }
+      if(p.qty<qtyR){ toast(`Quantità insufficiente — disponibili: ${p.qty} ${p.unita||''}`, 'error'); return; }
+      p.qty=Math.max(0, Math.round((p.qty-qtyR)*100)/100);
+    } else {
+      p.qty=Math.round((p.qty+qtyR)*100)/100;
+      if(p.qty_init===undefined) p.qty_init=qtyR;
+    }
+    saveP(prods);
+    const newMov={id:genId(),ts:new Date().toISOString(),tipo:manualMovType,prod:p.nome,prodId:p.id,qty:qtyR,lotto:(document.getElementById('m-lotto').value||'').trim(),note:(document.getElementById('m-note').value||'').trim()};
+    const movs=loadM(); movs.unshift(newMov);
+    saveM(movs, newMov); closeModal('modal-mov');
+    renderMovimenti();
+    if(currentView==='inventario') renderInv();
+    if(currentView==='dashboard') renderDashboard();
+    toast(`${manualMovType==='carico'?'Carico':'Scarico'} registrato: ${p.nome} ${manualMovType==='carico'?'+':'−'}${qtyR}`,manualMovType==='carico'?'success':'info');
+  }catch(e){ console.error('[confirmManualMov]',e); toast('Errore imprevisto: '+e.message,'error'); }
 }
 
 // ══════════════════════════════════════════
@@ -3133,20 +3298,26 @@ function scaricaSelProd(){
   document.getElementById('sc-man-confirm-btn').style.display='none';
 }
 function confirmScaricaManuale(){
-  if(!scaricaSelectedId){ toast('Seleziona un lotto','error'); return; }
-  const qty=parseFloat(document.getElementById('sc-man-qty').value)||1;
-  const note=document.getElementById('sc-man-note').value;
-  const prods=loadP(), p=prods.find(x=>x.id===scaricaSelectedId);
-  if(!p){ toast('Prodotto non trovato','error'); return; }
-  if(p.qty<qty){ toast('Quantità insufficiente — disponibili: '+p.qty,'error'); return; }
-  p.qty-=qty; saveP(prods);
-  const newMov={id:genId(),ts:new Date().toISOString(),tipo:'scarico',prod:p.nome,prodId:p.id,qty,lotto:p.lotto||'',note:note||'Scarico manuale'};
-  const movs=loadM(); movs.unshift(newMov); saveM(movs, newMov);
-  closeScaricaModal();
-  if(currentView==='inventario') renderInv();
-  if(currentView==='dashboard') renderDashboard();
-  if(currentView==='movimenti') renderMovimenti();
-  toast('Scarico: '+p.nome+' −'+qty,'info');
+  try{
+    if(!scaricaSelectedId){ toast('Seleziona un prodotto dalla lista','error'); return; }
+    const qty=parseFloat(document.getElementById('sc-man-qty').value);
+    if(!qty||isNaN(qty)||qty<=0){ toast('Inserisci una quantità valida maggiore di zero','error'); return; }
+    const qtyR=Math.round(qty*100)/100;
+    const note=(document.getElementById('sc-man-note').value||'').trim();
+    const prods=loadP(), p=prods.find(x=>x.id===scaricaSelectedId);
+    if(!p){ toast('Prodotto non trovato — aggiorna la pagina','error'); return; }
+    if(p.qty<=0){ toast('Prodotto già esaurito','error'); return; }
+    if(p.qty<qtyR){ toast(`Quantità insufficiente — disponibili: ${p.qty} ${p.unita||''}`, 'error'); return; }
+    p.qty=Math.max(0, Math.round((p.qty-qtyR)*100)/100);
+    saveP(prods);
+    const newMov={id:genId(),ts:new Date().toISOString(),tipo:'scarico',prod:p.nome,prodId:p.id,qty:qtyR,lotto:p.lotto||'',note:note||'Scarico manuale'};
+    const movs=loadM(); movs.unshift(newMov); saveM(movs, newMov);
+    closeScaricaModal();
+    if(currentView==='inventario') renderInv();
+    if(currentView==='dashboard') renderDashboard();
+    if(currentView==='movimenti') renderMovimenti();
+    toast('Scarico: '+p.nome+' −'+qtyR,'info');
+  }catch(e){ console.error('[confirmScaricaManuale]',e); toast('Errore imprevisto: '+e.message,'error'); }
 }
 function closeScaricaModal(){ if(codeReader){ try{codeReader.reset();}catch(e){} codeReader=null; } closeModal('modal-scarica'); }
 function openBarcodeModal(){ openScaricaModal(); }
@@ -3163,7 +3334,7 @@ async function startBarcodeScanner(){
       <input type="text" id="manual-bc" placeholder="Barcode…" style="text-align:center;font-family:DM Mono,monospace;font-size:15px;letter-spacing:2px" onkeydown="if(event.key==='Enter') handleScannedCode(this.value.trim())">
       <button class="btn btn-primary" style="margin-top:9px;width:100%" onclick="handleScannedCode(document.getElementById('manual-bc').value.trim())">Cerca</button>
     </div>`;
-    document.getElementById('scan-line')?.remove();
+    document.querySelector('#barcode-video-wrap .scan-line')?.remove();
   }
 }
 function handleScannedCode(code){
@@ -3189,19 +3360,25 @@ function handleScannedCode(code){
 }
 function closeBarcodeModal(){ closeScaricaModal(); }
 function confirmBarcodeScario(){
-  if(!matchedProd) return;
-  const qty=parseFloat(document.getElementById('bc-qty').value)||1;
-  if(matchedProd.qty<qty){ toast('Quantità insufficiente','error'); return; }
-  const prods=loadP(), p=prods.find(x=>x.id===matchedProd.id);
-  if(!p){ toast('Prodotto non trovato','error'); return; }
-  p.qty-=qty; saveP(prods);
-  const newMov={id:genId(),ts:new Date().toISOString(),tipo:'scarico',prod:p.nome,prodId:p.id,qty,lotto:p.lotto||'',note:document.getElementById('bc-note').value||'Scarico barcode'};
-  const movs=loadM(); movs.unshift(newMov); saveM(movs, newMov);
-  closeBarcodeModal();
-  if(currentView==='inventario') renderInv();
-  if(currentView==='dashboard') renderDashboard();
-  if(currentView==='movimenti') renderMovimenti();
-  toast(`Scarico: ${p.nome} −${qty}`,'info');
+  try{
+    if(!matchedProd){ toast('Nessun prodotto selezionato','error'); return; }
+    const qty=parseFloat(document.getElementById('bc-qty').value);
+    if(!qty||isNaN(qty)||qty<=0){ toast('Inserisci una quantità valida','error'); return; }
+    const qtyR=Math.round(qty*100)/100;
+    const prods=loadP(), p=prods.find(x=>x.id===matchedProd.id);
+    if(!p){ toast('Prodotto non trovato — ricarica la pagina','error'); return; }
+    if(p.qty<=0){ toast('Prodotto già esaurito','error'); return; }
+    if(p.qty<qtyR){ toast(`Quantità insufficiente — disponibili: ${p.qty} ${p.unita||''}`, 'error'); return; }
+    p.qty=Math.max(0, Math.round((p.qty-qtyR)*100)/100);
+    saveP(prods);
+    const newMov={id:genId(),ts:new Date().toISOString(),tipo:'scarico',prod:p.nome,prodId:p.id,qty:qtyR,lotto:p.lotto||'',note:(document.getElementById('bc-note').value||'Scarico barcode').trim()};
+    const movs=loadM(); movs.unshift(newMov); saveM(movs, newMov);
+    closeBarcodeModal();
+    if(currentView==='inventario') renderInv();
+    if(currentView==='dashboard') renderDashboard();
+    if(currentView==='movimenti') renderMovimenti();
+    toast(`Scarico: ${p.nome} −${qtyR}`,'info');
+  }catch(e){ console.error('[confirmBarcodeScario]',e); toast('Errore imprevisto: '+e.message,'error'); }
 }
 function addFromBarcode(){ closeBarcodeModal(); document.getElementById('f-barcode').value=lastCode||''; openAddModal(); }
 
@@ -3326,52 +3503,56 @@ function processCaricaScan(code){
 }
 
 function confirmCaricaScanFound(){
-  if(!csMatchedId){ toast('Nessun prodotto selezionato','error'); return; }
-  const qty=parseFloat(document.getElementById('cs-qty').value)||1;
-  const note=document.getElementById('cs-note').value;
-  const prods=loadP(), p=prods.find(x=>x.id===csMatchedId);
-  if(!p){ toast('Prodotto non trovato','error'); return; }
-  p.qty+=qty;
-  if(p.qty_init===undefined) p.qty_init=qty;
-  saveP(prods);
-  const newMov={id:genId(),ts:new Date().toISOString(),tipo:'carico',prod:p.nome,prodId:p.id,qty,lotto:p.lotto||'',note:note||'Carico da scan'};
-  const movs=loadM();
-  movs.unshift(newMov);
-  saveM(movs, newMov);
-  closeCaricaScanModal();
-  if(currentView==='inventario') renderInv();
-  if(currentView==='dashboard') renderDashboard();
-  if(currentView==='movimenti') renderMovimenti();
-  toast('Carico: '+p.nome+' +'+qty,'success');
+  try{
+    if(!csMatchedId){ toast('Nessun prodotto selezionato','error'); return; }
+    const qty=parseFloat(document.getElementById('cs-qty').value);
+    if(!qty||isNaN(qty)||qty<=0){ toast('Inserisci una quantità valida','error'); return; }
+    const qtyR=Math.round(qty*100)/100;
+    const note=(document.getElementById('cs-note').value||'').trim();
+    const prods=loadP(), p=prods.find(x=>x.id===csMatchedId);
+    if(!p){ toast('Prodotto non trovato — ricarica la pagina','error'); return; }
+    p.qty=Math.round((p.qty+qtyR)*100)/100;
+    if(p.qty_init===undefined) p.qty_init=qtyR;
+    saveP(prods);
+    const newMov={id:genId(),ts:new Date().toISOString(),tipo:'carico',prod:p.nome,prodId:p.id,qty:qtyR,lotto:p.lotto||'',note:note||'Carico da scan'};
+    const movs=loadM(); movs.unshift(newMov); saveM(movs, newMov);
+    closeCaricaScanModal();
+    if(currentView==='inventario') renderInv();
+    if(currentView==='dashboard') renderDashboard();
+    if(currentView==='movimenti') renderMovimenti();
+    toast('Carico: '+p.nome+' +'+qtyR,'success');
+  }catch(e){ console.error('[confirmCaricaScanFound]',e); toast('Errore imprevisto: '+e.message,'error'); }
 }
 
 function confirmCaricaScanNew(){
-  const nome=document.getElementById('cs-nome').value.trim();
-  const catSel=document.getElementById('cs-cat').value;
-  const forn=document.getElementById('cs-fornitore').value.trim();
-  const cat=catSel&&catSel!=='Altro'?catSel:smartCategorize(nome,forn,'');
-  if(!nome){ toast('Nome obbligatorio','error'); return; }
-  const qty=parseFloat(document.getElementById('cs-qty-new').value)||1;
-  const p={
-    id:genId(), nome, cat,
-    fornitore:document.getElementById('cs-fornitore').value.trim(),
-    barcode:document.getElementById('cs-codici').value.trim(),
-    lotto:document.getElementById('cs-lotto').value.trim(),
-    scadenza:document.getElementById('cs-scadenza').value,
-    qty, qty_init:qty,
-    unita:document.getElementById('cs-unita').value.trim()||'pz',
-    min:0, pos:'', note:''
-  };
-  const prods=loadP(); prods.push(p); saveP(prods);
-  const newMov={id:genId(),ts:new Date().toISOString(),tipo:'carico',prod:p.nome,prodId:p.id,qty,lotto:p.lotto||'',note:'Carico da scan — nuovo prodotto'};
-  const movs=loadM();
-  movs.unshift(newMov);
-  saveM(movs, newMov);
-  closeCaricaScanModal();
-  if(currentView==='inventario') renderInv();
-  if(currentView==='dashboard') renderDashboard();
-  if(currentView==='movimenti') renderMovimenti();
-  toast('Nuovo prodotto salvato: '+p.nome,'success');
+  try{
+    const nome=(document.getElementById('cs-nome').value||'').trim();
+    if(!nome){ toast('Nome prodotto obbligatorio','error'); return; }
+    if(nome.length<2){ toast('Nome troppo corto (min 2 caratteri)','error'); return; }
+    const qty=parseFloat(document.getElementById('cs-qty-new').value);
+    if(!qty||isNaN(qty)||qty<=0){ toast('Inserisci una quantità valida','error'); return; }
+    const qtyR=Math.round(qty*100)/100;
+    const catSel=document.getElementById('cs-cat').value;
+    const forn=(document.getElementById('cs-fornitore').value||'').trim();
+    const cat=catSel&&catSel!=='Altro'?catSel:smartCategorize(nome,forn,'');
+    const p={
+      id:genId(), nome, cat, fornitore:forn,
+      barcode:(document.getElementById('cs-codici').value||'').trim(),
+      lotto:(document.getElementById('cs-lotto').value||'').trim(),
+      scadenza:document.getElementById('cs-scadenza').value||'',
+      qty:qtyR, qty_init:qtyR,
+      unita:(document.getElementById('cs-unita').value||'pz').trim()||'pz',
+      min:0, pos:'', note:''
+    };
+    const prods=loadP(); prods.push(p); saveP(prods);
+    const newMov={id:genId(),ts:new Date().toISOString(),tipo:'carico',prod:p.nome,prodId:p.id,qty:qtyR,lotto:p.lotto||'',note:'Carico da scan — nuovo prodotto'};
+    const movs=loadM(); movs.unshift(newMov); saveM(movs, newMov);
+    closeCaricaScanModal();
+    if(currentView==='inventario') renderInv();
+    if(currentView==='dashboard') renderDashboard();
+    if(currentView==='movimenti') renderMovimenti();
+    toast('Nuovo prodotto salvato: '+p.nome,'success');
+  }catch(e){ console.error('[confirmCaricaScanNew]',e); toast('Errore imprevisto: '+e.message,'error'); }
 }
 
 // ══════════════════════════════════════════
@@ -3490,7 +3671,6 @@ function renderSchede(){
 // ══════════════════════════════════════════
 // PROCESSATORE
 // ══════════════════════════════════════════
-const LS_PROC = 'ls_processatore';
 const loadProc=()=>_getCache(LS_PROC,'[]');
 async function saveProc(arr, deletedId){
   _setCache(LS_PROC, arr);
@@ -3709,7 +3889,6 @@ async function deleteProcCiclo(id){
 // ══════════════════════════════════════════
 // COLORATORE — Registro giornaliero
 // ══════════════════════════════════════════
-const LS_COLOR_REG = 'ls_coloratore';
 const loadColoratore=()=>_getCache(LS_COLOR_REG,'[]');
 async function saveColoratoreReg(arr, deletedId){
   _setCache(LS_COLOR_REG, arr);
@@ -3880,7 +4059,6 @@ async function deleteColorCiclo(id){
 // ══════════════════════════════════════════
 // TRACCIABILITÀ CAMPIONI
 // ══════════════════════════════════════════
-const LS_CAMP = 'ls_campioni';
 const loadCampioni=()=>_getCache(LS_CAMP,'[]');
 async function saveCampioni(arr, deletedId){
   localStorage.setItem(LS_CAMP, JSON.stringify(arr));
@@ -4300,7 +4478,6 @@ async function deleteCampioneDetail(){
 // ══════════════════════════════════════════
 // ARCHIVIO ORDINI
 // ══════════════════════════════════════════
-const LS_ARCH='ls_archivio_ordini';
 const loadArch=()=>_getCache(LS_ARCH,'[]');
 async function saveArch(arr, deletedId){
   _setCache(LS_ARCH,arr);
@@ -4694,7 +4871,6 @@ function precompileOrdine(prodId){
 // ══════════════════════════════════════════
 // ORDINI
 // ══════════════════════════════════════════
-const LS_ORD = 'ls_ordini';
 const loadOrd=()=>_getCache(LS_ORD,'[]');
 async function saveOrd(arr, deletedId){
   localStorage.setItem(LS_ORD, JSON.stringify(arr));
@@ -4757,6 +4933,7 @@ function renderOrdini(){
 // ── MODAL ORDINE ──
 let ordineEditId = null;
 function openOrdineModal(mode='new', prodId=null){
+  buildProdDatalist(); // assicura autocomplete sempre aggiornato
   ordineEditId = null;
   document.getElementById('ordine-modal-title').textContent = 'Nuovo Ordine';
   document.getElementById('o-num').value = 'ORD-' + new Date().getFullYear() + '-' + String(loadOrd().length+1).padStart(3,'0');
