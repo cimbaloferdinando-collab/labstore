@@ -5,7 +5,6 @@
 <meta charset="UTF-8">
 <link rel="manifest" href="/manifest.json">
 <meta name="theme-color" content="#4a3080">
-<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -275,152 +274,102 @@ textarea{resize:vertical;min-height:60px}
 
     <!-- ══════ HOME ══════ -->
     <div class="view active" id="view-dashboard">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;flex-wrap:wrap;gap:8px">
-        <div class="page-title" style="margin:0">Dashboard</div>
-        <div id="dash-date" style="font-size:12px;color:var(--text3);font-family:'DM Mono',monospace"></div>
-      </div>
-      <div style="color:var(--text3);font-size:12px;margin-bottom:18px" id="dash-sub"></div>
+      <div class="page-title">Home</div>
+      <div class="page-sub" id="dash-date"></div>
 
-      <!-- ── RIGA 1: KPI principali ── -->
-      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:16px" id="stats-grid"></div>
+      <!-- Stat cards -->
+      <div class="stats-grid" id="stats-grid"></div>
 
-      <!-- ── RIGA 2: Tracciabilità oggi (wide) ── -->
-      <div class="card" style="margin-bottom:14px">
-        <div class="card-header" style="padding:12px 16px">
-          <div style="display:flex;align-items:center;gap:8px">
-            <span style="font-size:16px">🧬</span>
-            <span class="card-title">Tracciabilità campioni</span>
+      <!-- WIDGET RAPIDO: Registra caso al volo -->
+      <div class="card" style="margin-bottom:14px;padding:14px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+          <div style="font-weight:700;font-size:14px;color:var(--accent)">🧬 Registra caso rapido</div>
+          <button class="btn btn-sm" onclick="showView('tracciabilita')">Tutti i casi →</button>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr auto;gap:8px;align-items:end">
+          <div class="fg" style="margin:0">
+            <label>ID Caso *</label>
+            <input type="text" id="quick-id" placeholder="es. 2764/26" style="font-family:DM Mono,monospace;font-weight:700">
           </div>
+          <div class="fg" style="margin:0">
+            <label>Tipo *</label>
+            <select id="quick-tipo">
+              <option value="istologia">Istologia</option>
+              <option value="citologia">Citologia</option>
+              <option value="pap_l">Pap LupoLab</option>
+              <option value="pap_priv">Pap Privato</option>
+            </select>
+          </div>
+          <div class="fg" style="margin:0">
+            <label>Provenienza</label>
+            <input type="text" id="quick-prov" placeholder="Reparto / medico">
+          </div>
+          <div class="fg" style="margin:0">
+            <label>Descrizione breve</label>
+            <input type="text" id="quick-desc" placeholder="es. Biopsia colon">
+          </div>
+          <button class="btn btn-primary" onclick="saveQuickCaso()" style="height:36px;margin-bottom:0">＋</button>
+        </div>
+        <div id="home-tracc-oggi" style="margin-top:10px"></div>
+      </div>
+
+      <!-- COLORATORE: tabella giornaliera -->
+      <div class="card" style="margin-bottom:14px;padding:14px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <div style="font-weight:700;font-size:14px;color:var(--accent)">🎨 Coloratore</div>
           <div style="display:flex;gap:6px">
-            <button class="btn btn-sm btn-primary" onclick="openNuovoCampione()">＋ Nuovo</button>
-            <button class="btn btn-sm" onclick="showView('tracciabilita')">Tutti →</button>
+            <button class="btn btn-sm btn-primary" onclick="openNuovoColoratore()">＋ Nuovo</button>
+            <button class="btn btn-sm" onclick="showView('coloratore')">Storico →</button>
           </div>
         </div>
-        <div style="padding:14px">
-          <!-- Registra rapido -->
-          <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr auto;gap:8px;margin-bottom:12px;align-items:end">
-            <div class="fg" style="margin:0"><label>ID Caso *</label><input type="text" id="quick-id" placeholder="es. 2764/26" style="font-family:'DM Mono',monospace;font-weight:700"></div>
-            <div class="fg" style="margin:0"><label>Tipo *</label>
-              <select id="quick-tipo">
-                <option value="istologia">Istologia</option>
-                <option value="citologia">Citologia</option>
-                <option value="pap_l">Pap LupoLab</option>
-                <option value="pap_priv">Pap Privato</option>
-              </select>
-            </div>
-            <div class="fg" style="margin:0"><label>Provenienza</label><input type="text" id="quick-prov" placeholder="Reparto / medico"></div>
-            <div class="fg" style="margin:0"><label>Descrizione</label><input type="text" id="quick-desc" placeholder="es. Biopsia colon"></div>
-            <button class="btn btn-primary" onclick="saveQuickCaso()" style="height:36px">＋</button>
+        <div id="home-color-table"></div>
+        <div id="home-color-oggi" style="margin-top:8px"></div>
+      </div>
+
+      <!-- PROCESSATORE + ALLERTE magazzino -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
+        <div class="card" style="padding:14px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+            <div style="font-weight:700;font-size:14px;color:var(--accent)">⚗️ Processatore</div>
+            <button class="btn btn-sm" onclick="showView('processatore')">Storico →</button>
           </div>
-          <!-- Contatori oggi/mese -->
-          <div id="home-tracc-oggi"></div>
-          <!-- Casi registrati oggi -->
-          <div id="home-tracc-casi" style="margin-top:8px"></div>
+          <div id="home-proc-oggi"></div>
+        </div>
+        <div class="card" style="padding:14px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+            <div style="font-weight:700;font-size:14px;color:var(--accent)">🚨 Magazzino</div>
+            <button class="btn btn-sm" onclick="showView('allerte')">Tutte →</button>
+          </div>
+          <div id="home-allerte-list" style="padding:4px 0"></div>
         </div>
       </div>
 
-      <!-- ── RIGA 3: Coloratore + Processatore (50/50) ── -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
-
-        <!-- COLORATORE -->
-        <div class="card">
-          <div class="card-header" style="padding:12px 16px">
-            <div style="display:flex;align-items:center;gap:8px"><span style="font-size:15px">🎨</span><span class="card-title">Coloratore</span></div>
-            <div style="display:flex;gap:6px">
-              <button class="btn btn-sm btn-primary" onclick="openNuovoColoratore()">＋ Nuovo</button>
-              <button class="btn btn-sm" onclick="showView('coloratore')">Storico →</button>
-            </div>
-          </div>
-          <div style="padding:12px">
-            <div id="home-color-oggi" style="margin-bottom:10px"></div>
-            <div id="home-color-table"></div>
-          </div>
-        </div>
-
-        <!-- PROCESSATORE -->
-        <div class="card">
-          <div class="card-header" style="padding:12px 16px">
-            <div style="display:flex;align-items:center;gap:8px"><span style="font-size:15px">⚗️</span><span class="card-title">Processatore</span></div>
-            <div style="display:flex;gap:6px">
-              <button class="btn btn-sm btn-primary" onclick="openNuovoProcessatore()">＋ Nuovo</button>
-              <button class="btn btn-sm" onclick="showView('processatore')">Storico →</button>
-            </div>
-          </div>
-          <div style="padding:12px" id="home-proc-oggi"></div>
-        </div>
-      </div>
-
-      <!-- ── RIGA 4: Magazzino + Rifiuti (60/40) ── -->
-      <div style="display:grid;grid-template-columns:3fr 2fr;gap:14px;margin-bottom:14px">
-
-        <!-- MAGAZZINO DETTAGLIO -->
-        <div class="card">
-          <div class="card-header" style="padding:12px 16px">
-            <div style="display:flex;align-items:center;gap:8px"><span style="font-size:15px">📦</span><span class="card-title">Stato Magazzino</span></div>
-            <div style="display:flex;gap:6px">
-              <button class="btn btn-sm btn-warn" onclick="openScaricaModal()">⬇ Scarico</button>
-              <button class="btn btn-sm btn-ok" onclick="openCaricaScanModal()">⬆ Carico</button>
-              <button class="btn btn-sm" onclick="showView('inventario')">Inventario →</button>
-            </div>
-          </div>
-          <div style="padding:12px">
-            <div id="dash-mag-categorie" style="margin-bottom:10px"></div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-              <div>
-                <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.7px;margin-bottom:6px">🚨 Allerte attive</div>
-                <div id="home-allerte-list"></div>
-              </div>
-              <div>
-                <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.7px;margin-bottom:6px">⏰ In scadenza (30gg)</div>
-                <div id="home-scadenze-list"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- RIFIUTI DETTAGLIO -->
-        <div class="card">
-          <div class="card-header" style="padding:12px 16px">
-            <div style="display:flex;align-items:center;gap:8px"><span style="font-size:15px">🗑</span><span class="card-title">Rifiuti</span></div>
-            <div style="display:flex;gap:6px">
-              <button class="btn btn-sm btn-waste" onclick="openRifiutiModal()">＋ Pieno</button>
-              <button class="btn btn-sm" onclick="showView('rifiuti')">Dettaglio →</button>
-            </div>
-          </div>
-          <div style="padding:12px" id="dash-rifiuti-detail"></div>
-        </div>
-      </div>
-
-      <!-- ── RIGA 5: Ordini + Movimenti recenti ── -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
-        <div class="card">
-          <div class="card-header" style="padding:12px 16px">
-            <div style="display:flex;align-items:center;gap:8px"><span style="font-size:15px">🛒</span><span class="card-title">Ordini aperti</span></div>
-            <div style="display:flex;gap:6px">
-              <button class="btn btn-sm btn-primary" onclick="openOrdineModal()">＋ Nuovo</button>
-              <button class="btn btn-sm" onclick="showView('ordini')">Tutti →</button>
-            </div>
-          </div>
-          <div style="padding:12px" id="home-ordini-list"></div>
-        </div>
-        <div class="card">
-          <div class="card-header" style="padding:12px 16px">
-            <div style="display:flex;align-items:center;gap:8px"><span style="font-size:15px">↕</span><span class="card-title">Movimenti recenti</span></div>
-            <button class="btn btn-sm" onclick="showView('movimenti')">Tutti →</button>
-          </div>
-          <div style="padding:12px" id="dash-movimenti-recenti"></div>
-        </div>
-      </div>
-
-      <!-- ── Alert banners ── -->
+      <!-- Alert banners -->
       <div id="alerts-wrap"></div>
 
-      <!-- Griglia prodotti per categoria (nascosta, usata da renderHomeGrid) -->
-      <div id="home-cat-grid" style="display:none"></div>
+      <!-- 2-col: scadenze + ordini -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px">
+        <div class="card" style="margin:0;padding:14px">
+          <div class="card-header" style="margin-bottom:8px"><span class="card-title">⏰ In scadenza (30gg)</span></div>
+          <div id="home-scadenze-list" style="padding:4px 0"></div>
+        </div>
+        <div class="card" style="margin:0;padding:14px">
+          <div class="card-header" style="margin-bottom:8px"><span class="card-title">🛒 Ordini aperti</span><button class="btn btn-sm" onclick="showView('ordini')">Tutti →</button></div>
+          <div id="home-ordini-list" style="padding:4px 0"></div>
+        </div>
+      </div>
+
+      <!-- PRODOTTI MAGAZZINO grid -->
+      <div class="card" style="padding:14px;margin-bottom:14px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <div style="font-weight:700;font-size:14px;color:var(--accent)">📦 Magazzino</div>
+          <button class="btn btn-sm" onclick="showView('inventario')">Tutte →</button>
+        </div>
+        <input type="text" id="home-search" placeholder="Cerca prodotto..." oninput="renderHomeGrid()" style="margin-bottom:10px">
+        <div id="home-cat-grid"></div>
+      </div>
 
     </div>
-
-    <!-- ══════ INVENTARIO ══════ -->
     <div class="view" id="view-inventario">
       <div class="page-title">Inventario</div>
       <div class="page-sub">Tutti i consumabili del laboratorio</div>
@@ -1374,16 +1323,6 @@ const SUPA_OK = SUPA_URL.startsWith('https://') && SUPA_KEY.length > 20;
 let IS_ONLINE = navigator.onLine;
 const LS_QUEUE = 'ls_sync_queue';
 
-// ── CHIAVE AI (Anthropic) ──
-// Imposta la tua chiave API su Supabase o salvala qui:
-// localStorage.setItem('ai_api_key', 'sk-ant-api03-...')
-function getAIKey(){
-  const stored = localStorage.getItem('ai_api_key')||'';
-  if(stored && stored.startsWith('sk-ant-')) return stored;
-  return ''; // placeholder o non configurata
-}
-function isAIConfigured(){ return getAIKey().length > 20; }
-
 // Rileva cambio connessione
 window.addEventListener('online',  ()=>{ IS_ONLINE=true;  updateSyncStatus('sync'); flushQueue(); });
 window.addEventListener('offline', ()=>{ IS_ONLINE=false; updateSyncStatus('offline'); updateQueueBadge(); });
@@ -1414,122 +1353,36 @@ function enqueue(op){
 
 // Invia tutto quando torna online
 async function forceSync(){
-  if(!SUPA_OK||!IS_ONLINE){ toast('Non connesso o Supabase non configurato','error'); return; }
+  // Forza download da Supabase sovrascrivendo il localStorage
+  if(!SUPA_OK||!IS_ONLINE){ toast('Non connesso','error'); return; }
   updateSyncStatus('sync');
-  const errors=[];
   try{
-    // 1. DOWNLOAD dal cloud
-    const [prods,movs,wRows,wlog,ordini,arch,camp_cloud,proc_cloud,color_cloud]=await Promise.all([
+    const [prods,movs,wRows,wlog,ordini,arch,camp_cloud]=await Promise.all([
       supaFetch('products','GET',null,'?order=nome'),
-      supaFetch('movements','GET',null,'?order=ts.desc&limit=500'),
+      supaFetch('movements','GET',null,'?order=ts.desc&limit=200'),
       supaFetch('waste_state','GET',null,'?id=eq.waste_state'),
       supaFetch('waste_log','GET',null,'?order=ts.desc&limit=100'),
       supaFetch('ordini','GET',null,'?order=creato.desc&limit=200'),
       supaFetch('archivio_ordini','GET',null,'?order=creato.desc&limit=500'),
-      supaFetch('campioni','GET',null,'?order=data.desc&limit=1000'),
-      supaFetch('processatore','GET',null,'?order=data.desc&limit=500'),
-      supaFetch('coloratore','GET',null,'?order=data.desc&limit=500')
+      supaFetch('campioni','GET',null,'?order=data.desc&limit=1000')
     ]);
-
-    // 2. PRODOTTI: merge locale + cloud
-    const localP = JSON.parse(localStorage.getItem(LS_P)||'[]');
-    if(prods&&prods.length){
-      const localIds = new Set(localP.map(p=>p.id));
-      const onlyCloud = prods.filter(p=>!localIds.has(p.id));
-      const merged = [...localP, ...onlyCloud];
-      _setCache(LS_P, merged);
-      localStorage.setItem(LS_P, JSON.stringify(merged));
-    }
-    if(localP.length){
-      const r=await supaFetch('products','POST',localP,'?on_conflict=id');
-      if(!r) errors.push('prodotti');
-    }
-
-    // 3. MOVIMENTI: merge locale + cloud
-    const localM = JSON.parse(localStorage.getItem(LS_M)||'[]');
-    if(movs&&movs.length){
-      const cloudIds = new Set(movs.map(m=>m.id));
-      const onlyLocal = localM.filter(m=>!cloudIds.has(m.id));
-      const merged = [...onlyLocal, ...movs].sort((a,b)=>new Date(b.ts)-new Date(a.ts));
-      _setCache(LS_M, merged);
-      localStorage.setItem(LS_M, JSON.stringify(merged));
-      if(onlyLocal.length){
-        const r=await supaFetch('movements','POST',onlyLocal,'?on_conflict=id');
-        if(!r) errors.push('movimenti');
-      }
-    } else if(localM.length){
-      const r=await supaFetch('movements','POST',localM.slice(0,500),'?on_conflict=id');
-      if(!r) errors.push('movimenti');
-    }
-
-    // 4. WASTE
+    if(prods&&prods.length) localStorage.setItem(LS_P, JSON.stringify(prods));
+    if(movs&&movs.length) localStorage.setItem(LS_M, JSON.stringify(movs));
     if(wRows&&wRows.length) localStorage.setItem(LS_W, JSON.stringify(wRows[0].data));
     if(wlog) localStorage.setItem(LS_WL, JSON.stringify(wlog));
-
-    // 5. ORDINI
     if(ordini) localStorage.setItem('ls_ordini', JSON.stringify(ordini));
     if(arch) localStorage.setItem(LS_ARCH, JSON.stringify(arch));
-
-    // 6. CAMPIONI
     const localCamp=JSON.parse(localStorage.getItem(LS_CAMP)||'[]');
-    if(localCamp.length>0){
-      const r=await supaFetch('campioni','POST',localCamp,'?on_conflict=id');
-      if(!r) errors.push('campioni');
-    } else if(camp_cloud&&camp_cloud.length){
-      localStorage.setItem(LS_CAMP, JSON.stringify(camp_cloud));
-    }
-
-    // 7. PROCESSATORE: merge locale + cloud
-    const localProc=JSON.parse(localStorage.getItem(LS_PROC)||'[]');
-    if(proc_cloud&&proc_cloud.length){
-      const cloudProcIds=new Set(proc_cloud.map(x=>x.id));
-      const onlyLocalProc=localProc.filter(x=>!cloudProcIds.has(x.id));
-      const mergedProc=[...onlyLocalProc,...proc_cloud].sort((a,b)=>b.data.localeCompare(a.data));
-      _setCache(LS_PROC, mergedProc);
-      localStorage.setItem(LS_PROC, JSON.stringify(mergedProc));
-      if(onlyLocalProc.length){ const r=await supaFetch('processatore','POST',onlyLocalProc,'?on_conflict=id'); if(!r) errors.push('processatore'); }
-    } else if(localProc.length){
-      const r=await supaFetch('processatore','POST',localProc,'?on_conflict=id');
-      if(!r) errors.push('processatore');
-    }
-
-    // 8. COLORATORE: merge locale + cloud
-    const localColor=JSON.parse(localStorage.getItem(LS_COLOR_REG)||'[]');
-    if(color_cloud&&color_cloud.length){
-      const cloudColorIds=new Set(color_cloud.map(x=>x.id));
-      const onlyLocalColor=localColor.filter(x=>!cloudColorIds.has(x.id));
-      const mergedColor=[...onlyLocalColor,...color_cloud].sort((a,b)=>b.data.localeCompare(a.data));
-      _setCache(LS_COLOR_REG, mergedColor);
-      localStorage.setItem(LS_COLOR_REG, JSON.stringify(mergedColor));
-      if(onlyLocalColor.length){ const r=await supaFetch('coloratore','POST',onlyLocalColor,'?on_conflict=id'); if(!r) errors.push('coloratore'); }
-    } else if(localColor.length){
-      const r=await supaFetch('coloratore','POST',localColor,'?on_conflict=id');
-      if(!r) errors.push('coloratore');
-    }
-
+    if(localCamp.length>0){ await supaFetch('campioni','POST',localCamp,'?on_conflict=id'); }
+    else if(camp_cloud&&camp_cloud.length) localStorage.setItem(LS_CAMP, JSON.stringify(camp_cloud));
     _invalidateAll();
-    if(errors.length){
-      updateSyncStatus('err');
-      toast('⚠ Sync parziale — errore su: '+errors.join(', '),'warn');
-      console.error('[Sync] Errori su tabelle:', errors);
-    } else {
-      updateSyncStatus('ok');
-      toast('Dati sincronizzati correttamente','success');
-    }
-    // Aggiorna la view corrente
+    updateSyncStatus('ok');
     if(currentView==='tracciabilita') renderTracciabilita();
     if(currentView==='dashboard') renderDashboard();
     if(currentView==='inventario') renderInv();
     if(currentView==='movimenti') renderMovimenti();
-    if(currentView==='rifiuti') renderRifiuti();
-    if(currentView==='allerte') renderAllerte();
-    if(currentView==='ordini') renderOrdini();
-    if(currentView==='report') renderReport();
-  }catch(e){
-    console.error('[forceSync] errore inatteso:', e);
-    updateSyncStatus('err');
-    toast('Errore sync: '+e.message,'error');
-  }
+    toast('✅ Dati aggiornati dal cloud','success');
+  }catch(e){ updateSyncStatus('err'); toast('Errore sync','error'); }
 }
 async function flushQueue(){
   if(!SUPA_OK||!IS_ONLINE) return;
@@ -1545,8 +1398,8 @@ async function flushQueue(){
     const wlog=JSON.parse(localStorage.getItem(LS_WL)||'[]');
     // Sync prodotti: upsert tutto
     if(prods.length) await supaFetch('products','POST',prods,'?on_conflict=id');
-    // Sync movimenti: invia tutti (non solo 20)
-    if(movs.length) await supaFetch('movements','POST',movs.slice(0,500),'?on_conflict=id');
+    // Sync movimenti nuovi (ultimi 20)
+    if(movs.length) await supaFetch('movements','POST',movs.slice(0,20),'?on_conflict=id');
     // Sync waste
     await supaFetch('waste_state','DELETE',null,'?id=eq.waste_state');
     if(Object.keys(W).length) await supaFetch('waste_state','POST',[{id:'waste_state',data:W}],'?on_conflict=id');
@@ -1558,196 +1411,73 @@ async function flushQueue(){
     // Sync campioni
     const camp=JSON.parse(localStorage.getItem(LS_CAMP)||'[]');
     if(camp.length) await supaFetch('campioni','POST',camp,'?on_conflict=id');
-    // Sync processatore
-    const proc=JSON.parse(localStorage.getItem(LS_PROC)||'[]');
-    if(proc.length) await supaFetch('processatore','POST',proc,'?on_conflict=id');
-    // Sync coloratore
-    const color=JSON.parse(localStorage.getItem(LS_COLOR_REG)||'[]');
-    if(color.length) await supaFetch('coloratore','POST',color,'?on_conflict=id');
     saveQueue([]);
     updateSyncStatus('ok');
-    _invalidateAll();
-    if(currentView==='movimenti') renderMovimenti();
-    if(currentView==='inventario') renderInv();
-    if(currentView==='dashboard') renderDashboard();
-    if(currentView==='processatore') renderProcessatore();
-    if(currentView==='coloratore') renderColoratore();
     toast('✅ '+q.length+' modifica/he sincronizzata/e','success');
   }catch(e){ updateSyncStatus('err'); }
 }
 
 async function supaFetch(table,method='GET',body=null,query=''){
   if(!SUPA_OK) return null;
-  if(!IS_ONLINE && method!=='GET') return null;
-  // Timeout: 10s per GET, 15s per write
-  const timeoutMs = method==='GET' ? 10000 : 15000;
-  const controller = new AbortController();
-  const timer = setTimeout(()=>controller.abort(), timeoutMs);
+  if(!IS_ONLINE && method!=='GET') return null; // offline: non tentare write
   try{
     const res=await fetch(SUPA_URL+'/rest/v1/'+table+query,{
       method, body:body?JSON.stringify(body):undefined,
-      signal: controller.signal,
       headers:{'Content-Type':'application/json','apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,'Prefer':'return=representation'}
     });
-    clearTimeout(timer);
-    if(!res.ok){
-      const errText = await res.text().catch(()=>'');
-      console.warn(`[Supabase] ${method} ${table}${query} → ${res.status}:`, errText);
-      return null;
-    }
+    if(!res.ok) return null;
     const t=await res.text(); return t?JSON.parse(t):true;
-  }catch(e){
-    clearTimeout(timer);
-    if(e.name==='AbortError'){
-      console.warn(`[Supabase] Timeout (${timeoutMs}ms): ${method} ${table}`);
-    } else {
-      console.warn('[Supabase] fetch error:', e.message);
-    }
-    return null;
-  }
+  }catch(e){ return null; }
 }
 
 // ── DATA LAYER — In-memory cache + localStorage + Supabase ──
-const LS_P='ls_products', LS_M='ls_movements', LS_W='ls_waste', LS_WL='ls_waste_log';
-const LS_ARCH='ls_archivio_ordini';
-const LS_ORD='ls_ordini';
-const LS_CAMP='ls_campioni';
-const LS_PROC='ls_processatore';
-const LS_COLOR_REG='ls_coloratore';
+const LS_P='ls_products', LS_M='ls_movements', LS_W='ls_waste', LS_WL='ls_waste_log', LS_ORD='ls_ordini';
 
-// ── VALIDATORI — garantiscono struttura minima dei record ──
-function _validateProduct(p){
-  if(!p||typeof p!=='object') return false;
-  if(!p.id||typeof p.id!=='string') return false;
-  if(!p.nome||typeof p.nome!=='string') return false;
-  if(typeof p.qty!=='number'||isNaN(p.qty)) p.qty=0;
-  if(typeof p.min!=='number'||isNaN(p.min)) p.min=0;
-  if(!p.cat) p.cat='Altro';
-  return true;
-}
-function _validateMovement(m){
-  if(!m||typeof m!=='object') return false;
-  if(!m.id||typeof m.id!=='string') return false;
-  if(!m.tipo||!['carico','scarico'].includes(m.tipo)) return false;
-  if(typeof m.qty!=='number'||isNaN(m.qty)||m.qty<0) return false;
-  return true;
-}
-function _sanitizeArray(arr, validator){
-  if(!Array.isArray(arr)) return [];
-  return arr.filter(item=>{ try{ return validator(item); }catch(e){ return false; } });
-}
-
-// ── LETTURA SICURA localStorage — se corrotto, non crasha ──
-function _safeRead(key, fallback='[]'){
-  try{
-    const raw=localStorage.getItem(key);
-    if(!raw) return JSON.parse(fallback);
-    const parsed=JSON.parse(raw);
-    // Se il dato atteso è un array ma abbiamo qualcos'altro, resetta
-    if(fallback==='[]'&&!Array.isArray(parsed)){
-      console.warn('[DataLayer] '+key+' corrotto (non array), ripristino a []');
-      localStorage.removeItem(key);
-      return [];
-    }
-    return parsed;
-  }catch(e){
-    console.error('[DataLayer] JSON corrotto in '+key+', ripristino a fallback:', e.message);
-    // Backup del dato corrotto prima di cancellarlo
-    try{ localStorage.setItem(key+'_backup_'+Date.now(), localStorage.getItem(key)||''); }catch(_){}
-    localStorage.removeItem(key);
-    return JSON.parse(fallback);
-  }
-}
-
-// ── SCRITTURA SICURA localStorage — gestisce quota exceeded ──
-function _safeWrite(key, val){
-  try{
-    localStorage.setItem(key, JSON.stringify(val));
-    return true;
-  }catch(e){
-    if(e.name==='QuotaExceededError'){
-      console.error('[DataLayer] localStorage pieno! Pulizia voci vecchie...');
-      // Rimuovi i backup accumulati per liberare spazio
-      Object.keys(localStorage).filter(k=>k.includes('_backup_')).forEach(k=>localStorage.removeItem(k));
-      try{ localStorage.setItem(key, JSON.stringify(val)); return true; }catch(_){}
-      toast('⚠ Spazio locale esaurito — alcuni dati non salvati','error',5000);
-    }else{
-      console.error('[DataLayer] Errore scrittura '+key+':', e.message);
-    }
-    return false;
-  }
-}
-
-// ── RETRY su Supabase — riprova 3 volte con backoff ──
-async function _supaWithRetry(table, method, body, query, maxRetries=3){
-  for(let i=0; i<maxRetries; i++){
-    const res=await supaFetch(table, method, body, query);
-    if(res!==null) return res;
-    if(i<maxRetries-1){
-      await new Promise(r=>setTimeout(r, 500*(i+1))); // 500ms, 1000ms, 1500ms
-    }
-  }
-  return null;
-}
-
-// ── Cache in memoria: evita JSON.parse ripetuti ──
+// Cache in memoria: evita JSON.parse ripetuti (loadP() chiamata 40+ volte per render)
 const _cache={};
 function _getCache(key,fallback='[]'){
   if(!Object.prototype.hasOwnProperty.call(_cache,key)){
-    _cache[key]=_safeRead(key, fallback);
+    try{ _cache[key]=JSON.parse(localStorage.getItem(key)||fallback); }
+    catch(e){ _cache[key]=JSON.parse(fallback); }
   }
   return _cache[key];
 }
-function _setCache(key,val){
-  _cache[key]=val;
-  _safeWrite(key, val);
-}
+function _setCache(key,val){ _cache[key]=val; localStorage.setItem(key,JSON.stringify(val)); }
 function _invalidateAll(){ Object.keys(_cache).forEach(k=>delete _cache[k]); }
 
-const loadP=()=>_sanitizeArray(_getCache(LS_P,'[]'), _validateProduct);
+const loadP=()=>_getCache(LS_P,'[]');
+const loadOrd=()=>_getCache(LS_ORD,'[]');
 async function saveP(arr, deletedId){
-  const clean=_sanitizeArray(arr, _validateProduct);
-  _setCache(LS_P, clean);
+  _setCache(LS_P,arr);
   if(!SUPA_OK) return;
   if(!IS_ONLINE){ enqueue({type:'products'}); return; }
   updateSyncStatus('sync');
-  const ok1=deletedId ? await _supaWithRetry('products','DELETE',null,'?id=eq.'+deletedId) : true;
-  const ok2=clean.length ? await _supaWithRetry('products','POST',clean,'?on_conflict=id') : true;
-  if(!ok1||!ok2){
-    enqueue({type:'products'});
-    toast('⚠ Prodotti salvati in locale — sync in coda','warn');
-  } else {
+  try{
+    if(deletedId) await supaFetch('products','DELETE',null,'?id=eq.'+deletedId);
+    if(arr.length) await supaFetch('products','POST',arr,'?on_conflict=id');
     updateSyncStatus('ok');
-  }
+  }catch(e){ enqueue({type:'products'}); }
 }
 
-const loadM=()=>_sanitizeArray(_getCache(LS_M,'[]'), _validateMovement);
-function saveM(arr, newMovements){
-  const clean=_sanitizeArray(arr, _validateMovement);
-  _setCache(LS_M, clean);
-  if(!SUPA_OK||!clean.length) return;
+const loadM=()=>_getCache(LS_M,'[]');
+function saveM(arr){
+  _setCache(LS_M,arr);
+  if(!SUPA_OK||!arr.length) return;
   if(!IS_ONLINE){ enqueue({type:'movements'}); return; }
-  const toSync=newMovements?(Array.isArray(newMovements)?newMovements:[newMovements]):clean.slice(0,50);
-  const validToSync=_sanitizeArray(toSync, _validateMovement);
-  if(validToSync.length){
-    _supaWithRetry('movements','POST',validToSync,'?on_conflict=id').then(ok=>{
-      if(!ok){ enqueue({type:'movements'}); toast('⚠ Movimenti salvati in locale — sync in coda','warn'); }
-    });
-  }
+  supaFetch('movements','POST',[arr[0]],'?on_conflict=id');
 }
 
 function loadW(){
   const def={
-    cer_180103:{pieni:0,vuoti:3,smaltiti:0},
-    cer_150110:{pieni:0,smaltiti:0},
-    cer_150202:{pieni:0,smaltiti:0},
-    cer_180106:{pieni:0,vuoti:2,smaltiti:0},
-    bidoni_solidi_comuni:{vuoti:4}
+    cer_180103:{pieni:0,vuoti:3,smaltiti:0},   // scatole cartone dedicate
+    cer_150110:{pieni:0,smaltiti:0},             // bidone condiviso — vuoti gestiti da pool
+    cer_150202:{pieni:0,smaltiti:0},             // bidone condiviso — vuoti gestiti da pool
+    cer_180106:{pieni:0,vuoti:2,smaltiti:0},    // taniche dedicate
+    bidoni_solidi_comuni:{vuoti:4}               // pool condiviso 150110+150202
   };
-  const stored=_safeRead(LS_W,'{}');
-  const obj=typeof stored==='object'&&!Array.isArray(stored)?stored:{};
-  Object.keys(def).forEach(k=>{ if(!obj[k]) obj[k]=def[k]; });
-  return obj;
+  const stored=JSON.parse(localStorage.getItem(LS_W)||'{}');
+  Object.keys(def).forEach(k=>{ if(!stored[k]) stored[k]=def[k]; });
+  return stored;
 }
 // Helper: restituisce i vuoti disponibili per un tipo (pool condiviso o proprio)
 function getVuotiDisp(W, key){
@@ -1793,16 +1523,14 @@ async function initialSync(){
   if(!SUPA_OK){ updateSyncStatus('off'); return; }
   updateSyncStatus('sync');
   try{
-    const [prods,movs,wRows,wlog,ordini,arch,camp_cloud,proc_cloud,color_cloud]=await Promise.all([
+    const [prods,movs,wRows,wlog,ordini,arch,camp_cloud]=await Promise.all([
       supaFetch('products','GET',null,'?order=nome'),
       supaFetch('movements','GET',null,'?order=ts.desc&limit=200'),
       supaFetch('waste_state','GET',null,'?id=eq.waste_state'),
       supaFetch('waste_log','GET',null,'?order=ts.desc&limit=100'),
       supaFetch('ordini','GET',null,'?order=creato.desc&limit=200'),
       supaFetch('archivio_ordini','GET',null,'?order=creato.desc&limit=500'),
-      supaFetch('campioni','GET',null,'?order=data.desc&limit=1000'),
-      supaFetch('processatore','GET',null,'?order=data.desc&limit=500'),
-      supaFetch('coloratore','GET',null,'?order=data.desc&limit=500')
+      supaFetch('campioni','GET',null,'?order=data.desc&limit=1000')
     ]);
     // Strategia: il locale è sempre la fonte di verità
     // Supabase viene usato solo per caricare dati su un dispositivo nuovo/pulito
@@ -1815,15 +1543,7 @@ async function initialSync(){
       // Nessun dato locale (primo accesso o dispositivo pulito): scarica da Supabase
       localStorage.setItem(LS_P, JSON.stringify(prods));
     }
-    // Movimenti: merge locale + cloud, non sovrascrivere mai quelli locali
-    if(movs&&movs.length){
-      const localM2 = JSON.parse(localStorage.getItem(LS_M)||'[]');
-      const cloudIds2 = new Set(movs.map(m=>m.id));
-      const onlyLocal2 = localM2.filter(m=>!cloudIds2.has(m.id));
-      const mergedM = [...onlyLocal2, ...movs].sort((a,b)=>new Date(b.ts)-new Date(a.ts));
-      localStorage.setItem(LS_M, JSON.stringify(mergedM));
-      if(onlyLocal2.length) supaFetch('movements','POST',onlyLocal2,'?on_conflict=id');
-    }
+    if(movs&&movs.length) localStorage.setItem(LS_M, JSON.stringify(movs));
     // Waste: usa cloud solo se locale è ai valori di default (vuoto/primo accesso)
     const localW=JSON.parse(localStorage.getItem(LS_W)||'{}');
     const isDefaultW=!localW.cer_180103||localW.cer_180103.pieni===0;
@@ -1831,24 +1551,6 @@ async function initialSync(){
     localStorage.setItem(LS_WL, JSON.stringify(wlog||[]));
     localStorage.setItem('ls_ordini', JSON.stringify(ordini||[]));
     localStorage.setItem(LS_ARCH, JSON.stringify(arch||[]));
-    // Processatore: merge locale + cloud
-    const localProc2=JSON.parse(localStorage.getItem(LS_PROC)||'[]');
-    if(proc_cloud&&proc_cloud.length){
-      const cloudPIds=new Set(proc_cloud.map(x=>x.id));
-      const onlyLP=localProc2.filter(x=>!cloudPIds.has(x.id));
-      const merged=[...onlyLP,...proc_cloud].sort((a,b)=>b.data.localeCompare(a.data));
-      _setCache(LS_PROC,merged); localStorage.setItem(LS_PROC,JSON.stringify(merged));
-      if(onlyLP.length) supaFetch('processatore','POST',onlyLP,'?on_conflict=id');
-    } else if(localProc2.length){ supaFetch('processatore','POST',localProc2,'?on_conflict=id'); }
-    // Coloratore: merge locale + cloud
-    const localColor2=JSON.parse(localStorage.getItem(LS_COLOR_REG)||'[]');
-    if(color_cloud&&color_cloud.length){
-      const cloudCIds=new Set(color_cloud.map(x=>x.id));
-      const onlyLC=localColor2.filter(x=>!cloudCIds.has(x.id));
-      const merged=[...onlyLC,...color_cloud].sort((a,b)=>b.data.localeCompare(a.data));
-      _setCache(LS_COLOR_REG,merged); localStorage.setItem(LS_COLOR_REG,JSON.stringify(merged));
-      if(onlyLC.length) supaFetch('coloratore','POST',onlyLC,'?on_conflict=id');
-    } else if(localColor2.length){ supaFetch('coloratore','POST',localColor2,'?on_conflict=id'); }
     updateSyncStatus('ok');
     // Aggiorna la view corrente
     if(currentView==='tracciabilita') renderTracciabilita();
@@ -1859,8 +1561,6 @@ async function initialSync(){
     if(currentView==='allerte') renderAllerte();
     if(currentView==='ordini') renderOrdini();
     if(currentView==='report') renderReport();
-    if(currentView==='processatore') renderProcessatore();
-    if(currentView==='coloratore') renderColoratore();
   }catch(e){ updateSyncStatus('err'); }
 }
 
@@ -2048,58 +1748,34 @@ function closeModal(id){ document.getElementById(id).classList.remove('open'); }
 // ══════════════════════════════════════════
 // NAVIGATION
 // ══════════════════════════════════════════
-// ── safeRender: esegue una funzione render catturando errori ──
-// Se la funzione crasha, mostra un messaggio nella view invece di pagina bianca
-function safeRender(fn, viewId){
-  try{
-    fn();
-  }catch(e){
-    console.error('[Render] Errore in '+viewId+':', e);
-    const container = viewId ? document.getElementById('view-'+viewId) : null;
-    if(container){
-      // Mostra errore nella view senza bloccare il resto dell'app
-      const errBox = container.querySelector('.render-error');
-      if(!errBox){
-        const div = document.createElement('div');
-        div.className='render-error';
-        div.style.cssText='margin:20px;padding:16px;background:var(--red-bg);border:1px solid #fca5a5;border-radius:var(--r);color:var(--red)';
-        div.innerHTML='<strong>⚠ Errore di visualizzazione</strong><br><span style="font-size:12px;opacity:.8">'+e.message+'</span><br><button class="btn btn-sm" style="margin-top:8px" onclick="this.parentElement.remove();safeRender(()=>'+fn.name+'(),\''+viewId+'\')">🔄 Riprova</button>';
-        container.insertBefore(div, container.firstChild);
-      }
-    }
-    toast('Errore nella pagina '+viewId+' — vedi dettaglio in alto','error');
-  }
-}
-
 let currentView='dashboard', invFilter='all', fornFilter='all', homeFornFilter='all', manualMovType='carico';
 function showView(v){
   document.querySelectorAll('.view').forEach(e=>e.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(e=>e.classList.remove('active'));
   const viewEl = document.getElementById('view-'+v);
-  if(!viewEl){ console.warn('View not found: view-'+v); toast('Pagina "'+v+'" non trovata','error'); return; }
+  if(!viewEl){ console.warn('View not found: view-'+v); return; }
   viewEl.classList.add('active');
-  // Rimuovi eventuali errori precedenti della stessa view
-  viewEl.querySelectorAll('.render-error').forEach(e=>e.remove());
   const n=document.getElementById('nav-'+v); if(n) n.classList.add('active');
   currentView=v;
+  // Apri submenu magazzino automaticamente
   const magVoci=['inventario','movimenti','allerte','ordini','archivio','schede'];
   if(magVoci.includes(v)){
     const sub=document.getElementById('mag-submenu');
     const ar=document.getElementById('mag-arrow');
     if(sub && sub.style.display==='none'){ sub.style.display='block'; if(ar) ar.textContent='▾'; }
   }
-  if(v==='dashboard')    safeRender(renderDashboard, 'dashboard');
-  if(v==='inventario')   safeRender(renderInv, 'inventario');
-  if(v==='movimenti'){   delete _cache[LS_M]; safeRender(renderMovimenti, 'movimenti'); }
-  if(v==='rifiuti')      safeRender(renderRifiuti, 'rifiuti');
-  if(v==='allerte')      safeRender(renderAllerte, 'allerte');
-  if(v==='ordini'){      buildProdDatalist(); safeRender(renderOrdini, 'ordini'); }
-  if(v==='report')       safeRender(renderReport, 'report');
-  if(v==='archivio')     safeRender(renderArchivio, 'archivio');
-  if(v==='schede')       safeRender(renderSchede, 'schede');
-  if(v==='tracciabilita') safeRender(renderTracciabilita, 'tracciabilita');
-  if(v==='processatore') safeRender(renderProcessatore, 'processatore');
-  if(v==='coloratore')   safeRender(renderColoratore, 'coloratore');
+  if(v==='dashboard'){ renderDashboard(); }
+  if(v==='inventario') renderInv();
+  if(v==='movimenti') renderMovimenti();
+  if(v==='rifiuti') renderRifiuti();
+  if(v==='allerte') renderAllerte();
+  if(v==='ordini'){ buildProdDatalist(); renderOrdini(); }
+  if(v==='report') renderReport();
+  if(v==='archivio') renderArchivio();
+  if(v==='schede') renderSchede();
+  if(v==='tracciabilita') renderTracciabilita();
+  if(v==='processatore') renderProcessatore();
+  if(v==='coloratore') renderColoratore();
 }
 function goCategory(cat){
   invFilter=cat; subFilter='all';
@@ -2233,309 +1909,162 @@ function renderHomeCampioniOggi(){
 
 function renderDashboard(){
   if(!document.getElementById('stats-grid')) return;
-
-  // ── Raccolta dati ──
+  // ── Dati tracciabilità ──
+  const campioni = loadCampioni();
   const oggi = new Date().toISOString().slice(0,10);
-  const mese = oggi.slice(0,7);
-  const now = new Date();
+  const campOggi = campioni.filter(c=>c.data===oggi);
+  const campMese = campioni.filter(c=>c.data&&c.data.slice(0,7)===oggi.slice(0,7));
+  const istOggi = campOggi.filter(c=>c.tipo==='istologia').length;
+  const citOggi = campOggi.filter(c=>c.tipo==='citologia').length;
+  const papOggi = campOggi.filter(c=>c.tipo==='pap'||c.tipo==='pap_priv').length;
+  const papLOggi = campOggi.filter(c=>c.tipo==='pap_l').length;
 
-  const campioni  = loadCampioni();
-  const procArr   = loadProc();
-  const colorArr  = loadColoratore();
-  const prods     = loadP();
-  const W         = loadW();
-  const ords      = loadOrd();
-  const movs      = loadM();
+  // ── Dati processatore ──
+  const procArr = loadProc();
+  const procOggi = procArr.find(x=>x.data===oggi);
+  const procMese = procArr.filter(x=>x.data&&x.data.slice(0,7)===oggi.slice(0,7));
+  const totCasiProcMese = procMese.reduce((s,x)=>s+(x.casi||[]).length,0);
 
-  const campOggi  = campioni.filter(c=>c.data===oggi);
-  const campMese  = campioni.filter(c=>c.data&&c.data.slice(0,7)===mese);
-  const procOggi  = procArr.find(x=>x.data===oggi);
-  const procMese  = procArr.filter(x=>x.data&&x.data.slice(0,7)===mese);
+  // ── Dati coloratore ──
+  const colorArr = loadColoratore();
   const colorOggi = colorArr.find(x=>x.data===oggi);
-  const colorMese = colorArr.filter(x=>x.data&&x.data.slice(0,7)===mese);
+  const colorMese = colorArr.filter(x=>x.data&&x.data.slice(0,7)===oggi.slice(0,7));
+  const prods=loadP(), W=loadW(), now=new Date();
+  {const _dd=document.getElementById('dash-date');if(_dd)_dd.textContent='Aggiornato '+now.toLocaleDateString('it-IT',{weekday:'long',day:'numeric',month:'long',year:'numeric'});}
 
-  const critici   = prods.filter(p=>p.min>0&&p.qty<=p.min&&p.qty>0);
-  const esauriti  = prods.filter(p=>p.qty<=0);
-  const scaduti   = prods.filter(p=>daysUntil(p.scadenza)<0);
-  const inScad    = prods.filter(p=>{const d=daysUntil(p.scadenza);return d>=0&&d<=30;});
-  const totAllerte = critici.length + esauriti.length + scaduti.length;
+  const critici=prods.filter(p=>p.min>0&&p.qty<=p.min&&p.qty>0).length;
+  const esauriti=prods.filter(p=>p.qty<=0).length;
+  const scaduti=prods.filter(p=>daysUntil(p.scadenza)<0).length;
+  const inScad=prods.filter(p=>{const d=daysUntil(p.scadenza);return d>=0&&d<=30}).length;
+  const totalPieni=(['cer_180103','cer_150110','cer_150202','cer_180106']).reduce((a,k)=>a+(W[k]?.pieni||0),0);
+  const totalVuoti=(W['cer_180103']?.vuoti||0)+(W['bidoni_solidi_comuni']?.vuoti||0)+(W['cer_180106']?.vuoti||0);
+  const solidiPieni=(W['cer_180103']?.pieni||0)+(W['cer_150110']?.pieni||0)+(W['cer_150202']?.pieni||0);
+  const solidiVuoti=(W['cer_180103']?.vuoti||0)+(W['bidoni_solidi_comuni']?.vuoti||0);
+  const liquidiPieni=(W['cer_180106']?.pieni||0);
+  const liquidiVuoti=(W['cer_180106']?.vuoti||0);
+  const ords=loadOrd();
+  const ordAperti=ords.filter(o=>o.stato==='inviato'||o.stato==='approvato').length;
+  const totAllerte=critici+inScad;
 
-  const ordAperti = ords.filter(o=>o.stato==='inviato'||o.stato==='approvato');
-  const totCasiMese = procMese.reduce((s,x)=>s+(x.casi||[]).length,0);
-  const totEEMese   = colorMese.reduce((s,x)=>s+(x.cicli_ee||0),0);
-  const totCitMese  = colorMese.reduce((s,x)=>s+(x.cicli_ee_cit||0),0);
-  const totPapMese  = colorMese.reduce((s,x)=>s+(x.cicli_pap||0),0);
-  const totCampMese = campMese.length;
-
-  const solidiPieni = (W['cer_180103']?.pieni||0)+(W['cer_150110']?.pieni||0)+(W['cer_150202']?.pieni||0);
-  const liquidiPieni = W['cer_180106']?.pieni||0;
-  const solidiVuoti = (W['cer_180103']?.vuoti||0)+(W['bidoni_solidi_comuni']?.vuoti||0);
-  const liquidiVuoti = W['cer_180106']?.vuoti||0;
-  const noVuotiAlert = Object.keys(WASTE_CONFIG).filter(k=>(W[k]?.pieni||0)>0&&getVuotiDisp(W,k)===0);
-
-  // ── Data header ──
-  const _dd=document.getElementById('dash-date');
-  if(_dd) _dd.textContent=now.toLocaleDateString('it-IT',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
-  const _ds=document.getElementById('dash-sub');
-  if(_ds) _ds.textContent=`${campOggi.length} campioni oggi · ${totCasiMese} casi processati questo mese`;
-
-  // ── KPI cards (5 colonne) ──
-  const kpiWarn = totAllerte>0?'var(--red)':'var(--green)';
-  const rifiutiWarn = noVuotiAlert.length>0?'var(--red)':solidiPieni+liquidiPieni>0?'var(--orange)':'var(--text3)';
   document.getElementById('stats-grid').innerHTML=`
-    <div class="stat-card sc-blue" onclick="showView('tracciabilita')" style="cursor:pointer">
-      <div class="stat-lbl">Campioni oggi</div>
-      <div class="stat-val blue">${campOggi.length}</div>
-      <div class="stat-sub">${totCampMese} questo mese</div>
-    </div>
-    <div class="stat-card sc-green" onclick="showView('inventario')" style="cursor:pointer">
-      <div class="stat-lbl">Prodotti a magazzino</div>
-      <div class="stat-val green">${prods.length}</div>
+    <div class="stat-card sc-blue" style="cursor:pointer" onclick="showView('inventario')">
+      <div class="stat-lbl">Prodotti a magazzino</div><div class="stat-val blue">${prods.length}</div>
       <div class="stat-sub">${[...new Set(prods.map(p=>p.cat))].length} categorie</div>
     </div>
-    <div class="stat-card sc-red" onclick="showView('allerte')" style="cursor:pointer">
-      <div class="stat-lbl">Allerte magazzino</div>
-      <div class="stat-val" style="color:${kpiWarn}">${totAllerte}</div>
-      <div class="stat-sub">${esauriti.length} esauriti · ${critici.length} scorta bassa · ${scaduti.length} scaduti</div>
+    <div class="stat-card sc-red" style="cursor:pointer" onclick="showView('allerte')">
+      <div class="stat-lbl">Allerte attive</div><div class="stat-val red">${totAllerte}</div>
+      <div class="stat-sub">${critici} scorta bassa · ${inScad} in scadenza</div>
     </div>
-    <div class="stat-card sc-orange" onclick="showView('rifiuti')" style="cursor:pointer">
-      <div class="stat-lbl">Rifiuti pieni</div>
-      <div class="stat-val" style="color:${rifiutiWarn}">${solidiPieni+liquidiPieni}</div>
-      <div class="stat-sub">${solidiPieni} solidi · ${liquidiPieni} liquidi${noVuotiAlert.length?' · ⚠ vuoti esauriti':''}</div>
+    <div class="stat-card sc-orange" style="cursor:pointer;padding:12px" onclick="showView('rifiuti')">
+      <div class="stat-lbl" style="margin-bottom:8px">🗑 Rifiuti</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div style="background:rgba(176,80,16,.08);border-radius:6px;padding:8px;text-align:center">
+          <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px">Solidi</div>
+          <div style="font-family:'DM Mono',monospace;font-size:18px;color:var(--orange)">${solidiPieni} <span style="font-size:11px;color:var(--text3)">pieni</span></div>
+          <div style="font-family:'DM Mono',monospace;font-size:14px;color:var(--text2)">${solidiVuoti} <span style="font-size:11px;color:var(--text3)">vuoti</span></div>
+        </div>
+        <div style="background:rgba(26,90,154,.08);border-radius:6px;padding:8px;text-align:center">
+          <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px">Liquidi</div>
+          <div style="font-family:'DM Mono',monospace;font-size:18px;color:var(--blue)">${liquidiPieni} <span style="font-size:11px;color:var(--text3)">pieni</span></div>
+          <div style="font-family:'DM Mono',monospace;font-size:14px;color:var(--text2)">${liquidiVuoti} <span style="font-size:11px;color:var(--text3)">vuoti</span></div>
+        </div>
+      </div>
     </div>
-    <div class="stat-card sc-blue" onclick="showView('ordini')" style="cursor:pointer">
-      <div class="stat-lbl">Ordini aperti</div>
-      <div class="stat-val" style="color:var(--teal)">${ordAperti.length}</div>
-      <div class="stat-sub">in attesa risposta</div>
+    <div class="stat-card sc-blue" style="cursor:pointer" onclick="showView('ordini')">
+      <div class="stat-lbl">Ordini aperti</div><div class="stat-val" style="color:var(--teal)">${ordAperti}</div>
+      <div class="stat-sub">in attesa di risposta</div>
     </div>`;
 
-  // ── Tracciabilità: contatori oggi/mese ──
+  // ── Sezioni Tracciabilità / Processatore / Coloratore ──
+  const oggi2=new Date().toISOString().slice(0,10);
+  const mese2=oggi2.slice(0,7);
+  const campOggi2=campioni.filter(x=>x.data===oggi2);
+  const campMese2=campioni.filter(x=>x.data&&x.data.slice(0,7)===mese2);
+  const procOggi2=procArr.find(x=>x.data===oggi2);
+  const colorOggi2=colorArr.find(x=>x.data===oggi2);
+  const totCasiMese=procMese.reduce((s,x)=>s+(x.casi||[]).length,0);
+  const totEEMese=colorMese.reduce((s,x)=>s+(x.cicli_ee||0),0);
+  const totCitMese=colorMese.reduce((s,x)=>s+(x.cicli_ee_cit||0),0);
+  const totPapMese=colorMese.reduce((s,x)=>s+(x.cicli_pap||0),0);
+  ['home-tracc-oggi','home-proc-oggi','home-color-oggi'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML='';});
   const tEl=document.getElementById('home-tracc-oggi');
   if(tEl){
     const rows=[
-      {label:'IST',full:'Istologia',color:'var(--blue)',   oggi:campOggi.filter(x=>x.tipo==='istologia').length, mese:campMese.filter(x=>x.tipo==='istologia').length},
-      {label:'CIT',full:'Citologia',color:'var(--teal)',   oggi:campOggi.filter(x=>x.tipo==='citologia').length, mese:campMese.filter(x=>x.tipo==='citologia').length},
-      {label:'PAP',full:'Pap Priv.', color:'var(--purple)',oggi:campOggi.filter(x=>x.tipo==='pap'||x.tipo==='pap_priv').length,mese:campMese.filter(x=>x.tipo==='pap'||x.tipo==='pap_priv').length},
-      {label:'PAP-L',full:'Pap Lab',color:'var(--orange)', oggi:campOggi.filter(x=>x.tipo==='pap_l').length, mese:campMese.filter(x=>x.tipo==='pap_l').length},
+      {label:'ISTOLOGIA',color:'var(--blue)',oggi:campOggi2.filter(x=>x.tipo==='istologia').length,mese:campMese2.filter(x=>x.tipo==='istologia').length},
+      {label:'CITOLOGIA',color:'var(--teal)',oggi:campOggi2.filter(x=>x.tipo==='citologia').length,mese:campMese2.filter(x=>x.tipo==='citologia').length},
+      {label:'PAP',color:'var(--purple)',oggi:campOggi2.filter(x=>x.tipo==='pap'||x.tipo==='pap_priv').length,mese:campMese2.filter(x=>x.tipo==='pap'||x.tipo==='pap_priv').length},
+      {label:'PAP LUPOLAB',color:'var(--orange)',oggi:campOggi2.filter(x=>x.tipo==='pap_l').length,mese:campMese2.filter(x=>x.tipo==='pap_l').length},
     ];
     tEl.innerHTML='<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">'+
-      rows.map(r=>`<div style="text-align:center;background:var(--bg3);border-radius:8px;padding:10px 6px;cursor:pointer" onclick="showView('tracciabilita')">
-        <div style="font-size:10px;color:${r.color};font-weight:700;letter-spacing:.5px;margin-bottom:3px">${r.full}</div>
-        <div style="font-family:'DM Mono',monospace;font-size:26px;font-weight:700;color:${r.color};line-height:1">${r.oggi}</div>
-        <div style="font-size:10px;color:var(--text3);margin-top:3px">${r.mese} questo mese</div>
-      </div>`).join('')+'</div>';
+      rows.map(r=>'<div style="text-align:center;background:var(--bg3);border-radius:8px;padding:10px;cursor:pointer" onclick="showView(&quot;tracciabilita&quot;)">'+
+        '<div style="font-size:10px;color:'+r.color+';font-weight:600;margin-bottom:4px">'+r.label+'</div>'+
+        '<div style="font-family:DM Mono,monospace;font-size:24px;font-weight:700;color:'+r.color+'">'+r.oggi+'</div>'+
+        '<div style="font-size:10px;color:var(--text3)">oggi &middot; '+r.mese+' mese</div></div>').join('')+'</div>';
   }
-
-  // ── Casi registrati oggi (chip) ──
-  const casiEl=document.getElementById('home-tracc-casi');
-  if(casiEl){
-    if(!campOggi.length){
-      casiEl.innerHTML='<div style="color:var(--text3);font-size:12px;padding:4px 0">Nessun caso registrato oggi</div>';
-    } else {
-      const tipoColor={istologia:'var(--blue)',citologia:'var(--teal)',pap:'var(--purple)',pap_l:'var(--orange)',pap_priv:'var(--red)'};
-      const tipoLabel={istologia:'IST',citologia:'CIT',pap:'PAP',pap_l:'PAP-L',pap_priv:'PAP-P'};
-      casiEl.innerHTML='<div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:2px">'+
-        campOggi.map(c=>`<span onclick="openDetailCampione('${c.id}')" style="cursor:pointer;display:inline-flex;align-items:center;gap:5px;background:var(--bg3);border:1px solid var(--border);border-radius:5px;padding:3px 9px;font-size:12px">
-          <span style="font-family:'DM Mono',monospace;font-weight:700">${c.campione_id}</span>
-          <span style="font-size:10px;color:${tipoColor[c.tipo]||'var(--text3)'};font-weight:600">${tipoLabel[c.tipo]||c.tipo}</span>
-          ${c.provenienza?`<span style="font-size:10px;color:var(--text3)">${c.provenienza}</span>`:''}
-        </span>`).join('')+
-      '</div>';
-    }
-  }
-
-  // ── Coloratore oggi ──
-  const cEl=document.getElementById('home-color-oggi');
-  if(cEl){
-    const cicli=[
-      ['EE Ist.','var(--blue)',  colorOggi?colorOggi.cicli_ee||0:0,     totEEMese],
-      ['EE Cit.','var(--teal)', colorOggi?colorOggi.cicli_ee_cit||0:0, totCitMese],
-      ['PAP L.', 'var(--purple)',colorOggi?colorOggi.cicli_pap||0:0,    totPapMese],
-    ];
-    cEl.innerHTML='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">'+
-      cicli.map(r=>`<div style="text-align:center;background:var(--bg3);border-radius:6px;padding:8px">
-        <div style="font-size:10px;color:${r[1]};font-weight:600;margin-bottom:2px">${r[0]}</div>
-        <div style="font-family:'DM Mono',monospace;font-size:22px;font-weight:700;color:${r[1]}">${r[2]}</div>
-        <div style="font-size:10px;color:var(--text3)">${r[3]} mese</div>
-      </div>`).join('')+'</div>';
-  }
-  renderHomeColoratore();
-
-  // ── Processatore ──
   const pEl=document.getElementById('home-proc-oggi');
-  if(pEl){
-    const protoLabel={standard:'Standard notturno',rapido:'Rapido',biopsie:'Biopsie',altro:'Altro'};
-    if(procOggi){
-      pEl.innerHTML=`
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;padding:10px;background:var(--green-bg);border-radius:8px;border:1px solid #a7f3d0">
-          <span style="font-family:'DM Mono',monospace;font-size:28px;font-weight:700;color:var(--green)">${(procOggi.casi||[]).length}</span>
-          <div><div style="font-weight:600;font-size:13px;color:var(--green)">Ciclo di oggi</div>
-          <div style="font-size:12px;color:var(--text2)">${protoLabel[procOggi.protocollo]||procOggi.protocollo}</div></div>
-          <span style="margin-left:auto;font-size:11px;color:var(--text3)">${procOggi.ora_inizio||''}${procOggi.ora_fine?' → '+procOggi.ora_fine:''}</span>
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px">
-          <div style="background:var(--bg3);border-radius:6px;padding:8px;text-align:center">
-            <div style="font-size:10px;color:var(--text3)">Casi oggi</div>
-            <div style="font-family:'DM Mono',monospace;font-weight:700;color:var(--green)">${(procOggi.casi||[]).length}</div>
-          </div>
-          <div style="background:var(--bg3);border-radius:6px;padding:8px;text-align:center">
-            <div style="font-size:10px;color:var(--text3)">Cicli mese</div>
-            <div style="font-family:'DM Mono',monospace;font-weight:700;color:var(--accent)">${procMese.length}</div>
-          </div>
-          <div style="background:var(--bg3);border-radius:6px;padding:8px;text-align:center">
-            <div style="font-size:10px;color:var(--text3)">Casi mese</div>
-            <div style="font-family:'DM Mono',monospace;font-weight:700;color:var(--accent)">${totCasiMese}</div>
-          </div>
-        </div>
-        ${procOggi.reagenti?.length?`<div style="margin-top:8px;font-size:11px;color:var(--text3)">🧪 Reagenti: ${procOggi.reagenti.map(r=>r.nome+(r.lotto?' ['+r.lotto+']':'')).join(', ')}</div>`:''}`;
-    } else {
-      const lastProc=procArr[0];
-      pEl.innerHTML=`
-        <div style="color:var(--text3);font-size:12px;margin-bottom:10px;padding:8px;background:var(--bg3);border-radius:6px">Nessun ciclo registrato oggi</div>
-        ${lastProc?`<div style="font-size:12px"><div style="font-weight:600;color:var(--text2);margin-bottom:3px">Ultimo ciclo: ${fmtDate(lastProc.data)}</div>
-        <div style="color:var(--text3)">${protoLabel[lastProc.protocollo]||lastProc.protocollo} · ${(lastProc.casi||[]).length} casi</div></div>`:''}
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:10px">
-          <div style="background:var(--bg3);border-radius:6px;padding:8px;text-align:center">
-            <div style="font-size:10px;color:var(--text3)">Cicli mese</div>
-            <div style="font-family:'DM Mono',monospace;font-weight:700;color:var(--accent)">${procMese.length}</div>
-          </div>
-          <div style="background:var(--bg3);border-radius:6px;padding:8px;text-align:center">
-            <div style="font-size:10px;color:var(--text3)">Casi mese</div>
-            <div style="font-family:'DM Mono',monospace;font-weight:700;color:var(--accent)">${totCasiMese}</div>
-          </div>
-        </div>`;
+  if(pEl) pEl.innerHTML=procOggi2
+    ?'<div style="display:flex;align-items:center;gap:12px"><span style="font-family:DM Mono,monospace;font-size:22px;font-weight:700;color:var(--green)">'+(procOggi2.casi||[]).length+'</span><span style="color:var(--text2)">casi · '+( procOggi2.protocollo||'')+'</span><span style="margin-left:auto;font-size:11px;color:var(--text3)">'+totCasiMese+' questo mese</span></div>'
+    :'<div style="color:var(--text3);font-size:13px">Nessun ciclo oggi &middot; '+totCasiMese+' casi questo mese</div>';
+  const cEl=document.getElementById('home-color-oggi');
+  if(cEl) cEl.innerHTML='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">'+
+    [['EE Ist.','var(--blue)',colorOggi2?colorOggi2.cicli_ee||0:0,totEEMese],
+     ['EE Cit.','var(--teal)',colorOggi2?colorOggi2.cicli_ee_cit||0:0,totCitMese],
+     ['PAP L.','var(--purple)',colorOggi2?colorOggi2.cicli_pap||0:0,totPapMese]].map(r=>
+      '<div style="text-align:center;background:var(--bg3);border-radius:6px;padding:8px">'+
+      '<div style="font-size:10px;color:'+r[1]+';font-weight:600">'+r[0]+'</div>'+
+      '<div style="font-family:DM Mono,monospace;font-size:20px;font-weight:700;color:'+r[1]+'">'+r[2]+'</div>'+
+      '<div style="font-size:10px;color:var(--text3)">'+r[3]+' mese</div></div>').join('')+'</div>';
+
+  // Alert banners
+  const alerts=[];
+  if(critici>0) alerts.push(`<div class="alert yellow"><span style="font-size:15px">⚠</span><div><div class="alert-title">${critici} prodotto/i a scorta bassa</div><div class="alert-msg">${prods.filter(p=>p.min>0&&p.qty<=p.min&&p.qty>0).map(p=>p.nome+' ('+p.qty+' rimasti)').join(', ')}</div></div></div>`);
+  if(inScad>0) alerts.push(`<div class="alert yellow"><span style="font-size:15px">📅</span><div><div class="alert-title">${inScad} in scadenza entro 30 giorni</div><div class="alert-msg">${prods.filter(p=>{const d=daysUntil(p.scadenza);return d>=0&&d<=30}).map(p=>p.nome+' ('+fmtDate(p.scadenza)+')').join(', ')}</div></div></div>`);
+  const noVuoti=Object.keys(WASTE_CONFIG).filter(k=>(W[k]?.pieni||0)>0&&getVuotiDisp(W,k)===0).map(k=>WASTE_CONFIG[k].label);
+  if(noVuoti.length) alerts.push(`<div class="alert yellow"><span style="font-size:15px">🗑</span><div><div class="alert-title">Contenitori vuoti esauriti</div><div class="alert-msg">${noVuoti.join(', ')}</div></div></div>`);
+  document.getElementById('alerts-wrap').innerHTML=alerts.join('');
+
+  // Panel 1: allerte
+  const allerteProds=prods.filter(p=>(p.min>0&&p.qty<=p.min&&p.qty>0)||(()=>{const d=daysUntil(p.scadenza);return d>=0&&d<=30})());
+  const allerteEl=document.getElementById('home-allerte-list');
+  if(!allerteProds.length){ allerteEl.innerHTML='<div class="home-empty">✅ Nessuna allerta</div>'; }
+  else allerteEl.innerHTML=allerteProds.slice(0,6).map(p=>{
+    const d=daysUntil(p.scadenza); const s=d>=0&&d<=30?`<span class="badge bg-yellow" style="font-size:10px">${d===0?'Oggi':d+'gg'}</span>`:'<span class="badge bg-yellow" style="font-size:10px">Scorta bassa</span>';
+    return `<div class="home-list-item" onclick="openSchedaProdotto('${p.id}')"><span style="font-weight:500">${p.nome}</span>${s}</div>`;
+  }).join('')+(allerteProds.length>6?`<div class="home-empty" style="cursor:pointer" onclick="showView('allerte')">+${allerteProds.length-6} altri →</div>`:'');
+
+  // Panel 2: in scadenza
+  const scadEl=document.getElementById('home-scadenze-list');
+  const scadProds=prods.filter(p=>p.scadenza&&daysUntil(p.scadenza)>=0&&daysUntil(p.scadenza)<=30).sort((a,b)=>daysUntil(a.scadenza)-daysUntil(b.scadenza));
+  if(!scadProds.length){ scadEl.innerHTML='<div class="home-empty">✅ Nessuna scadenza imminente</div>'; }
+  else scadEl.innerHTML=scadProds.slice(0,6).map(p=>{
+    const d=daysUntil(p.scadenza);
+    return `<div class="home-list-item" onclick="openSchedaProdotto('${p.id}')"><span style="font-weight:500">${p.nome}</span><span style="color:var(--yellow);font-family:'DM Mono',monospace;font-size:11px">${d===0?'oggi':d+'gg'}</span></div>`;
+  }).join('')+(scadProds.length>6?`<div class="home-empty">+${scadProds.length-6} altri</div>`:'');
+
+  // Panel 3: ordini aperti
+  const ordEl=document.getElementById('home-ordini-list');
+  const ordOpen=ords.filter(o=>o.stato!=='ricevuto'&&o.stato!=='annullato').slice(0,6);
+  const statoIco={bozza:'📝',inviato:'📤',approvato:'✅'};
+  if(!ordOpen.length){ ordEl.innerHTML='<div class="home-empty">Nessun ordine in corso</div>'; }
+  else ordEl.innerHTML=ordOpen.map(o=>`<div class="home-list-item" onclick="showView('ordini')"><span style="font-weight:500">${o.num||'—'}<small style="color:var(--text3);margin-left:5px">${o.righe?.length||0} prodotti</small></span><span>${statoIco[o.stato]||''} <span style="font-size:11px;color:var(--text2)">${o.stato}</span></span></div>`).join('');
+
+  // Product grid
+  renderHomeGrid();
+  renderHomeColoratore();
+  renderHomeCampioniOggi();
+  // Processatore ultimo
+  const procEl = document.getElementById('home-proc-oggi');
+  if(procEl){
+    const lastProc = loadProc()[0];
+    if(!lastProc){ procEl.innerHTML='<div style="color:var(--text3);font-size:13px">Nessun ciclo registrato</div>'; }
+    else{
+      const protoLabel={standard:'Standard notturno',rapido:'Rapido',biopsie:'Biopsie',altro:'Altro'};
+      procEl.innerHTML=`<div style="font-size:13px"><div style="font-weight:600">${fmtDate(lastProc.data)} — ${protoLabel[lastProc.protocollo]||lastProc.protocollo}</div><div style="font-size:12px;color:var(--text3);margin-top:3px">${lastProc.casi?.length||0} casi · ${lastProc.reagenti?.length||0} reagenti tracciati</div></div>`;
     }
   }
-
-  // ── Magazzino: barre per categoria ──
-  const magEl=document.getElementById('dash-mag-categorie');
-  if(magEl){
-    const catOrder=['Reagenti','IHC','Vetrini','Cassette','Coloranti','Consumabili','Lame','Altro'];
-    const catColors={'Reagenti':'var(--blue)','IHC':'var(--purple)','Vetrini':'var(--teal)','Cassette':'var(--orange)','Coloranti':'var(--green)','Consumabili':'var(--yellow)','Lame':'var(--red)','Altro':'var(--text3)'};
-    const bycat={};
-    prods.forEach(p=>{ if(!bycat[p.cat]) bycat[p.cat]={tot:0,crit:0,scad:0}; bycat[p.cat].tot++; if((p.min>0&&p.qty<=p.min)||p.qty<=0) bycat[p.cat].crit++; if(daysUntil(p.scadenza)<0) bycat[p.cat].scad++; });
-    const cats=catOrder.filter(c=>bycat[c]);
-    magEl.innerHTML='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:6px">'+
-      cats.map(cat=>{
-        const d=bycat[cat];
-        const haProb=d.crit>0||d.scad>0;
-        return `<div onclick="goCategory('${cat}')" style="cursor:pointer;background:var(--bg3);border-radius:8px;padding:8px;border:1.5px solid ${haProb?'var(--red)':'var(--border)'}">
-          <div style="font-size:10px;color:${catColors[cat]||'var(--text3)'};font-weight:700;margin-bottom:3px">${CAT_ICON[cat]||'📌'} ${cat}</div>
-          <div style="font-family:'DM Mono',monospace;font-size:18px;font-weight:700;color:var(--text)">${d.tot}</div>
-          ${haProb?`<div style="font-size:10px;color:var(--red);margin-top:2px">${d.crit>0?d.crit+' critici':''}${d.scad>0?' '+d.scad+' scaduti':''}</div>`:'<div style="font-size:10px;color:var(--green);margin-top:2px">✓ ok</div>'}
-        </div>`;
-      }).join('')+'</div>';
-  }
-
-  // ── Allerte list ──
-  const allerteEl=document.getElementById('home-allerte-list');
-  if(allerteEl){
-    const allerteProds=[...esauriti,...critici,...scaduti].slice(0,6);
-    if(!allerteProds.length){ allerteEl.innerHTML='<div class="home-empty">✅ Nessuna allerta</div>'; }
-    else allerteEl.innerHTML=allerteProds.map(p=>{
-      const tags=[];
-      if(p.qty<=0) tags.push('<span class="badge bg-red" style="font-size:9px">Esaurito</span>');
-      else if(p.min>0&&p.qty<=p.min) tags.push('<span class="badge bg-yellow" style="font-size:9px">Scorta</span>');
-      if(daysUntil(p.scadenza)<0) tags.push('<span class="badge bg-red" style="font-size:9px">Scaduto</span>');
-      return `<div class="home-list-item" onclick="openSchedaProdotto('${p.id}')"><span style="font-weight:500;font-size:12px">${p.nome}</span><span style="display:flex;gap:3px">${tags.join('')}</span></div>`;
-    }).join('')+(critici.length+esauriti.length+scaduti.length>6?`<div class="home-empty" style="cursor:pointer" onclick="showView('allerte')">+${critici.length+esauriti.length+scaduti.length-6} altri →</div>`:'');
-  }
-
-  // ── Scadenze ──
-  const scadEl=document.getElementById('home-scadenze-list');
-  if(scadEl){
-    const scadProds=inScad.sort((a,b)=>daysUntil(a.scadenza)-daysUntil(b.scadenza)).slice(0,6);
-    if(!scadProds.length){ scadEl.innerHTML='<div class="home-empty">✅ Nessuna scadenza imminente</div>'; }
-    else scadEl.innerHTML=scadProds.map(p=>{
-      const d=daysUntil(p.scadenza);
-      const col=d<=7?'var(--red)':'var(--yellow)';
-      return `<div class="home-list-item" onclick="openSchedaProdotto('${p.id}')"><span style="font-size:12px;font-weight:500">${p.nome}</span><span style="color:${col};font-family:'DM Mono',monospace;font-size:11px">${d===0?'oggi':d+'gg'}</span></div>`;
-    }).join('')+(inScad.length>6?`<div class="home-empty">+${inScad.length-6} altri</div>`:'');
-  }
-
-  // ── Rifiuti dettaglio ──
-  const rifEl=document.getElementById('dash-rifiuti-detail');
-  if(rifEl){
-    const cerItems=[
-      {key:'cer_180103',ico:'☣',label:'180103*',color:'var(--yellow)'},
-      {key:'cer_150110',ico:'🧴',label:'150110*',color:'var(--orange)'},
-      {key:'cer_150202',ico:'🧤',label:'150202*',color:'var(--red)'},
-      {key:'cer_180106',ico:'💧',label:'180106*',color:'var(--blue)'},
-    ];
-    const poolVuoti=W['bidoni_solidi_comuni']?.vuoti||0;
-    rifEl.innerHTML=`
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px">
-        <div style="background:rgba(234,88,12,.08);border-radius:8px;padding:10px;text-align:center">
-          <div style="font-size:10px;color:var(--orange);font-weight:600;margin-bottom:3px">SOLIDI PIENI</div>
-          <div style="font-family:'DM Mono',monospace;font-size:26px;font-weight:700;color:var(--orange)">${solidiPieni}</div>
-        </div>
-        <div style="background:rgba(37,99,235,.08);border-radius:8px;padding:10px;text-align:center">
-          <div style="font-size:10px;color:var(--blue);font-weight:600;margin-bottom:3px">LIQUIDI PIENI</div>
-          <div style="font-family:'DM Mono',monospace;font-size:26px;font-weight:700;color:var(--blue)">${liquidiPieni}</div>
-        </div>
-      </div>
-      ${cerItems.map(c=>{
-        const w=W[c.key]||{pieni:0,smaltiti:0};
-        const vuoti=getVuotiDisp(W,c.key);
-        const warn=w.pieni>0&&vuoti===0;
-        return `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)">
-          <span style="font-size:14px">${c.ico}</span>
-          <span style="font-size:11px;color:var(--text2);flex:1">CER ${c.label}</span>
-          <span style="font-family:'DM Mono',monospace;font-size:12px;color:${w.pieni>0?c.color:'var(--text4)'}">P:${w.pieni}</span>
-          <span style="font-family:'DM Mono',monospace;font-size:12px;color:${vuoti===0?'var(--red)':'var(--green)'}">V:${vuoti}</span>
-          ${warn?'<span style="font-size:10px;color:var(--red)">⚠</span>':''}
-        </div>`;
-      }).join('')}
-      <div style="margin-top:8px;padding:6px 8px;background:var(--bg3);border-radius:6px;font-size:11px;color:var(--text2)">
-        🗑 Pool bidoni plastica condivisi: <strong style="color:${poolVuoti===0?'var(--red)':'var(--green)'}">${poolVuoti} vuoti</strong>
-      </div>
-      ${noVuotiAlert.length?`<div style="margin-top:6px;padding:6px 8px;background:var(--red-bg);border-radius:6px;font-size:11px;color:var(--red);border:1px solid #fca5a5">⚠ Vuoti esauriti per: ${noVuotiAlert.map(k=>WASTE_CONFIG[k].label).join(', ')}</div>`:''}`;
-  }
-
-  // ── Ordini aperti ──
-  const ordEl=document.getElementById('home-ordini-list');
-  if(ordEl){
-    const ordOpen=ords.filter(o=>o.stato!=='ricevuto'&&o.stato!=='annullato').slice(0,6);
-    const statoIco={bozza:'📝',inviato:'📤',approvato:'✅'};
-    const statoBg={bozza:'var(--bg3)',inviato:'var(--blue-bg)',approvato:'var(--green-bg)'};
-    if(!ordOpen.length){ ordEl.innerHTML='<div class="home-empty">Nessun ordine in corso</div>'; }
-    else ordEl.innerHTML=ordOpen.map(o=>`
-      <div class="home-list-item" onclick="showView('ordini')" style="align-items:flex-start">
-        <div><div style="font-weight:600;font-size:13px">${o.num||'—'}</div>
-        <div style="font-size:11px;color:var(--text3)">${o.fornitore||'—'} · ${o.righe?.length||0} prodotti</div></div>
-        <span style="background:${statoBg[o.stato]||'var(--bg3)'};padding:2px 7px;border-radius:10px;font-size:11px">${statoIco[o.stato]||''} ${o.stato}</span>
-      </div>`).join('');
-  }
-
-  // ── Movimenti recenti ──
-  const movEl=document.getElementById('dash-movimenti-recenti');
-  if(movEl){
-    const recenti=movs.slice(0,8);
-    if(!recenti.length){ movEl.innerHTML='<div class="home-empty">Nessun movimento registrato</div>'; }
-    else movEl.innerHTML=recenti.map(m=>{
-      const isCarico=m.tipo==='carico';
-      return `<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--border)">
-        <span style="font-size:13px">${isCarico?'⬆':'⬇'}</span>
-        <div style="flex:1;min-width:0">
-          <div style="font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${m.prod||'—'}</div>
-          <div style="font-size:10px;color:var(--text3)">${fmtTs(m.ts)}</div>
-        </div>
-        <span style="font-family:'DM Mono',monospace;font-size:12px;font-weight:700;color:${isCarico?'var(--green)':'var(--red)'}">${isCarico?'+':'−'}${m.qty}</span>
-      </div>`;
-    }).join('');
-  }
-
-  // ── Alert banners ──
-  const alerts=[];
-  if(esauriti.length) alerts.push(`<div class="alert red"><span style="font-size:15px">🔴</span><div><div class="alert-title">${esauriti.length} prodotto/i esauriti</div><div class="alert-msg">${esauriti.slice(0,5).map(p=>p.nome).join(', ')}${esauriti.length>5?' e altri…':''}</div></div></div>`);
-  if(critici.length) alerts.push(`<div class="alert yellow"><span style="font-size:15px">⚠</span><div><div class="alert-title">${critici.length} prodotto/i a scorta bassa</div><div class="alert-msg">${critici.slice(0,5).map(p=>p.nome+' ('+p.qty+' rimasti)').join(', ')}</div></div></div>`);
-  if(noVuotiAlert.length) alerts.push(`<div class="alert yellow"><span style="font-size:15px">🗑</span><div><div class="alert-title">Contenitori vuoti esauriti</div><div class="alert-msg">${noVuotiAlert.map(k=>WASTE_CONFIG[k].label).join(', ')}</div></div></div>`);
-  document.getElementById('alerts-wrap').innerHTML=alerts.join('');
 }
 
 function renderHomeGrid(){
-  const container=document.getElementById('home-cat-grid');
-  if(!container || container.style.display==='none') return; // non più usata nella nuova dashboard
   const q=(document.getElementById('home-search')?.value||'').toLowerCase();
   let prods=loadP();
   if(q) prods=prods.filter(p=>p.nome.toLowerCase().includes(q)||(p.fornitore||'').toLowerCase().includes(q)||(p.barcode||'').includes(q));
@@ -2548,6 +2077,7 @@ function renderHomeGrid(){
   prods.forEach(p=>{ if(!bycat[p.cat]) bycat[p.cat]=[]; bycat[p.cat].push(p); });
 
   const catOrder=['Reagenti','IHC','Vetrini','Cassette','Coloranti','Consumabili','Lame','Altro'];
+  const container=document.getElementById('home-cat-grid');
   if(!prods.length){ container.innerHTML='<div class="empty"><div class="e-ico">🔍</div><p>Nessun prodotto trovato</p></div>'; return; }
 
   container.innerHTML=catOrder.filter(cat=>bycat[cat]).map(cat=>{
@@ -2795,8 +2325,7 @@ function adjQty(id,delta){
   const prods=loadP(), p=prods.find(x=>x.id===id); if(!p) return;
   const nq=Math.max(0,p.qty+delta); if(nq===p.qty) return;
   p.qty=nq; saveP(prods);
-  const newMov={id:genId(),ts:new Date().toISOString(),tipo:delta>0?'carico':'scarico',prod:p.nome,prodId:p.id,qty:Math.abs(delta),lotto:p.lotto||'',note:'Aggiustamento rapido'};
-  const movs=loadM(); movs.unshift(newMov); saveM(movs, newMov);
+  const movs=loadM(); movs.unshift({id:genId(),ts:new Date().toISOString(),tipo:delta>0?'carico':'scarico',prod:p.nome,prodId:p.id,qty:Math.abs(delta),lotto:p.lotto||'',note:'Aggiustamento rapido'}); saveM(movs);
   renderInv();
 }
 function deleteProduct(id){
@@ -2808,15 +2337,12 @@ function deleteProduct(id){
 // MOVIMENTI
 // ══════════════════════════════════════════
 function renderMovimenti(){
-  const tb=document.getElementById('mov-tbody');
-  if(!tb) return;
-  // Invalida la cache per leggere sempre i dati più aggiornati dal localStorage
-  delete _cache[LS_M];
-  const movs=loadM();
+  if(!document.getElementById('mov-tbody')) return;
+  const movs=loadM(), tb=document.getElementById('mov-tbody');
   if(!movs.length){ tb.innerHTML=`<tr><td colspan="6"><div class="empty"><div class="e-ico">↕</div><p>Nessun movimento registrato</p></div></td></tr>`; return; }
-  tb.innerHTML=movs.slice(0,500).map(m=>{
+  tb.innerHTML=movs.slice(0,200).map(m=>{
     const badge=m.tipo==='carico'?'<span class="badge bg-green">⬆ Carico</span>':'<span class="badge bg-red">⬇ Scarico</span>';
-    return `<tr><td class="mono" style="font-size:12px">${fmtTs(m.ts)}</td><td>${badge}</td><td><strong>${m.prod||'—'}</strong></td><td class="mono">${m.qty}</td><td class="mono">${m.lotto||'—'}</td><td style="color:var(--text2);font-size:12px">${m.note||'—'}</td></tr>`;
+    return `<tr><td class="mono" style="font-size:12px">${fmtTs(m.ts)}</td><td>${badge}</td><td><strong>${m.prod}</strong></td><td class="mono">${m.qty}</td><td class="mono">${m.lotto||'—'}</td><td style="color:var(--text2);font-size:12px">${m.note||'—'}</td></tr>`;
   }).join('');
 }
 function clearMovimenti(){ if(!confirm('Svuotare lo storico?')) return; saveM([]); renderMovimenti(); toast('Storico svuotato','info'); }
@@ -3041,32 +2567,24 @@ function openManualMovModal(tipo){
   document.getElementById('modal-mov').classList.add('open');
 }
 function confirmManualMov(){
-  try{
-    const prodId=document.getElementById('m-prod').value;
-    const qty=parseFloat(document.getElementById('m-qty').value);
-    if(!prodId){ toast('Seleziona un prodotto','error'); return; }
-    if(!qty||isNaN(qty)||qty<=0){ toast('Inserisci una quantità valida maggiore di zero','error'); return; }
-    if(qty>99999){ toast('Quantità troppo elevata','error'); return; }
-    const qtyR=Math.round(qty*100)/100; // max 2 decimali
-    const prods=loadP(), p=prods.find(x=>x.id===prodId);
-    if(!p){ toast('Prodotto non trovato in magazzino','error'); return; }
-    if(manualMovType==='scarico'){
-      if(p.qty<=0){ toast('Prodotto già esaurito','error'); return; }
-      if(p.qty<qtyR){ toast(`Quantità insufficiente — disponibili: ${p.qty} ${p.unita||''}`, 'error'); return; }
-      p.qty=Math.max(0, Math.round((p.qty-qtyR)*100)/100);
-    } else {
-      p.qty=Math.round((p.qty+qtyR)*100)/100;
-      if(p.qty_init===undefined) p.qty_init=qtyR;
-    }
-    saveP(prods);
-    const newMov={id:genId(),ts:new Date().toISOString(),tipo:manualMovType,prod:p.nome,prodId:p.id,qty:qtyR,lotto:(document.getElementById('m-lotto').value||'').trim(),note:(document.getElementById('m-note').value||'').trim()};
-    const movs=loadM(); movs.unshift(newMov);
-    saveM(movs, newMov); closeModal('modal-mov');
-    renderMovimenti();
-    if(currentView==='inventario') renderInv();
-    if(currentView==='dashboard') renderDashboard();
-    toast(`${manualMovType==='carico'?'Carico':'Scarico'} registrato: ${p.nome} ${manualMovType==='carico'?'+':'−'}${qtyR}`,manualMovType==='carico'?'success':'info');
-  }catch(e){ console.error('[confirmManualMov]',e); toast('Errore imprevisto: '+e.message,'error'); }
+  const prodId=document.getElementById('m-prod').value;
+  const qty=parseFloat(document.getElementById('m-qty').value)||0;
+  if(!prodId||qty<=0){ toast('Seleziona prodotto e quantità','error'); return; }
+  const prods=loadP(), p=prods.find(x=>x.id===prodId); if(!p) return;
+  if(manualMovType==='scarico'&&p.qty<qty){ toast('Quantità insufficiente','error'); return; }
+  if(manualMovType==='carico'){
+    p.qty=p.qty+qty;
+    if(p.qty_init===undefined) p.qty_init=qty; // prima volta: qty iniziale = quanto caricato
+  } else {
+    p.qty=p.qty-qty;
+  }
+  saveP(prods);
+  const movs=loadM();
+  movs.unshift({id:genId(),ts:new Date().toISOString(),tipo:manualMovType,prod:p.nome,prodId:p.id,qty,lotto:document.getElementById('m-lotto').value,note:document.getElementById('m-note').value});
+  saveM(movs); closeModal('modal-mov');
+  renderMovimenti();
+  if(currentView==='inventario') renderInv();
+  toast(`${manualMovType==='carico'?'Carico':'Scarico'} registrato`,manualMovType==='carico'?'success':'info');
 }
 
 // ══════════════════════════════════════════
@@ -3116,14 +2634,6 @@ function processDDTFile(file){
 }
 async function analyzeDDT(){
   if(!ddtBase64){ toast('Nessuna immagine','error'); return; }
-  if(!isAIConfigured()){
-    toast('Chiave AI non configurata — apri la console e usa: localStorage.setItem(\'ai_api_key\',\'sk-ant-...\')','warn',6000);
-    document.getElementById('ddt-proc').style.display='none';
-    document.getElementById('ddt-results').style.display='block';
-    document.getElementById('ddt-rows').innerHTML='<div style="padding:12px;color:var(--yellow);font-size:13px">⚠ Funzione AI non attiva. Inserisci i prodotti manualmente usando il pulsante ＋ sotto.</div>';
-    document.getElementById('ddt-confirm-btn').style.display='';
-    return;
-  }
   document.getElementById('ddt-proc').style.display='block';
   document.getElementById('ddt-results').style.display='none';
   document.getElementById('ddt-confirm-btn').style.display='none';
@@ -3134,7 +2644,7 @@ Categorie valide: Reagenti, IHC, Vetrini, Cassette, Coloranti, Consumabili, Lame
 Se non leggi nulla: [{"nome":"Prodotto non riconosciuto","lotto":"","scadenza":"","qty":1,"unita":"pz","fornitore":"","barcode":"","cat":"Altro"}]`;
   try{
     const res=await fetch('https://api.anthropic.com/v1/messages',{
-      method:'POST',headers:{'Content-Type':'application/json','x-api-key':getAIKey(),'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      method:'POST',headers:{'Content-Type':'application/json','x-api-key':'sk-ant-api03-placeholder','anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
       body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:sys,
         messages:[{role:'user',content:[{type:'image',source:{type:'base64',media_type:'image/jpeg',data:ddtBase64}},{type:'text',text:'Analizza questo DDT.'}]}]})
     });
@@ -3182,102 +2692,25 @@ function addDDTRow(){
 function confirmDDT(){
   const rows=document.querySelectorAll('#ddt-rows .ai-row');
   if(!rows.length){ toast('Nessun prodotto da caricare','error'); return; }
-  const prods=loadP(), movs=loadM();
-  let count=0;
-  const newMovs=[];
-  const caricati=[]; // prodotti caricati da questo DDT
-
+  const prods=loadP(), movs=loadM(); let count=0;
   rows.forEach(row=>{
     const g=f=>row.querySelector(`[data-f="${f}"]`)?.value?.trim()||'';
     const nome=g('nome'); if(!nome) return;
-    const qty=parseFloat(g('qty'))||1;
-    const catRaw=g('cat')||'';
-    const cat=catRaw&&catRaw!=='Altro'?catRaw:smartCategorize(nome,g('fornitore')||'','');
-    const lotto=g('lotto'), scadenza=g('scadenza'), unita=g('unita')||'pz';
-    const fornitore=g('fornitore')||'';
-
-    // Cerca prodotto esistente (prima per nome+lotto, poi solo nome)
+    const qty=parseFloat(g('qty'))||1, catRaw=g('cat')||'', cat=catRaw&&catRaw!=='Altro'?catRaw:smartCategorize(nome,g('fornitore')||'',''), lotto=g('lotto'), scadenza=g('scadenza'), unita=g('unita')||'pz';
     let ex=prods.find(p=>p.nome.toLowerCase()===nome.toLowerCase()&&p.lotto===lotto);
     if(!ex) ex=prods.find(p=>p.nome.toLowerCase()===nome.toLowerCase());
-
-    if(ex){
-      ex.qty=Math.round((ex.qty+qty)*100)/100;
-      if(lotto) ex.lotto=lotto;
-      if(scadenza) ex.scadenza=scadenza;
-      if(!ex.fornitore && fornitore) ex.fornitore=fornitore;
+    if(ex){ ex.qty+=qty; if(lotto) ex.lotto=lotto; if(scadenza) ex.scadenza=scadenza;
       if(ex.qty_init===undefined) ex.qty_init=qty;
     } else {
-      const newP={id:genId(),nome,cat,fornitore,barcode:'',lotto,scadenza,qty,qty_init:qty,unita,min:0,pos:'',note:''};
-      prods.push(newP);
-      ex=newP;
+      prods.push({id:genId(),nome,cat,fornitore:'',barcode:'',lotto,scadenza,qty,qty_init:qty,unita,min:0,pos:'',note:''});
     }
-    const m={id:genId(),ts:new Date().toISOString(),tipo:'carico',prod:nome,prodId:ex.id,qty,lotto,note:'Da DDT'};
-    movs.unshift(m); newMovs.push(m);
-    caricati.push({nome,qty,fornitore});
-    count++;
+    movs.unshift({id:genId(),ts:new Date().toISOString(),tipo:'carico',prod:nome,prodId:ex?.id||'',qty,lotto,note:'Da DDT'}); count++;
   });
-
-  saveP(prods);
-  saveM(movs, newMovs);
-
-  // ── Aggiornamento automatico ordini ──
-  // Cerca ordini aperti (bozza/inviato/approvato) che contengono i prodotti caricati
-  const ords = loadOrd();
-  let ordiniAggiornati = 0;
-
-  ords.forEach(ord => {
-    if(ord.stato==='ricevuto'||ord.stato==='annullato') return;
-
-    let modificato = false;
-    if(!ord.righe) return;
-
-    ord.righe.forEach(riga => {
-      const match = caricati.find(c =>
-        c.nome.toLowerCase()===riga.nome.toLowerCase() ||
-        riga.nome.toLowerCase().includes(c.nome.toLowerCase()) ||
-        c.nome.toLowerCase().includes(riga.nome.toLowerCase())
-      );
-      if(match){
-        // Aggiorna quantità ricevuta sulla riga
-        riga.qtyRicevuta = (riga.qtyRicevuta||0) + match.qty;
-        riga.dataRicezione = new Date().toISOString().slice(0,10);
-        modificato = true;
-      }
-    });
-
-    if(modificato){
-      // Controlla se tutte le righe sono state ricevute
-      const tutteRicevute = ord.righe.every(r => (r.qtyRicevuta||0) >= r.qty);
-      const parziale = ord.righe.some(r => (r.qtyRicevuta||0) > 0);
-
-      if(tutteRicevute){
-        ord.stato = 'ricevuto';
-        ord.dataRicezione = new Date().toISOString();
-        ord.noteRicezione = 'Ricevuto automaticamente da DDT';
-      } else if(parziale){
-        ord.stato = 'parziale';
-        if(!ord.noteRicezione) ord.noteRicezione = '';
-        ord.noteRicezione = 'Ricezione parziale da DDT — ' + new Date().toLocaleDateString('it-IT');
-      }
-      ordiniAggiornati++;
-    }
-  });
-
-  if(ordiniAggiornati > 0){
-    saveOrd(ords);
-  }
-
-  closeDDTModal();
+  saveP(prods); saveM(movs); closeDDTModal();
   if(currentView==='inventario') renderInv();
   if(currentView==='dashboard') renderDashboard();
   if(currentView==='movimenti') renderMovimenti();
-  if(currentView==='ordini') renderOrdini();
-
-  if(ordiniAggiornati > 0){
-    toast(`${count} prodotto/i caricati · ${ordiniAggiornati} ordine/i aggiornato/i automaticamente`, 'success', 5000);
-  } else {
-    toast(`${count} prodotto/i caricato/i da DDT`, 'success');
-  }
+  toast(`${count} prodotto/i caricato/i da DDT`,'success');
 }
 
 // ══════════════════════════════════════════
@@ -3348,26 +2781,19 @@ function scaricaSelProd(){
   document.getElementById('sc-man-confirm-btn').style.display='none';
 }
 function confirmScaricaManuale(){
-  try{
-    if(!scaricaSelectedId){ toast('Seleziona un prodotto dalla lista','error'); return; }
-    const qty=parseFloat(document.getElementById('sc-man-qty').value);
-    if(!qty||isNaN(qty)||qty<=0){ toast('Inserisci una quantità valida maggiore di zero','error'); return; }
-    const qtyR=Math.round(qty*100)/100;
-    const note=(document.getElementById('sc-man-note').value||'').trim();
-    const prods=loadP(), p=prods.find(x=>x.id===scaricaSelectedId);
-    if(!p){ toast('Prodotto non trovato — aggiorna la pagina','error'); return; }
-    if(p.qty<=0){ toast('Prodotto già esaurito','error'); return; }
-    if(p.qty<qtyR){ toast(`Quantità insufficiente — disponibili: ${p.qty} ${p.unita||''}`, 'error'); return; }
-    p.qty=Math.max(0, Math.round((p.qty-qtyR)*100)/100);
-    saveP(prods);
-    const newMov={id:genId(),ts:new Date().toISOString(),tipo:'scarico',prod:p.nome,prodId:p.id,qty:qtyR,lotto:p.lotto||'',note:note||'Scarico manuale'};
-    const movs=loadM(); movs.unshift(newMov); saveM(movs, newMov);
-    closeScaricaModal();
-    if(currentView==='inventario') renderInv();
-    if(currentView==='dashboard') renderDashboard();
-    if(currentView==='movimenti') renderMovimenti();
-    toast('Scarico: '+p.nome+' −'+qtyR,'info');
-  }catch(e){ console.error('[confirmScaricaManuale]',e); toast('Errore imprevisto: '+e.message,'error'); }
+  if(!scaricaSelectedId){ toast('Seleziona un lotto','error'); return; }
+  const qty=parseFloat(document.getElementById('sc-man-qty').value)||1;
+  const note=document.getElementById('sc-man-note').value;
+  const prods=loadP(), p=prods.find(x=>x.id===scaricaSelectedId);
+  if(!p){ toast('Prodotto non trovato','error'); return; }
+  if(p.qty<qty){ toast('Quantità insufficiente — disponibili: '+p.qty,'error'); return; }
+  p.qty-=qty; saveP(prods);
+  const movs=loadM(); movs.unshift({id:genId(),ts:new Date().toISOString(),tipo:'scarico',prod:p.nome,prodId:p.id,qty,lotto:p.lotto||'',note:note||'Scarico manuale'}); saveM(movs);
+  closeScaricaModal();
+  if(currentView==='inventario') renderInv();
+  if(currentView==='dashboard') renderDashboard();
+  if(currentView==='movimenti') renderMovimenti();
+  toast('Scarico: '+p.nome+' −'+qty,'info');
 }
 function closeScaricaModal(){ if(codeReader){ try{codeReader.reset();}catch(e){} codeReader=null; } closeModal('modal-scarica'); }
 function openBarcodeModal(){ openScaricaModal(); }
@@ -3384,7 +2810,7 @@ async function startBarcodeScanner(){
       <input type="text" id="manual-bc" placeholder="Barcode…" style="text-align:center;font-family:DM Mono,monospace;font-size:15px;letter-spacing:2px" onkeydown="if(event.key==='Enter') handleScannedCode(this.value.trim())">
       <button class="btn btn-primary" style="margin-top:9px;width:100%" onclick="handleScannedCode(document.getElementById('manual-bc').value.trim())">Cerca</button>
     </div>`;
-    document.querySelector('#barcode-video-wrap .scan-line')?.remove();
+    document.getElementById('scan-line')?.remove();
   }
 }
 function handleScannedCode(code){
@@ -3410,25 +2836,18 @@ function handleScannedCode(code){
 }
 function closeBarcodeModal(){ closeScaricaModal(); }
 function confirmBarcodeScario(){
-  try{
-    if(!matchedProd){ toast('Nessun prodotto selezionato','error'); return; }
-    const qty=parseFloat(document.getElementById('bc-qty').value);
-    if(!qty||isNaN(qty)||qty<=0){ toast('Inserisci una quantità valida','error'); return; }
-    const qtyR=Math.round(qty*100)/100;
-    const prods=loadP(), p=prods.find(x=>x.id===matchedProd.id);
-    if(!p){ toast('Prodotto non trovato — ricarica la pagina','error'); return; }
-    if(p.qty<=0){ toast('Prodotto già esaurito','error'); return; }
-    if(p.qty<qtyR){ toast(`Quantità insufficiente — disponibili: ${p.qty} ${p.unita||''}`, 'error'); return; }
-    p.qty=Math.max(0, Math.round((p.qty-qtyR)*100)/100);
-    saveP(prods);
-    const newMov={id:genId(),ts:new Date().toISOString(),tipo:'scarico',prod:p.nome,prodId:p.id,qty:qtyR,lotto:p.lotto||'',note:(document.getElementById('bc-note').value||'Scarico barcode').trim()};
-    const movs=loadM(); movs.unshift(newMov); saveM(movs, newMov);
-    closeBarcodeModal();
-    if(currentView==='inventario') renderInv();
-    if(currentView==='dashboard') renderDashboard();
-    if(currentView==='movimenti') renderMovimenti();
-    toast(`Scarico: ${p.nome} −${qtyR}`,'info');
-  }catch(e){ console.error('[confirmBarcodeScario]',e); toast('Errore imprevisto: '+e.message,'error'); }
+  if(!matchedProd) return;
+  const qty=parseFloat(document.getElementById('bc-qty').value)||1;
+  if(matchedProd.qty<qty){ toast('Quantità insufficiente','error'); return; }
+  const prods=loadP(), p=prods.find(x=>x.id===matchedProd.id);
+  if(!p){ toast('Prodotto non trovato','error'); return; }
+  p.qty-=qty; saveP(prods);
+  const movs=loadM(); movs.unshift({id:genId(),ts:new Date().toISOString(),tipo:'scarico',prod:p.nome,prodId:p.id,qty,lotto:p.lotto||'',note:document.getElementById('bc-note').value||'Scarico barcode'}); saveM(movs);
+  closeBarcodeModal();
+  if(currentView==='inventario') renderInv();
+  if(currentView==='dashboard') renderDashboard();
+  if(currentView==='movimenti') renderMovimenti();
+  toast(`Scarico: ${p.nome} −${qty}`,'info');
 }
 function addFromBarcode(){ closeBarcodeModal(); document.getElementById('f-barcode').value=lastCode||''; openAddModal(); }
 
@@ -3553,56 +2972,49 @@ function processCaricaScan(code){
 }
 
 function confirmCaricaScanFound(){
-  try{
-    if(!csMatchedId){ toast('Nessun prodotto selezionato','error'); return; }
-    const qty=parseFloat(document.getElementById('cs-qty').value);
-    if(!qty||isNaN(qty)||qty<=0){ toast('Inserisci una quantità valida','error'); return; }
-    const qtyR=Math.round(qty*100)/100;
-    const note=(document.getElementById('cs-note').value||'').trim();
-    const prods=loadP(), p=prods.find(x=>x.id===csMatchedId);
-    if(!p){ toast('Prodotto non trovato — ricarica la pagina','error'); return; }
-    p.qty=Math.round((p.qty+qtyR)*100)/100;
-    if(p.qty_init===undefined) p.qty_init=qtyR;
-    saveP(prods);
-    const newMov={id:genId(),ts:new Date().toISOString(),tipo:'carico',prod:p.nome,prodId:p.id,qty:qtyR,lotto:p.lotto||'',note:note||'Carico da scan'};
-    const movs=loadM(); movs.unshift(newMov); saveM(movs, newMov);
-    closeCaricaScanModal();
-    if(currentView==='inventario') renderInv();
-    if(currentView==='dashboard') renderDashboard();
-    if(currentView==='movimenti') renderMovimenti();
-    toast('Carico: '+p.nome+' +'+qtyR,'success');
-  }catch(e){ console.error('[confirmCaricaScanFound]',e); toast('Errore imprevisto: '+e.message,'error'); }
+  if(!csMatchedId){ toast('Nessun prodotto selezionato','error'); return; }
+  const qty=parseFloat(document.getElementById('cs-qty').value)||1;
+  const note=document.getElementById('cs-note').value;
+  const prods=loadP(), p=prods.find(x=>x.id===csMatchedId);
+  if(!p){ toast('Prodotto non trovato','error'); return; }
+  p.qty+=qty;
+  if(p.qty_init===undefined) p.qty_init=qty;
+  saveP(prods);
+  const movs=loadM();
+  movs.unshift({id:genId(),ts:new Date().toISOString(),tipo:'carico',prod:p.nome,prodId:p.id,qty,lotto:p.lotto||'',note:note||'Carico da scan'});
+  saveM(movs);
+  closeCaricaScanModal();
+  if(currentView==='inventario') renderInv();
+  if(currentView==='dashboard') renderDashboard();
+  if(currentView==='movimenti') renderMovimenti();
+  toast('Carico: '+p.nome+' +'+qty,'success');
 }
 
 function confirmCaricaScanNew(){
-  try{
-    const nome=(document.getElementById('cs-nome').value||'').trim();
-    if(!nome){ toast('Nome prodotto obbligatorio','error'); return; }
-    if(nome.length<2){ toast('Nome troppo corto (min 2 caratteri)','error'); return; }
-    const qty=parseFloat(document.getElementById('cs-qty-new').value);
-    if(!qty||isNaN(qty)||qty<=0){ toast('Inserisci una quantità valida','error'); return; }
-    const qtyR=Math.round(qty*100)/100;
-    const catSel=document.getElementById('cs-cat').value;
-    const forn=(document.getElementById('cs-fornitore').value||'').trim();
-    const cat=catSel&&catSel!=='Altro'?catSel:smartCategorize(nome,forn,'');
-    const p={
-      id:genId(), nome, cat, fornitore:forn,
-      barcode:(document.getElementById('cs-codici').value||'').trim(),
-      lotto:(document.getElementById('cs-lotto').value||'').trim(),
-      scadenza:document.getElementById('cs-scadenza').value||'',
-      qty:qtyR, qty_init:qtyR,
-      unita:(document.getElementById('cs-unita').value||'pz').trim()||'pz',
-      min:0, pos:'', note:''
-    };
-    const prods=loadP(); prods.push(p); saveP(prods);
-    const newMov={id:genId(),ts:new Date().toISOString(),tipo:'carico',prod:p.nome,prodId:p.id,qty:qtyR,lotto:p.lotto||'',note:'Carico da scan — nuovo prodotto'};
-    const movs=loadM(); movs.unshift(newMov); saveM(movs, newMov);
-    closeCaricaScanModal();
-    if(currentView==='inventario') renderInv();
-    if(currentView==='dashboard') renderDashboard();
-    if(currentView==='movimenti') renderMovimenti();
-    toast('Nuovo prodotto salvato: '+p.nome,'success');
-  }catch(e){ console.error('[confirmCaricaScanNew]',e); toast('Errore imprevisto: '+e.message,'error'); }
+  const nome=document.getElementById('cs-nome').value.trim();
+  const catSel=document.getElementById('cs-cat').value;
+  const forn=document.getElementById('cs-fornitore').value.trim();
+  const cat=catSel&&catSel!=='Altro'?catSel:smartCategorize(nome,forn,'');
+  if(!nome){ toast('Nome obbligatorio','error'); return; }
+  const qty=parseFloat(document.getElementById('cs-qty-new').value)||1;
+  const p={
+    id:genId(), nome, cat,
+    fornitore:document.getElementById('cs-fornitore').value.trim(),
+    barcode:document.getElementById('cs-codici').value.trim(),
+    lotto:document.getElementById('cs-lotto').value.trim(),
+    scadenza:document.getElementById('cs-scadenza').value,
+    qty, qty_init:qty,
+    unita:document.getElementById('cs-unita').value.trim()||'pz',
+    min:0, pos:'', note:''
+  };
+  const prods=loadP(); prods.push(p); saveP(prods);
+  const movs=loadM();
+  movs.unshift({id:genId(),ts:new Date().toISOString(),tipo:'carico',prod:p.nome,prodId:p.id,qty,lotto:p.lotto||'',note:'Carico da scan — nuovo prodotto'});
+  saveM(movs);
+  closeCaricaScanModal();
+  if(currentView==='inventario') renderInv();
+  if(currentView==='dashboard') renderDashboard();
+  toast('Nuovo prodotto salvato: '+p.nome,'success');
 }
 
 // ══════════════════════════════════════════
@@ -3721,9 +3133,9 @@ function renderSchede(){
 // ══════════════════════════════════════════
 // PROCESSATORE
 // ══════════════════════════════════════════
+const LS_PROC = 'ls_processatore';
 const loadProc=()=>_getCache(LS_PROC,'[]');
 async function saveProc(arr, deletedId){
-  _setCache(LS_PROC, arr);
   localStorage.setItem(LS_PROC, JSON.stringify(arr));
   if(!SUPA_OK) return;
   if(!IS_ONLINE){ enqueue({type:'processatore'}); return; }
@@ -3781,8 +3193,8 @@ function addRangeCasiProc(){
       for(let n=nFrom;n<=nTo;n++) procCasiList.push(n+'/'+anno);
     } else { procCasiList.push(from); if(to) procCasiList.push(to); }
   }
-  document.getElementById('proc-caso-from').value='';
-  document.getElementById('proc-caso-to').value='';
+  document.getElementById('proc-caso-from').value=preset?.casi_da||'';
+  document.getElementById('proc-caso-to').value=preset?.casi_a||'';
   renderProcCasiList();
 }
 
@@ -3939,9 +3351,9 @@ async function deleteProcCiclo(id){
 // ══════════════════════════════════════════
 // COLORATORE — Registro giornaliero
 // ══════════════════════════════════════════
+const LS_COLOR_REG = 'ls_coloratore';
 const loadColoratore=()=>_getCache(LS_COLOR_REG,'[]');
 async function saveColoratoreReg(arr, deletedId){
-  _setCache(LS_COLOR_REG, arr);
   localStorage.setItem(LS_COLOR_REG, JSON.stringify(arr));
   if(!SUPA_OK) return;
   if(!IS_ONLINE){ enqueue({type:'coloratore'}); return; }
@@ -4051,7 +3463,7 @@ function renderColoratore(){
   const totPap = all.reduce((s,x)=>s+(x.cicli_pap||0),0);
   const el = document.getElementById('color-list');
   {const _cs=document.getElementById('color-stats');if(_cs)_cs.textContent=
-    `${all.length} giorni registrati · EE: ${totEE} cicli · EE-Cit: ${totCit} cicli · PAP: ${totPap} cicli`;
+    `${all.length} giorni registrati · EE: ${totEE} cicli · EE-Cit: ${totCit} cicli · PAP: ${totPap} cicli`;}
 
   if(!arr.length){ el.innerHTML='<div class="empty"><div class="e-ico">🎨</div><p>Nessun registro</p></div>'; return; }
 
@@ -4109,6 +3521,7 @@ async function deleteColorCiclo(id){
 // ══════════════════════════════════════════
 // TRACCIABILITÀ CAMPIONI
 // ══════════════════════════════════════════
+const LS_CAMP = 'ls_campioni';
 const loadCampioni=()=>_getCache(LS_CAMP,'[]');
 async function saveCampioni(arr, deletedId){
   localStorage.setItem(LS_CAMP, JSON.stringify(arr));
@@ -4396,7 +3809,7 @@ function renderTracciabilita(){
   const all = loadCampioni();
   const oggi = new Date().toISOString().slice(0,10);
   const oggi_n = all.filter(c=>c.data===oggi).length;
-  {const _ts=document.getElementById('tracc-stats');if(_ts)_ts.textContent= all.length+' campioni totali · '+oggi_n+' oggi';
+  {const _ts=document.getElementById('tracc-stats');if(_ts)_ts.textContent= all.length+' campioni totali · '+oggi_n+' oggi';}
 
   const container = document.getElementById('tracc-list');
   if(!campioni.length){
@@ -4528,6 +3941,7 @@ async function deleteCampioneDetail(){
 // ══════════════════════════════════════════
 // ARCHIVIO ORDINI
 // ══════════════════════════════════════════
+const LS_ARCH='ls_archivio_ordini';
 const loadArch=()=>_getCache(LS_ARCH,'[]');
 async function saveArch(arr, deletedId){
   _setCache(LS_ARCH,arr);
@@ -4588,20 +4002,13 @@ function archFileSelected(input){
 }
 async function archAnalyze(){
   if(!archBase64){ toast('Nessuna immagine','error'); return; }
-  if(!isAIConfigured()){
-    document.getElementById('arch-ai-status').style.display='none';
-    document.getElementById('arch-form').style.display='';
-    document.getElementById('arch-save-btn').style.display='';
-    document.getElementById('arch-ai-status').innerHTML='<span style="color:var(--yellow)">⚠ Chiave AI non configurata — compila il form manualmente</span>';
-    return;
-  }
   document.getElementById('arch-ai-status').style.display='';
   document.getElementById('arch-form').style.display='none';
   document.getElementById('arch-save-btn').style.display='none';
   try{
     const resp=await fetch('https://api.anthropic.com/v1/messages',{
       method:'POST',
-      headers:{'Content-Type':'application/json','x-api-key':getAIKey(),'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      headers:{'Content-Type':'application/json','x-api-key':'sk-ant-api03-placeholder','anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
       body:JSON.stringify({
         model:'claude-sonnet-4-20250514',
         max_tokens:1000,
@@ -4617,11 +4024,13 @@ Se un campo non è leggibile usa stringa vuota o 0.`}
     const text=data.content.map(i=>i.text||'').join('');
     const clean=text.replace(/```json|```/g,'').trim();
     const ord=JSON.parse(clean);
+    // Popola form
     document.getElementById('arch-numero').value=ord.numero||'';
     document.getElementById('arch-data').value=ord.data||'';
     document.getElementById('arch-fornitore').value=ord.fornitore||'';
     document.getElementById('arch-importo').value=ord.importo_totale||'';
     document.getElementById('arch-note-ord').value=ord.note||'';
+    // Righe prodotti
     const wrap=document.getElementById('arch-righe-wrap');
     wrap.innerHTML='';
     (ord.righe||[]).forEach(r=>archAddRiga(r.prodotto,r.qty,r.prezzo_unit));
@@ -4849,7 +4258,7 @@ document.querySelectorAll('.modal-overlay').forEach(overlay=>{
   overlay.addEventListener('click',e=>{
     if(e.target!==overlay) return;
     if(overlay.id==='modal-ddt') closeDDTModal();
-    else if(overlay.id==='modal-scarica') closeScaricaModal();
+    else if(overlay.id==='modal-barcode') closeBarcodeModal();
     else overlay.classList.remove('open');
   });
 });
@@ -4870,8 +4279,7 @@ function setAllerteFilter(f, btn){
   renderAllerte();
 }
 function renderAllerte(){
-  const tb = document.getElementById('allerte-tbody');
-  if(!tb) return;
+  if(!document.getElementById('allerte-tbody')) return;
   let prods = loadP();
   const esauriti   = p => p.qty <= 0;
   const critici    = p => p.min > 0 && p.qty > 0 && p.qty <= p.min;
@@ -4886,6 +4294,7 @@ function renderAllerte(){
   else filtered = prods.filter(p => esauriti(p)||critici(p)||scaduti(p)||inscadenza(p));
 
   document.getElementById('allerte-count').textContent = filtered.length + ' prodotto/i';
+  const tb = document.getElementById('allerte-tbody');
   if(!filtered.length){
     tb.innerHTML = `<tr><td colspan="8"><div class="empty"><div class="e-ico">✅</div><p>Nessuna allerta attiva</p></div></td></tr>`;
     return;
@@ -4921,7 +4330,6 @@ function precompileOrdine(prodId){
 // ══════════════════════════════════════════
 // ORDINI
 // ══════════════════════════════════════════
-const loadOrd=()=>_getCache(LS_ORD,'[]');
 async function saveOrd(arr, deletedId){
   localStorage.setItem(LS_ORD, JSON.stringify(arr));
   if(!SUPA_OK) return;
@@ -4953,7 +4361,6 @@ function renderOrdini(){
     bozza:     '<span class="badge" style="background:rgba(255,255,255,.07);color:var(--text2);border-color:var(--border2)">📝 Bozza</span>',
     inviato:   '<span class="badge bg-blue">📤 Inviato</span>',
     approvato: '<span class="badge bg-green">✅ Approvato</span>',
-    parziale:  '<span class="badge bg-yellow">📦 Parz. ricevuto</span>',
     ricevuto:  '<span class="badge" style="background:rgba(45,212,191,.1);color:var(--teal);border-color:rgba(45,212,191,.3)">📦 Ricevuto</span>',
     annullato: '<span class="badge bg-red">❌ Annullato</span>'
   };
@@ -4961,15 +4368,10 @@ function renderOrdini(){
   tb.innerHTML = ords.map(o => {
     const nProd = o.righe ? o.righe.length : 0;
     const prodList = o.righe ? o.righe.map(r=>r.nome).join(', ') : '—';
-    // Mostra progress ricezione per ordini parziali
-    const progressInfo = (o.stato==='parziale' && o.righe) ? (() => {
-      const ricevuti = o.righe.filter(r=>(r.qtyRicevuta||0)>=r.qty).length;
-      return `<small style="color:var(--yellow)">${ricevuti}/${nProd} prodotti ricevuti</small>`;
-    })() : '';
     return `<tr>
       <td class="mono" style="font-size:12px">${fmtDate(o.data)||'—'}</td>
       <td><strong>${o.num||'—'}</strong>${urgMap[o.urgenza]||''}</td>
-      <td title="${prodList}"><div style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${nProd} prodotto/i<br><small style="color:var(--text3)">${prodList}</small>${progressInfo?'<br>'+progressInfo:''}</div></td>
+      <td title="${prodList}"><div style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${nProd} prodotto/i<br><small style="color:var(--text3)">${prodList}</small></div></td>
       <td style="color:var(--text2);font-size:12px">${o.fornitore||'—'}</td>
       <td>${statoMap[o.stato]||o.stato}</td>
       <td style="color:var(--text2);font-size:12px;max-width:150px">${o.note||'—'}</td>
@@ -4978,7 +4380,7 @@ function renderOrdini(){
           <button class="btn btn-sm" onclick="viewOrdine('${o.id}')">👁</button>
           ${o.stato==='bozza'?`<button class="btn btn-sm btn-primary" onclick="updateOrdineStato('${o.id}','inviato')">📤</button>`:''}
           ${o.stato==='inviato'?`<button class="btn btn-sm btn-ok" onclick="updateOrdineStato('${o.id}','approvato')">✅</button>`:''}
-          ${(o.stato==='approvato'||o.stato==='parziale')?`<button class="btn btn-sm btn-warn" onclick="riceviOrdine('${o.id}')">📦 Ricevi</button>`:''}
+          ${o.stato==='approvato'?`<button class="btn btn-sm btn-warn" onclick="riceviOrdine('${o.id}')">📦 Ricevi</button>`:''}
           ${o.stato!=='ricevuto'&&o.stato!=='annullato'?`<button class="btn btn-sm btn-danger" onclick="updateOrdineStato('${o.id}','annullato')">✕</button>`:''}
         </div>
       </td>
@@ -4989,7 +4391,6 @@ function renderOrdini(){
 // ── MODAL ORDINE ──
 let ordineEditId = null;
 function openOrdineModal(mode='new', prodId=null){
-  buildProdDatalist(); // assicura autocomplete sempre aggiornato
   ordineEditId = null;
   document.getElementById('ordine-modal-title').textContent = 'Nuovo Ordine';
   document.getElementById('o-num').value = 'ORD-' + new Date().getFullYear() + '-' + String(loadOrd().length+1).padStart(3,'0');
@@ -5000,25 +4401,9 @@ function openOrdineModal(mode='new', prodId=null){
   document.getElementById('ordine-rows').innerHTML = '';
 
   if(mode==='da_allerte'){
-    // Pre-popola con tutti i prodotti critici: esauriti, scorta bassa, scaduti o in scadenza
-    const critici = loadP().filter(p=>{
-      const scorta = p.qty<=0 || (p.min>0 && p.qty<=p.min);
-      const scad = daysUntil(p.scadenza) < 0;
-      return scorta || scad;
-    });
-    if(critici.length){
-      // Se ci sono prodotti esauriti, imposta urgenza alta
-      const haEsauriti = critici.some(p=>p.qty<=0);
-      if(haEsauriti) document.getElementById('o-urgenza').value='urgente';
-      document.getElementById('o-note').value='Ordine da allerte magazzino — '+critici.length+' prodotto/i critici';
-      critici.forEach(p=>{
-        const qOrd = p.min>0 ? Math.max(1,(p.min-p.qty)+p.min) : 1;
-        addOrdineRowData(p.nome, p.fornitore||'', qOrd);
-      });
-    } else {
-      addOrdineRowData('','',1);
-      toast('Nessun prodotto critico al momento','info');
-    }
+    // Pre-popola con tutti i prodotti critici
+    const critici = loadP().filter(p=>(p.min>0&&p.qty<=p.min)||p.qty<=0);
+    critici.forEach(p => addOrdineRowData(p.nome, p.fornitore||'', Math.max(1, (p.min-p.qty)+p.min)));
   } else if(mode==='da_prodotto' && prodId){
     const p = loadP().find(x=>x.id===prodId);
     if(p) addOrdineRowData(p.nome, p.fornitore||'', Math.max(1,(p.min-p.qty)+p.min));
@@ -5135,25 +4520,22 @@ function confirmRicezione(id){
   // Carica i prodotti in magazzino
   const prods = loadP();
   const movs = loadM();
-  const newMovs = [];
   o.righe.forEach(r=>{
     const p = prods.find(x=>x.nome.toLowerCase()===r.nome.toLowerCase());
     if(p){ p.qty += r.qty; }
-    const m={id:genId(),ts:new Date().toISOString(),tipo:'carico',prod:r.nome,prodId:p?.id||'',qty:r.qty,lotto:'',note:`Ricezione ordine ${o.num}`};
-    movs.unshift(m); newMovs.push(m);
+    movs.unshift({id:genId(),ts:new Date().toISOString(),tipo:'carico',prod:r.nome,prodId:p?.id||'',qty:r.qty,lotto:'',note:`Ricezione ordine ${o.num}`});
   });
-  saveP(prods); saveM(movs, newMovs); saveOrd(ords);
+  saveP(prods); saveM(movs); saveOrd(ords);
   closeModal('modal-ordine-detail');
   renderOrdini();
   if(currentView==='inventario') renderInv();
   if(currentView==='dashboard') renderDashboard();
-  if(currentView==='movimenti') renderMovimenti();
   toast(`Ordine ${o.num} ricevuto — ${o.righe.length} prodotto/i caricati`,'success');
 }
 
 function viewOrdine(id){
   const o = loadOrd().find(x=>x.id===id); if(!o) return;
-  const statoMap = {bozza:'📝 Bozza',inviato:'📤 Inviato',approvato:'✅ Approvato',parziale:'📦 Parz. ricevuto',ricevuto:'📦 Ricevuto',annullato:'❌ Annullato'};
+  const statoMap = {bozza:'📝 Bozza',inviato:'📤 Inviato',approvato:'✅ Approvato',ricevuto:'📦 Ricevuto',annullato:'❌ Annullato'};
   const urgMap = {urgente:'🔴 Urgente',normale:'Normale',bassa:'Bassa priorità'};
   document.getElementById('od-title').textContent = `Ordine ${o.num||'—'}`;
   document.getElementById('od-content').innerHTML = `
@@ -5164,33 +4546,13 @@ function viewOrdine(id){
       <div class="report-kv"><span>Fornitore</span><span>${o.fornitore||'—'}</span></div>
       ${o.dataInvio?`<div class="report-kv"><span>Inviato il</span><span>${fmtDate(o.dataInvio?.slice(0,10))}</span></div>`:''}
       ${o.dataRicezione?`<div class="report-kv"><span>Ricevuto il</span><span>${fmtDate(o.dataRicezione?.slice(0,10))}</span></div>`:''}
-      ${o.noteRicezione?`<div class="report-kv" style="grid-column:1/-1"><span>Note ricezione</span><span style="color:var(--text2)">${o.noteRicezione}</span></div>`:''}
     </div>
     ${o.note?`<div style="background:var(--bg3);border-radius:var(--r);padding:10px;margin-bottom:12px;font-size:13px;color:var(--text2)">📝 ${o.note}</div>`:''}
     <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.7px;font-weight:600;margin-bottom:8px">Prodotti (${o.righe.length})</div>
-    <table><thead><tr><th>Prodotto</th><th>Fornitore</th><th>Qtà ord.</th><th>Qtà ric.</th><th>Stato</th></tr></thead><tbody>
-    ${o.righe.map(r=>{
-      const ricevuta = r.qtyRicevuta||0;
-      const completo = ricevuta >= r.qty;
-      const parziale = ricevuta > 0 && !completo;
-      const statoRiga = completo
-        ? '<span class="badge bg-green" style="font-size:10px">✓ Ricevuto</span>'
-        : parziale
-          ? `<span class="badge bg-yellow" style="font-size:10px">${ricevuta}/${r.qty} ric.</span>`
-          : '<span class="badge" style="font-size:10px;color:var(--text3)">In attesa</span>';
-      return `<tr>
-        <td><strong>${r.nome}</strong></td>
-        <td style="color:var(--text2)">${r.fornitore||'—'}</td>
-        <td class="mono">${r.qty} ${r.unita||''}</td>
-        <td class="mono" style="color:${completo?'var(--green)':parziale?'var(--yellow)':'var(--text3)'}">${ricevuta}</td>
-        <td>${statoRiga}</td>
-      </tr>`;
-    }).join('')}
+    <table><thead><tr><th>Prodotto</th><th>Fornitore</th><th>Qtà</th><th>Note</th></tr></thead><tbody>
+    ${o.righe.map(r=>`<tr><td><strong>${r.nome}</strong></td><td style="color:var(--text2)">${r.fornitore||'—'}</td><td class="mono">${r.qty} ${r.unita||''}</td><td style="color:var(--text2);font-size:12px">${r.note||'—'}</td></tr>`).join('')}
     </tbody></table>`;
-  document.getElementById('od-footer').innerHTML = `
-    <button class="btn" onclick="closeModal('modal-ordine-detail')">Chiudi</button>
-    ${(o.stato==='approvato'||o.stato==='parziale')?`<button class="btn btn-warn" onclick="closeModal('modal-ordine-detail');riceviOrdine('${o.id}')">📦 Segna Ricevuto</button>`:''}
-  `;
+  document.getElementById('od-footer').innerHTML = `<button class="btn btn-primary" onclick="closeModal('modal-ordine-detail')">Chiudi</button>`;
   document.getElementById('modal-ordine-detail').classList.add('open');
 }
 
@@ -5199,14 +4561,10 @@ const _origRenderDashboard = renderDashboard;
 // Patch dashboard to also render quick cards
 const __patchDash = true;
 
-window.addEventListener('load', function(){
-  buildProdDatalist();
-  renderDashboard();
-  initialSync();
-});
+buildProdDatalist();
+renderDashboard();
+initialSync();
 
-}
-}
 </script>
 </body>
 </html>
