@@ -3182,26 +3182,102 @@ function addDDTRow(){
 function confirmDDT(){
   const rows=document.querySelectorAll('#ddt-rows .ai-row');
   if(!rows.length){ toast('Nessun prodotto da caricare','error'); return; }
-  const prods=loadP(), movs=loadM(); let count=0; const newMovs=[];
+  const prods=loadP(), movs=loadM();
+  let count=0;
+  const newMovs=[];
+  const caricati=[]; // prodotti caricati da questo DDT
+
   rows.forEach(row=>{
     const g=f=>row.querySelector(`[data-f="${f}"]`)?.value?.trim()||'';
     const nome=g('nome'); if(!nome) return;
-    const qty=parseFloat(g('qty'))||1, catRaw=g('cat')||'', cat=catRaw&&catRaw!=='Altro'?catRaw:smartCategorize(nome,g('fornitore')||'',''), lotto=g('lotto'), scadenza=g('scadenza'), unita=g('unita')||'pz';
+    const qty=parseFloat(g('qty'))||1;
+    const catRaw=g('cat')||'';
+    const cat=catRaw&&catRaw!=='Altro'?catRaw:smartCategorize(nome,g('fornitore')||'','');
+    const lotto=g('lotto'), scadenza=g('scadenza'), unita=g('unita')||'pz';
+    const fornitore=g('fornitore')||'';
+
+    // Cerca prodotto esistente (prima per nome+lotto, poi solo nome)
     let ex=prods.find(p=>p.nome.toLowerCase()===nome.toLowerCase()&&p.lotto===lotto);
     if(!ex) ex=prods.find(p=>p.nome.toLowerCase()===nome.toLowerCase());
-    if(ex){ ex.qty+=qty; if(lotto) ex.lotto=lotto; if(scadenza) ex.scadenza=scadenza;
+
+    if(ex){
+      ex.qty=Math.round((ex.qty+qty)*100)/100;
+      if(lotto) ex.lotto=lotto;
+      if(scadenza) ex.scadenza=scadenza;
+      if(!ex.fornitore && fornitore) ex.fornitore=fornitore;
       if(ex.qty_init===undefined) ex.qty_init=qty;
     } else {
-      prods.push({id:genId(),nome,cat,fornitore:'',barcode:'',lotto,scadenza,qty,qty_init:qty,unita,min:0,pos:'',note:''});
+      const newP={id:genId(),nome,cat,fornitore,barcode:'',lotto,scadenza,qty,qty_init:qty,unita,min:0,pos:'',note:''};
+      prods.push(newP);
+      ex=newP;
     }
-    const m={id:genId(),ts:new Date().toISOString(),tipo:'carico',prod:nome,prodId:ex?.id||'',qty,lotto,note:'Da DDT'};
-    movs.unshift(m); newMovs.push(m); count++;
+    const m={id:genId(),ts:new Date().toISOString(),tipo:'carico',prod:nome,prodId:ex.id,qty,lotto,note:'Da DDT'};
+    movs.unshift(m); newMovs.push(m);
+    caricati.push({nome,qty,fornitore});
+    count++;
   });
-  saveP(prods); saveM(movs, newMovs); closeDDTModal();
+
+  saveP(prods);
+  saveM(movs, newMovs);
+
+  // ── Aggiornamento automatico ordini ──
+  // Cerca ordini aperti (bozza/inviato/approvato) che contengono i prodotti caricati
+  const ords = loadOrd();
+  let ordiniAggiornati = 0;
+
+  ords.forEach(ord => {
+    if(ord.stato==='ricevuto'||ord.stato==='annullato') return;
+
+    let modificato = false;
+    if(!ord.righe) return;
+
+    ord.righe.forEach(riga => {
+      const match = caricati.find(c =>
+        c.nome.toLowerCase()===riga.nome.toLowerCase() ||
+        riga.nome.toLowerCase().includes(c.nome.toLowerCase()) ||
+        c.nome.toLowerCase().includes(riga.nome.toLowerCase())
+      );
+      if(match){
+        // Aggiorna quantità ricevuta sulla riga
+        riga.qtyRicevuta = (riga.qtyRicevuta||0) + match.qty;
+        riga.dataRicezione = new Date().toISOString().slice(0,10);
+        modificato = true;
+      }
+    });
+
+    if(modificato){
+      // Controlla se tutte le righe sono state ricevute
+      const tutteRicevute = ord.righe.every(r => (r.qtyRicevuta||0) >= r.qty);
+      const parziale = ord.righe.some(r => (r.qtyRicevuta||0) > 0);
+
+      if(tutteRicevute){
+        ord.stato = 'ricevuto';
+        ord.dataRicezione = new Date().toISOString();
+        ord.noteRicezione = 'Ricevuto automaticamente da DDT';
+      } else if(parziale){
+        ord.stato = 'parziale';
+        if(!ord.noteRicezione) ord.noteRicezione = '';
+        ord.noteRicezione = 'Ricezione parziale da DDT — ' + new Date().toLocaleDateString('it-IT');
+      }
+      ordiniAggiornati++;
+    }
+  });
+
+  if(ordiniAggiornati > 0){
+    saveOrd(ords);
+  }
+
+  closeDDTModal();
   if(currentView==='inventario') renderInv();
   if(currentView==='dashboard') renderDashboard();
   if(currentView==='movimenti') renderMovimenti();
-  toast(`${count} prodotto/i caricato/i da DDT`,'success');
+  if(currentView==='ordini') renderOrdini();
+
+  if(ordiniAggiornati > 0){
+    toast(`${count} prodotto/i caricati · ${ordiniAggiornati} ordine/i aggiornato/i automaticamente`, 'success', 5000);
+  } else {
+    toast(`${count} prodotto/i caricato/i da DDT`, 'success');
+  }
 }
 
 // ══════════════════════════════════════════
@@ -4877,6 +4953,7 @@ function renderOrdini(){
     bozza:     '<span class="badge" style="background:rgba(255,255,255,.07);color:var(--text2);border-color:var(--border2)">📝 Bozza</span>',
     inviato:   '<span class="badge bg-blue">📤 Inviato</span>',
     approvato: '<span class="badge bg-green">✅ Approvato</span>',
+    parziale:  '<span class="badge bg-yellow">📦 Parz. ricevuto</span>',
     ricevuto:  '<span class="badge" style="background:rgba(45,212,191,.1);color:var(--teal);border-color:rgba(45,212,191,.3)">📦 Ricevuto</span>',
     annullato: '<span class="badge bg-red">❌ Annullato</span>'
   };
@@ -4884,10 +4961,15 @@ function renderOrdini(){
   tb.innerHTML = ords.map(o => {
     const nProd = o.righe ? o.righe.length : 0;
     const prodList = o.righe ? o.righe.map(r=>r.nome).join(', ') : '—';
+    // Mostra progress ricezione per ordini parziali
+    const progressInfo = (o.stato==='parziale' && o.righe) ? (() => {
+      const ricevuti = o.righe.filter(r=>(r.qtyRicevuta||0)>=r.qty).length;
+      return `<small style="color:var(--yellow)">${ricevuti}/${nProd} prodotti ricevuti</small>`;
+    })() : '';
     return `<tr>
       <td class="mono" style="font-size:12px">${fmtDate(o.data)||'—'}</td>
       <td><strong>${o.num||'—'}</strong>${urgMap[o.urgenza]||''}</td>
-      <td title="${prodList}"><div style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${nProd} prodotto/i<br><small style="color:var(--text3)">${prodList}</small></div></td>
+      <td title="${prodList}"><div style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${nProd} prodotto/i<br><small style="color:var(--text3)">${prodList}</small>${progressInfo?'<br>'+progressInfo:''}</div></td>
       <td style="color:var(--text2);font-size:12px">${o.fornitore||'—'}</td>
       <td>${statoMap[o.stato]||o.stato}</td>
       <td style="color:var(--text2);font-size:12px;max-width:150px">${o.note||'—'}</td>
@@ -4896,7 +4978,7 @@ function renderOrdini(){
           <button class="btn btn-sm" onclick="viewOrdine('${o.id}')">👁</button>
           ${o.stato==='bozza'?`<button class="btn btn-sm btn-primary" onclick="updateOrdineStato('${o.id}','inviato')">📤</button>`:''}
           ${o.stato==='inviato'?`<button class="btn btn-sm btn-ok" onclick="updateOrdineStato('${o.id}','approvato')">✅</button>`:''}
-          ${o.stato==='approvato'?`<button class="btn btn-sm btn-warn" onclick="riceviOrdine('${o.id}')">📦 Ricevi</button>`:''}
+          ${(o.stato==='approvato'||o.stato==='parziale')?`<button class="btn btn-sm btn-warn" onclick="riceviOrdine('${o.id}')">📦 Ricevi</button>`:''}
           ${o.stato!=='ricevuto'&&o.stato!=='annullato'?`<button class="btn btn-sm btn-danger" onclick="updateOrdineStato('${o.id}','annullato')">✕</button>`:''}
         </div>
       </td>
@@ -5071,7 +5153,7 @@ function confirmRicezione(id){
 
 function viewOrdine(id){
   const o = loadOrd().find(x=>x.id===id); if(!o) return;
-  const statoMap = {bozza:'📝 Bozza',inviato:'📤 Inviato',approvato:'✅ Approvato',ricevuto:'📦 Ricevuto',annullato:'❌ Annullato'};
+  const statoMap = {bozza:'📝 Bozza',inviato:'📤 Inviato',approvato:'✅ Approvato',parziale:'📦 Parz. ricevuto',ricevuto:'📦 Ricevuto',annullato:'❌ Annullato'};
   const urgMap = {urgente:'🔴 Urgente',normale:'Normale',bassa:'Bassa priorità'};
   document.getElementById('od-title').textContent = `Ordine ${o.num||'—'}`;
   document.getElementById('od-content').innerHTML = `
@@ -5082,13 +5164,33 @@ function viewOrdine(id){
       <div class="report-kv"><span>Fornitore</span><span>${o.fornitore||'—'}</span></div>
       ${o.dataInvio?`<div class="report-kv"><span>Inviato il</span><span>${fmtDate(o.dataInvio?.slice(0,10))}</span></div>`:''}
       ${o.dataRicezione?`<div class="report-kv"><span>Ricevuto il</span><span>${fmtDate(o.dataRicezione?.slice(0,10))}</span></div>`:''}
+      ${o.noteRicezione?`<div class="report-kv" style="grid-column:1/-1"><span>Note ricezione</span><span style="color:var(--text2)">${o.noteRicezione}</span></div>`:''}
     </div>
     ${o.note?`<div style="background:var(--bg3);border-radius:var(--r);padding:10px;margin-bottom:12px;font-size:13px;color:var(--text2)">📝 ${o.note}</div>`:''}
     <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.7px;font-weight:600;margin-bottom:8px">Prodotti (${o.righe.length})</div>
-    <table><thead><tr><th>Prodotto</th><th>Fornitore</th><th>Qtà</th><th>Note</th></tr></thead><tbody>
-    ${o.righe.map(r=>`<tr><td><strong>${r.nome}</strong></td><td style="color:var(--text2)">${r.fornitore||'—'}</td><td class="mono">${r.qty} ${r.unita||''}</td><td style="color:var(--text2);font-size:12px">${r.note||'—'}</td></tr>`).join('')}
+    <table><thead><tr><th>Prodotto</th><th>Fornitore</th><th>Qtà ord.</th><th>Qtà ric.</th><th>Stato</th></tr></thead><tbody>
+    ${o.righe.map(r=>{
+      const ricevuta = r.qtyRicevuta||0;
+      const completo = ricevuta >= r.qty;
+      const parziale = ricevuta > 0 && !completo;
+      const statoRiga = completo
+        ? '<span class="badge bg-green" style="font-size:10px">✓ Ricevuto</span>'
+        : parziale
+          ? `<span class="badge bg-yellow" style="font-size:10px">${ricevuta}/${r.qty} ric.</span>`
+          : '<span class="badge" style="font-size:10px;color:var(--text3)">In attesa</span>';
+      return `<tr>
+        <td><strong>${r.nome}</strong></td>
+        <td style="color:var(--text2)">${r.fornitore||'—'}</td>
+        <td class="mono">${r.qty} ${r.unita||''}</td>
+        <td class="mono" style="color:${completo?'var(--green)':parziale?'var(--yellow)':'var(--text3)'}">${ricevuta}</td>
+        <td>${statoRiga}</td>
+      </tr>`;
+    }).join('')}
     </tbody></table>`;
-  document.getElementById('od-footer').innerHTML = `<button class="btn btn-primary" onclick="closeModal('modal-ordine-detail')">Chiudi</button>`;
+  document.getElementById('od-footer').innerHTML = `
+    <button class="btn" onclick="closeModal('modal-ordine-detail')">Chiudi</button>
+    ${(o.stato==='approvato'||o.stato==='parziale')?`<button class="btn btn-warn" onclick="closeModal('modal-ordine-detail');riceviOrdine('${o.id}')">📦 Segna Ricevuto</button>`:''}
+  `;
   document.getElementById('modal-ordine-detail').classList.add('open');
 }
 
@@ -5097,9 +5199,11 @@ const _origRenderDashboard = renderDashboard;
 // Patch dashboard to also render quick cards
 const __patchDash = true;
 
-buildProdDatalist();
-renderDashboard();
-initialSync();
+window.addEventListener('load', function(){
+  buildProdDatalist();
+  renderDashboard();
+  initialSync();
+});
 
 }
 }
