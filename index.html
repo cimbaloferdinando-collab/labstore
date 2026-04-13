@@ -2088,9 +2088,9 @@ function renderDashboard(){
   const scaduti=prods.filter(p=>daysUntil(p.scadenza)<0).length;
   const inScad=prods.filter(p=>{const d=daysUntil(p.scadenza);return d>=0&&d<=30}).length;
   const totalPieni=(['cer_180103','cer_150110','cer_150202','cer_180106']).reduce((a,k)=>a+(W[k]?.pieni||0),0);
-  const totalVuoti=(W['cer_180103']?.vuoti||0)+(W['bidoni_solidi_comuni']?.vuoti||0)+(W['cer_180106']?.vuoti||0);
+  const totalVuoti=(W['bidoni_solidi_comuni']?.vuoti||0)+(W['cer_180106']?.vuoti||0);
   const solidiPieni=(W['cer_180103']?.pieni||0)+(W['cer_150110']?.pieni||0)+(W['cer_150202']?.pieni||0);
-  const solidiVuoti=(W['cer_180103']?.vuoti||0)+(W['bidoni_solidi_comuni']?.vuoti||0);
+  const solidiVuoti=(W['bidoni_solidi_comuni']?.vuoti||0);
   const liquidiPieni=(W['cer_180106']?.pieni||0);
   const liquidiVuoti=(W['cer_180106']?.vuoti||0);
   const ords=loadOrd();
@@ -4309,7 +4309,7 @@ function renderReport(){
   const bycat={};
   prods.forEach(p=>{ if(!bycat[p.cat]) bycat[p.cat]=[]; bycat[p.cat].push(p); });
   const totalPieni=Object.values(W).reduce((a,v)=>a+v.pieni,0);
-  const totalVuoti=(W['cer_180103']?.vuoti||0)+(W['bidoni_solidi_comuni']?.vuoti||0)+(W['cer_180106']?.vuoti||0);
+  const totalVuoti=(W['bidoni_solidi_comuni']?.vuoti||0)+(W['cer_180106']?.vuoti||0);
   const totalSmaltiti=(['cer_180103','cer_150110','cer_150202','cer_180106']).reduce((a,k)=>a+(W[k]?.smaltiti||0),0);
 
   let html=`
@@ -4329,10 +4329,10 @@ function renderReport(){
     ${Object.entries(WASTE_CONFIG).map(([k,cfg])=>{
       const w=W[k]||{pieni:0,smaltiti:0};
       const vDisp=getVuotiDisp(W,k);
-      const vLabel=cfg.sharedPool?`Bidoni plastica condivisi: ${vDisp} (pool 150110+150202)`:cfg.contenitoreLabel+': '+vDisp;
-      return `<div class="report-kv"><span>${cfg.icon} ${cfg.label} — ${cfg.sub}</span><span>Pieni: ${w.pieni} · ${vLabel} · Smaltiti: ${w.smaltiti}</span></div>`;
+      const vLabel=cfg.sharedPool?'(vedi pool condiviso sotto)':cfg.contenitoreLabel+': '+vDisp;
+      return `<div class="report-kv"><span>${cfg.icon} ${cfg.label} — ${cfg.sub}</span><span>Pieni: ${w.pieni} · Vuoti: ${vLabel} · Smaltiti: ${w.smaltiti}</span></div>`;
     }).join('')}
-    <div class="report-kv"><span style="font-size:11px;color:var(--text3)">🗑 Pool bidoni plastica condivisi (150110+150202)</span><span>${W['bidoni_solidi_comuni']?.vuoti||0} disponibili</span></div>
+    <div class="report-kv" style="background:rgba(251,146,60,.06);border-radius:4px;padding:8px"><span>🗑 <strong>Pool bidoni plastica condivisi (150110* + 150202*)</strong><br><span style="font-size:11px;color:var(--text3)">Un unico stock di bidoni vuoti usato da entrambi i codici CER</span></span><span style="font-size:18px;font-weight:700;color:var(--green)">${W['bidoni_solidi_comuni']?.vuoti||0}</span></div>
     <div class="report-kv" style="border-top:1px solid var(--border);margin-top:4px;padding-top:6px"><span><strong>Totale bidoni pieni</strong></span><span style="color:var(--orange)">${totalPieni}</span></div>
     <div class="report-kv"><span><strong>Totale bidoni vuoti disponibili</strong></span><span style="color:var(--green)">${totalVuoti}</span></div>
     <div class="report-kv"><span><strong>Totale bidoni smaltiti (storico)</strong></span><span>${totalSmaltiti}</span></div>
