@@ -2121,9 +2121,37 @@ function renderDashboard(){
         </div>
       </div>
     </div>
-    <div class="stat-card sc-blue" style="cursor:pointer" onclick="showView('ordini')">
-      <div class="stat-lbl">Ordini aperti</div><div class="stat-val" style="color:var(--teal)">${ordAperti}</div>
-      <div class="stat-sub">in attesa di risposta</div>
+    <div class="stat-card sc-blue" style="cursor:pointer;padding:12px" onclick="showView('ordini')">
+      <div class="stat-lbl" style="margin-bottom:8px">🛒 Ordini</div>
+      ${(()=>{
+        const aperti=ords.filter(o=>o.stato!=='ricevuto'&&o.stato!=='annullato');
+        if(!aperti.length) return '<div style="font-size:13px;color:var(--green)">✅ Nessun ordine aperto</div>';
+        const byForn={};
+        aperti.forEach(o=>{
+          const f=o.fornitore||'Altro';
+          if(!byForn[f]) byForn[f]=[];
+          byForn[f].push(o);
+        });
+        return Object.entries(byForn).map(([forn,lista])=>{
+          return lista.map(o=>{
+            const totO=(o.righe||[]).reduce((s,r)=>s+r.qty,0);
+            const totR=(o.righe||[]).reduce((s,r)=>s+(r.qtyRicevuta||0),0);
+            const pct=totO>0?Math.round(totR/totO*100):0;
+            const statoIco={bozza:'📝',inviato:'📤',approvato:'✅',parziale:'📦⏳'};
+            const barColor=pct===0?'var(--border2)':pct<100?'var(--yellow)':'var(--green)';
+            return '<div style="margin-bottom:6px">'+
+              '<div style="display:flex;justify-content:space-between;align-items:center;font-size:12px">'+
+                '<span style="font-weight:600">'+forn+'</span>'+
+                '<span style="font-size:11px;color:var(--text3)">'+(statoIco[o.stato]||'')+' '+o.num+'</span>'+
+              '</div>'+
+              '<div class="prog-wrap" style="margin-top:3px">'+
+                '<div class="prog-bar"><div class="prog-fill" style="width:'+pct+'%;background:'+barColor+'"></div></div>'+
+                '<span class="prog-pct">'+pct+'%</span>'+
+              '</div>'+
+            '</div>';
+          }).join('');
+        }).join('');
+      })()}
     </div>`;
 
   // ── Sezioni Tracciabilità / Processatore / Coloratore ──
