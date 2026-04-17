@@ -4267,7 +4267,9 @@ function renderArchivio(){
   if(!arch.length){ container.innerHTML='<div class="empty"><div class="e-ico">🗂</div><p>Nessun ordine in archivio</p></div>'; return; }
   const statoCol={ricevuto:'var(--green)',parziale:'var(--yellow)','in attesa':'var(--text3)'};
   const statoIco={ricevuto:'✅',parziale:'⚠','in attesa':'⏳'};
-  container.innerHTML=arch.map(o=>`
+  container.innerHTML=arch.map(o=>{
+    const nDdt = (o.ddtImages||[]).length;
+    return `
     <div class="card" style="margin-bottom:12px;padding:14px">
       <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:10px">
         <div>
@@ -4285,7 +4287,14 @@ function renderArchivio(){
         <tbody>${o.righe.map(r=>`<tr><td style="padding:3px 6px">${r.prodotto}</td><td style="text-align:right;padding:3px 6px;font-family:'DM Mono',monospace">${r.qty}</td><td style="text-align:right;padding:3px 6px;font-family:'DM Mono',monospace">${r.prezzo_unit?'€'+r.prezzo_unit.toFixed(2):'—'}</td><td style="text-align:right;padding:3px 6px;font-family:'DM Mono',monospace;font-weight:600">${r.prezzo_unit?'€'+(r.qty*r.prezzo_unit).toFixed(2):'—'}</td></tr>`).join('')}</tbody>
       </table>`:''}
       ${o.note?`<div style="margin-top:8px;font-size:12px;color:var(--text2);font-style:italic">${o.note}</div>`:''}
-    </div>`).join('');
+      <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+        <button class="btn btn-sm" onclick="allegaScanOrdine('${o.id}')">📄 ${o.scanOrdine?'✅ Ordine':'Allega Ordine'}</button>
+        <button class="btn btn-sm" onclick="allegaScanDdt('${o.id}')">📦 Allega DDT</button>
+        ${o.scanOrdine?`<button class="btn btn-sm btn-ok" onclick="viewScanOrdine('${o.id}')">👁 Ordine</button>`:''}
+        ${nDdt?`<button class="btn btn-sm btn-ok" onclick="viewScanDdt('${o.id}')">👁 ${nDdt} DDT</button>`:''}
+      </div>
+    </div>`;
+  }).join('');
 }
 function deleteArchivioOrdine(id){
   if(!confirm('Eliminare questo ordine dall\'archivio?')) return;
@@ -4556,7 +4565,7 @@ function renderOrdini(){
           <button class="btn btn-sm" onclick="viewOrdine('${o.id}')">👁</button>
           ${o.stato==='bozza'?`<button class="btn btn-sm btn-primary" onclick="updateOrdineStato('${o.id}','inviato')">📤</button>`:''}
           ${o.stato==='inviato'?`<button class="btn btn-sm btn-ok" onclick="updateOrdineStato('${o.id}','approvato')">✅</button>`:''}
-          ${o.stato==='approvato'||o.stato==='parziale'?`<button class="btn btn-sm btn-warn" onclick="riceviParziale('${o.id}')">📦 Ricevi</button>`:''}
+          ${o.stato==='inviato'||o.stato==='approvato'||o.stato==='parziale'?`<button class="btn btn-sm btn-warn" onclick="riceviParziale('${o.id}')">📦 Ricevi</button>`:''}
           ${o.stato!=='ricevuto'&&o.stato!=='annullato'?`<button class="btn btn-sm btn-danger" onclick="updateOrdineStato('${o.id}','annullato')">✕</button>`:''}
         </div>
       </td>
@@ -4668,52 +4677,10 @@ function updateOrdineStato(id, stato){
   toast('Stato aggiornato: '+(lbl[stato]||stato), stato==='annullato'?'warn':'success');
 }
 
-function riceviOrdine(id){
-  const ords = loadOrd();
-  const o = ords.find(x=>x.id===id); if(!o) return;
-  // Mostra modal conferma ricezione
-  const prods = loadP();
-  const info = o.righe.map(r=>`<div style="padding:6px 0;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;font-size:13px"><span>${r.nome} <small style="color:var(--text3)">(${r.qty} ${r.unita||'pz'})</small></span><span style="color:var(--green)">→ +${r.qty}</span></div>`).join('');
-  document.getElementById('od-title').textContent = 'Conferma Ricezione';
-  document.getElementById('od-content').innerHTML = `
-    <p style="color:var(--text2);font-size:13px;margin-bottom:12px">I seguenti prodotti verranno aggiunti al magazzino:</p>
-    ${info}
-    <div style="margin-top:12px;padding:10px;background:var(--bg3);border-radius:var(--r)">
-      <label style="font-size:11px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.7px">Note ricezione / DDT di riferimento</label>
-      <input type="text" id="recv-note" placeholder="es. DDT n. 12345 del 10/03/2025" style="margin-top:5px">
-    </div>`;
-  document.getElementById('od-footer').innerHTML = `
-    <button class="btn" onclick="closeModal('modal-ordine-detail')">Annulla</button>
-    <button class="btn btn-ok" onclick="confirmRicezione('${id}')">📦 Conferma Ricezione</button>`;
-  document.getElementById('modal-ordine-detail').classList.add('open');
-}
+// riceviOrdine ora punta sempre a riceviParziale per gestire arrivi parziali e completi
+function riceviOrdine(id){ riceviParziale(id); }
 
-function confirmRicezione(id){
-  const ords = loadOrd();
-  const o = ords.find(x=>x.id===id); if(!o) return;
-  _takeSnapshot('Ricezione ordine '+o.num); // FIX [UNDO]
-  const note = document.getElementById('recv-note')?.value||'';
-  o.stato = 'ricevuto';
-  o.dataRicezione = new Date().toISOString();
-  o.noteRicezione = note;
-  // Carica i prodotti in magazzino
-  const prods = loadP();
-  const movs = loadM();
-  o.righe.forEach(r=>{
-    r.qtyRicevuta = r.qty; // segna come completamente ricevuto
-    const p = prods.find(x=>x.nome.toLowerCase()===r.nome.toLowerCase());
-    if(p){ p.qty += r.qty; }
-    movs.unshift({id:genId(),ts:new Date().toISOString(),tipo:'carico',prod:r.nome,prodId:p?.id||'',qty:r.qty,lotto:'',note:`Ricezione ordine ${o.num}`});
-  });
-  // FEATURE 4: Archivia automaticamente
-  archiviaOrdineAutomatico(o);
-  saveP(prods); saveM(movs); saveOrd(ords);
-  closeModal('modal-ordine-detail');
-  renderOrdini();
-  if(currentView==='inventario') renderInv();
-  if(currentView==='dashboard') renderDashboard();
-  toast(`Ordine ${o.num} ricevuto — ${o.righe.length} prodotto/i caricati`,'success');
-}
+function confirmRicezione(id){ riceviParziale(id); }
 
 function viewOrdine(id){
   const o = loadOrd().find(x=>x.id===id); if(!o) return;
@@ -5179,6 +5146,116 @@ if(_origOpenEditModal){
     }
   };
   openEditModal = _patchedOpenEdit;
+}
+
+// ══════════════════════════════════════════
+// ARCHIVIO: Allega scan ordine e DDT
+// ══════════════════════════════════════════
+function _readFileAsBase64(callback){
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*';
+  input.onchange = function(){
+    const file = input.files[0]; if(!file) return;
+    // Comprimi immagine per non appesantire il DB
+    const reader = new FileReader();
+    reader.onload = function(e){
+      const img = new Image();
+      img.onload = function(){
+        const canvas = document.createElement('canvas');
+        const maxW = 1200, maxH = 1600;
+        let w = img.width, h = img.height;
+        if(w > maxW){ h = h*(maxW/w); w = maxW; }
+        if(h > maxH){ w = w*(maxH/h); h = maxH; }
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        const base64 = canvas.toDataURL('image/jpeg', 0.7);
+        callback(base64, file.name);
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  };
+  input.click();
+}
+
+function allegaScanOrdine(archId){
+  _readFileAsBase64(function(base64, fileName){
+    const arch = loadArch();
+    const o = arch.find(x=>x.id===archId); if(!o) return;
+    _takeSnapshot('Allega scan ordine');
+    o.scanOrdine = { data: base64, nome: fileName, ts: new Date().toISOString() };
+    saveArch(arch);
+    renderArchivio();
+    toast('📄 Scan ordine allegato','success');
+  });
+}
+
+function allegaScanDdt(archId){
+  _readFileAsBase64(function(base64, fileName){
+    const arch = loadArch();
+    const o = arch.find(x=>x.id===archId); if(!o) return;
+    _takeSnapshot('Allega scan DDT');
+    if(!o.ddtImages) o.ddtImages = [];
+    const rif = prompt('Riferimento DDT (es. DDT n. 12345):') || fileName;
+    o.ddtImages.push({ data: base64, nome: fileName, rif: rif, ts: new Date().toISOString() });
+    saveArch(arch);
+    renderArchivio();
+    toast('📦 Scan DDT allegato ('+o.ddtImages.length+' totali)','success');
+  });
+}
+
+function viewScanOrdine(archId){
+  const o = loadArch().find(x=>x.id===archId); if(!o||!o.scanOrdine) return;
+  document.getElementById('od-title').textContent = '📄 Scan Ordine — '+o.numero;
+  document.getElementById('od-content').innerHTML = `
+    <div style="text-align:center">
+      <img src="${o.scanOrdine.data}" style="max-width:100%;max-height:70vh;border-radius:var(--r);border:1px solid var(--border)">
+      <div style="font-size:11px;color:var(--text3);margin-top:6px">${o.scanOrdine.nome} — ${new Date(o.scanOrdine.ts).toLocaleDateString('it-IT')}</div>
+    </div>`;
+  document.getElementById('od-footer').innerHTML = `
+    <button class="btn btn-danger btn-sm" onclick="rimuoviScanOrdine('${archId}')">🗑 Rimuovi</button>
+    <button class="btn btn-primary" onclick="closeModal('modal-ordine-detail')">Chiudi</button>`;
+  document.getElementById('modal-ordine-detail').classList.add('open');
+}
+
+function viewScanDdt(archId){
+  const o = loadArch().find(x=>x.id===archId); if(!o||!o.ddtImages?.length) return;
+  document.getElementById('od-title').textContent = '📦 DDT Allegati — '+o.numero+' ('+o.ddtImages.length+')';
+  document.getElementById('od-content').innerHTML = o.ddtImages.map((ddt,i)=>`
+    <div style="margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border)">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <div style="font-weight:600;font-size:13px">${ddt.rif||'DDT '+(i+1)}</div>
+        <div style="display:flex;gap:5px;align-items:center">
+          <span style="font-size:11px;color:var(--text3)">${new Date(ddt.ts).toLocaleDateString('it-IT')}</span>
+          <button class="btn btn-sm btn-danger" onclick="rimuoviScanDdt('${archId}',${i})">✕</button>
+        </div>
+      </div>
+      <img src="${ddt.data}" style="max-width:100%;max-height:50vh;border-radius:var(--r);border:1px solid var(--border)">
+    </div>`).join('');
+  document.getElementById('od-footer').innerHTML = `
+    <button class="btn btn-primary" onclick="closeModal('modal-ordine-detail')">Chiudi</button>`;
+  document.getElementById('modal-ordine-detail').classList.add('open');
+}
+
+function rimuoviScanOrdine(archId){
+  if(!confirm('Rimuovere la scan dell\'ordine?')) return;
+  _takeSnapshot('Rimuovi scan ordine');
+  const arch = loadArch();
+  const o = arch.find(x=>x.id===archId); if(!o) return;
+  delete o.scanOrdine;
+  saveArch(arch); closeModal('modal-ordine-detail'); renderArchivio();
+  toast('Scan ordine rimosso','info');
+}
+
+function rimuoviScanDdt(archId, idx){
+  if(!confirm('Rimuovere questa scan DDT?')) return;
+  _takeSnapshot('Rimuovi scan DDT');
+  const arch = loadArch();
+  const o = arch.find(x=>x.id===archId); if(!o) return;
+  o.ddtImages.splice(idx, 1);
+  saveArch(arch); closeModal('modal-ordine-detail'); renderArchivio();
+  toast('Scan DDT rimosso','info');
 }
 
 </script>
