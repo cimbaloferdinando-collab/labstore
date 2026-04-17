@@ -4682,6 +4682,19 @@ function riceviOrdine(id){ riceviParziale(id); }
 
 function confirmRicezione(id){ riceviParziale(id); }
 
+function riapreOrdine(id){
+  if(!confirm('Riaprire questo ordine come parziale? Utile se è stato segnato come ricevuto per errore.')) return;
+  _takeSnapshot('Riapri ordine come parziale');
+  const ords = loadOrd();
+  const o = ords.find(x=>x.id===id); if(!o) return;
+  o.stato = 'parziale';
+  delete o.dataRicezione;
+  saveOrd(ords);
+  closeModal('modal-ordine-detail');
+  renderOrdini();
+  toast('Ordine riaperto come parziale — ora puoi registrare altre ricezioni','info');
+}
+
 function viewOrdine(id){
   const o = loadOrd().find(x=>x.id===id); if(!o) return;
   const statoMap = {bozza:'📝 Bozza',inviato:'📤 Inviato',approvato:'✅ Approvato',parziale:'📦⏳ Parziale',ricevuto:'📦 Ricevuto',annullato:'❌ Annullato'};
@@ -4718,7 +4731,10 @@ function viewOrdine(id){
         <span style="color:var(--text3);margin-left:8px">${d.righe.map(r=>r.nome+' ×'+r.qty).join(', ')}</span>
       </div>`).join('')}
     `:''}`;
-  document.getElementById('od-footer').innerHTML = `<button class="btn btn-primary" onclick="closeModal('modal-ordine-detail')">Chiudi</button>`;
+  document.getElementById('od-footer').innerHTML = `
+    ${o.stato==='ricevuto'?`<button class="btn btn-sm" onclick="riapreOrdine('${o.id}')">↩ Riapri come parziale</button>`:''}
+    ${o.stato!=='ricevuto'&&o.stato!=='annullato'?`<button class="btn btn-ok" onclick="closeModal('modal-ordine-detail');riceviParziale('${o.id}')">📦 Registra Ricezione</button>`:''}
+    <button class="btn btn-primary" onclick="closeModal('modal-ordine-detail')">Chiudi</button>`;
   document.getElementById('modal-ordine-detail').classList.add('open');
 }
 
@@ -4793,7 +4809,6 @@ function confirmRicezioneParziale(id){
   const ddt = document.getElementById('recv-parz-ddt')?.value||'';
   const prods = loadP();
   const movs = loadM();
-  let tuttoRicevuto = true;
   // Inizializza array DDT se non esiste
   if(!o.ddtList) o.ddtList = [];
   const ddtEntry = { data: new Date().toISOString(), rif: ddt, righe: [] };
@@ -4808,8 +4823,9 @@ function confirmRicezioneParziale(id){
     const p = prods.find(x=>x.nome.toLowerCase()===r.nome.toLowerCase());
     if(p) p.qty += qtyArrivo;
     movs.unshift({id:genId(),ts:new Date().toISOString(),tipo:'carico',prod:r.nome,prodId:p?.id||'',qty:qtyArrivo,lotto:'',note:'Ricezione parziale '+o.num+(ddt?' — '+ddt:'')});
-    if(r.qtyRicevuta < r.qty) tuttoRicevuto = false;
   });
+  // FIX: Controlla TUTTE le righe per determinare se l'ordine è completo
+  const tuttoRicevuto = o.righe.every(r => (r.qtyRicevuta||0) >= r.qty);
   o.ddtList.push(ddtEntry);
   o.stato = tuttoRicevuto ? 'ricevuto' : 'parziale';
   if(tuttoRicevuto){
