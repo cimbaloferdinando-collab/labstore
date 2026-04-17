@@ -4251,33 +4251,42 @@ function archAddRiga(prodotto='',qty=1,prezzo=0){
   wrap.appendChild(row);
 }
 async function saveArchivioOrdine(){
-  _takeSnapshot('Salva ordine archivio'); // FIX [UNDO]
+  _takeSnapshot('Salva ordine da foto');
   const righe=[...document.querySelectorAll('#arch-righe-wrap > div')].map(row=>({
+    nome:row.querySelector('.arch-r-prod').value.trim(),
     prodotto:row.querySelector('.arch-r-prod').value.trim(),
     qty:parseFloat(row.querySelector('.arch-r-qty').value)||0,
-    prezzo_unit:parseFloat(row.querySelector('.arch-r-prezzo').value)||0
-  })).filter(r=>r.prodotto);
+    qtyRicevuta:0,
+    prezzo_unit:parseFloat(row.querySelector('.arch-r-prezzo').value)||0,
+    unita:'',
+    fornitore:'',
+    note:''
+  })).filter(r=>r.nome);
+  const stato = document.getElementById('arch-stato').value;
   const ord={
     id:genId(),
-    numero:document.getElementById('arch-numero').value.trim(),
+    num:document.getElementById('arch-numero').value.trim(),
     data:document.getElementById('arch-data').value,
     fornitore:document.getElementById('arch-fornitore').value.trim(),
-    stato:document.getElementById('arch-stato').value,
+    stato: stato||'inviato',
+    urgenza:'normale',
     importo_totale:parseFloat(document.getElementById('arch-importo').value)||0,
     note:document.getElementById('arch-note-ord').value.trim(),
     righe,
     creato:new Date().toISOString()
   };
   if(!ord.fornitore){ toast('Inserisci almeno il fornitore','error'); return; }
-  const arch=loadArch(); arch.unshift(ord); await saveArch(arch);
+  const ords=loadOrd(); ords.unshift(ord); await saveOrd(ords);
   closeModal('modal-archivio'); archStopCam();
   if(currentView==='archivio') renderArchivio();
-  toast('Ordine salvato in archivio','success');
+  if(currentView==='ordini') renderOrdini();
+  toast('Ordine salvato','success');
 }
 
 function renderArchivio(){
   if(!document.getElementById('archivio-list')) return;
-  let arch=loadArch();
+  // UNIFICATO: l'archivio è una vista filtrata degli ordini
+  let arch=loadOrd();
   // Popola filtri
   const mesi=[...new Set(arch.map(o=>o.data?o.data.slice(0,7):'').filter(Boolean))].sort().reverse();
   const forn=[...new Set(arch.map(o=>o.fornitore).filter(Boolean))].sort();
@@ -4292,41 +4301,51 @@ function renderArchivio(){
   if(fForn) arch=arch.filter(o=>o.fornitore===fForn);
   if(fStato) arch=arch.filter(o=>o.stato===fStato);
   const container=document.getElementById('archivio-list');
-  if(!arch.length){ container.innerHTML='<div class="empty"><div class="e-ico">🗂</div><p>Nessun ordine in archivio</p></div>'; return; }
-  const statoCol={ricevuto:'var(--green)',parziale:'var(--yellow)','in attesa':'var(--text3)'};
-  const statoIco={ricevuto:'✅',parziale:'⚠','in attesa':'⏳'};
+  if(!arch.length){ container.innerHTML='<div class="empty"><div class="e-ico">🗂</div><p>Nessun ordine trovato</p></div>'; return; }
+  const statoCol={bozza:'var(--text3)',inviato:'var(--blue)',approvato:'var(--green)',parziale:'var(--yellow)',ricevuto:'var(--teal)',annullato:'var(--red)'};
+  const statoIco={bozza:'📝',inviato:'📤',approvato:'✅',parziale:'📦⏳',ricevuto:'📦',annullato:'❌'};
   container.innerHTML=arch.map(o=>{
     const nDdt = (o.ddtImages||[]).length;
+    const totO=(o.righe||[]).reduce((s,r)=>s+r.qty,0);
+    const totR=(o.righe||[]).reduce((s,r)=>s+(r.qtyRicevuta||0),0);
+    const pct=totO>0?Math.round(totR/totO*100):0;
+    const nomeRighe=(o.righe||[]).map(r=>r.nome||r.prodotto).join(', ');
     return `
     <div class="card" style="margin-bottom:12px;padding:14px">
       <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:10px">
         <div>
-          <div style="font-weight:700;font-size:15px">${o.numero?'N° '+o.numero+' — ':' '}${o.fornitore||'—'}</div>
-          <div style="font-size:12px;color:var(--text3);margin-top:2px">${o.data?fmtDate(o.data):'Data n.d.'}</div>
+          <div style="font-weight:700;font-size:15px">${o.num||o.numero||'—'} — ${o.fornitore||'—'}</div>
+          <div style="font-size:12px;color:var(--text3);margin-top:2px">${o.data?fmtDate(o.data):'Data n.d.'} · ${(o.righe||[]).length} prodotti</div>
         </div>
         <div style="display:flex;align-items:center;gap:10px">
           <span style="font-size:13px;font-weight:600;color:${statoCol[o.stato]||'var(--text2)'}">${statoIco[o.stato]||''} ${o.stato||'—'}</span>
-          ${o.importo_totale?`<span style="font-family:'DM Mono',monospace;font-size:14px;font-weight:700;color:var(--accent)">€ ${o.importo_totale.toFixed(2)}</span>`:''}
-          <button class="btn btn-sm btn-danger" onclick="deleteArchivioOrdine('${o.id}')">✕</button>
         </div>
       </div>
+      <div class="prog-wrap" style="margin-bottom:10px"><div class="prog-bar"><div class="prog-fill" style="width:${pct}%;background:${pct>=100?'var(--green)':pct>0?'var(--yellow)':'var(--border2)'}"></div></div><span class="prog-pct">${pct}%</span></div>
       ${o.righe&&o.righe.length?`<table style="width:100%;font-size:12px">
-        <thead><tr><th style="text-align:left;padding:4px 6px;color:var(--text3);font-weight:600">Prodotto</th><th style="text-align:right;padding:4px 6px;color:var(--text3);font-weight:600">Qtà</th><th style="text-align:right;padding:4px 6px;color:var(--text3);font-weight:600">€/cad</th><th style="text-align:right;padding:4px 6px;color:var(--text3);font-weight:600">Totale</th></tr></thead>
-        <tbody>${o.righe.map(r=>`<tr><td style="padding:3px 6px">${r.prodotto}</td><td style="text-align:right;padding:3px 6px;font-family:'DM Mono',monospace">${r.qty}</td><td style="text-align:right;padding:3px 6px;font-family:'DM Mono',monospace">${r.prezzo_unit?'€'+r.prezzo_unit.toFixed(2):'—'}</td><td style="text-align:right;padding:3px 6px;font-family:'DM Mono',monospace;font-weight:600">${r.prezzo_unit?'€'+(r.qty*r.prezzo_unit).toFixed(2):'—'}</td></tr>`).join('')}</tbody>
+        <thead><tr><th style="text-align:left;padding:4px 6px">Prodotto</th><th style="text-align:right;padding:4px 6px">Ord.</th><th style="text-align:right;padding:4px 6px">Ric.</th></tr></thead>
+        <tbody>${(o.righe||[]).map(r=>{
+          const ric=r.qtyRicevuta||0;
+          const cls=ric>=r.qty?'color:var(--green)':ric>0?'color:var(--yellow)':'color:var(--text3)';
+          return `<tr><td style="padding:3px 6px">${r.nome||r.prodotto}</td><td style="text-align:right;padding:3px 6px;font-family:'DM Mono',monospace">${r.qty} ${r.unita||''}</td><td style="text-align:right;padding:3px 6px;font-family:'DM Mono',monospace;${cls}">${ric}</td></tr>`;
+        }).join('')}</tbody>
       </table>`:''}
       ${o.note?`<div style="margin-top:8px;font-size:12px;color:var(--text2);font-style:italic">${o.note}</div>`:''}
+      ${(o.ddtList&&o.ddtList.length)?`<div style="margin-top:8px;font-size:11px;color:var(--text3)">📄 ${o.ddtList.length} DDT registrati</div>`:''}
       <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);display:flex;gap:6px;flex-wrap:wrap;align-items:center">
         <button class="btn btn-sm" onclick="allegaScanOrdine('${o.id}')">📄 ${o.scanOrdine?'✅ Ordine':'Allega Ordine'}</button>
         <button class="btn btn-sm" onclick="allegaScanDdt('${o.id}')">📦 Allega DDT</button>
         ${o.scanOrdine?`<button class="btn btn-sm btn-ok" onclick="viewScanOrdine('${o.id}')">👁 Ordine</button>`:''}
         ${nDdt?`<button class="btn btn-sm btn-ok" onclick="viewScanDdt('${o.id}')">👁 ${nDdt} DDT</button>`:''}
+        <button class="btn btn-sm" onclick="viewOrdine('${o.id}')">👁 Dettaglio</button>
       </div>
     </div>`;
   }).join('');
 }
 function deleteArchivioOrdine(id){
-  if(!confirm('Eliminare questo ordine dall\'archivio?')) return;
-  const arch=loadArch().filter(o=>o.id!==id); saveArch(arch,id); renderArchivio();
+  if(!confirm('Eliminare questo ordine?')) return;
+  _takeSnapshot('Elimina ordine da archivio');
+  const ords=loadOrd().filter(o=>o.id!==id); saveOrd(ords); renderArchivio();
   toast('Ordine eliminato','info');
 }
 // ══════════════════════════════════════════
@@ -4940,26 +4959,8 @@ function confirmRicezioneParziale(id){
   toast(tuttoRicevuto ? '✅ Ordine completamente ricevuto e archiviato' : '📦 Ricezione parziale registrata','success');
 }
 
-// ══════════════════════════════════════════
-// FEATURE 4: Archiviazione automatica ordine ricevuto
-// ══════════════════════════════════════════
-function archiviaOrdineAutomatico(o){
-  const arch = loadArch();
-  const importo = (o.righe||[]).reduce((s,r)=>s+(r.prezzo_unit||0)*(r.qty||0),0);
-  arch.unshift({
-    id: genId(),
-    numero: o.num,
-    data: o.data,
-    fornitore: o.fornitore,
-    stato: 'ricevuto',
-    importo: importo||null,
-    note: o.note||'',
-    righe: (o.righe||[]).map(r=>({prodotto:r.nome, qty:r.qty, prezzo_unit:r.prezzo_unit||0})),
-    ddtList: o.ddtList||[],
-    creato: new Date().toISOString()
-  });
-  saveArch(arch);
-}
+// FEATURE 4: Archiviazione automatica — non più necessaria, ordini e archivio sono unificati
+function archiviaOrdineAutomatico(o){ /* no-op: l'archivio legge direttamente da loadOrd() */ }
 
 // ══════════════════════════════════════════
 // FEATURE 5: Checklist inventario → genera ordine
@@ -5085,10 +5086,10 @@ const _patchedRenderReport = function(){
   scarichi.forEach(m=>{ consumoPerProd[m.prod] = (consumoPerProd[m.prod]||0) + (m.qty||0); });
   const topConsumi = Object.entries(consumoPerProd).sort((a,b)=>b[1]-a[1]).slice(0,10);
 
-  // Costi per fornitore (archivio ordini del mese)
-  const archMese = loadArch().filter(o=>o.data&&o.data.slice(0,7)===mese);
+  // Costi per fornitore (ordini del mese)
+  const archMese = loadOrd().filter(o=>o.data&&o.data.slice(0,7)===mese);
   const costoPerForn = {};
-  archMese.forEach(o=>{ costoPerForn[o.fornitore||'—'] = (costoPerForn[o.fornitore||'—']||0) + (o.importo||0); });
+  archMese.forEach(o=>{ costoPerForn[o.fornitore||'—'] = (costoPerForn[o.fornitore||'—']||0) + (o.importo_totale||o.importo||0); });
   const totCosto = Object.values(costoPerForn).reduce((s,v)=>s+v,0);
 
   // Rifiuti del mese
@@ -5294,56 +5295,56 @@ function _readFileAsBase64(callback){
   input.click();
 }
 
-function allegaScanOrdine(archId){
+function allegaScanOrdine(ordId){
   _readFileAsBase64(function(base64, fileName){
-    const arch = loadArch();
-    const o = arch.find(x=>x.id===archId); if(!o) return;
+    const ords = loadOrd();
+    const o = ords.find(x=>x.id===ordId); if(!o) return;
     _takeSnapshot('Allega scan ordine');
     o.scanOrdine = { data: base64, nome: fileName, ts: new Date().toISOString() };
-    saveArch(arch);
+    saveOrd(ords);
     renderArchivio();
     toast('📄 Scan ordine allegato','success');
   });
 }
 
-function allegaScanDdt(archId){
+function allegaScanDdt(ordId){
   _readFileAsBase64(function(base64, fileName){
-    const arch = loadArch();
-    const o = arch.find(x=>x.id===archId); if(!o) return;
+    const ords = loadOrd();
+    const o = ords.find(x=>x.id===ordId); if(!o) return;
     _takeSnapshot('Allega scan DDT');
     if(!o.ddtImages) o.ddtImages = [];
     const rif = prompt('Riferimento DDT (es. DDT n. 12345):') || fileName;
     o.ddtImages.push({ data: base64, nome: fileName, rif: rif, ts: new Date().toISOString() });
-    saveArch(arch);
+    saveOrd(ords);
     renderArchivio();
     toast('📦 Scan DDT allegato ('+o.ddtImages.length+' totali)','success');
   });
 }
 
-function viewScanOrdine(archId){
-  const o = loadArch().find(x=>x.id===archId); if(!o||!o.scanOrdine) return;
-  document.getElementById('od-title').textContent = '📄 Scan Ordine — '+o.numero;
+function viewScanOrdine(ordId){
+  const o = loadOrd().find(x=>x.id===ordId); if(!o||!o.scanOrdine) return;
+  document.getElementById('od-title').textContent = '📄 Scan Ordine — '+(o.num||o.numero);
   document.getElementById('od-content').innerHTML = `
     <div style="text-align:center">
       <img src="${o.scanOrdine.data}" style="max-width:100%;max-height:70vh;border-radius:var(--r);border:1px solid var(--border)">
       <div style="font-size:11px;color:var(--text3);margin-top:6px">${o.scanOrdine.nome} — ${new Date(o.scanOrdine.ts).toLocaleDateString('it-IT')}</div>
     </div>`;
   document.getElementById('od-footer').innerHTML = `
-    <button class="btn btn-danger btn-sm" onclick="rimuoviScanOrdine('${archId}')">🗑 Rimuovi</button>
+    <button class="btn btn-danger btn-sm" onclick="rimuoviScanOrdine('${ordId}')">🗑 Rimuovi</button>
     <button class="btn btn-primary" onclick="closeModal('modal-ordine-detail')">Chiudi</button>`;
   document.getElementById('modal-ordine-detail').classList.add('open');
 }
 
-function viewScanDdt(archId){
-  const o = loadArch().find(x=>x.id===archId); if(!o||!o.ddtImages?.length) return;
-  document.getElementById('od-title').textContent = '📦 DDT Allegati — '+o.numero+' ('+o.ddtImages.length+')';
+function viewScanDdt(ordId){
+  const o = loadOrd().find(x=>x.id===ordId); if(!o||!o.ddtImages?.length) return;
+  document.getElementById('od-title').textContent = '📦 DDT Allegati — '+(o.num||o.numero)+' ('+o.ddtImages.length+')';
   document.getElementById('od-content').innerHTML = o.ddtImages.map((ddt,i)=>`
     <div style="margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border)">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
         <div style="font-weight:600;font-size:13px">${ddt.rif||'DDT '+(i+1)}</div>
         <div style="display:flex;gap:5px;align-items:center">
           <span style="font-size:11px;color:var(--text3)">${new Date(ddt.ts).toLocaleDateString('it-IT')}</span>
-          <button class="btn btn-sm btn-danger" onclick="rimuoviScanDdt('${archId}',${i})">✕</button>
+          <button class="btn btn-sm btn-danger" onclick="rimuoviScanDdt('${ordId}',${i})">✕</button>
         </div>
       </div>
       <img src="${ddt.data}" style="max-width:100%;max-height:50vh;border-radius:var(--r);border:1px solid var(--border)">
@@ -5353,23 +5354,23 @@ function viewScanDdt(archId){
   document.getElementById('modal-ordine-detail').classList.add('open');
 }
 
-function rimuoviScanOrdine(archId){
+function rimuoviScanOrdine(ordId){
   if(!confirm('Rimuovere la scan dell\'ordine?')) return;
   _takeSnapshot('Rimuovi scan ordine');
-  const arch = loadArch();
-  const o = arch.find(x=>x.id===archId); if(!o) return;
+  const ords = loadOrd();
+  const o = ords.find(x=>x.id===ordId); if(!o) return;
   delete o.scanOrdine;
-  saveArch(arch); closeModal('modal-ordine-detail'); renderArchivio();
+  saveOrd(ords); closeModal('modal-ordine-detail'); renderArchivio();
   toast('Scan ordine rimosso','info');
 }
 
-function rimuoviScanDdt(archId, idx){
+function rimuoviScanDdt(ordId, idx){
   if(!confirm('Rimuovere questa scan DDT?')) return;
   _takeSnapshot('Rimuovi scan DDT');
-  const arch = loadArch();
-  const o = arch.find(x=>x.id===archId); if(!o) return;
+  const ords = loadOrd();
+  const o = ords.find(x=>x.id===ordId); if(!o) return;
   o.ddtImages.splice(idx, 1);
-  saveArch(arch); closeModal('modal-ordine-detail'); renderArchivio();
+  saveOrd(ords); closeModal('modal-ordine-detail'); renderArchivio();
   toast('Scan DDT rimosso','info');
 }
 
