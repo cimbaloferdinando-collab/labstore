@@ -4747,8 +4747,8 @@ function resetRicezione(id){
   _takeSnapshot('Reset ricezione ordine');
   const ords = loadOrd();
   const o = ords.find(x=>x.id===id); if(!o) return;
-  // Azzera qtyRicevuta su tutte le righe
-  (o.righe||[]).forEach(r=>{ r.qtyRicevuta = 0; });
+  // Azzera qtyRicevuta e storico ricezioni su tutte le righe
+  (o.righe||[]).forEach(r=>{ r.qtyRicevuta = 0; r.ricezioni = []; });
   // Pulisci DDT
   o.ddtList = [];
   o.stato = 'approvato';
@@ -4832,11 +4832,20 @@ function viewOrdine(id){
     </div>
     ${o.note?`<div style="background:var(--bg3);border-radius:var(--r);padding:10px;margin-bottom:12px;font-size:13px;color:var(--text2)">📝 ${o.note}</div>`:''}
     <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.7px;font-weight:600;margin-bottom:8px">Prodotti (${o.righe.length})</div>
-    <table><thead><tr><th>Prodotto</th><th>Fornitore</th><th>Ord.</th><th>Ric.</th><th>Note</th><th></th></tr></thead><tbody>
+    <table><thead><tr><th>Prodotto</th><th>Ord.</th><th>Ric.</th><th>DDT</th><th></th></tr></thead><tbody>
     ${o.righe.map((r,i)=>{
       const ric=r.qtyRicevuta||0;
       const cls=ric>=r.qty?'color:var(--green)':ric>0?'color:var(--yellow)':'color:var(--text3)';
-      return `<tr><td><strong>${r.nome}</strong></td><td style="color:var(--text2)">${r.fornitore||'—'}</td><td class="mono">${r.qty} ${r.unita||''}</td><td class="mono" style="${cls}">${ric}</td><td style="color:var(--text2);font-size:12px">${r.note||'—'}</td><td><button class="btn btn-sm" onclick="editRigaRicezione('${o.id}',${i})" title="Modifica qtà ricevuta">✎</button></td></tr>`;
+      const ddtChips=(r.ricezioni||[]).map(rc=>
+        `<span style="font-size:10px;background:var(--green-bg);color:var(--green);border-radius:3px;padding:1px 5px;border:1px solid #a7f3d0;white-space:nowrap">+${rc.qty} ${rc.ddt?'· '+rc.ddt:''}</span>`
+      ).join(' ')||'<span style="font-size:10px;color:var(--text3)">—</span>';
+      return `<tr>
+        <td><strong>${r.nome}</strong><br><span style="font-size:11px;color:var(--text3)">${r.fornitore||''} ${r.unita?'· '+r.unita:''}</span></td>
+        <td class="mono">${r.qty}</td>
+        <td class="mono" style="${cls}">${ric}</td>
+        <td style="max-width:200px">${ddtChips}</td>
+        <td><button class="btn btn-sm" onclick="editRigaRicezione('${o.id}',${i})" title="Modifica qtà ricevuta">✎</button></td>
+      </tr>`;
     }).join('')}
     </tbody></table>
     ${(o.ddtList&&o.ddtList.length)?`
@@ -4891,28 +4900,40 @@ async function scanReagente(target){
 function riceviParziale(id){
   const ords = loadOrd();
   const o = ords.find(x=>x.id===id); if(!o) return;
-  // Modal per selezionare quali righe sono arrivate
   const info = o.righe.map((r,i)=>{
     const ricevuta = r.qtyRicevuta||0;
     const restante = r.qty - ricevuta;
-    return `<div style="padding:8px 0;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;font-size:13px">
-      <div style="flex:1">
-        <strong>${r.nome}</strong>
-        <div style="font-size:11px;color:var(--text3)">Ordinati: ${r.qty} ${r.unita||'pz'} · Già ricevuti: ${ricevuta}</div>
-      </div>
-      <div style="display:flex;align-items:center;gap:5px">
-        <label style="font-size:10px;margin:0">Qtà arrivo:</label>
-        <input type="number" class="recv-parz-qty" data-idx="${i}" value="${restante}" min="0" max="${restante}" style="width:70px;text-align:center">
+    // Mostra storico ricezioni per questa riga
+    const storico = (r.ricezioni||[]).map(rc=>
+      `<span style="font-size:10px;background:var(--green-bg);color:var(--green);border-radius:3px;padding:1px 5px;border:1px solid #a7f3d0">+${rc.qty} ${rc.ddt||''} ${rc.data?new Date(rc.data).toLocaleDateString('it-IT'):''}</span>`
+    ).join(' ');
+    return `<div style="padding:8px 0;border-bottom:1px solid var(--border);font-size:13px">
+      <div style="display:flex;align-items:center;gap:8px">
+        <div style="flex:1">
+          <strong>${r.nome}</strong>
+          <div style="font-size:11px;color:var(--text3)">Ordinati: ${r.qty} ${r.unita||'pz'} · Ricevuti: ${ricevuta} · Restano: ${Math.max(0,restante)}</div>
+          ${storico?'<div style="margin-top:3px;display:flex;flex-wrap:wrap;gap:3px">'+storico+'</div>':''}
+        </div>
+        <div style="display:flex;align-items:center;gap:5px">
+          <label style="font-size:10px;margin:0">Arrivo:</label>
+          <input type="number" class="recv-parz-qty" data-idx="${i}" value="${Math.max(0,restante)}" min="0" max="${restante}" style="width:70px;text-align:center" ${restante<=0?'disabled':''}>
+        </div>
       </div>
     </div>`;
   }).join('');
-  document.getElementById('od-title').textContent = 'Ricezione Parziale — '+o.num;
+  document.getElementById('od-title').textContent = 'Registra Ricezione — '+(o.num||'');
   document.getElementById('od-content').innerHTML = `
-    <p style="color:var(--text2);font-size:13px;margin-bottom:12px">Indica le quantità ricevute con questo DDT:</p>
+    <p style="color:var(--text2);font-size:13px;margin-bottom:12px">Indica le quantità ricevute. Metti 0 sui prodotti non ancora arrivati.</p>
     ${info}
     <div style="margin-top:12px;padding:10px;background:var(--bg3);border-radius:var(--r)">
       <label style="font-size:11px;color:var(--text3);font-weight:600">Rif. DDT</label>
       <input type="text" id="recv-parz-ddt" placeholder="es. DDT n. 12345 del 10/04/2026" style="margin-top:5px">
+    </div>
+    <div style="margin-top:8px;padding:10px;background:var(--bg3);border-radius:var(--r)">
+      <label style="font-size:11px;color:var(--text3);font-weight:600">📷 Scan DDT (opzionale)</label>
+      <div style="margin-top:5px;display:flex;gap:6px;align-items:center">
+        <input type="file" id="recv-parz-scan" accept="image/*" style="font-size:12px;flex:1">
+      </div>
     </div>`;
   document.getElementById('od-footer').innerHTML = `
     <button class="btn" onclick="closeModal('modal-ordine-detail')">Annulla</button>
@@ -4925,38 +4946,66 @@ function confirmRicezioneParziale(id){
   const ords = loadOrd();
   const o = ords.find(x=>x.id===id); if(!o) return;
   const ddt = document.getElementById('recv-parz-ddt')?.value||'';
+  const scanFile = document.getElementById('recv-parz-scan')?.files?.[0];
   const prods = loadP();
   const movs = loadM();
-  // Inizializza array DDT se non esiste
   if(!o.ddtList) o.ddtList = [];
-  const ddtEntry = { data: new Date().toISOString(), rif: ddt, righe: [] };
+  const now = new Date().toISOString();
+  const ddtEntry = { data: now, rif: ddt, righe: [] };
+  let haRicevuto = false;
   document.querySelectorAll('.recv-parz-qty').forEach(input=>{
     const idx = parseInt(input.dataset.idx);
     const qtyArrivo = parseFloat(input.value)||0;
     if(qtyArrivo <= 0) return;
+    haRicevuto = true;
     const r = o.righe[idx];
     r.qtyRicevuta = (r.qtyRicevuta||0) + qtyArrivo;
+    // Storico ricezioni per riga — associa al DDT
+    if(!r.ricezioni) r.ricezioni = [];
+    r.ricezioni.push({ qty: qtyArrivo, ddt: ddt, data: now });
     ddtEntry.righe.push({nome:r.nome, qty:qtyArrivo});
     // Carica in magazzino
     const p = prods.find(x=>x.nome.toLowerCase()===r.nome.toLowerCase());
     if(p) p.qty += qtyArrivo;
-    movs.unshift({id:genId(),ts:new Date().toISOString(),tipo:'carico',prod:r.nome,prodId:p?.id||'',qty:qtyArrivo,lotto:'',note:'Ricezione parziale '+o.num+(ddt?' — '+ddt:'')});
+    movs.unshift({id:genId(),ts:now,tipo:'carico',prod:r.nome,prodId:p?.id||'',qty:qtyArrivo,lotto:'',note:'Ricezione '+o.num+(ddt?' — '+ddt:'')});
   });
-  // FIX: Controlla TUTTE le righe per determinare se l'ordine è completo
+  if(!haRicevuto){ toast('Nessuna quantità inserita','error'); return; }
   const tuttoRicevuto = o.righe.every(r => (r.qtyRicevuta||0) >= r.qty);
   o.ddtList.push(ddtEntry);
   o.stato = tuttoRicevuto ? 'ricevuto' : 'parziale';
-  if(tuttoRicevuto){
-    o.dataRicezione = new Date().toISOString();
-    // FEATURE 4: Archivia automaticamente
-    archiviaOrdineAutomatico(o);
+  if(tuttoRicevuto) o.dataRicezione = now;
+  // Se c'è una scan DDT, allega
+  const _finalize = ()=>{
+    saveP(prods); saveM(movs); saveOrd(ords);
+    closeModal('modal-ordine-detail');
+    renderOrdini();
+    if(currentView==='inventario') renderInv();
+    if(currentView==='dashboard') renderDashboard();
+    if(currentView==='archivio') renderArchivio();
+    toast(tuttoRicevuto ? '✅ Ordine completamente ricevuto' : '📦 Ricezione parziale registrata','success');
+  };
+  if(scanFile){
+    const reader = new FileReader();
+    reader.onload = function(e){
+      const img = new Image();
+      img.onload = function(){
+        const canvas = document.createElement('canvas');
+        const maxW=1200,maxH=1600;
+        let w=img.width,h=img.height;
+        if(w>maxW){h=h*(maxW/w);w=maxW;} if(h>maxH){w=w*(maxH/h);h=maxH;}
+        canvas.width=w;canvas.height=h;
+        canvas.getContext('2d').drawImage(img,0,0,w,h);
+        const base64=canvas.toDataURL('image/jpeg',0.7);
+        if(!o.ddtImages) o.ddtImages=[];
+        o.ddtImages.push({data:base64,nome:scanFile.name,rif:ddt,ts:now});
+        _finalize();
+      };
+      img.src=e.target.result;
+    };
+    reader.readAsDataURL(scanFile);
+  } else {
+    _finalize();
   }
-  saveP(prods); saveM(movs); saveOrd(ords);
-  closeModal('modal-ordine-detail');
-  renderOrdini();
-  if(currentView==='inventario') renderInv();
-  if(currentView==='dashboard') renderDashboard();
-  toast(tuttoRicevuto ? '✅ Ordine completamente ricevuto e archiviato' : '📦 Ricezione parziale registrata','success');
 }
 
 // FEATURE 4: Archiviazione automatica — non più necessaria, ordini e archivio sono unificati
