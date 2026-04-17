@@ -4602,7 +4602,7 @@ function addOrdineRow(){
   addOrdineRowData('','',1);
 }
 
-function addOrdineRowData(nome='', fornitore='', qty=1){
+function addOrdineRowData(nome='', fornitore='', qty=1, unita='', note=''){
   const wrap = document.getElementById('ordine-rows');
   const row = document.createElement('div');
   row.className = 'ai-row';
@@ -4615,8 +4615,8 @@ function addOrdineRowData(nome='', fornitore='', qty=1){
     <input type="text" value="${esc(nome)}" placeholder="Nome prodotto" style="flex:2;min-width:140px" list="prod-list-ord" class="ord-nome">
     <input type="text" value="${esc(fornitore)}" placeholder="Fornitore" style="width:130px" class="ord-fornitore">
     <input type="number" value="${qty}" min="1" style="width:60px" class="ord-qty" placeholder="Qtà">
-    <input type="text" value="" placeholder="Unità" style="width:55px" class="ord-unita">
-    <input type="text" value="" placeholder="Note riga" style="flex:1;min-width:80px" class="ord-note">
+    <input type="text" value="${esc(unita)}" placeholder="Unità" style="width:55px" class="ord-unita">
+    <input type="text" value="${esc(note)}" placeholder="Note riga" style="flex:1;min-width:80px" class="ord-note">
     <span class="del" onclick="this.parentElement.remove()">✕</span>`;
   wrap.appendChild(row);
 }
@@ -4692,7 +4692,76 @@ function riapreOrdine(id){
   saveOrd(ords);
   closeModal('modal-ordine-detail');
   renderOrdini();
-  toast('Ordine riaperto come parziale — ora puoi registrare altre ricezioni','info');
+  toast('Ordine riaperto come parziale','info');
+}
+
+function resetRicezione(id){
+  if(!confirm('Azzerare tutte le ricezioni di questo ordine? Le quantità ricevute verranno riportate a 0 e lo stato tornerà ad "approvato". I movimenti di magazzino già registrati NON verranno annullati — usa Undo se vuoi annullare anche quelli.')) return;
+  _takeSnapshot('Reset ricezione ordine');
+  const ords = loadOrd();
+  const o = ords.find(x=>x.id===id); if(!o) return;
+  // Azzera qtyRicevuta su tutte le righe
+  (o.righe||[]).forEach(r=>{ r.qtyRicevuta = 0; });
+  // Pulisci DDT
+  o.ddtList = [];
+  o.stato = 'approvato';
+  delete o.dataRicezione;
+  delete o.noteRicezione;
+  saveOrd(ords);
+  closeModal('modal-ordine-detail');
+  renderOrdini();
+  toast('Ricezione azzerata — ordine riportato ad "approvato"','info');
+}
+
+function editRigaRicezione(ordId, rigaIdx){
+  const ords = loadOrd();
+  const o = ords.find(x=>x.id===ordId); if(!o) return;
+  const r = o.righe[rigaIdx]; if(!r) return;
+  const attuale = r.qtyRicevuta||0;
+  const nuovaQty = prompt(`${r.nome}\nOrdinati: ${r.qty} ${r.unita||'pz'}\nRicevuti attualmente: ${attuale}\n\nInserisci la nuova quantità ricevuta:`, attuale);
+  if(nuovaQty===null) return;
+  const val = parseFloat(nuovaQty);
+  if(isNaN(val) || val<0){ toast('Quantità non valida','error'); return; }
+  _takeSnapshot('Modifica ricezione '+r.nome);
+  r.qtyRicevuta = val;
+  // Ricalcola stato ordine
+  const tuttoRicevuto = o.righe.every(ri => (ri.qtyRicevuta||0) >= ri.qty);
+  const qualcosaRicevuto = o.righe.some(ri => (ri.qtyRicevuta||0) > 0);
+  if(tuttoRicevuto){
+    o.stato = 'ricevuto';
+    o.dataRicezione = o.dataRicezione || new Date().toISOString();
+  } else if(qualcosaRicevuto){
+    o.stato = 'parziale';
+    delete o.dataRicezione;
+  } else {
+    // Nulla ricevuto — torna allo stato precedente
+    o.stato = o.dataInvio ? (o.dataApprovazione ? 'approvato' : 'inviato') : 'bozza';
+    delete o.dataRicezione;
+  }
+  saveOrd(ords);
+  // Riapri il dettaglio aggiornato
+  closeModal('modal-ordine-detail');
+  viewOrdine(ordId);
+  renderOrdini();
+  toast(`${r.nome}: ricevuti aggiornati a ${val}`,'success');
+}
+
+function editOrdine(id){
+  closeModal('modal-ordine-detail');
+  // Apri il modal ordine in modalità modifica
+  const o = loadOrd().find(x=>x.id===id); if(!o) return;
+  ordineEditId = o.id;
+  document.getElementById('ordine-modal-title').textContent = 'Modifica Ordine';
+  document.getElementById('o-num').value = o.num||'';
+  document.getElementById('o-data').value = o.data||'';
+  document.getElementById('o-fornitore').value = o.fornitore||'';
+  document.getElementById('o-urgenza').value = o.urgenza||'normale';
+  document.getElementById('o-note').value = o.note||'';
+  // Popola le righe
+  const wrap = document.getElementById('ordine-rows');
+  wrap.innerHTML = '';
+  (o.righe||[]).forEach(r=>addOrdineRowData(r.nome, r.fornitore, r.qty, r.unita, r.note));
+  document.getElementById('modal-ordine').classList.add('open');
 }
 
 function viewOrdine(id){
@@ -4716,11 +4785,11 @@ function viewOrdine(id){
     </div>
     ${o.note?`<div style="background:var(--bg3);border-radius:var(--r);padding:10px;margin-bottom:12px;font-size:13px;color:var(--text2)">📝 ${o.note}</div>`:''}
     <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.7px;font-weight:600;margin-bottom:8px">Prodotti (${o.righe.length})</div>
-    <table><thead><tr><th>Prodotto</th><th>Fornitore</th><th>Ord.</th><th>Ric.</th><th>Note</th></tr></thead><tbody>
-    ${o.righe.map(r=>{
+    <table><thead><tr><th>Prodotto</th><th>Fornitore</th><th>Ord.</th><th>Ric.</th><th>Note</th><th></th></tr></thead><tbody>
+    ${o.righe.map((r,i)=>{
       const ric=r.qtyRicevuta||0;
       const cls=ric>=r.qty?'color:var(--green)':ric>0?'color:var(--yellow)':'color:var(--text3)';
-      return `<tr><td><strong>${r.nome}</strong></td><td style="color:var(--text2)">${r.fornitore||'—'}</td><td class="mono">${r.qty} ${r.unita||''}</td><td class="mono" style="${cls}">${ric}</td><td style="color:var(--text2);font-size:12px">${r.note||'—'}</td></tr>`;
+      return `<tr><td><strong>${r.nome}</strong></td><td style="color:var(--text2)">${r.fornitore||'—'}</td><td class="mono">${r.qty} ${r.unita||''}</td><td class="mono" style="${cls}">${ric}</td><td style="color:var(--text2);font-size:12px">${r.note||'—'}</td><td><button class="btn btn-sm" onclick="editRigaRicezione('${o.id}',${i})" title="Modifica qtà ricevuta">✎</button></td></tr>`;
     }).join('')}
     </tbody></table>
     ${(o.ddtList&&o.ddtList.length)?`
@@ -4732,7 +4801,9 @@ function viewOrdine(id){
       </div>`).join('')}
     `:''}`;
   document.getElementById('od-footer').innerHTML = `
-    ${o.stato==='ricevuto'?`<button class="btn btn-sm" onclick="riapreOrdine('${o.id}')">↩ Riapri come parziale</button>`:''}
+    <button class="btn btn-sm" onclick="editOrdine('${o.id}')">✎ Modifica</button>
+    ${o.stato==='parziale'||o.stato==='ricevuto'?`<button class="btn btn-sm btn-danger" onclick="resetRicezione('${o.id}')">🔄 Reset ricezione</button>`:''}
+    ${o.stato==='ricevuto'?`<button class="btn btn-sm" onclick="riapreOrdine('${o.id}')">↩ Riapri</button>`:''}
     ${o.stato!=='ricevuto'&&o.stato!=='annullato'?`<button class="btn btn-ok" onclick="closeModal('modal-ordine-detail');riceviParziale('${o.id}')">📦 Registra Ricezione</button>`:''}
     <button class="btn btn-primary" onclick="closeModal('modal-ordine-detail')">Chiudi</button>`;
   document.getElementById('modal-ordine-detail').classList.add('open');
