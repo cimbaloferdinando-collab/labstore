@@ -37,7 +37,7 @@ header{background:var(--accent);padding:0 20px;display:flex;align-items:center;j
 .logo{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:700;color:#fff;display:flex;align-items:center;gap:10px;letter-spacing:-.3px}
 .logo-badge{background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);font-family:'DM Mono',monospace;font-size:9px;padding:3px 7px;border-radius:4px;letter-spacing:1.5px;font-weight:600;border:1px solid rgba(255,255,255,.2)}
 .hdr-act{display:flex;gap:5px;align-items:center;flex-wrap:wrap}
-.btn{padding:6px 14px;border-radius:var(--r-sm);border:1px solid var(--border2);background:var(--bg2);color:var(--text2);cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;transition:all .15s;display:inline-flex;align-items:center;gap:5px;white-space:nowrap;box-shadow:var(--shadow-sm)}
+.btn{padding:9px 14px;border-radius:var(--r-sm);border:1px solid var(--border2);background:var(--bg2);color:var(--text2);cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;transition:all .15s;display:inline-flex;align-items:center;gap:5px;white-space:nowrap;box-shadow:var(--shadow-sm)}
 .btn:hover{border-color:var(--accent2);color:var(--accent);background:var(--accent-light);transform:translateY(-1px);box-shadow:var(--shadow)}
 .btn:active{transform:translateY(0)}
 .btn-primary{background:var(--accent2);color:#fff;border-color:var(--accent2);font-weight:600;box-shadow:0 2px 4px rgba(37,99,235,.3)}
@@ -49,7 +49,11 @@ header{background:var(--accent);padding:0 20px;display:flex;align-items:center;j
 .btn-danger{background:var(--red-bg);color:var(--red);border-color:#fca5a5}
 .btn-danger:hover{background:#fee2e2}
 .btn-waste{background:var(--orange-bg);color:var(--orange);border-color:#fdba74}
-.btn-sm{padding:4px 10px;font-size:12px}
+.btn-pap-l{background:rgba(234,88,12,.2);color:#fdba74;border-color:rgba(234,88,12,.3)}
+.btn-pap-l:hover{background:rgba(234,88,12,.3);color:#fff}
+.btn-pap-priv{background:rgba(124,58,237,.2);color:#c4b5fd;border-color:rgba(124,58,237,.3)}
+.btn-pap-priv:hover{background:rgba(124,58,237,.3);color:#fff}
+.btn-sm{padding:7px 11px;font-size:12px}
 .btn:disabled{opacity:.45;cursor:not-allowed;transform:none!important}
 header .btn{background:rgba(255,255,255,.1);color:rgba(255,255,255,.9);border-color:rgba(255,255,255,.2)}
 header .btn:hover{background:rgba(255,255,255,.2);color:#fff}
@@ -97,7 +101,7 @@ tbody td{padding:10px 14px;vertical-align:middle}
 .fg{display:flex;flex-direction:column;gap:4px;margin-bottom:0}
 .fg.full{grid-column:1/-1}
 label{font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px}
-input[type=text],input[type=number],input[type=date],input[type=time],input[type=email],select,textarea{padding:8px 12px;border:1.5px solid var(--border2);border-radius:var(--r-sm);background:var(--bg2);color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;transition:border-color .15s,box-shadow .15s;width:100%;outline:none}
+input[type=text],input[type=number],input[type=date],input[type=time],input[type=email],select,textarea{padding:10px 12px;border:1.5px solid var(--border2);border-radius:var(--r-sm);background:var(--bg2);color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;transition:border-color .15s,box-shadow .15s;width:100%;outline:none}
 input:focus,select:focus,textarea:focus{border-color:var(--accent2);box-shadow:0 0 0 3px rgba(37,99,235,.1)}
 input::placeholder{color:var(--text4)}
 textarea{resize:vertical;min-height:60px}
@@ -151,7 +155,7 @@ textarea{resize:vertical;min-height:60px}
 .fase-dot.pending{background:var(--bg4);color:var(--text3);border:2px solid var(--border2)}
 .pezzo-row{display:flex;gap:8px;align-items:center;padding:8px 12px;background:var(--bg4);border-radius:var(--r-sm);margin-bottom:4px;border:1px solid var(--border)}
 .pezzo-label{font-family:'DM Mono',monospace;font-weight:700;font-size:15px;min-width:28px;color:var(--accent2)}
-.frammento-chip{display:inline-flex;align-items:center;justify-content:center;width:34px;height:28px;background:var(--bg2);border:1.5px solid var(--border2);border-radius:var(--r-sm);font-family:'DM Mono',monospace;font-size:11px;font-weight:600;cursor:pointer;transition:all .12s}
+.frammento-chip{display:inline-flex;align-items:center;justify-content:center;width:40px;height:38px;background:var(--bg2);border:1.5px solid var(--border2);border-radius:var(--r-sm);font-family:'DM Mono',monospace;font-size:11px;font-weight:600;cursor:pointer;transition:all .12s}
 .frammento-chip:hover{border-color:var(--accent2);color:var(--accent2)}
 .frammento-chip.done{background:var(--green-bg);border-color:#a7f3d0;color:var(--green)}
 .reagente-usato-row{display:flex;gap:8px;align-items:center;padding:8px 12px;border:1.5px solid var(--border);border-radius:var(--r-sm);margin-bottom:6px;background:var(--bg3);transition:border-color .12s}
@@ -189,7 +193,31 @@ textarea{resize:vertical;min-height:60px}
 .logo:hover{opacity:.85}
 .view{display:none}
 .view.active{display:block}
-@media(max-width:900px){.sidebar{display:none}.stats-grid{grid-template-columns:repeat(2,1fr)}.waste-grid{grid-template-columns:1fr}.prod-grid{grid-template-columns:repeat(auto-fill,minmax(160px,1fr))}#home-panels{grid-template-columns:1fr!important}.form-grid{grid-template-columns:1fr}.main{padding:14px}}
+#sync-banner{background:var(--blue-bg);color:var(--blue);border-bottom:1px solid #bfdbfe;padding:7px 20px;font-size:12px;font-weight:500;display:none;align-items:center;gap:8px}
+#sync-banner.show{display:flex}
+/* FIX [UI/UX]: header dropdown magazzino */
+.hdr-ddrop{position:relative}
+.hdr-ddrop-menu{display:none;position:absolute;top:calc(100% + 6px);right:0;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--shadow-lg);padding:5px;min-width:170px;z-index:300;flex-direction:column;gap:3px}
+.hdr-ddrop-menu.open{display:flex}
+.hdr-ddrop-menu .btn{justify-content:flex-start;width:100%;background:var(--bg2);color:var(--text);border-color:transparent;box-shadow:none}
+.hdr-ddrop-menu .btn:hover{background:var(--accent-light);color:var(--accent2);border-color:transparent}
+/* FIX [UI/UX]: hamburger + sidebar drawer tablet */
+.btn-hamburger{display:none;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#fff;width:40px;height:40px;border-radius:var(--r-sm);cursor:pointer;font-size:18px;align-items:center;justify-content:center;flex-shrink:0;padding:0;line-height:1}
+#sidebar-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:149;touch-action:none}
+#sidebar-backdrop.show{display:block}
+@media(max-width:900px){
+  .btn-hamburger{display:flex}
+  .sidebar{display:block!important;position:fixed;top:56px;left:0;bottom:0;z-index:150;width:260px;transform:translateX(-100%);transition:transform .25s ease;box-shadow:var(--shadow-lg)}
+  .sidebar.open{transform:translateX(0)}
+  .stats-grid{grid-template-columns:repeat(2,1fr)}
+  .waste-grid{grid-template-columns:1fr}
+  .prod-grid{grid-template-columns:repeat(auto-fill,minmax(160px,1fr))}
+  #home-panels{grid-template-columns:1fr!important}
+  .form-grid{grid-template-columns:1fr}
+  .main{padding:14px}
+  #quick-form-grid{grid-template-columns:1fr 1fr!important}
+  #quick-form-grid>button{grid-column:1/-1}
+}
 @media print{header,.sidebar,.btn,.filter-bar,.hdr-act{display:none!important}.main{padding:0}.layout{display:block}body{background:#fff;color:#000}}
 </style>
   <script>
@@ -204,22 +232,32 @@ textarea{resize:vertical;min-height:60px}
 </head>
 <body>
 <header>
-  <div class="logo" onclick="showView('dashboard')" style="cursor:pointer">LupoLab <span class="logo-badge">AP</span></div>
+  <div style="display:flex;align-items:center;gap:10px">
+    <button class="btn-hamburger" onclick="toggleSidebar()" aria-label="Menu navigazione">☰</button>
+    <div class="logo" onclick="showView('dashboard')" style="cursor:pointer">LupoLab <span class="logo-badge">AP</span></div>
+  </div>
   <div class="hdr-act">
     <button class="btn" id="sync-status" onclick="forceSync()" style="font-size:11px;font-family:'DM Mono',monospace" title="Sincronizza con cloud">⬡ Locale</button>
     <button class="btn btn-ok" onclick="forceSave()" title="Salva tutto sul cloud" style="font-size:11px">💾 Salva</button>
     <button class="btn" id="undo-btn" onclick="undoLastAction()" title="Nessuna azione da annullare" style="font-size:11px;opacity:.4">↩ Annulla</button>
     <div style="width:1px;height:20px;background:rgba(255,255,255,.15);margin:0 4px"></div>
     <button class="btn btn-primary" onclick="openNuovoCampione()" title="Nuovo campione">＋ Campione</button>
-    <button class="btn" onclick="openNuovoCampioneSpec('pap_l')" style="background:rgba(234,88,12,.2);color:#fdba74;border-color:rgba(234,88,12,.3)">＋ Pap L</button>
-    <button class="btn" onclick="openNuovoCampioneSpec('pap_priv')" style="background:rgba(124,58,237,.2);color:#c4b5fd;border-color:rgba(124,58,237,.3)">＋ Pap Priv.</button>
+    <button class="btn btn-pap-l" onclick="openNuovoCampioneSpec('pap_l')">＋ Pap L</button>
+    <button class="btn btn-pap-priv" onclick="openNuovoCampioneSpec('pap_priv')">＋ Pap Priv.</button>
     <div style="width:1px;height:20px;background:rgba(255,255,255,.15);margin:0 4px"></div>
-    <button class="btn btn-ok" onclick="openCaricaScanModal()" title="Carico da scan">⬆ Carico</button>
-    <button class="btn btn-warn" onclick="openScaricaModal()" title="Scarico manuale">⬇ Scarico</button>
-    <button class="btn" onclick="openDDTModal()" title="Importa da foto">📷 DDT</button>
-    <button class="btn btn-primary" onclick="openAddModal()" title="Aggiungi prodotto">＋ Prodotto</button>
+    <div class="hdr-ddrop" id="hdr-mag-drop">
+      <button class="btn" onclick="toggleHdrDrop('hdr-mag-drop')" aria-label="Azioni magazzino">📦 Mag. ▾</button>
+      <div class="hdr-ddrop-menu" id="hdr-mag-drop-menu">
+        <button class="btn btn-ok" onclick="openCaricaScanModal();toggleHdrDrop('hdr-mag-drop')">⬆ Carico scan</button>
+        <button class="btn btn-warn" onclick="openScaricaModal();toggleHdrDrop('hdr-mag-drop')">⬇ Scarico</button>
+        <button class="btn" onclick="openDDTModal();toggleHdrDrop('hdr-mag-drop')">📷 DDT</button>
+        <button class="btn btn-primary" onclick="openAddModal();toggleHdrDrop('hdr-mag-drop')">＋ Prodotto</button>
+      </div>
+    </div>
   </div>
 </header>
+<div id="sync-banner">⟳ Sincronizzazione dati in corso…</div>
+<div id="sidebar-backdrop" onclick="toggleSidebar()"></div>
 
 <div class="layout">
   <nav class="sidebar">
@@ -288,7 +326,7 @@ textarea{resize:vertical;min-height:60px}
           <div style="font-weight:700;font-size:14px;color:var(--accent)">🧬 Registra caso rapido</div>
           <button class="btn btn-sm" onclick="showView('tracciabilita')">Tutti i casi →</button>
         </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr auto;gap:8px;align-items:end">
+        <div id="quick-form-grid" style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr auto;gap:8px;align-items:end">
           <div class="fg" style="margin:0">
             <label>ID Caso *</label>
             <input type="text" id="quick-id" placeholder="es. 2764/26" style="font-family:DM Mono,monospace;font-weight:700">
@@ -1676,6 +1714,7 @@ const debouncedRenderTracc = debounce((...a)=>typeof renderTracciabilita!=='unde
 async function initialSync(){
   if(!SUPA_OK){ updateSyncStatus('off'); return; }
   updateSyncStatus('sync');
+  document.getElementById('sync-banner')?.classList.add('show');
   try{
     const [prods,movs,wRows,wlog,ordini,arch,camp_cloud,proc_cloud,color_cloud,schede_cloud]=await Promise.all([
       supaFetch('products','GET',null,'?order=nome'),
@@ -1713,8 +1752,9 @@ async function initialSync(){
     if(wRows&&wRows.length&&isDefault) localStorage.setItem(LS_W, JSON.stringify(wRows[0].data));
     _invalidateAll();
     updateSyncStatus('ok');
+    document.getElementById('sync-banner')?.classList.remove('show');
     _refreshCurrentView();
-  }catch(e){ updateSyncStatus('err'); }
+  }catch(e){ updateSyncStatus('err'); document.getElementById('sync-banner')?.classList.remove('show'); }
 }
 
 // Al rientro nella tab: sync solo se online (push locale → cloud, non cloud → locale)
@@ -1929,6 +1969,9 @@ function showView(v){
   if(v==='tracciabilita') renderTracciabilita();
   if(v==='processatore') renderProcessatore();
   if(v==='coloratore') renderColoratore();
+  // Chiudi sidebar drawer su mobile dopo navigazione
+  const sb=document.querySelector('.sidebar');
+  if(sb?.classList.contains('open')) toggleSidebar();
 }
 function goCategory(cat){
   invFilter=cat; subFilter='all';
@@ -4868,6 +4911,25 @@ function viewOrdine(id){
 buildProdDatalist();
 renderDashboard();
 initialSync();
+
+// FIX [UI/UX]: header dropdown magazzino
+function toggleHdrDrop(id){
+  const menu=document.getElementById(id+'-menu');
+  if(!menu) return;
+  menu.classList.toggle('open');
+}
+document.addEventListener('click',e=>{
+  if(!e.target.closest('.hdr-ddrop')) document.querySelectorAll('.hdr-ddrop-menu.open').forEach(m=>m.classList.remove('open'));
+});
+
+// FIX [UI/UX]: sidebar drawer per tablet
+function toggleSidebar(){
+  const sb=document.querySelector('.sidebar');
+  const bd=document.getElementById('sidebar-backdrop');
+  if(!sb||!bd) return;
+  const open=sb.classList.toggle('open');
+  bd.classList.toggle('show', open);
+}
 
 // ══════════════════════════════════════════
 // FEATURE 2: SCAN BARCODE REAGENTI per processatore/coloratore
