@@ -1754,13 +1754,23 @@ function _updateSyncWarning(){
     toast('⚠ Sync '+first+': '+(_supaErrMsg.get(first)||'errore POST'),'error');
   }
 }
+// FIX [INFRASTRUTTURA]: normalizza array prima del POST — tutti gli oggetti devono avere le stesse chiavi
+function _normalizeArr(arr){
+  if(!arr||arr.length<2) return arr;
+  const allKeys=new Set();
+  arr.forEach(item=>{ if(item&&typeof item==='object') Object.keys(item).forEach(k=>allKeys.add(k)); });
+  return arr.map(item=>{ const n={}; allKeys.forEach(k=>n[k]=item[k]!==undefined?item[k]:null); return n; });
+}
 async function supaFetch(table,method='GET',body=null,query=''){
   if(!SUPA_OK) return null;
   if(!IS_ONLINE && method!=='GET') return null; // offline: non tentare write
   try{
+    // FIX [INFRASTRUTTURA]: resolution=merge-duplicates obbligatorio per upsert
+    const prefer=method==='POST'?'return=representation,resolution=merge-duplicates':'return=representation';
+    const payload=method==='POST'&&Array.isArray(body)?_normalizeArr(body):body;
     const res=await fetch(SUPA_URL+'/rest/v1/'+table+query,{
-      method, body:body?JSON.stringify(body):undefined,
-      headers:{'Content-Type':'application/json','apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,'Prefer':'return=representation'}
+      method, body:payload?JSON.stringify(payload):undefined,
+      headers:{'Content-Type':'application/json','apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,'Prefer':prefer}
     });
     if(!res.ok){
       if(method==='POST'){
