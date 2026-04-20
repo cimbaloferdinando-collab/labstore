@@ -3214,7 +3214,7 @@ function scaricaSelProd(){
       document.getElementById('sc-man-qty-wrap').style.display='';
       document.getElementById('sc-man-confirm-btn').style.display='';
       document.getElementById('sc-man-qty').max=p.qty;
-      document.getElementById('sc-man-info').innerHTML=`<div style="font-size:12px;color:var(--text3)">Disponibili: <strong style="color:var(--green)">${p.qty}</strong> ${p.unita||''}</div>`;
+      document.getElementById('sc-man-info').innerHTML=`<div style="font-size:12px;color:var(--text3)">Disponibili: <strong style="color:var(--green)">${p.qty}</strong> ${esc(p.unita||'')}</div>`;
     };
     wrap.appendChild(div);
   });
@@ -3466,7 +3466,14 @@ function confirmCaricaScanNew(){
 // ══════════════════════════════════════════
 // FIX [INFRASTRUTTURA]: LS_SCHEDE dichiarata in cima al file
 const loadSchede=()=>_getCache(LS_SCHEDE,'[]');
-function saveSchede(arr){ _setCache(LS_SCHEDE,arr); }
+// FIX [INFRASTRUTTURA]: saveSchede ora sincronizza su Supabase e gestisce offline
+async function saveSchede(arr){
+  _setCache(LS_SCHEDE,arr);
+  if(!SUPA_OK) return;
+  if(!IS_ONLINE){ enqueue({type:'schede'}); return; }
+  try{ if(arr.length) await supaFetch('schede_tecniche','POST',arr,'?on_conflict=id'); }
+  catch(e){ enqueue({type:'schede'}); }
+}
 
 let ssScanReader=null, ssCurrentUrl=null;
 
@@ -3519,7 +3526,7 @@ function prefillSchedaFornitore(url){
     if(url.includes(domain)){ document.getElementById('ss-fornitore').value=name; break; }
   }
 }
-function saveSchedaTecnica(){
+async function saveSchedaTecnica(){
   if(!ssCurrentUrl){ toast('Nessun URL da salvare','error'); return; }
   const scheda={
     id:genId(),
@@ -3527,9 +3534,11 @@ function saveSchedaTecnica(){
     fornitore:document.getElementById('ss-fornitore').value.trim()||'Altro',
     prodotto:document.getElementById('ss-prodotto').value.trim(),
     prodId:document.getElementById('ss-link-prod').value,
-    data:new Date().toISOString()
+    data:new Date().toISOString(),
+    creato:new Date().toISOString(),
+    modificato:new Date().toISOString()
   };
-  const schede=loadSchede(); schede.unshift(scheda); saveSchede(schede);
+  const schede=loadSchede(); schede.unshift(scheda); await saveSchede(schede);
   closeSchedaScanModal();
   if(currentView==='schede') renderSchede();
   toast('Scheda tecnica salvata','success');
