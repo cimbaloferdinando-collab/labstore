@@ -1756,8 +1756,8 @@ function _updateSyncWarning(){
 }
 // FIX [INFRASTRUTTURA]: campi da NON inviare a Supabase per tabella (es. base64 immagini)
 const _SUPA_STRIP={
-  ordini:['ddtImages'],
-  archivio_ordini:['ddtImages'],
+  ordini:['ddtImages','scanOrdine'],
+  archivio_ordini:['ddtImages','scanOrdine'],
 };
 // Normalizza array prima del POST — tutti gli oggetti devono avere le stesse chiavi
 function _normalizeArr(arr){
