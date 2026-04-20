@@ -970,6 +970,7 @@ textarea{resize:vertical;min-height:60px}
     </div>
 
     <div class="modal-footer">
+      <button class="btn btn-danger btn-sm" id="proc-delete-btn" onclick="deleteProcCicloModal()" style="margin-right:auto;display:none">🗑 Elimina</button>
       <button class="btn" onclick="closeModal('modal-processatore')">Annulla</button>
       <button class="btn btn-primary" onclick="saveProcessatore()">💾 Salva</button>
     </div>
@@ -1065,6 +1066,7 @@ textarea{resize:vertical;min-height:60px}
     </div>
 
     <div class="modal-footer">
+      <button class="btn btn-danger btn-sm" id="color-delete-btn" onclick="deleteColorCicloModal()" style="margin-right:auto;display:none">🗑 Elimina</button>
       <button class="btn" onclick="closeModal('modal-coloratore')">Annulla</button>
       <button class="btn btn-primary" onclick="saveColoratore()">💾 Salva</button>
     </div>
@@ -3531,6 +3533,8 @@ function openNuovoProcessatore(preset){
   const rl = document.getElementById('proc-reagenti-list');
   rl.innerHTML='';
   (preset?.reagenti||[]).forEach(r=>addReagenteProc(r));
+  const procDelBtn=document.getElementById('proc-delete-btn');
+  if(procDelBtn) procDelBtn.style.display=preset?'':'none';
   document.getElementById('modal-processatore').classList.add('open');
 }
 
@@ -3713,6 +3717,17 @@ async function deleteProcCiclo(id){
   await saveProc(loadProc().filter(x=>x.id!==id), id);
   renderProcessatore(); toast('Ciclo eliminato','info');
 }
+async function deleteProcCicloModal(){
+  const id=document.getElementById('proc-edit-id').value;
+  if(!id) return;
+  if(!confirm('Eliminare questo ciclo processatore?')) return;
+  _takeSnapshot('Elimina ciclo processatore');
+  await saveProc(loadProc().filter(x=>x.id!==id), id);
+  closeModal('modal-processatore');
+  renderProcessatore();
+  renderDashboard();
+  toast('Ciclo eliminato','info');
+}
 
 // ══════════════════════════════════════════
 // COLORATORE — Registro giornaliero
@@ -3752,6 +3767,8 @@ function openNuovoColoratore(preset){
   rl.innerHTML='';
   if(preset?.reagenti?.length){ preset.reagenti.forEach(r=>addReagenteColor(r)); }
   else { precompileReagentiColoratore(); }
+  const colorDelBtn=document.getElementById('color-delete-btn');
+  if(colorDelBtn) colorDelBtn.style.display=preset?'':'none';
   document.getElementById('modal-coloratore').classList.add('open');
 }
 
@@ -3896,6 +3913,17 @@ async function deleteColorCiclo(id){
   _takeSnapshot('Elimina registro coloratore'); // FIX [UNDO]
   await saveColoratoreReg(loadColoratore().filter(x=>x.id!==id), id);
   renderColoratore(); toast('Registro eliminato','info');
+}
+async function deleteColorCicloModal(){
+  const id=document.getElementById('color-edit-id').value;
+  if(!id) return;
+  if(!confirm('Eliminare questo registro coloratore?')) return;
+  _takeSnapshot('Elimina registro coloratore');
+  await saveColoratoreReg(loadColoratore().filter(x=>x.id!==id), id);
+  closeModal('modal-coloratore');
+  renderColoratore();
+  renderDashboard();
+  toast('Registro eliminato','info');
 }
 // ══════════════════════════════════════════
 // ══════════════════════════════════════════
