@@ -239,6 +239,7 @@ textarea{resize:vertical;min-height:60px}
   <div class="hdr-act">
     <button class="btn" id="sync-status" onclick="forceSync()" style="font-size:11px;font-family:'DM Mono',monospace" title="Sincronizza con cloud">⬡ Locale</button>
     <button class="btn btn-ok" onclick="forceSave()" title="Salva tutto sul cloud" style="font-size:11px">💾 Salva</button>
+    <button class="btn" onclick="exportBackup()" title="Esporta backup locale JSON" style="font-size:11px">📥 Backup</button>
     <button class="btn" id="undo-btn" onclick="undoLastAction()" title="Nessuna azione da annullare" style="font-size:11px;opacity:.4">↩ Annulla</button>
     <div style="width:1px;height:20px;background:rgba(255,255,255,.15);margin:0 4px"></div>
     <button class="btn btn-primary" onclick="openNuovoCampione()" title="Nuovo campione">＋ Campione</button>
@@ -1525,10 +1526,11 @@ function _refreshCurrentView(){
 }
 
 // ── SALVA MANUALE — Force push di tutto su Supabase ──
-async function forceSave(){
-  if(!SUPA_OK){ toast('Supabase non configurato','error'); return; }
-  if(!IS_ONLINE){ toast('Sei offline — impossibile salvare sul cloud','error'); return; }
-  updateSyncStatus('sync');
+// FIX [INFRASTRUTTURA]: aggiunto ihc_requests + modalità silent per auto-sync
+async function forceSave(silent=false){
+  if(!SUPA_OK){ if(!silent) toast('Supabase non configurato','error'); return; }
+  if(!IS_ONLINE){ if(!silent) toast('Sei offline — impossibile salvare sul cloud','error'); return; }
+  if(!silent) updateSyncStatus('sync');
   try{
     const prods=JSON.parse(localStorage.getItem(LS_P)||'[]');
     const movs=JSON.parse(localStorage.getItem(LS_M)||'[]');
@@ -1540,7 +1542,7 @@ async function forceSave(){
     const schede=JSON.parse(localStorage.getItem(LS_SCHEDE)||'[]');
     const proc=JSON.parse(localStorage.getItem(LS_PROC)||'[]');
     const color=JSON.parse(localStorage.getItem(LS_COLOR_REG)||'[]');
-    // Push tutto
+    const ihc=JSON.parse(localStorage.getItem(LS_IHC)||'[]');
     if(prods.length) await supaFetch('products','POST',prods,'?on_conflict=id');
     if(movs.length) await supaFetch('movements','POST',movs,'?on_conflict=id');
     await supaFetch('waste_state','DELETE',null,'?id=eq.waste_state');
@@ -1551,12 +1553,42 @@ async function forceSave(){
     if(camp.length) await supaFetch('campioni','POST',camp,'?on_conflict=id');
     if(proc.length) await supaFetch('processatore','POST',proc,'?on_conflict=id');
     if(color.length) await supaFetch('coloratore_log','POST',color,'?on_conflict=id');
-    // Schede: sync su Supabase (tabella schede_tecniche)
     if(schede.length) await supaFetch('schede_tecniche','POST',schede,'?on_conflict=id');
+    if(ihc.length) await supaFetch('ihc_requests','POST',ihc,'?on_conflict=id');
     saveQueue([]);
-    updateSyncStatus('ok');
-    toast('💾 Tutto salvato sul cloud','success');
-  }catch(e){ updateSyncStatus('err'); toast('Errore salvataggio: '+e.message,'error'); }
+    if(!silent){ updateSyncStatus('ok'); toast('💾 Tutto salvato sul cloud','success'); }
+    else if(_supaErrors.size===0) updateSyncStatus('ok');
+  }catch(e){ if(!silent){ updateSyncStatus('err'); toast('Errore salvataggio: '+e.message,'error'); } }
+}
+
+// FIX [INFRASTRUTTURA]: export backup completo JSON scaricabile
+function exportBackup(){
+  try{
+    const backup={
+      timestamp: new Date().toISOString(),
+      version: '1.0',
+      data:{
+        products:       JSON.parse(localStorage.getItem(LS_P)||'[]'),
+        movements:      JSON.parse(localStorage.getItem(LS_M)||'[]'),
+        waste_state:    JSON.parse(localStorage.getItem(LS_W)||'{}'),
+        waste_log:      JSON.parse(localStorage.getItem(LS_WL)||'[]'),
+        ordini:         JSON.parse(localStorage.getItem(LS_ORD)||'[]'),
+        archivio_ordini:JSON.parse(localStorage.getItem(LS_ARCH)||'[]'),
+        campioni:       JSON.parse(localStorage.getItem(LS_CAMP)||'[]'),
+        processatore:   JSON.parse(localStorage.getItem(LS_PROC)||'[]'),
+        coloratore:     JSON.parse(localStorage.getItem(LS_COLOR_REG)||'[]'),
+        schede:         JSON.parse(localStorage.getItem(LS_SCHEDE)||'[]'),
+        ihc:            JSON.parse(localStorage.getItem(LS_IHC)||'[]'),
+      }
+    };
+    const blob=new Blob([JSON.stringify(backup,null,2)],{type:'application/json'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url; a.download='lupolab-backup-'+new Date().toISOString().slice(0,10)+'.json';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast('📥 Backup esportato','success');
+  }catch(e){ toast('Errore backup: '+e.message,'error'); }
 }
 
 // Rileva cambio connessione
@@ -1708,6 +1740,15 @@ async function flushQueue(){
   }catch(e){ updateSyncStatus('err'); }
 }
 
+// FIX [SICUREZZA]: traccia tabelle con POST falliti per rilevare schema mismatch
+const _supaErrors=new Set();
+function _updateSyncWarning(){
+  const el=document.getElementById('sync-status'); if(!el) return;
+  if(_supaErrors.size>0){
+    el.textContent='⚠ Schema'; el.style.color='var(--red)';
+    el.title='⚠ POST falliti su: '+[..._supaErrors].join(', ')+'\nEsegui la migration SQL in Supabase, poi clicca per risincronizzare.';
+  }
+}
 async function supaFetch(table,method='GET',body=null,query=''){
   if(!SUPA_OK) return null;
   if(!IS_ONLINE && method!=='GET') return null; // offline: non tentare write
@@ -1716,7 +1757,12 @@ async function supaFetch(table,method='GET',body=null,query=''){
       method, body:body?JSON.stringify(body):undefined,
       headers:{'Content-Type':'application/json','apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,'Prefer':'return=representation'}
     });
-    if(!res.ok) return null;
+    if(!res.ok){
+      // FIX [INFRASTRUTTURA]: rileva schema mismatch su POST e avvisa immediatamente
+      if(method==='POST'){ _supaErrors.add(table); setTimeout(_updateSyncWarning,100); }
+      return null;
+    }
+    if(method==='POST') _supaErrors.delete(table);
     const t=await res.text(); return t?JSON.parse(t):true;
   }catch(e){ return null; }
 }
@@ -5236,6 +5282,8 @@ function viewOrdine(id){
 buildProdDatalist();
 renderDashboard();
 initialSync();
+// FIX [INFRASTRUTTURA]: auto-sync silenzioso ogni 3 minuti — previene perdita dati se browser svuota localStorage
+setInterval(()=>{ if(IS_ONLINE&&SUPA_OK) forceSave(true); }, 3*60*1000);
 
 // FIX [UI/UX]: header dropdown magazzino
 function toggleHdrDrop(id){
