@@ -2400,9 +2400,12 @@ function renderDashboard(){
       const prioBadge={urgente:'<span class="badge bg-red" style="font-size:10px">🔴 Urgente</span>',normale:'',differibile:'<span class="badge" style="background:var(--bg4);color:var(--text3);border-color:var(--border2);font-size:10px">Diff.</span>'};
       const statoBadge={da_fare:'<span class="badge bg-red" style="font-size:10px">Da fare</span>',in_lavorazione:'<span class="badge bg-yellow" style="font-size:10px">In lav.</span>'};
       ihcEl.innerHTML=`<div style="font-size:12px;color:var(--text3);margin-bottom:8px">${ihcDaFare} da fare · ${ihcInLav} in lavorazione${ihcUrgenti?` · <span style="color:var(--red);font-weight:700">${ihcUrgenti} urgenti</span>`:''}</div>`+
-        pending.slice(0,5).map(r=>`<div class="home-list-item" onclick="openNuovaIHC(loadIHC().find(x=>x.id==='${r.id}'))" style="${r.priorita==='urgente'?'color:var(--red)':''}">
-          <span><strong style="font-family:DM Mono,monospace">${esc(r.campione_id||'—')}</strong> <span style="color:var(--text3)">${esc(r.patologo||'')}</span></span>
-          <span style="display:flex;align-items:center;gap:4px">${prioBadge[r.priorita]||''}${statoBadge[r.stato]||''}</span>
+        pending.slice(0,5).map(r=>`<div class="home-list-item" onclick="openNuovaIHC(loadIHC().find(x=>x.id==='${r.id}'))" style="flex-direction:column;align-items:flex-start;gap:4px;${r.priorita==='urgente'?'color:var(--red)':''}">
+          <div style="display:flex;width:100%;justify-content:space-between;align-items:center">
+            <span><strong style="font-family:DM Mono,monospace">${esc(r.campione_id||'—')}</strong> <span style="color:var(--text3)">${esc(r.patologo||'')}</span></span>
+            <span style="display:flex;align-items:center;gap:4px">${prioBadge[r.priorita]||''}${statoBadge[r.stato]||''}</span>
+          </div>
+          ${_ihcChips(r)}
         </div>`).join('')+
         (pending.length>5?`<div class="home-empty">+${pending.length-5} altre richieste</div>`:'');
     }
