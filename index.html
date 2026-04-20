@@ -269,6 +269,7 @@ textarea{resize:vertical;min-height:60px}
     <div class="nav-item" onclick="showView('tracciabilita')" id="nav-tracciabilita"><span class="nav-icon">🧬</span>Campioni</div>
     <div class="nav-item" onclick="showView('processatore')" id="nav-processatore"><span class="nav-icon">⚗️</span>Processatore</div>
     <div class="nav-item" onclick="showView('coloratore')" id="nav-coloratore"><span class="nav-icon">🎨</span>Coloratore</div>
+    <div class="nav-item" onclick="showView('ihc')" id="nav-ihc"><span class="nav-icon">🔬</span>IHC</div>
 
     <div class="nav-div"></div>
 
@@ -364,6 +365,18 @@ textarea{resize:vertical;min-height:60px}
         </div>
         <div id="home-color-table"></div>
         <div id="home-color-oggi" style="margin-top:8px"></div>
+      </div>
+
+      <!-- IHC widget -->
+      <div class="card" id="home-ihc-card" style="margin-bottom:14px;padding:14px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <div style="font-weight:700;font-size:14px;color:var(--accent)">🔬 IHC</div>
+          <div style="display:flex;gap:6px">
+            <button class="btn btn-sm btn-primary" onclick="openNuovaIHC()">＋ Nuova</button>
+            <button class="btn btn-sm" onclick="showView('ihc')">Tutte →</button>
+          </div>
+        </div>
+        <div id="home-ihc-content"></div>
       </div>
 
       <!-- PROCESSATORE + ALLERTE magazzino -->
@@ -652,7 +665,73 @@ textarea{resize:vertical;min-height:60px}
       <div id="color-list"></div>
     </div>
 
+    <!-- ══════ IHC ══════ -->
+    <div class="view" id="view-ihc">
+      <div class="page-title">🔬 Richieste IHC</div>
+      <div class="page-sub">Immunoistochimica richiesta dai patologi</div>
+      <div style="display:flex;gap:7px;margin-bottom:14px;flex-wrap:wrap;align-items:center">
+        <button class="btn btn-primary" onclick="openNuovaIHC()">＋ Nuova richiesta</button>
+        <div class="search-wrap"><span class="s-ico">🔍</span><input type="text" id="ihc-search" placeholder="Cerca per campione, patologo, anticorpo…" oninput="renderIHC()"></div>
+      </div>
+      <div class="filter-bar" id="ihc-filter-bar">
+        <button class="f-btn active" onclick="setIHCFilter('all',this)">Tutte</button>
+        <button class="f-btn" onclick="setIHCFilter('da_fare',this)">🔴 Da fare</button>
+        <button class="f-btn" onclick="setIHCFilter('in_lavorazione',this)">🟡 In lavorazione</button>
+        <button class="f-btn" onclick="setIHCFilter('completata',this)">🟢 Completate</button>
+      </div>
+      <div id="ihc-list"></div>
+    </div>
+
   </main>
+</div>
+
+<!-- ══════════════════════════════
+     MODAL: IHC
+══════════════════════════════ -->
+<div class="modal-overlay" id="modal-ihc">
+  <div class="modal" style="width:500px">
+    <div class="modal-title" id="ihc-modal-title">Nuova richiesta IHC</div>
+    <input type="hidden" id="ihc-edit-id">
+    <div class="form-grid">
+      <div class="fg" style="margin:0">
+        <label>ID Campione *</label>
+        <input type="text" id="ihc-campione" placeholder="es. 2764/26" style="font-family:DM Mono,monospace;font-weight:700">
+      </div>
+      <div class="fg" style="margin:0">
+        <label>Patologo *</label>
+        <input type="text" id="ihc-patologo" placeholder="es. Dr. Rossi">
+      </div>
+      <div class="fg full" style="margin:0;grid-column:1/-1">
+        <label>Anticorpo / Colorazione speciale *</label>
+        <textarea id="ihc-anticorpo" placeholder="es. CK7, p63, Ki67 — oppure PAS, Grocott…" style="min-height:70px"></textarea>
+      </div>
+      <div class="fg" style="margin:0">
+        <label>Priorità</label>
+        <select id="ihc-priorita">
+          <option value="normale">Normale</option>
+          <option value="urgente">🔴 Urgente</option>
+          <option value="differibile">Differibile</option>
+        </select>
+      </div>
+      <div class="fg" style="margin:0">
+        <label>Stato</label>
+        <select id="ihc-stato">
+          <option value="da_fare">Da fare</option>
+          <option value="in_lavorazione">In lavorazione</option>
+          <option value="completata">Completata</option>
+        </select>
+      </div>
+      <div class="fg" style="margin:0">
+        <label>Data richiesta</label>
+        <input type="date" id="ihc-data">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-danger btn-sm" id="ihc-delete-btn" onclick="deleteIHC()" style="margin-right:auto;display:none">🗑 Elimina</button>
+      <button class="btn" onclick="closeModal('modal-ihc')">Annulla</button>
+      <button class="btn btn-primary" onclick="saveIHC()">💾 Salva</button>
+    </div>
+  </div>
 </div>
 
 <!-- ══════════════════════════════
@@ -937,22 +1016,34 @@ textarea{resize:vertical;min-height:60px}
 
     <!-- RANGE CASI PER TIPO -->
     <div style="background:var(--bg3);border-radius:var(--r);padding:12px;margin-bottom:14px">
-      <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px">Range ID casi lavorati</div>
+      <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px">Range ID casi lavorati + vetri</div>
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
         <div style="background:var(--bg2);border-radius:8px;padding:10px;border:1px solid var(--border)">
           <div style="font-size:11px;color:var(--blue);font-weight:600;margin-bottom:6px">Istologia</div>
           <input type="text" id="color-range-ist-from" placeholder="Da es. 2764/26" style="width:100%;margin-bottom:5px;font-family:DM Mono,monospace;font-size:12px">
-          <input type="text" id="color-range-ist-to" placeholder="A es. 2800/26" style="width:100%;font-family:DM Mono,monospace;font-size:12px">
+          <input type="text" id="color-range-ist-to" placeholder="A es. 2800/26" style="width:100%;margin-bottom:5px;font-family:DM Mono,monospace;font-size:12px">
+          <div style="display:flex;align-items:center;gap:6px;margin-top:4px">
+            <span style="font-size:10px;color:var(--text3);white-space:nowrap">N° vetri</span>
+            <input type="number" id="color-vetri-ist" min="0" value="0" placeholder="0" style="width:70px;font-family:DM Mono,monospace;font-size:13px;font-weight:700;color:var(--blue);text-align:center">
+          </div>
         </div>
         <div style="background:var(--bg2);border-radius:8px;padding:10px;border:1px solid var(--border)">
           <div style="font-size:11px;color:var(--teal);font-weight:600;margin-bottom:6px">Citologia</div>
           <input type="text" id="color-range-cit-from" placeholder="Da es. 2764/26" style="width:100%;margin-bottom:5px;font-family:DM Mono,monospace;font-size:12px">
-          <input type="text" id="color-range-cit-to" placeholder="A es. 2800/26" style="width:100%;font-family:DM Mono,monospace;font-size:12px">
+          <input type="text" id="color-range-cit-to" placeholder="A es. 2800/26" style="width:100%;margin-bottom:5px;font-family:DM Mono,monospace;font-size:12px">
+          <div style="display:flex;align-items:center;gap:6px;margin-top:4px">
+            <span style="font-size:10px;color:var(--text3);white-space:nowrap">N° vetri</span>
+            <input type="number" id="color-vetri-cit" min="0" value="0" placeholder="0" style="width:70px;font-family:DM Mono,monospace;font-size:13px;font-weight:700;color:var(--teal);text-align:center">
+          </div>
         </div>
         <div style="background:var(--bg2);border-radius:8px;padding:10px;border:1px solid var(--border)">
           <div style="font-size:11px;color:var(--purple);font-weight:600;margin-bottom:6px">Pap LupoLab</div>
           <input type="text" id="color-range-pap-from" placeholder="Da es. 100/26L" style="width:100%;margin-bottom:5px;font-family:DM Mono,monospace;font-size:12px">
-          <input type="text" id="color-range-pap-to" placeholder="A es. 150/26L" style="width:100%;font-family:DM Mono,monospace;font-size:12px">
+          <input type="text" id="color-range-pap-to" placeholder="A es. 150/26L" style="width:100%;margin-bottom:5px;font-family:DM Mono,monospace;font-size:12px">
+          <div style="display:flex;align-items:center;gap:6px;margin-top:4px">
+            <span style="font-size:10px;color:var(--text3);white-space:nowrap">N° vetri</span>
+            <input type="number" id="color-vetri-pap" min="0" value="0" placeholder="0" style="width:70px;font-family:DM Mono,monospace;font-size:13px;font-weight:700;color:var(--purple);text-align:center">
+          </div>
         </div>
       </div>
     </div>
@@ -1385,11 +1476,12 @@ const LS_PROC='ls_processatore';
 const LS_COLOR_REG='ls_coloratore';
 const LS_CAMP='ls_campioni';
 const LS_ARCH='ls_archivio_ordini';
+const LS_IHC='ls_ihc';
 
 // ── UNDO SYSTEM — Stack di snapshot per annullare fino a 10 azioni ──
 const UNDO_MAX = 10;
 const _undoStack = [];
-const _UNDO_KEYS = [LS_P, LS_M, LS_W, LS_WL, LS_ORD, LS_SCHEDE, LS_PROC, LS_COLOR_REG, LS_CAMP, LS_ARCH];
+const _UNDO_KEYS = [LS_P, LS_M, LS_W, LS_WL, LS_ORD, LS_SCHEDE, LS_PROC, LS_COLOR_REG, LS_CAMP, LS_ARCH, LS_IHC];
 function _takeSnapshot(label){
   const snap = { label, ts: Date.now(), data: {} };
   _UNDO_KEYS.forEach(k => { try{ snap.data[k] = localStorage.getItem(k)||'[]'; }catch(e){} });
@@ -1425,6 +1517,7 @@ function _refreshCurrentView(){
   if(currentView==='tracciabilita' && typeof renderTracciabilita==='function') renderTracciabilita();
   if(currentView==='processatore' && typeof renderProcessatore==='function') renderProcessatore();
   if(currentView==='coloratore' && typeof renderColoratore==='function') renderColoratore();
+  if(currentView==='ihc' && typeof renderIHC==='function') renderIHC();
   if(currentView==='archivio' && typeof renderArchivio==='function') renderArchivio();
   if(currentView==='schede' && typeof renderSchede==='function') renderSchede();
 }
@@ -1518,7 +1611,7 @@ async function forceSync(){
   updateSyncStatus('sync');
   try{
     // FIX [INFRASTRUTTURA]: Scarica tutto dal cloud + processatore/coloratore/schede
-    const [prods,movs,wRows,wlog,ordini,arch,camp_cloud,proc_cloud,color_cloud,schede_cloud]=await Promise.all([
+    const [prods,movs,wRows,wlog,ordini,arch,camp_cloud,proc_cloud,color_cloud,schede_cloud,ihc_cloud]=await Promise.all([
       supaFetch('products','GET',null,'?order=nome'),
       supaFetch('movements','GET',null,'?order=ts.desc&limit=500'),
       supaFetch('waste_state','GET',null,'?id=eq.waste_state'),
@@ -1528,7 +1621,8 @@ async function forceSync(){
       supaFetch('campioni','GET',null,'?order=data.desc&limit=1000'),
       supaFetch('processatore','GET',null,'?order=data.desc&limit=500'),
       supaFetch('coloratore_log','GET',null,'?order=data.desc&limit=500'),
-      supaFetch('schede_tecniche','GET',null,'?order=data.desc&limit=200')
+      supaFetch('schede_tecniche','GET',null,'?order=data.desc&limit=200'),
+      supaFetch('ihc_requests','GET',null,'?order=data_richiesta.desc&limit=500')
     ]);
     // Merge last-write-wins per ogni tabella con array di record
     const mergedP = _mergeArrays(JSON.parse(localStorage.getItem(LS_P)||'[]'), prods);
@@ -1540,6 +1634,7 @@ async function forceSync(){
     const mergedColor = _mergeArrays(JSON.parse(localStorage.getItem(LS_COLOR_REG)||'[]'), color_cloud);
     const mergedSchede = _mergeArrays(JSON.parse(localStorage.getItem(LS_SCHEDE)||'[]'), schede_cloud);
     const mergedWlog = _mergeArrays(JSON.parse(localStorage.getItem(LS_WL)||'[]'), wlog);
+    const mergedIhc = _mergeArrays(JSON.parse(localStorage.getItem(LS_IHC)||'[]'), ihc_cloud);
     // Salva merge in locale
     _setCache(LS_P, mergedP);
     _setCache(LS_M, mergedM);
@@ -1550,6 +1645,7 @@ async function forceSync(){
     _setCache(LS_COLOR_REG, mergedColor);
     _setCache(LS_SCHEDE, mergedSchede);
     _setCache(LS_WL, mergedWlog);
+    _setCache(LS_IHC, mergedIhc);
     // Waste state: oggetto singolo, cloud vince se più recente
     if(wRows&&wRows.length){
       const localW=JSON.parse(localStorage.getItem(LS_W)||'{}');
@@ -1568,6 +1664,7 @@ async function forceSync(){
     if(mergedColor.length) await supaFetch('coloratore_log','POST',mergedColor,'?on_conflict=id');
     if(mergedSchede.length) await supaFetch('schede_tecniche','POST',mergedSchede,'?on_conflict=id');
     if(mergedWlog.length) await supaFetch('waste_log','POST',mergedWlog,'?on_conflict=id');
+    if(mergedIhc.length) await supaFetch('ihc_requests','POST',mergedIhc,'?on_conflict=id');
     _invalidateAll();
     updateSyncStatus('ok');
     _refreshCurrentView();
@@ -1589,6 +1686,7 @@ async function flushQueue(){
     const proc=JSON.parse(localStorage.getItem(LS_PROC)||'[]');
     const color=JSON.parse(localStorage.getItem(LS_COLOR_REG)||'[]');
     const schede=JSON.parse(localStorage.getItem(LS_SCHEDE)||'[]');
+    const ihc=JSON.parse(localStorage.getItem(LS_IHC)||'[]');
     // Push tutto su Supabase
     if(prods.length) await supaFetch('products','POST',prods,'?on_conflict=id');
     if(movs.length) await supaFetch('movements','POST',movs,'?on_conflict=id');
@@ -1601,6 +1699,7 @@ async function flushQueue(){
     if(proc.length) await supaFetch('processatore','POST',proc,'?on_conflict=id');
     if(color.length) await supaFetch('coloratore_log','POST',color,'?on_conflict=id');
     if(schede.length) await supaFetch('schede_tecniche','POST',schede,'?on_conflict=id');
+    if(ihc.length) await supaFetch('ihc_requests','POST',ihc,'?on_conflict=id');
     saveQueue([]);
     updateSyncStatus('ok');
     toast('✅ '+q.length+' modifica/he sincronizzata/e','success');
@@ -1716,7 +1815,7 @@ async function initialSync(){
   updateSyncStatus('sync');
   document.getElementById('sync-banner')?.classList.add('show');
   try{
-    const [prods,movs,wRows,wlog,ordini,arch,camp_cloud,proc_cloud,color_cloud,schede_cloud]=await Promise.all([
+    const [prods,movs,wRows,wlog,ordini,arch,camp_cloud,proc_cloud,color_cloud,schede_cloud,ihc_cloud]=await Promise.all([
       supaFetch('products','GET',null,'?order=nome'),
       supaFetch('movements','GET',null,'?order=ts.desc&limit=500'),
       supaFetch('waste_state','GET',null,'?id=eq.waste_state'),
@@ -1726,13 +1825,15 @@ async function initialSync(){
       supaFetch('campioni','GET',null,'?order=data.desc&limit=1000'),
       supaFetch('processatore','GET',null,'?order=data.desc&limit=500'),
       supaFetch('coloratore_log','GET',null,'?order=data.desc&limit=500'),
-      supaFetch('schede_tecniche','GET',null,'?order=data.desc&limit=200')
+      supaFetch('schede_tecniche','GET',null,'?order=data.desc&limit=200'),
+      supaFetch('ihc_requests','GET',null,'?order=data_richiesta.desc&limit=500')
     ]);
     // Merge per ogni tabella: ultimo modificato vince
     const tables = [
       [LS_P, prods], [LS_M, movs], [LS_ORD, ordini],
       [LS_ARCH, arch], [LS_CAMP, camp_cloud], [LS_PROC, proc_cloud],
-      [LS_COLOR_REG, color_cloud], [LS_SCHEDE, schede_cloud], [LS_WL, wlog]
+      [LS_COLOR_REG, color_cloud], [LS_SCHEDE, schede_cloud], [LS_WL, wlog],
+      [LS_IHC, ihc_cloud]
     ];
     tables.forEach(([key, cloud]) => {
       const local = JSON.parse(localStorage.getItem(key)||'[]');
@@ -1969,6 +2070,7 @@ function showView(v){
   if(v==='tracciabilita') renderTracciabilita();
   if(v==='processatore') renderProcessatore();
   if(v==='coloratore') renderColoratore();
+  if(v==='ihc') renderIHC();
   // Chiudi sidebar drawer su mobile dopo navigazione
   const sb=document.querySelector('.sidebar');
   if(sb?.classList.contains('open')) toggleSidebar();
@@ -2058,24 +2160,25 @@ function renderHomeColoratore(){
     <thead><tr>
       <th>Data</th>
       <th style="color:var(--blue);text-align:center">EE</th>
-      <th style="color:var(--blue)">Range</th>
+      <th style="color:var(--blue)">Range / Vetri</th>
       <th style="color:var(--teal);text-align:center">Cit.</th>
-      <th style="color:var(--teal)">Range</th>
+      <th style="color:var(--teal)">Range / Vetri</th>
       <th style="color:var(--purple);text-align:center">PAP</th>
-      <th style="color:var(--purple)">Range</th>
+      <th style="color:var(--purple)">Range / Vetri</th>
       <th>Reagenti</th>
     </tr></thead>
     <tbody>${arr.map((reg,i)=>{
       const prev=arr[i+1]||null;
       const stato=statoReag(reg,prev);
+      const rngV=(r,v,c)=>r?.from?`<span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text3)">${rng(r)}</span>${v?`<span style="margin-left:5px;font-family:'DM Mono',monospace;font-size:11px;font-weight:600;color:${c}">${v}v</span>`:''}`:v?`<span style="font-family:'DM Mono',monospace;font-size:11px;font-weight:600;color:${c}">${v}v</span>`:'—';
       return `<tr style="cursor:pointer" onclick="openNuovoColoratore(loadColoratore().find(x=>x.id==='${reg.id}'))">
         <td style="font-weight:600;white-space:nowrap">${fmtDate(reg.data)}</td>
         <td style="text-align:center;font-family:'DM Mono',monospace;font-weight:700;color:var(--blue)">${reg.cicli_ee||0}</td>
-        <td style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text3)">${rng(reg.range_ist)}</td>
+        <td>${rngV(reg.range_ist,reg.vetri_ist,'var(--blue)')}</td>
         <td style="text-align:center;font-family:'DM Mono',monospace;font-weight:700;color:var(--teal)">${reg.cicli_ee_cit||0}</td>
-        <td style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text3)">${rng(reg.range_cit)}</td>
+        <td>${rngV(reg.range_cit,reg.vetri_cit,'var(--teal)')}</td>
         <td style="text-align:center;font-family:'DM Mono',monospace;font-weight:700;color:var(--purple)">${reg.cicli_pap||0}</td>
-        <td style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text3)">${rng(reg.range_pap)}</td>
+        <td>${rngV(reg.range_pap,reg.vetri_pap,'var(--purple)')}</td>
         <td><span class="badge ${stato.cls}" style="font-size:10px">${stato.label}</span></td>
       </tr>`;
     }).join('')}</tbody>
@@ -2118,6 +2221,12 @@ function renderDashboard(){
   const procOggi = procArr.find(x=>x.data===oggi);
   const procMese = procArr.filter(x=>x.data&&x.data.slice(0,7)===oggi.slice(0,7));
   const totCasiProcMese = procMese.reduce((s,x)=>s+(x.casi||[]).length,0);
+
+  // ── Dati IHC ──
+  const ihcArr = loadIHC();
+  const ihcDaFare = ihcArr.filter(x=>x.stato==='da_fare').length;
+  const ihcInLav = ihcArr.filter(x=>x.stato==='in_lavorazione').length;
+  const ihcUrgenti = ihcArr.filter(x=>x.stato!=='completata'&&x.priorita==='urgente').length;
 
   // ── Dati coloratore ──
   const colorArr = loadColoratore();
@@ -2274,6 +2383,27 @@ function renderDashboard(){
   renderHomeGrid();
   renderHomeColoratore();
   renderHomeCampioniOggi();
+  // IHC widget
+  const ihcEl=document.getElementById('home-ihc-content');
+  if(ihcEl){
+    const pending=ihcArr.filter(x=>x.stato!=='completata').sort((a,b)=>{
+      if(a.priorita==='urgente'&&b.priorita!=='urgente') return -1;
+      if(b.priorita==='urgente'&&a.priorita!=='urgente') return 1;
+      return (b.data_richiesta||'').localeCompare(a.data_richiesta||'');
+    });
+    if(!pending.length){
+      ihcEl.innerHTML='<div style="color:var(--green);font-size:13px;font-weight:600">✅ Nessuna richiesta in sospeso</div>';
+    } else {
+      const prioBadge={urgente:'<span class="badge bg-red" style="font-size:10px">🔴 Urgente</span>',normale:'',differibile:'<span class="badge" style="background:var(--bg4);color:var(--text3);border-color:var(--border2);font-size:10px">Diff.</span>'};
+      const statoBadge={da_fare:'<span class="badge bg-red" style="font-size:10px">Da fare</span>',in_lavorazione:'<span class="badge bg-yellow" style="font-size:10px">In lav.</span>'};
+      ihcEl.innerHTML=`<div style="font-size:12px;color:var(--text3);margin-bottom:8px">${ihcDaFare} da fare · ${ihcInLav} in lavorazione${ihcUrgenti?` · <span style="color:var(--red);font-weight:700">${ihcUrgenti} urgenti</span>`:''}</div>`+
+        pending.slice(0,5).map(r=>`<div class="home-list-item" onclick="openNuovaIHC(loadIHC().find(x=>x.id==='${r.id}'))" style="${r.priorita==='urgente'?'color:var(--red)':''}">
+          <span><strong style="font-family:DM Mono,monospace">${esc(r.campione_id||'—')}</strong> <span style="color:var(--text3)">${esc(r.patologo||'')}</span></span>
+          <span style="display:flex;align-items:center;gap:4px">${prioBadge[r.priorita]||''}${statoBadge[r.stato]||''}</span>
+        </div>`).join('')+
+        (pending.length>5?`<div class="home-empty">+${pending.length-5} altre richieste</div>`:'');
+    }
+  }
   // Processatore ultimo
   const procEl = document.getElementById('home-proc-oggi');
   if(procEl){
@@ -3607,13 +3737,16 @@ function openNuovoColoratore(preset){
   document.getElementById('color-cicli-ee').value = preset?.cicli_ee||0;
   document.getElementById('color-cicli-ee-cit').value = preset?.cicli_ee_cit||0;
   document.getElementById('color-cicli-pap').value = preset?.cicli_pap||0;
-  // Range casi
+  // Range casi + vetri
   document.getElementById('color-range-ist-from').value = preset?.range_ist?.from||'';
   document.getElementById('color-range-ist-to').value   = preset?.range_ist?.to||'';
   document.getElementById('color-range-cit-from').value = preset?.range_cit?.from||'';
   document.getElementById('color-range-cit-to').value   = preset?.range_cit?.to||'';
   document.getElementById('color-range-pap-from').value = preset?.range_pap?.from||'';
   document.getElementById('color-range-pap-to').value   = preset?.range_pap?.to||'';
+  document.getElementById('color-vetri-ist').value = preset?.vetri_ist||0;
+  document.getElementById('color-vetri-cit').value = preset?.vetri_cit||0;
+  document.getElementById('color-vetri-pap').value = preset?.vetri_pap||0;
   // Reagenti
   const rl = document.getElementById('color-reagenti-list');
   rl.innerHTML='';
@@ -3671,6 +3804,9 @@ async function saveColoratore(){
     range_ist: { from: document.getElementById('color-range-ist-from').value.trim(), to: document.getElementById('color-range-ist-to').value.trim() },
     range_cit: { from: document.getElementById('color-range-cit-from').value.trim(), to: document.getElementById('color-range-cit-to').value.trim() },
     range_pap: { from: document.getElementById('color-range-pap-from').value.trim(), to: document.getElementById('color-range-pap-to').value.trim() },
+    vetri_ist: parseInt(document.getElementById('color-vetri-ist').value)||0,
+    vetri_cit: parseInt(document.getElementById('color-vetri-cit').value)||0,
+    vetri_pap: parseInt(document.getElementById('color-vetri-pap').value)||0,
     reagenti: getReagentiList('color-reagenti-list'),
     modificato: new Date().toISOString()
   };
@@ -3713,17 +3849,22 @@ function renderColoratore(){
     return hasNew ? {label:'🔄 Cambiato',cls:'bg-red'} : {label:'➕ Rabboccato',cls:'bg-yellow'};
   };
   const rng=r=>r?.from?(r.from+(r.to&&r.to!==r.from?' → '+String(r.to).split('/')[0]:'')):'—';
+  const rngVetri=(r,v,c)=>{
+    const r_str=rng(r);
+    const v_str=v?`<span style="margin-left:5px;font-weight:700;color:${c}">${v}v</span>`:'';
+    return r_str==='—'&&!v?'—':`${r_str==='—'?'':r_str}${v_str}`;
+  };
 
   el.innerHTML=`<div style="overflow-x:auto">
   <table>
     <thead><tr>
       <th>Data</th>
       <th style="color:var(--blue);text-align:center">EE Ist.</th>
-      <th style="color:var(--blue)">Range Ist.</th>
+      <th style="color:var(--blue)">Range / Vetri Ist.</th>
       <th style="color:var(--teal);text-align:center">EE Cit.</th>
-      <th style="color:var(--teal)">Range Cit.</th>
+      <th style="color:var(--teal)">Range / Vetri Cit.</th>
       <th style="color:var(--purple);text-align:center">PAP</th>
-      <th style="color:var(--purple)">Range PAP</th>
+      <th style="color:var(--purple)">Range / Vetri PAP</th>
       <th>Reagenti</th>
       <th style="width:70px"></th>
     </tr></thead>
@@ -3734,11 +3875,11 @@ function renderColoratore(){
         return `<tr>
           <td style="font-weight:600;white-space:nowrap">${fmtDate(reg.data)}</td>
           <td style="text-align:center;font-family:'DM Mono',monospace;font-weight:700;color:var(--blue)">${reg.cicli_ee||0}</td>
-          <td style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text3)">${rng(reg.range_ist)}</td>
+          <td style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text3)">${rngVetri(reg.range_ist,reg.vetri_ist,'var(--blue)')}</td>
           <td style="text-align:center;font-family:'DM Mono',monospace;font-weight:700;color:var(--teal)">${reg.cicli_ee_cit||0}</td>
-          <td style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text3)">${rng(reg.range_cit)}</td>
+          <td style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text3)">${rngVetri(reg.range_cit,reg.vetri_cit,'var(--teal)')}</td>
           <td style="text-align:center;font-family:'DM Mono',monospace;font-weight:700;color:var(--purple)">${reg.cicli_pap||0}</td>
-          <td style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text3)">${rng(reg.range_pap)}</td>
+          <td style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text3)">${rngVetri(reg.range_pap,reg.vetri_pap,'var(--purple)')}</td>
           <td><span class="badge ${stato.cls}" style="font-size:11px">${stato.label}</span></td>
           <td style="white-space:nowrap">
             <button class="btn btn-sm" onclick="openNuovoColoratore(loadColoratore().find(x=>x.id==='${reg.id}'))">✎</button>
@@ -3757,6 +3898,123 @@ async function deleteColorCiclo(id){
   renderColoratore(); toast('Registro eliminato','info');
 }
 // ══════════════════════════════════════════
+// ══════════════════════════════════════════
+// IHC — Richieste Immunoistochimica
+// ══════════════════════════════════════════
+const loadIHC=()=>_getCache(LS_IHC,'[]');
+async function saveIHCArr(arr, deletedId){
+  _setCache(LS_IHC, _stampMod(arr));
+  if(!IS_ONLINE){ enqueue({type:'ihc'}); return; }
+  try{
+    if(deletedId) await supaFetch('ihc_requests','DELETE',null,'?id=eq.'+deletedId);
+    if(arr.length) await supaFetch('ihc_requests','POST',arr,'?on_conflict=id');
+  }catch(e){ enqueue({type:'ihc'}); }
+}
+
+let _ihcFilter='all';
+function setIHCFilter(f,btn){
+  _ihcFilter=f;
+  document.querySelectorAll('#ihc-filter-bar .f-btn').forEach(b=>b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  renderIHC();
+}
+
+function renderIHC(){
+  const el=document.getElementById('ihc-list'); if(!el) return;
+  const q=(document.getElementById('ihc-search')?.value||'').toLowerCase();
+  let arr=loadIHC();
+  if(_ihcFilter!=='all') arr=arr.filter(x=>x.stato===_ihcFilter);
+  if(q) arr=arr.filter(x=>
+    (x.campione_id||'').toLowerCase().includes(q)||
+    (x.patologo||'').toLowerCase().includes(q)||
+    (x.anticorpo||'').toLowerCase().includes(q)
+  );
+  // Urgenti in cima, poi per data richiesta desc
+  arr.sort((a,b)=>{
+    if(a.priorita==='urgente'&&b.priorita!=='urgente') return -1;
+    if(b.priorita==='urgente'&&a.priorita!=='urgente') return 1;
+    return (b.data_richiesta||'').localeCompare(a.data_richiesta||'');
+  });
+  if(!arr.length){
+    el.innerHTML='<div class="empty"><div class="e-ico">🔬</div><p>Nessuna richiesta IHC</p></div>';
+    return;
+  }
+  const prioBadge={urgente:'<span class="badge bg-red">🔴 Urgente</span>',normale:'<span class="badge bg-blue">Normale</span>',differibile:'<span class="badge" style="background:var(--bg4);color:var(--text3);border-color:var(--border2)">Differibile</span>'};
+  const statoBadge={da_fare:'<span class="badge bg-red">Da fare</span>',in_lavorazione:'<span class="badge bg-yellow">In lavorazione</span>',completata:'<span class="badge bg-green">Completata</span>'};
+  el.innerHTML=arr.map(r=>`
+    <div class="campione-card" onclick="openNuovaIHC(loadIHC().find(x=>x.id==='${r.id}'))" style="${r.priorita==='urgente'?'border-color:#fca5a5;background:#fff8f8':''}">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px">
+        <div style="flex:1;min-width:0">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:5px">
+            <span class="campione-id" style="font-size:16px">${esc(r.campione_id||'—')}</span>
+            ${prioBadge[r.priorita]||prioBadge.normale}
+            ${statoBadge[r.stato]||statoBadge.da_fare}
+          </div>
+          <div style="font-size:13px;color:var(--text2);margin-bottom:4px"><strong>Patologo:</strong> ${esc(r.patologo||'—')}</div>
+          <div style="font-size:13px;color:var(--text);font-weight:500;white-space:pre-wrap">${esc(r.anticorpo||'—')}</div>
+        </div>
+        <div style="font-size:11px;color:var(--text3);white-space:nowrap;text-align:right;flex-shrink:0">
+          ${r.data_richiesta?fmtDate(r.data_richiesta):''}
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function openNuovaIHC(preset){
+  document.getElementById('ihc-edit-id').value=preset?.id||'';
+  document.getElementById('ihc-modal-title').textContent=preset?'Modifica richiesta IHC':'Nuova richiesta IHC';
+  document.getElementById('ihc-campione').value=preset?.campione_id||'';
+  document.getElementById('ihc-patologo').value=preset?.patologo||'';
+  document.getElementById('ihc-anticorpo').value=preset?.anticorpo||'';
+  document.getElementById('ihc-priorita').value=preset?.priorita||'normale';
+  document.getElementById('ihc-stato').value=preset?.stato||'da_fare';
+  document.getElementById('ihc-data').value=preset?.data_richiesta||new Date().toISOString().slice(0,10);
+  const delBtn=document.getElementById('ihc-delete-btn');
+  if(delBtn) delBtn.style.display=preset?'':'none';
+  document.getElementById('modal-ihc').classList.add('open');
+}
+
+async function saveIHC(){
+  const campione_id=document.getElementById('ihc-campione').value.trim();
+  const patologo=document.getElementById('ihc-patologo').value.trim();
+  const anticorpo=document.getElementById('ihc-anticorpo').value.trim();
+  if(!campione_id||!anticorpo){ toast('Campione e anticorpo obbligatori','error'); return; }
+  _takeSnapshot('Salva IHC '+campione_id);
+  const editId=document.getElementById('ihc-edit-id').value;
+  const rec={
+    id: editId||genId(),
+    campione_id,
+    patologo,
+    anticorpo,
+    priorita: document.getElementById('ihc-priorita').value,
+    stato: document.getElementById('ihc-stato').value,
+    data_richiesta: document.getElementById('ihc-data').value,
+    modificato: new Date().toISOString()
+  };
+  if(!editId) rec.creato=new Date().toISOString();
+  const arr=loadIHC();
+  if(editId){ const i=arr.findIndex(x=>x.id===editId); if(i>=0) arr[i]=rec; else arr.unshift(rec); }
+  else arr.unshift(rec);
+  await saveIHCArr(arr);
+  closeModal('modal-ihc');
+  renderIHC();
+  renderDashboard();
+  toast('IHC salvata','success');
+}
+
+async function deleteIHC(){
+  const editId=document.getElementById('ihc-edit-id').value;
+  if(!editId) return;
+  if(!confirm('Eliminare questa richiesta IHC?')) return;
+  _takeSnapshot('Elimina IHC');
+  const arr=loadIHC().filter(x=>x.id!==editId);
+  await saveIHCArr(arr, editId);
+  closeModal('modal-ihc');
+  renderIHC();
+  renderDashboard();
+  toast('IHC eliminata','info');
+}
+
 // TRACCIABILITÀ CAMPIONI
 // ══════════════════════════════════════════
 // FIX [INFRASTRUTTURA]: LS_CAMP dichiarata in cima al file
