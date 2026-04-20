@@ -1740,13 +1740,18 @@ async function flushQueue(){
   }catch(e){ updateSyncStatus('err'); }
 }
 
-// FIX [SICUREZZA]: traccia tabelle con POST falliti per rilevare schema mismatch
+// FIX [SICUREZZA]: traccia tabelle con POST falliti — cattura errore reale
 const _supaErrors=new Set();
+const _supaErrMsg=new Map();
 function _updateSyncWarning(){
   const el=document.getElementById('sync-status'); if(!el) return;
   if(_supaErrors.size>0){
     el.textContent='⚠ Schema'; el.style.color='var(--red)';
-    el.title='⚠ POST falliti su: '+[..._supaErrors].join(', ')+'\nEsegui la migration SQL in Supabase, poi clicca per risincronizzare.';
+    const details=[..._supaErrors].map(t=>t+': '+(_supaErrMsg.get(t)||'?')).join('\n');
+    el.title='⚠ POST falliti:\n'+details;
+    // Mostra primo errore come toast per visibilità su tablet
+    const first=[..._supaErrors][0];
+    toast('⚠ Sync '+first+': '+(_supaErrMsg.get(first)||'errore POST'),'error');
   }
 }
 async function supaFetch(table,method='GET',body=null,query=''){
@@ -1758,11 +1763,15 @@ async function supaFetch(table,method='GET',body=null,query=''){
       headers:{'Content-Type':'application/json','apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,'Prefer':'return=representation'}
     });
     if(!res.ok){
-      // FIX [INFRASTRUTTURA]: rileva schema mismatch su POST e avvisa immediatamente
-      if(method==='POST'){ _supaErrors.add(table); setTimeout(_updateSyncWarning,100); }
+      if(method==='POST'){
+        const errBody=await res.text().catch(()=>'');
+        _supaErrors.add(table);
+        _supaErrMsg.set(table,'HTTP '+res.status+': '+errBody.slice(0,120));
+        setTimeout(_updateSyncWarning,100);
+      }
       return null;
     }
-    if(method==='POST') _supaErrors.delete(table);
+    if(method==='POST'){ _supaErrors.delete(table); _supaErrMsg.delete(table); }
     const t=await res.text(); return t?JSON.parse(t):true;
   }catch(e){ return null; }
 }
