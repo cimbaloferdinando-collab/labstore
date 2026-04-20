@@ -2388,10 +2388,11 @@ function renderDashboard(){
   // IHC widget
   const ihcEl=document.getElementById('home-ihc-content');
   if(ihcEl){
+    const _ihcN=s=>{const m=(s||'').match(/^(\d+)/);return m?parseInt(m[1]):0;};
     const pending=ihcArr.filter(x=>x.stato!=='completata').sort((a,b)=>{
       if(a.priorita==='urgente'&&b.priorita!=='urgente') return -1;
       if(b.priorita==='urgente'&&a.priorita!=='urgente') return 1;
-      return (b.data_richiesta||'').localeCompare(a.data_richiesta||'');
+      return _ihcN(a.campione_id)-_ihcN(b.campione_id);
     });
     if(!pending.length){
       ihcEl.innerHTML='<div style="color:var(--green);font-size:13px;font-weight:600">✅ Nessuna richiesta in sospeso</div>';
@@ -3957,11 +3958,12 @@ function renderIHC(){
     (x.patologo||'').toLowerCase().includes(q)||
     (x.anticorpo||'').toLowerCase().includes(q)
   );
-  // Urgenti in cima, poi per data richiesta desc
+  // Urgenti in cima, poi per ID campione crescente
+  const _ihcIdNum=s=>{const m=(s||'').match(/^(\d+)/);return m?parseInt(m[1]):0;};
   arr.sort((a,b)=>{
     if(a.priorita==='urgente'&&b.priorita!=='urgente') return -1;
     if(b.priorita==='urgente'&&a.priorita!=='urgente') return 1;
-    return (b.data_richiesta||'').localeCompare(a.data_richiesta||'');
+    return _ihcIdNum(a.campione_id)-_ihcIdNum(b.campione_id);
   });
   if(!arr.length){
     el.innerHTML='<div class="empty"><div class="e-ico">🔬</div><p>Nessuna richiesta IHC</p></div>';
