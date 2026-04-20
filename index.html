@@ -3940,6 +3940,38 @@ async function saveIHCArr(arr, deletedId){
   }catch(e){ enqueue({type:'ihc'}); }
 }
 
+// FIX [UI/UX]: chip anticorpi tappabili con stato completato
+function _ihcChips(r){
+  const items=(r.anticorpo||'').split(/[,\n]+/).map(s=>s.trim()).filter(Boolean);
+  if(!items.length) return `<div style="font-size:13px;color:var(--text3);margin-top:4px">—</div>`;
+  const done=Array.isArray(r.anticorpi_done)?r.anticorpi_done:[];
+  const chips=items.map(it=>{
+    const isDone=done.includes(it);
+    const onclick=`event.stopPropagation();toggleIHCAnticorpo(${JSON.stringify(r.id)},${JSON.stringify(it)})`.replace(/"/g,'&quot;');
+    return `<span onclick="${onclick}" style="display:inline-block;padding:5px 11px;border-radius:20px;cursor:pointer;font-size:12px;font-weight:600;margin:2px;border:1px solid;user-select:none;-webkit-user-select:none;${isDone?'background:#dcfce7;border-color:#86efac;color:#166534;text-decoration:line-through;':'background:var(--bg3);border-color:var(--border2);color:var(--text2);'}">${esc(it)}</span>`;
+  }).join('');
+  const nDone=done.filter(d=>items.includes(d)).length;
+  const manca=items.filter(it=>!done.includes(it)).map(it=>esc(it));
+  const progressLine=nDone===items.length
+    ? `<div style="font-size:11px;color:var(--green);margin-top:5px;font-weight:600">✅ Tutti completati</div>`
+    : `<div style="font-size:11px;color:var(--text3);margin-top:5px">${nDone}/${items.length} completati · manca: <strong style="color:var(--red)">${manca.join(', ')}</strong></div>`;
+  return `<div style="margin-top:6px;line-height:1.8">${chips}</div>${progressLine}`;
+}
+
+async function toggleIHCAnticorpo(id, item){
+  const arr=loadIHC();
+  const i=arr.findIndex(x=>x.id===id);
+  if(i<0) return;
+  const r=arr[i];
+  const done=Array.isArray(r.anticorpi_done)?[...r.anticorpi_done]:[];
+  const idx=done.indexOf(item);
+  if(idx>=0) done.splice(idx,1); else done.push(item);
+  arr[i]={...r, anticorpi_done:done, modificato:new Date().toISOString()};
+  await saveIHCArr(arr);
+  renderIHC();
+  renderDashboard();
+}
+
 let _ihcFilter='all';
 function setIHCFilter(f,btn){
   _ihcFilter=f;
@@ -3981,7 +4013,7 @@ function renderIHC(){
             ${statoBadge[r.stato]||statoBadge.da_fare}
           </div>
           <div style="font-size:13px;color:var(--text2);margin-bottom:4px"><strong>Patologo:</strong> ${esc(r.patologo||'—')}</div>
-          <div style="font-size:13px;color:var(--text);font-weight:500;white-space:pre-wrap">${esc(r.anticorpo||'—')}</div>
+          ${_ihcChips(r)}
         </div>
         <div style="font-size:11px;color:var(--text3);white-space:nowrap;text-align:right;flex-shrink:0">
           ${r.data_richiesta?fmtDate(r.data_richiesta):''}
@@ -4011,18 +4043,20 @@ async function saveIHC(){
   if(!campione_id||!anticorpo){ toast('Campione e anticorpo obbligatori','error'); return; }
   _takeSnapshot('Salva IHC '+campione_id);
   const editId=document.getElementById('ihc-edit-id').value;
+  const arr=loadIHC();
+  const existing=editId?arr.find(x=>x.id===editId):null;
   const rec={
     id: editId||genId(),
     campione_id,
     patologo,
     anticorpo,
+    anticorpi_done: existing?.anticorpi_done||[],
     priorita: document.getElementById('ihc-priorita').value,
     stato: document.getElementById('ihc-stato').value,
     data_richiesta: document.getElementById('ihc-data').value,
     modificato: new Date().toISOString()
   };
   if(!editId) rec.creato=new Date().toISOString();
-  const arr=loadIHC();
   if(editId){ const i=arr.findIndex(x=>x.id===editId); if(i>=0) arr[i]=rec; else arr.unshift(rec); }
   else arr.unshift(rec);
   await saveIHCArr(arr);
