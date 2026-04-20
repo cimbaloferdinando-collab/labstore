@@ -5373,23 +5373,38 @@ async function scanReagente(target){
 function riceviParziale(id){
   const ords = loadOrd();
   const o = ords.find(x=>x.id===id); if(!o) return;
+  const prods = loadP();
   const info = o.righe.map((r,i)=>{
     const ricevuta = r.qtyRicevuta||0;
     const restante = r.qty - ricevuta;
-    // Mostra storico ricezioni per questa riga
     const storico = (r.ricezioni||[]).map(rc=>
       `<span style="font-size:10px;background:var(--green-bg);color:var(--green);border-radius:3px;padding:1px 5px;border:1px solid #a7f3d0">+${rc.qty} ${rc.ddt||''} ${rc.data?new Date(rc.data).toLocaleDateString('it-IT'):''}</span>`
     ).join(' ');
-    return `<div style="padding:8px 0;border-bottom:1px solid var(--border);font-size:13px">
-      <div style="display:flex;align-items:center;gap:8px">
-        <div style="flex:1">
-          <strong>${r.nome}</strong>
-          <div style="font-size:11px;color:var(--text3)">Ordinati: ${r.qty} ${r.unita||'pz'} · Ricevuti: ${ricevuta} · Restano: ${Math.max(0,restante)}</div>
-          ${storico?'<div style="margin-top:3px;display:flex;flex-wrap:wrap;gap:3px">'+storico+'</div>':''}
+    const found = prods.find(x=>x.nome.toLowerCase()===r.nome.toLowerCase());
+    const matchBadge = restante>0
+      ? (found
+          ? `<span style="font-size:10px;color:var(--green);font-weight:600">✅ ${esc(found.nome)}</span>`
+          : `<span style="font-size:10px;color:var(--yellow);font-weight:600">⚠️ Non trovato in magazzino — verrà creato</span>`)
+      : '';
+    return `<div style="padding:10px 0;border-bottom:1px solid var(--border);font-size:13px">
+      <div style="margin-bottom:5px">
+        <strong>${esc(r.nome)}</strong>
+        <div style="font-size:11px;color:var(--text3)">Ordinati: ${r.qty} ${r.unita||'pz'} · Ricevuti: ${ricevuta} · Restano: ${Math.max(0,restante)}</div>
+        ${storico?'<div style="margin-top:3px;display:flex;flex-wrap:wrap;gap:3px">'+storico+'</div>':''}
+        ${matchBadge?'<div style="margin-top:3px">'+matchBadge+'</div>':''}
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+        <div style="display:flex;align-items:center;gap:4px">
+          <label style="font-size:10px;margin:0;color:var(--text3)">Arrivo:</label>
+          <input type="number" class="recv-parz-qty" data-idx="${i}" value="${Math.max(0,restante)}" min="0" style="width:65px;text-align:center" ${restante<=0?'disabled':''}>
         </div>
-        <div style="display:flex;align-items:center;gap:5px">
-          <label style="font-size:10px;margin:0">Arrivo:</label>
-          <input type="number" class="recv-parz-qty" data-idx="${i}" value="${Math.max(0,restante)}" min="0" max="${restante}" style="width:70px;text-align:center" ${restante<=0?'disabled':''}>
+        <div style="display:flex;align-items:center;gap:4px">
+          <label style="font-size:10px;margin:0;color:var(--text3)">Lotto:</label>
+          <input type="text" class="recv-parz-lotto" data-idx="${i}" placeholder="opzionale" style="width:110px" ${restante<=0?'disabled':''}>
+        </div>
+        <div style="display:flex;align-items:center;gap:4px">
+          <label style="font-size:10px;margin:0;color:var(--text3)">Scadenza:</label>
+          <input type="date" class="recv-parz-scad" data-idx="${i}" style="width:130px" ${restante<=0?'disabled':''}>
         </div>
       </div>
     </div>`;
@@ -5422,6 +5437,11 @@ function confirmRicezioneParziale(id){
   const scanFile = document.getElementById('recv-parz-scan')?.files?.[0];
   const prods = loadP();
   const movs = loadM();
+  // Indici per lotto e scadenza per riga
+  const lottoByIdx = {};
+  document.querySelectorAll('.recv-parz-lotto').forEach(inp=>{ lottoByIdx[parseInt(inp.dataset.idx)] = inp.value.trim(); });
+  const scadByIdx = {};
+  document.querySelectorAll('.recv-parz-scad').forEach(inp=>{ scadByIdx[parseInt(inp.dataset.idx)] = inp.value; });
   if(!o.ddtList) o.ddtList = [];
   const now = new Date().toISOString();
   const ddtEntry = { data: now, rif: ddt, righe: [] };
@@ -5432,15 +5452,33 @@ function confirmRicezioneParziale(id){
     if(qtyArrivo <= 0) return;
     haRicevuto = true;
     const r = o.righe[idx];
+    const lotto = lottoByIdx[idx]||'';
+    const scad = scadByIdx[idx]||'';
     r.qtyRicevuta = (r.qtyRicevuta||0) + qtyArrivo;
-    // Storico ricezioni per riga — associa al DDT
     if(!r.ricezioni) r.ricezioni = [];
-    r.ricezioni.push({ qty: qtyArrivo, ddt: ddt, data: now });
-    ddtEntry.righe.push({nome:r.nome, qty:qtyArrivo});
-    // Carica in magazzino
-    const p = prods.find(x=>x.nome.toLowerCase()===r.nome.toLowerCase());
-    if(p) p.qty += qtyArrivo;
-    movs.unshift({id:genId(),ts:now,tipo:'carico',prod:r.nome,prodId:p?.id||'',qty:qtyArrivo,lotto:'',note:'Ricezione '+o.num+(ddt?' — '+ddt:'')});
+    r.ricezioni.push({ qty: qtyArrivo, ddt: ddt, data: now, lotto, scadenza: scad });
+    ddtEntry.righe.push({nome:r.nome, qty:qtyArrivo, lotto, scadenza: scad});
+    // Carico magazzino — replica logica "Carica" da scan
+    let p = prods.find(x=>x.nome.toLowerCase()===r.nome.toLowerCase());
+    if(p){
+      // Prodotto trovato: aggiorna qty, lotto, scadenza
+      p.qty += qtyArrivo;
+      if(p.qty_init===undefined) p.qty_init = qtyArrivo;
+      if(lotto) p.lotto = lotto;
+      if(scad) p.scadenza = scad;
+    } else {
+      // Prodotto non trovato: crea nuovo
+      const cat = smartCategorize(r.nome, o.fornitore||'', '');
+      p = {
+        id: genId(), nome: r.nome, cat,
+        fornitore: o.fornitore||'',
+        barcode: '', lotto, scadenza: scad,
+        qty: qtyArrivo, qty_init: qtyArrivo,
+        unita: r.unita||'pz', min: 0, pos: '', note: ''
+      };
+      prods.push(p);
+    }
+    movs.unshift({id:genId(),ts:now,tipo:'carico',prod:r.nome,prodId:p.id,qty:qtyArrivo,lotto,note:'Ricezione '+o.num+(ddt?' — DDT '+ddt:'')});
   });
   if(!haRicevuto){ toast('Nessuna quantità inserita','error'); return; }
   const tuttoRicevuto = o.righe.every(r => (r.qtyRicevuta||0) >= r.qty);
