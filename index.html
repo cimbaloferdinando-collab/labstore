@@ -457,6 +457,7 @@ textarea{resize:vertical;min-height:60px}
         <div class="card-header">
           <span class="card-title" id="inv-count">0 prodotti</span>
           <div class="card-act">
+            <button class="btn btn-sm" onclick="openInventarioFisico()" style="background:var(--purple-bg);color:var(--purple);border-color:#c4b5fd">📋 Verifica inventario</button>
             <div class="search-wrap"><span class="s-ico">🔍</span><input type="text" id="inv-search" placeholder="Cerca…" oninput="debouncedRenderInv()"></div>
           </div>
         </div>
@@ -1417,6 +1418,21 @@ textarea{resize:vertical;min-height:60px}
       <button class="btn" onclick="closeModal('modal-ordine')">Annulla</button>
       <button class="btn" onclick="saveOrdine('bozza')">💾 Salva bozza</button>
       <button class="btn btn-primary" onclick="saveOrdine('inviato')">📤 Segna come Inviato</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: VERIFICA INVENTARIO FISICO -->
+<div class="modal-overlay" id="modal-inventario-fisico">
+  <div class="modal" style="width:680px;max-height:90vh;display:flex;flex-direction:column">
+    <div class="modal-title" style="display:flex;justify-content:space-between;align-items:center">
+      <span>📋 Verifica Inventario Fisico</span>
+      <span id="inv-fisico-progress" style="font-size:13px;font-weight:400;color:var(--text3)">0 / 0 verificati</span>
+    </div>
+    <div id="inv-fisico-body" style="overflow-y:auto;flex:1;padding:0 4px"></div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('modal-inventario-fisico')">Annulla</button>
+      <button class="btn btn-ok" onclick="applicaRettificheInventario()">✅ Applica correzioni</button>
     </div>
   </div>
 </div>
@@ -5671,6 +5687,106 @@ function generaOrdiniDaChecklist(){
   closeModal('modal-ordine-detail');
   showView('ordini');
   toast('🛒 '+creati.length+' ordine/i creati: '+creati.join(', '),'success');
+}
+
+// ══════════════════════════════════════════
+// FEATURE 6B: VERIFICA INVENTARIO FISICO
+// ══════════════════════════════════════════
+function openInventarioFisico(){
+  const prods = loadP().slice().sort((a,b)=>(a.cat||'').localeCompare(b.cat||'')||(a.nome||'').localeCompare(b.nome||''));
+  const byCat={};
+  prods.forEach(p=>{ if(!byCat[p.cat]) byCat[p.cat]=[]; byCat[p.cat].push(p); });
+  let html='';
+  for(const [cat,items] of Object.entries(byCat)){
+    html+=`<div style="margin-bottom:12px">
+      <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;padding:8px 0 4px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--bg)">${CAT_ICON[cat]||'📌'} ${esc(cat)}</div>`;
+    items.forEach(p=>{
+      const qColor=p.qty<=0?'var(--red)':p.min>0&&p.qty<=p.min?'var(--yellow)':'var(--accent2)';
+      html+=`<div class="inv-fisico-row" data-id="${p.id}" style="display:flex;align-items:center;gap:10px;padding:9px 4px;border-bottom:1px solid var(--border2);flex-wrap:wrap;transition:background .2s">
+        <input type="checkbox" class="if-check" data-id="${p.id}" onchange="_updateInvFisicoProgress()" style="width:20px;height:20px;flex-shrink:0;accent-color:var(--green);cursor:pointer">
+        <div style="flex:1;min-width:130px">
+          <div style="font-size:13px;font-weight:500">${esc(p.nome)}</div>
+          <div style="font-size:10px;color:var(--text3);margin-top:1px">${p.fornitore?esc(p.fornitore)+' · ':''} ${p.pos?'📍'+esc(p.pos):''}</div>
+          <div style="display:flex;gap:5px;margin-top:5px;flex-wrap:wrap">
+            <input type="text" class="if-lotto" data-id="${p.id}" value="${esc(p.lotto||'')}" placeholder="Lotto" style="width:95px;font-size:11px;padding:3px 6px">
+            <input type="date" class="if-scad" data-id="${p.id}" value="${p.scadenza||''}" style="width:128px;font-size:11px;padding:3px 6px">
+          </div>
+        </div>
+        <div style="text-align:center;min-width:60px">
+          <div style="font-size:10px;color:var(--text3);margin-bottom:2px">Sistema</div>
+          <div style="font-family:'DM Mono',monospace;font-size:18px;font-weight:700;color:${qColor}">${p.qty}</div>
+          <div style="font-size:10px;color:var(--text3)">${esc(p.unita||'pz')}</div>
+        </div>
+        <div style="text-align:center;min-width:80px">
+          <div style="font-size:10px;color:var(--text3);margin-bottom:2px">Rilevata</div>
+          <input type="number" class="if-qty" data-id="${p.id}" data-sys="${p.qty}" value="${p.qty}" step="0.1" min="0" style="width:72px;text-align:center;font-size:16px;font-weight:700;font-family:'DM Mono',monospace" oninput="_updateInvFisicoRow(this)">
+          <div style="font-size:10px;color:var(--text3)">${esc(p.unita||'pz')}</div>
+        </div>
+        <div class="if-delta" data-id="${p.id}" style="min-width:44px;text-align:center;font-size:12px;font-weight:700"></div>
+      </div>`;
+    });
+    html+=`</div>`;
+  }
+  document.getElementById('inv-fisico-body').innerHTML=html;
+  _updateInvFisicoProgress();
+  document.getElementById('modal-inventario-fisico').classList.add('open');
+}
+
+function _updateInvFisicoRow(inp){
+  const id=inp.dataset.id;
+  const sys=parseFloat(inp.dataset.sys)||0;
+  const ril=parseFloat(inp.value)||0;
+  const delta=+(ril-sys).toFixed(4);
+  const row=document.querySelector(`.inv-fisico-row[data-id="${id}"]`);
+  const deltaEl=document.querySelector(`.if-delta[data-id="${id}"]`);
+  const lottoEl=document.querySelector(`.if-lotto[data-id="${id}"]`);
+  const scadEl=document.querySelector(`.if-scad[data-id="${id}"]`);
+  if(Math.abs(delta)<0.001){
+    deltaEl.textContent='';
+    row.style.background='';
+    if(lottoEl) lottoEl.style.borderColor='';
+    if(scadEl) scadEl.style.borderColor='';
+  } else {
+    deltaEl.innerHTML=`<span style="color:${delta>0?'var(--green)':'var(--red)'}">${delta>0?'+':''}${delta}</span>`;
+    row.style.background=delta>0?'rgba(5,150,105,.07)':'rgba(220,38,38,.07)';
+    // Evidenzia lotto/scadenza per ricordare di verificarli
+    const borderColor=delta>0?'var(--green)':'var(--red)';
+    if(lottoEl) lottoEl.style.borderColor=borderColor;
+    if(scadEl) scadEl.style.borderColor=borderColor;
+  }
+}
+
+function _updateInvFisicoProgress(){
+  const total=document.querySelectorAll('.if-check').length;
+  const done=document.querySelectorAll('.if-check:checked').length;
+  const el=document.getElementById('inv-fisico-progress');
+  if(el) el.textContent=done+' / '+total+' verificati';
+}
+
+function applicaRettificheInventario(){
+  _takeSnapshot('Verifica inventario fisico');
+  const prods=loadP(); const movs=loadM();
+  const now=new Date().toISOString(); let n=0;
+  document.querySelectorAll('.if-qty').forEach(inp=>{
+    const sys=parseFloat(inp.dataset.sys)||0;
+    const ril=parseFloat(inp.value)||0;
+    if(Math.abs(ril-sys)<0.001) return;
+    const p=prods.find(x=>x.id===inp.dataset.id); if(!p) return;
+    const delta=ril-sys;
+    const lotto=document.querySelector(`.if-lotto[data-id="${p.id}"]`)?.value.trim()||'';
+    const scad=document.querySelector(`.if-scad[data-id="${p.id}"]`)?.value||'';
+    p.qty=ril;
+    if(lotto) p.lotto=lotto;
+    if(scad) p.scadenza=scad;
+    movs.unshift({id:genId(),ts:now,tipo:delta>0?'carico':'scarico',prod:p.nome,prodId:p.id,qty:Math.abs(delta),lotto,note:'Rettifica inventario fisico'});
+    n++;
+  });
+  if(!n){ toast('Nessuna correzione da applicare','error'); return; }
+  saveP(prods); saveM(movs);
+  closeModal('modal-inventario-fisico');
+  if(currentView==='inventario') renderInv();
+  if(currentView==='dashboard') renderDashboard();
+  toast(`✅ ${n} rettifica/he applicate`,'success');
 }
 
 // ══════════════════════════════════════════
