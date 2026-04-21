@@ -1759,6 +1759,20 @@ const _SUPA_STRIP={
   ordini:['ddtImages','scanOrdine'],
   archivio_ordini:['ddtImages','scanOrdine'],
 };
+// FIX [INFRASTRUTTURA]: valori default per campi NOT NULL che JS non imposta sempre
+const _SUPA_DEFAULTS={
+  coloratore_log:{protocollo:''},
+  processatore:{protocollo:''},
+  campioni:{tipo:'',num:''},
+};
+function _applyDefaults(table, arr){
+  const defs=_SUPA_DEFAULTS[table]; if(!defs||!arr?.length) return arr;
+  return arr.map(item=>{
+    const n={...item};
+    Object.entries(defs).forEach(([k,v])=>{ if(n[k]===null||n[k]===undefined) n[k]=v; });
+    return n;
+  });
+}
 // Normalizza array prima del POST — tutti gli oggetti devono avere le stesse chiavi
 function _normalizeArr(arr){
   if(!arr||arr.length<2) return arr;
@@ -1776,7 +1790,7 @@ async function supaFetch(table,method='GET',body=null,query=''){
     if(method==='POST'&&Array.isArray(body)){
       const strip=_SUPA_STRIP[table]||[];
       const cleaned=strip.length?body.map(item=>{const c={...item};strip.forEach(k=>delete c[k]);return c;}):body;
-      payload=_normalizeArr(cleaned);
+      payload=_normalizeArr(_applyDefaults(table,cleaned));
     }
     const res=await fetch(SUPA_URL+'/rest/v1/'+table+query,{
       method, body:payload?JSON.stringify(payload):undefined,
