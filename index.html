@@ -955,7 +955,7 @@ textarea{resize:vertical;min-height:60px}
         <button class="btn btn-sm btn-ok" onclick="addCasoSingoloProc()">＋</button>
       </div>
       <div id="proc-casi-list" style="display:flex;flex-wrap:wrap;gap:5px;min-height:32px;padding:6px;background:var(--bg2);border:1px solid var(--border);border-radius:6px"></div>
-      <div style="font-size:11px;color:var(--text3);margin-top:4px">N° casi: <span id="proc-casi-count" style="font-weight:600;color:var(--accent)">0</span></div>
+      <div style="font-size:11px;color:var(--text3);margin-top:4px">N° casi: <span id="proc-casi-count" style="font-weight:600;color:var(--accent)">0</span> &nbsp;·&nbsp; <label style="display:inline;font-size:11px;color:var(--text3)">N° cassette: <input type="number" id="proc-n-cassette" min="0" step="1" placeholder="auto" style="width:65px;font-size:12px;padding:2px 6px;display:inline;vertical-align:middle;font-family:DM Mono,monospace"></label></div>
     </div>
 
     <!-- REAGENTI PROCESSATORE -->
@@ -3660,6 +3660,7 @@ function openNuovoProcessatore(preset){
   document.getElementById('proc-caso-from').value=preset?.casi_da||'';
   document.getElementById('proc-caso-to').value=preset?.casi_a||'';
   document.getElementById('proc-caso-singolo').value='';
+  const ncEl=document.getElementById('proc-n-cassette'); if(ncEl) ncEl.value=preset?.n_cassette||'';
   renderProcCasiList();
   // Reagenti
   const rl = document.getElementById('proc-reagenti-list');
@@ -3766,7 +3767,7 @@ async function saveProcessatore(){
     casi: [...procCasiList],
     casi_da: document.getElementById('proc-caso-from').value.trim(),
     casi_a: document.getElementById('proc-caso-to').value.trim(),
-    n_cassette: procCasiList.length,
+    n_cassette: parseInt(document.getElementById('proc-n-cassette')?.value)||procCasiList.length,
     reagenti: getReagentiList('proc-reagenti-list'),
     creato: editId ? undefined : new Date().toISOString(),
     modificato: new Date().toISOString()
