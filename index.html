@@ -2064,8 +2064,15 @@ function matchAlias(prodNome, label){
   const n=(prodNome||'').toLowerCase();
   const aliases=PRODUCT_ALIASES[label];
   if(aliases) return aliases.some(kw=>n.includes(kw));
-  // Fallback: cerca il label stesso nel nome
   return n.includes(label.toLowerCase());
+}
+// FIX [MAGAZZINO]: raggruppa prodotti per alias semantico — evita allerte duplicate per varianti dello stesso reagente
+function _aliasGroup(nome){
+  const n=(nome||'').toLowerCase().trim();
+  for(const [label,aliases] of Object.entries(PRODUCT_ALIASES)){
+    if(aliases.some(a=>n.includes(a)||a.includes(n))) return label;
+  }
+  return nome;
 }
 const WASTE_CONFIG={
   cer_180103:{label:'CER 180103*',sub:'Rifiuti infetti — lame, materiale biologico, taglienti',icon:'☣',cls:'wc-yellow',color:'var(--yellow)',cer:'180103*',tipo:'Solido',pericoloso:true,
@@ -2446,13 +2453,20 @@ function renderDashboard(){
   document.getElementById('alerts-wrap').innerHTML=alerts.join('');
 
   // Panel 1: allerte
-  const allerteProds=prods.filter(p=>(p.min>0&&p.qty<=p.min&&p.qty>0)||(()=>{const d=daysUntil(p.scadenza);return d>=0&&d<=30})());
+  // FIX [MAGAZZINO]: allerte dashboard raggruppate per alias — niente duplicati per varianti
+  const _hgrp={};
+  prods.forEach(p=>{ const g=_aliasGroup(p.nome); if(!_hgrp[g]) _hgrp[g]={label:g,qty:0,min:0,prods:[]}; _hgrp[g].qty+=p.qty||0; _hgrp[g].min=Math.max(_hgrp[g].min,p.min||0); _hgrp[g].prods.push(p); });
+  const allerteGruppi=Object.values(_hgrp).filter(g=>g.min>0&&g.qty<=g.min);
+  const allerteScad=prods.filter(p=>{const d=daysUntil(p.scadenza);return d>=0&&d<=30;});
+  const allerteAll=[...allerteGruppi.map(g=>({type:'grp',g})),...allerteScad.map(p=>({type:'prod',p}))];
+  const seen2=new Set(); const allerteDedup=allerteAll.filter(r=>{const k=r.type==='grp'?'g:'+r.g.label:'p:'+r.p.id;if(seen2.has(k))return false;seen2.add(k);return true;});
   const allerteEl=document.getElementById('home-allerte-list');
-  if(!allerteProds.length){ allerteEl.innerHTML='<div class="home-empty">✅ Nessuna allerta</div>'; }
-  else allerteEl.innerHTML=allerteProds.slice(0,6).map(p=>{
-    const d=daysUntil(p.scadenza); const s=d>=0&&d<=30?`<span class="badge bg-yellow" style="font-size:10px">${d===0?'Oggi':d+'gg'}</span>`:'<span class="badge bg-yellow" style="font-size:10px">Scorta bassa</span>';
-    return `<div class="home-list-item" onclick="openSchedaProdotto('${p.id}')"><span style="font-weight:500">${p.nome}</span>${s}</div>`;
-  }).join('')+(allerteProds.length>6?`<div class="home-empty" style="cursor:pointer" onclick="showView('allerte')">+${allerteProds.length-6} altri →</div>`:'');
+  if(!allerteDedup.length){ allerteEl.innerHTML='<div class="home-empty">✅ Nessuna allerta</div>'; }
+  else allerteEl.innerHTML=allerteDedup.slice(0,6).map(r=>{
+    if(r.type==='grp'){ const g=r.g; const fp=g.prods[0]; const label=g.prods.length>1?esc(g.label):esc(fp.nome); const s='<span class="badge bg-yellow" style="font-size:10px">Scorta bassa</span>'; return `<div class="home-list-item" onclick="showView('allerte')"><span style="font-weight:500">${label}</span>${s}</div>`; }
+    const p=r.p; const d=daysUntil(p.scadenza); const s=`<span class="badge bg-yellow" style="font-size:10px">${d===0?'Oggi':d+'gg'}</span>`;
+    return `<div class="home-list-item" onclick="openSchedaProdotto('${p.id}')"><span style="font-weight:500">${esc(p.nome)}</span>${s}</div>`;
+  }).join('')+(allerteDedup.length>6?`<div class="home-empty" style="cursor:pointer" onclick="showView('allerte')">+${allerteDedup.length-6} altri →</div>`:'');
 
   // Panel 2: in scadenza
   const scadEl=document.getElementById('home-scadenze-list');
@@ -4972,44 +4986,77 @@ function setAllerteFilter(f, btn){
 }
 function renderAllerte(){
   if(!document.getElementById('allerte-tbody')) return;
-  let prods = loadP();
-  const esauriti   = p => p.qty <= 0;
-  const critici    = p => p.min > 0 && p.qty > 0 && p.qty <= p.min;
-  const scaduti    = p => daysUntil(p.scadenza) < 0;
-  const inscadenza = p => { const d=daysUntil(p.scadenza); return d>=0 && d<=30; };
-
-  let filtered;
-  if(allerteFilter==='esauriti')    filtered = prods.filter(esauriti);
-  else if(allerteFilter==='critici') filtered = prods.filter(critici);
-  else if(allerteFilter==='scaduti') filtered = prods.filter(scaduti);
-  else if(allerteFilter==='inscadenza') filtered = prods.filter(inscadenza);
-  else filtered = prods.filter(p => esauriti(p)||critici(p)||scaduti(p)||inscadenza(p));
-
-  document.getElementById('allerte-count').textContent = filtered.length + ' prodotto/i';
-  const tb = document.getElementById('allerte-tbody');
-  if(!filtered.length){
-    tb.innerHTML = `<tr><td colspan="8"><div class="empty"><div class="e-ico">✅</div><p>Nessuna allerta attiva</p></div></td></tr>`;
+  const prods = loadP();
+  // FIX [MAGAZZINO]: raggruppa per alias — 1 allerta per tipo prodotto
+  const _grp={};
+  prods.forEach(p=>{
+    const g=_aliasGroup(p.nome);
+    if(!_grp[g]) _grp[g]={label:g,qty:0,min:0,prods:[],unita:p.unita||''};
+    _grp[g].qty += p.qty||0;
+    _grp[g].min = Math.max(_grp[g].min, p.min||0);
+    _grp[g].prods.push(p);
+  });
+  const gruppi=Object.values(_grp);
+  const grpEsauriti = g => g.qty<=0;
+  const grpCritici  = g => g.min>0 && g.qty>0 && g.qty<=g.min;
+  const scaduti     = p => daysUntil(p.scadenza)<0;
+  const inscadenza  = p => { const d=daysUntil(p.scadenza); return d>=0&&d<=30; };
+  const f=allerteFilter;
+  let rows=[];
+  if(f==='esauriti'||f==='all')    rows=[...rows,...gruppi.filter(grpEsauriti).map(g=>({type:'grp',g}))];
+  if(f==='critici'||f==='all')     rows=[...rows,...gruppi.filter(grpCritici).map(g=>({type:'grp',g}))];
+  if(f==='scaduti'||f==='all')     rows=[...rows,...prods.filter(scaduti).map(p=>({type:'prod',p}))];
+  if(f==='inscadenza'||f==='all')  rows=[...rows,...prods.filter(inscadenza).map(p=>({type:'prod',p}))];
+  // Deduplicazione
+  const seen=new Set();
+  rows=rows.filter(r=>{ const k=r.type==='grp'?'g:'+r.g.label:'p:'+r.p.id; if(seen.has(k)) return false; seen.add(k); return true; });
+  document.getElementById('allerte-count').textContent = rows.length+' allerta/e';
+  const tb=document.getElementById('allerte-tbody');
+  if(!rows.length){
+    tb.innerHTML=`<tr><td colspan="8"><div class="empty"><div class="e-ico">✅</div><p>Nessuna allerta attiva</p></div></td></tr>`;
     return;
   }
-  tb.innerHTML = filtered.map(p => {
-    const stati = [];
-    if(p.qty<=0) stati.push('<span class="badge bg-red">Esaurito</span>');
-    else if(p.min>0&&p.qty<=p.min) stati.push('<span class="badge bg-yellow">Scorta bassa</span>');
-    if(daysUntil(p.scadenza)<0) stati.push('<span class="badge bg-red">Scaduto</span>');
-    else if(daysUntil(p.scadenza)<=30) stati.push('<span class="badge bg-yellow">In scadenza</span>');
-    return `<tr>
-      <td><strong>${p.nome}</strong>${p.pos?`<br><small style="color:var(--text3)">📍${p.pos}</small>`:''}</td>
-      <td><span class="cat-badge">${CAT_ICON[p.cat]||'📌'} ${p.cat}</span></td>
-      <td style="color:var(--text2);font-size:12px">${p.fornitore||'—'}</td>
-      <td class="mono">${p.lotto||'—'}</td>
-      <td><span style="color:var(--${qStat(p)})">${p.qty}</span> <small style="color:var(--text3)">${p.unita||''}</small>${p.min?`<br><small style="color:var(--text3)">min: ${p.min}</small>`:''}</td>
-      <td>${scBadge(p.scadenza)}</td>
-      <td>${stati.join(' ')}</td>
-      <td><div style="display:flex;gap:4px">
-        <button class="btn btn-sm btn-ok" onclick="precompileOrdine('${p.id}')">🛒 Ordina</button>
-        <button class="btn btn-sm" onclick="openEditModal('${p.id}')">✎</button>
-      </div></td>
-    </tr>`;
+  tb.innerHTML=rows.map(row=>{
+    if(row.type==='grp'){
+      const g=row.g; const fp=g.prods[0];
+      const stati=[];
+      if(g.qty<=0) stati.push('<span class="badge bg-red">Esaurito</span>');
+      else if(g.min>0&&g.qty<=g.min) stati.push('<span class="badge bg-yellow">Scorta bassa</span>');
+      const variantiHtml=g.prods.length>1
+        ?`<div style="font-size:10px;color:var(--text3);margin-top:2px">${g.prods.map(p=>`${esc(p.nome)}: ${p.qty}${p.unita||''}`).join(' · ')}</div>`:'';
+      const label=g.prods.length>1?esc(g.label):esc(fp.nome);
+      const qColor=g.qty<=0?'red':g.min>0&&g.qty<=g.min?'yellow':'green';
+      return `<tr>
+        <td><strong>${label}</strong>${variantiHtml}${fp.pos?`<br><small style="color:var(--text3)">📍${esc(fp.pos)}</small>`:''}</td>
+        <td><span class="cat-badge">${CAT_ICON[fp.cat]||'📌'} ${fp.cat}</span></td>
+        <td style="color:var(--text2);font-size:12px">${g.prods.length>1?'Vari':esc(fp.fornitore||'—')}</td>
+        <td class="mono">${fp.lotto||'—'}</td>
+        <td><span style="color:var(--${qColor})">${g.qty}</span> <small style="color:var(--text3)">${fp.unita||''}</small>${g.min?`<br><small style="color:var(--text3)">min: ${g.min}</small>`:''}</td>
+        <td>—</td>
+        <td>${stati.join(' ')}</td>
+        <td><div style="display:flex;gap:4px">
+          <button class="btn btn-sm btn-ok" onclick="precompileOrdine('${fp.id}')">🛒 Ordina</button>
+          <button class="btn btn-sm" onclick="openEditModal('${fp.id}')">✎</button>
+        </div></td>
+      </tr>`;
+    } else {
+      const p=row.p; const stati=[];
+      if(daysUntil(p.scadenza)<0) stati.push('<span class="badge bg-red">Scaduto</span>');
+      else if(daysUntil(p.scadenza)<=30) stati.push('<span class="badge bg-yellow">In scadenza</span>');
+      return `<tr>
+        <td><strong>${esc(p.nome)}</strong>${p.pos?`<br><small style="color:var(--text3)">📍${esc(p.pos)}</small>`:''}</td>
+        <td><span class="cat-badge">${CAT_ICON[p.cat]||'📌'} ${p.cat}</span></td>
+        <td style="color:var(--text2);font-size:12px">${esc(p.fornitore||'—')}</td>
+        <td class="mono">${p.lotto||'—'}</td>
+        <td><span style="color:var(--${qStat(p)})">${p.qty}</span> <small style="color:var(--text3)">${p.unita||''}</small>${p.min?`<br><small style="color:var(--text3)">min: ${p.min}</small>`:''}</td>
+        <td>${scBadge(p.scadenza)}</td>
+        <td>${stati.join(' ')}</td>
+        <td><div style="display:flex;gap:4px">
+          <button class="btn btn-sm btn-ok" onclick="precompileOrdine('${p.id}')">🛒 Ordina</button>
+          <button class="btn btn-sm" onclick="openEditModal('${p.id}')">✎</button>
+        </div></td>
+      </tr>`;
+    }
   }).join('');
 }
 
