@@ -2511,7 +2511,7 @@ function renderDashboard(){
     const pending=ihcArr.filter(x=>x.stato!=='completata').sort((a,b)=>{
       if(a.priorita==='urgente'&&b.priorita!=='urgente') return -1;
       if(b.priorita==='urgente'&&a.priorita!=='urgente') return 1;
-      return _ihcN(a.campione_id)-_ihcN(b.campione_id);
+      return _ihcN(b.campione_id)-_ihcN(a.campione_id);
     });
     if(!pending.length){
       ihcEl.innerHTML='<div style="color:var(--green);font-size:13px;font-weight:600">✅ Nessuna richiesta in sospeso</div>';
