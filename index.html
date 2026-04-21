@@ -1762,7 +1762,7 @@ const _SUPA_STRIP={
 // FIX [INFRASTRUTTURA]: valori default per campi NOT NULL che JS non imposta sempre
 const _SUPA_DEFAULTS={
   coloratore_log:{protocollo:''},
-  processatore:{protocollo:''},
+  processatore:{protocollo:'standard',ora_inizio:'',ora_fine:'',note:'',casi_da:'',casi_a:'',n_cassette:0},
   campioni:{tipo:'',num:''},
 };
 function _applyDefaults(table, arr){
