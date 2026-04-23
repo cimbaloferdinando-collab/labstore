@@ -960,12 +960,9 @@ textarea{resize:vertical;min-height:60px}
     <div style="background:var(--bg3);border-radius:var(--r);padding:12px;margin-bottom:14px">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
         <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.8px">Reagenti processatore</div>
-        <div style="display:flex;gap:5px">
-          <button class="btn btn-sm" onclick="scanReagente('proc')">📷 Scan</button>
-          <button class="btn btn-sm btn-primary" onclick="addReagenteProc()">＋ Reagente</button>
-        </div>
+        <button class="btn btn-sm" onclick="initReagentiProcFissi(null)" title="Ricarica dall'ultimo ciclo">⟳ Ricarica</button>
       </div>
-      <div style="font-size:11px;color:var(--text3);margin-bottom:8px">Scansiona il barcode o seleziona dal menu — stato: cambiato/rabboccato</div>
+      <div style="font-size:11px;color:var(--text3);margin-bottom:8px">Lista fissa — verificato: lotto invariato · rabboccato: integrato · sostituito: nuovo lotto</div>
       <div id="proc-reagenti-list"></div>
     </div>
 
@@ -1053,13 +1050,9 @@ textarea{resize:vertical;min-height:60px}
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
         <div>
           <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.8px">Reagenti presenti nel coloratore</div>
-          <div style="font-size:11px;color:var(--text3);margin-top:2px">Tutti i reagenti attivi nelle vaschette quel giorno</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:2px">Lista fissa — verificato: invariato · rabboccato: integrato · sostituito: nuovo lotto</div>
         </div>
-        <div style="display:flex;gap:5px">
-          <button class="btn btn-sm" onclick="scanReagente('color')">📷 Scan</button>
-          <button class="btn btn-sm" onclick="precompileReagentiColoratore()">⟳ Auto</button>
-          <button class="btn btn-sm btn-primary" onclick="addReagenteColor()">＋</button>
-        </div>
+        <button class="btn btn-sm" onclick="initReagentiColorFissi(null)" title="Ricarica dall'ultimo registro">⟳ Ricarica</button>
       </div>
       <div id="color-reagenti-list"></div>
     </div>
@@ -2659,7 +2652,7 @@ function renderInv(){
   tb.innerHTML=prods.map(p=>`<tr>
     <td><div style="font-weight:500">${p.nome}</div>${p.fornitore?`<div style="font-size:11px;color:var(--text3)">${p.fornitore}</div>`:''}${p.pos?`<div style="font-size:11px;color:var(--text3)">📍 ${p.pos}</div>`:''}</td>
     <td><span class="cat-badge">${CAT_ICON[p.cat]||'📌'} ${p.cat}</span></td>
-    <td class="mono">${p.lotto||'—'}</td>
+    <td class="mono">${p.lotto||'—'}${p.lotto_aperto?`<div style="font-size:10px;color:var(--green);margin-top:2px">🔓 ${esc(p.lotto_aperto.lotto)} · ${fmtDate(p.lotto_aperto.data_apertura.slice(0,10))}</div>`:''}</td>
     <td>${scBadge(p.scadenza)}</td>
     <td style="text-align:center">
       <div style="display:flex;align-items:center;justify-content:center;gap:8px">
@@ -2670,7 +2663,7 @@ function renderInv(){
       ${p.min?`<div style="font-size:10px;color:var(--text3);margin-top:2px">min: ${p.min}</div>`:''}
     </td>
     <td>${progBar(p)}</td>
-    <td><div style="display:flex;gap:4px;justify-content:flex-end"><button class="btn btn-sm" onclick="openEditModal('${p.id}')">✎</button><button class="btn btn-sm btn-danger" onclick="deleteProduct('${p.id}')">✕</button></div></td>
+    <td><div style="display:flex;gap:4px;justify-content:flex-end"><button class="btn btn-sm" onclick="apriFlaconeProdotto('${p.id}')" title="Apri flacone">🔓</button><button class="btn btn-sm" onclick="openEditModal('${p.id}')">✎</button><button class="btn btn-sm btn-danger" onclick="deleteProduct('${p.id}')">✕</button></div></td>
   </tr>`).join('');
 }
 function adjQty(id,delta){
@@ -2683,6 +2676,18 @@ function adjQty(id,delta){
 function deleteProduct(id){
   if(!confirm('Eliminare questo prodotto?')) return;
   saveP(loadP().filter(p=>p.id!==id), id); renderInv(); toast('Prodotto eliminato','info');
+}
+
+// FIX [MAGAZZINO]: Registra apertura flacone — salva lotto_aperto sul prodotto
+function apriFlaconeProdotto(id){
+  const prods = loadP(), p = prods.find(x=>x.id===id); if(!p) return;
+  const attuale = p.lotto_aperto?.lotto || p.lotto || '';
+  const lotto = prompt(`Apri flacone: ${p.nome}\nLotto del flacone aperto:`, attuale);
+  if(lotto===null) return;
+  p.lotto_aperto = {lotto: lotto.trim(), data_apertura: new Date().toISOString()};
+  saveP(prods);
+  renderInv();
+  toast(`Flacone aperto: ${p.nome} — Lotto ${lotto.trim()}`, 'success');
 }
 
 // ══════════════════════════════════════════
@@ -3512,6 +3517,21 @@ async function saveProc(arr, deletedId){
 // Reagenti tipici processatore dal magazzino
 const PROC_REAGENTI_DEFAULT = ['alcool 95','alcoolpath 95','alcol 95','alcool 100','alcoolpath 100','alcol 100','xilene','xylene','alcol 70'];
 
+// FIX [TRACCIABILITÀ]: Reagenti fissi processatore e coloratore
+const REAGENTI_FISSI_PROC = ['Alcol 95%','Alcol 100%','Xilene','Paraffina','Formalina'];
+const REAGENTI_FISSI_COLOR = ['Alcol 95%','Alcol 100%','H2O','Ematossilina Harris','Eosina acquosa','Xilene','OG6','EA50','Ematossilina Mayer'];
+
+// FIX [MAGAZZINO]: Cerca il lotto aperto di un reagente per nome
+function getOpenLottoByName(reagentName){
+  const kws = reagentName.toLowerCase().replace(/%/g,'').trim().split(/\s+/);
+  const prod = loadP().find(p=>{
+    const n=(p.nome||'').toLowerCase();
+    return kws.every(k=>n.includes(k));
+  });
+  if(!prod) return '';
+  return prod.lotto_aperto?.lotto || prod.lotto || '';
+}
+
 let procCasiList = [];
 
 function openNuovoProcessatore(preset){
@@ -3527,10 +3547,10 @@ function openNuovoProcessatore(preset){
   document.getElementById('proc-caso-to').value=preset?.casi_a||'';
   document.getElementById('proc-caso-singolo').value='';
   renderProcCasiList();
-  // Reagenti
-  const rl = document.getElementById('proc-reagenti-list');
-  rl.innerHTML='';
-  (preset?.reagenti||[]).forEach(r=>addReagenteProc(r));
+  // FIX [TRACCIABILITÀ]: Reagenti fissi processatore
+  initReagentiProcFissi(preset);
+  const procDelBtn=document.getElementById('proc-delete-btn');
+  if(procDelBtn) procDelBtn.style.display=preset?'':'none';
   document.getElementById('modal-processatore').classList.add('open');
 }
 
@@ -3572,29 +3592,63 @@ function addCasoSingoloProc(){
 
 function removeCasoProc(i){ procCasiList.splice(i,1); renderProcCasiList(); }
 
-function addReagenteProc(preset){
-  const prods = loadP();
-  // Filtra solo reagenti del processatore
-  const filtered = prods.filter(p=>{
-    const n=(p.nome||'').toLowerCase();
-    return PROC_REAGENTI_DEFAULT.some(k=>n.includes(k));
+// FIX [TRACCIABILITÀ]: Reagenti fissi processatore — inizializza lista fissa
+function initReagentiProcFissi(preset){
+  const rl = document.getElementById('proc-reagenti-list');
+  rl.innerHTML = '';
+  const lastCiclo = loadProc()[0];
+  const lastReag = lastCiclo?.reagenti || [];
+  REAGENTI_FISSI_PROC.forEach(nome=>{
+    // Cerca nel preset (modifica) o nell'ultimo ciclo (nuovo)
+    const src = preset?.reagenti?.find(r=>(r.nome||'').toLowerCase().includes(nome.toLowerCase().replace('%','').trim()))
+              || (preset ? null : lastReag.find(r=>(r.nome||'').toLowerCase().includes(nome.toLowerCase().replace('%','').trim())));
+    const stato = src?.stato || 'verificato';
+    const lotto = src?.lotto || getOpenLottoByName(nome);
+    const disabled = stato==='verificato' ? 'disabled' : '';
+    const div = document.createElement('div');
+    div.className = 'reagente-usato-row';
+    div.dataset.nome = nome;
+    div.dataset.lastLotto = lastReag.find(r=>(r.nome||'').toLowerCase().includes(nome.toLowerCase().replace('%','').trim()))?.lotto || getOpenLottoByName(nome);
+    div.style.cssText = 'display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)';
+    div.innerHTML = `
+      <span style="flex:1;font-size:13px;font-weight:500;font-family:\'DM Mono\',monospace;color:var(--text1)">${nome}</span>
+      <select class="reag-stato" style="width:130px" onchange="onStatoReagChange(this,'proc')">
+        <option value="verificato" ${stato==='verificato'?'selected':''}>✅ Verificato</option>
+        <option value="rabboccato" ${stato==='rabboccato'?'selected':''}>➕ Rabboccato</option>
+        <option value="sostituito" ${stato==='sostituito'?'selected':''}>🔄 Sostituito</option>
+      </select>
+      <input class="reag-lotto-input" type="text" placeholder="Lotto" value="${esc(lotto)}" ${disabled}
+        style="width:110px;font-family:\'DM Mono\',monospace;font-size:12px;background:${stato==='verificato'?'var(--bg3)':'var(--bg2)'}">`;
+    rl.appendChild(div);
   });
-  const opts = filtered.map(p=>`<option value="${p.id}" ${preset&&preset.prodId===p.id?'selected':''}>${p.nome} [${p.lotto||'—'}]</option>`).join('');
-  const div = document.createElement('div');
-  div.className = 'reagente-usato-row';
-  div.innerHTML = `
-    <select style="flex:2" onchange="updateReagLottoGeneric(this)">
-      <option value="">Seleziona reagente…</option>${opts}
-    </select>
-    <span class="reag-lotto" style="font-family:DM Mono,monospace;font-size:11px;color:var(--text2);min-width:70px">${preset?.lotto||'—'}</span>
-    <span class="reag-scad" style="font-size:11px;color:var(--text3);min-width:80px">${preset?.scadenza?fmtDate(preset.scadenza):'—'}</span>
-    <select class="reag-stato" style="width:100px">
-      <option value="cambiato" ${preset?.stato==='cambiato'?'selected':''}>Cambiato</option>
-      <option value="rabboccato" ${preset?.stato==='rabboccato'?'selected':''}>Rabboccato</option>
-    </select>
-    <button class="btn btn-sm btn-danger" onclick="this.closest('.reagente-usato-row').remove()">✕</button>`;
-  document.getElementById('proc-reagenti-list').appendChild(div);
-  if(preset?.prodId){ const sel=div.querySelector('select'); sel.value=preset.prodId; updateReagLottoGeneric(sel); }
+}
+
+// FIX [TRACCIABILITÀ]: Cambio stato reagente — aggiorna campo lotto
+function onStatoReagChange(sel, tipo){
+  const row = sel.closest('.reagente-usato-row');
+  const input = row.querySelector('.reag-lotto-input');
+  const lastLotto = row.dataset.lastLotto || '';
+  if(sel.value==='verificato'){
+    input.value = lastLotto;
+    input.disabled = true;
+    input.style.background = 'var(--bg3)';
+  } else if(sel.value==='rabboccato'){
+    input.disabled = false;
+    input.style.background = 'var(--bg2)';
+  } else if(sel.value==='sostituito'){
+    input.value = '';
+    input.disabled = false;
+    input.style.background = 'var(--bg2)';
+  }
+}
+
+// FIX [TRACCIABILITÀ]: Estrae reagenti fissi processatore dal form
+function getProcReagenti(){
+  return [...document.querySelectorAll('#proc-reagenti-list .reagente-usato-row')].map(row=>({
+    nome: row.dataset.nome||'',
+    lotto: row.querySelector('.reag-lotto-input')?.value||'',
+    stato: row.querySelector('.reag-stato')?.value||'verificato'
+  })).filter(r=>r.nome);
 }
 
 function updateReagLottoGeneric(sel){
@@ -3630,8 +3684,8 @@ async function saveProcessatore(){
     casi: [...procCasiList],
     casi_da: document.getElementById('proc-caso-from').value.trim(),
     casi_a: document.getElementById('proc-caso-to').value.trim(),
-    n_cassette: procCasiList.length,
-    reagenti: getReagentiList('proc-reagenti-list'),
+    n_cassette: parseInt(document.getElementById('proc-n-cassette')?.value)||procCasiList.length,
+    reagenti: getProcReagenti(),
     creato: editId ? undefined : new Date().toISOString(),
     modificato: new Date().toISOString()
   };
@@ -3653,10 +3707,19 @@ function renderProcessatore(){
   const to = document.getElementById('proc-filter-to')?.value;
   if(from) arr=arr.filter(x=>x.data>=from);
   if(to) arr=arr.filter(x=>x.data<=to);
-  if(q) arr=arr.filter(x=>(x.casi||[]).some(c=>c.toLowerCase().includes(q))||
-    (x.casi_da||'').toLowerCase().includes(q)||
-    (x.casi_a||'').toLowerCase().includes(q)||
-    (x.reagenti||[]).some(r=>(r.lotto||'').toLowerCase().includes(q)));
+  // FIX [TRACCIABILITÀ]: Range search numerico + string match
+  if(q) arr=arr.filter(x=>{
+    if((x.casi||[]).some(c=>c.toLowerCase().includes(q))) return true;
+    if((x.casi_da||'').toLowerCase().includes(q)||(x.casi_a||'').toLowerCase().includes(q)) return true;
+    if((x.reagenti||[]).some(r=>(r.lotto||'').toLowerCase().includes(q)||(r.nome||'').toLowerCase().includes(q))) return true;
+    const qn=parseInt(q.match(/^(\d+)/)?.[1]);
+    if(qn){
+      const dn=parseInt((x.casi_da||'').match(/^(\d+)/)?.[1]);
+      const an=parseInt((x.casi_a||'').match(/^(\d+)/)?.[1]);
+      if(dn&&an&&qn>=dn&&qn<=an) return true;
+    }
+    return false;
+  });
 
   document.getElementById('proc-stats').textContent=`${loadProc().length} cicli totali`;
   const el=document.getElementById('proc-list');
@@ -3747,11 +3810,10 @@ function openNuovoColoratore(preset){
   document.getElementById('color-vetri-ist').value = preset?.vetri_ist||0;
   document.getElementById('color-vetri-cit').value = preset?.vetri_cit||0;
   document.getElementById('color-vetri-pap').value = preset?.vetri_pap||0;
-  // Reagenti
-  const rl = document.getElementById('color-reagenti-list');
-  rl.innerHTML='';
-  if(preset?.reagenti?.length){ preset.reagenti.forEach(r=>addReagenteColor(r)); }
-  else { precompileReagentiColoratore(); }
+  // FIX [TRACCIABILITÀ]: Reagenti fissi coloratore
+  initReagentiColorFissi(preset);
+  const colorDelBtn=document.getElementById('color-delete-btn');
+  if(colorDelBtn) colorDelBtn.style.display=preset?'':'none';
   document.getElementById('modal-coloratore').classList.add('open');
 }
 
@@ -3769,24 +3831,43 @@ function precompileReagentiColoratore(){
   prods.forEach(p=>addReagenteColor({prodId:p.id,lotto:p.lotto,scadenza:p.scadenza}));
 }
 
-function addReagenteColor(preset){
-  const prods = loadP();
-  const allOpts = prods.map(p=>`<option value="${p.id}" ${preset&&preset.prodId===p.id?'selected':''}>${p.nome} [${p.lotto||'—'}]</option>`).join('');
-  const div = document.createElement('div');
-  div.className = 'reagente-usato-row';
-  div.innerHTML = `
-    <select style="flex:2" onchange="updateReagLottoGeneric(this)">
-      <option value="">Seleziona reagente…</option>${allOpts}
-    </select>
-    <span class="reag-lotto" style="font-family:DM Mono,monospace;font-size:11px;color:var(--text2);min-width:70px">${preset?.lotto||'—'}</span>
-    <span class="reag-scad" style="font-size:11px;color:var(--text3);min-width:80px">${preset?.scadenza?fmtDate(preset.scadenza):'—'}</span>
-    <select class="reag-stato" style="width:110px">
-      <option value="cambiato" ${preset?.stato==='cambiato'?'selected':''}>Cambiato</option>
-      <option value="rabboccato" ${preset?.stato==='rabboccato'?'selected':''}>Rabboccato</option>
-    </select>
-    <button class="btn btn-sm btn-danger" onclick="this.closest('.reagente-usato-row').remove()">✕</button>`;
-  document.getElementById('color-reagenti-list').appendChild(div);
-  if(preset?.prodId){ const sel=div.querySelector('select'); sel.value=preset.prodId; updateReagLottoGeneric(sel); }
+// FIX [TRACCIABILITÀ]: Reagenti fissi coloratore — inizializza lista fissa
+function initReagentiColorFissi(preset){
+  const rl = document.getElementById('color-reagenti-list');
+  rl.innerHTML = '';
+  const lastReg = loadColoratore()[0];
+  const lastReag = lastReg?.reagenti || [];
+  REAGENTI_FISSI_COLOR.forEach(nome=>{
+    const src = preset?.reagenti?.find(r=>(r.nome||'').toLowerCase().includes(nome.toLowerCase().replace('%','').trim()))
+              || (preset ? null : lastReag.find(r=>(r.nome||'').toLowerCase().includes(nome.toLowerCase().replace('%','').trim())));
+    const stato = src?.stato || 'verificato';
+    const lotto = src?.lotto || getOpenLottoByName(nome);
+    const disabled = stato==='verificato' ? 'disabled' : '';
+    const div = document.createElement('div');
+    div.className = 'reagente-usato-row';
+    div.dataset.nome = nome;
+    div.dataset.lastLotto = lastReag.find(r=>(r.nome||'').toLowerCase().includes(nome.toLowerCase().replace('%','').trim()))?.lotto || getOpenLottoByName(nome);
+    div.style.cssText = 'display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)';
+    div.innerHTML = `
+      <span style="flex:1;font-size:13px;font-weight:500;font-family:\'DM Mono\',monospace;color:var(--text1)">${nome}</span>
+      <select class="reag-stato" style="width:130px" onchange="onStatoReagChange(this,'color')">
+        <option value="verificato" ${stato==='verificato'?'selected':''}>✅ Verificato</option>
+        <option value="rabboccato" ${stato==='rabboccato'?'selected':''}>➕ Rabboccato</option>
+        <option value="sostituito" ${stato==='sostituito'?'selected':''}>🔄 Sostituito</option>
+      </select>
+      <input class="reag-lotto-input" type="text" placeholder="Lotto" value="${esc(lotto)}" ${disabled}
+        style="width:110px;font-family:\'DM Mono\',monospace;font-size:12px;background:${stato==='verificato'?'var(--bg3)':'var(--bg2)'}">`;
+    rl.appendChild(div);
+  });
+}
+
+// FIX [TRACCIABILITÀ]: Estrae reagenti fissi coloratore dal form
+function getColorReagenti(){
+  return [...document.querySelectorAll('#color-reagenti-list .reagente-usato-row')].map(row=>({
+    nome: row.dataset.nome||'',
+    lotto: row.querySelector('.reag-lotto-input')?.value||'',
+    stato: row.querySelector('.reag-stato')?.value||'verificato'
+  })).filter(r=>r.nome);
 }
 
 async function saveColoratore(){
@@ -3807,7 +3888,7 @@ async function saveColoratore(){
     vetri_ist: parseInt(document.getElementById('color-vetri-ist').value)||0,
     vetri_cit: parseInt(document.getElementById('color-vetri-cit').value)||0,
     vetri_pap: parseInt(document.getElementById('color-vetri-pap').value)||0,
-    reagenti: getReagentiList('color-reagenti-list'),
+    reagenti: getColorReagenti(),
     modificato: new Date().toISOString()
   };
   if(!editId) registro.creato = new Date().toISOString();
@@ -3828,7 +3909,21 @@ function renderColoratore(){
   const to = document.getElementById('color-filter-to')?.value;
   if(from) arr=arr.filter(x=>x.data>=from);
   if(to) arr=arr.filter(x=>x.data<=to);
-  if(q) arr=arr.filter(x=>(x.reagenti||[]).some(r=>(r.lotto||'').toLowerCase().includes(q)||(r.nome||'').toLowerCase().includes(q)));
+  // FIX [TRACCIABILITÀ]: Range search numerico su tutti i range coloratore
+  if(q) arr=arr.filter(x=>{
+    if((x.reagenti||[]).some(r=>(r.lotto||'').toLowerCase().includes(q)||(r.nome||'').toLowerCase().includes(q))) return true;
+    for(const rng of[x.range_ist,x.range_cit,x.range_pap]){
+      if(!rng?.from) continue;
+      if((rng.from||'').toLowerCase().includes(q)||(rng.to||'').toLowerCase().includes(q)) return true;
+      const qn=parseInt(q.match(/^(\d+)/)?.[1]);
+      if(qn){
+        const dn=parseInt((rng.from||'').match(/^(\d+)/)?.[1]);
+        const an=parseInt((rng.to||'').match(/^(\d+)/)?.[1]);
+        if(dn&&an&&qn>=dn&&qn<=an) return true;
+      }
+    }
+    return false;
+  });
 
   const all = loadColoratore();
   const totEE = all.reduce((s,x)=>s+(x.cicli_ee||0),0);
