@@ -1552,7 +1552,7 @@ async function forceSave(silent=false){
     const proc=JSON.parse(localStorage.getItem(LS_PROC)||'[]');
     const color=JSON.parse(localStorage.getItem(LS_COLOR_REG)||'[]');
     const ihc=JSON.parse(localStorage.getItem(LS_IHC)||'[]');
-    if(prods.length) await supaFetch('products','POST',prods,'?on_conflict=id');
+    if(prods.length) await supaFetch('products','POST',prods.map(({lotto_aperto,...r})=>r),'?on_conflict=id');
     if(movs.length) await supaFetch('movements','POST',movs,'?on_conflict=id');
     await supaFetch('waste_state','DELETE',null,'?id=eq.waste_state');
     if(Object.keys(W).length) await supaFetch('waste_state','POST',[{id:'waste_state',data:W}],'?on_conflict=id');
@@ -1698,7 +1698,7 @@ async function forceSync(){
       if(cloudTs>localTs) localStorage.setItem(LS_W, JSON.stringify(cloudW));
     }
     // Push merge result su Supabase
-    if(mergedP.length) await supaFetch('products','POST',mergedP,'?on_conflict=id');
+    if(mergedP.length) await supaFetch('products','POST',mergedP.map(({lotto_aperto,...r})=>r),'?on_conflict=id');
     if(mergedM.length) await supaFetch('movements','POST',mergedM,'?on_conflict=id');
     if(mergedOrd.length) await supaFetch('ordini','POST',mergedOrd,'?on_conflict=id');
     if(mergedArch.length) await supaFetch('archivio_ordini','POST',mergedArch,'?on_conflict=id');
@@ -1731,7 +1731,7 @@ async function flushQueue(){
     const schede=JSON.parse(localStorage.getItem(LS_SCHEDE)||'[]');
     const ihc=JSON.parse(localStorage.getItem(LS_IHC)||'[]');
     // Push tutto su Supabase
-    if(prods.length) await supaFetch('products','POST',prods,'?on_conflict=id');
+    if(prods.length) await supaFetch('products','POST',prods.map(({lotto_aperto,...r})=>r),'?on_conflict=id');
     if(movs.length) await supaFetch('movements','POST',movs,'?on_conflict=id');
     await supaFetch('waste_state','DELETE',null,'?id=eq.waste_state');
     if(Object.keys(W).length) await supaFetch('waste_state','POST',[{id:'waste_state',data:W}],'?on_conflict=id');
@@ -1843,9 +1843,11 @@ async function saveP(arr, deletedId){
   if(!SUPA_OK) return;
   if(!IS_ONLINE){ enqueue({type:'products'}); return; }
   updateSyncStatus('sync');
+  // FIX [INFRASTRUTTURA]: lotto_aperto è solo localStorage, non esiste su Supabase
+  const _prodSync=a=>a.map(({lotto_aperto,...r})=>r);
   try{
     if(deletedId) await supaFetch('products','DELETE',null,'?id=eq.'+deletedId);
-    if(arr.length) await supaFetch('products','POST',arr,'?on_conflict=id');
+    if(arr.length) await supaFetch('products','POST',_prodSync(arr),'?on_conflict=id');
     updateSyncStatus('ok');
   }catch(e){ enqueue({type:'products'}); }
 }
@@ -4207,15 +4209,19 @@ function renderIHC(){
   const el=document.getElementById('ihc-list'); if(!el) return;
   const q=(document.getElementById('ihc-search')?.value||'').toLowerCase();
   let arr=loadIHC();
-  if(_ihcFilter!=='all') arr=arr.filter(x=>x.stato===_ihcFilter);
+  // FIX [UI/UX]: normalizza stato mancante come 'da_fare' prima del filtro
+  if(_ihcFilter!=='all') arr=arr.filter(x=>(x.stato||'da_fare')===_ihcFilter);
   if(q) arr=arr.filter(x=>
     (x.campione_id||'').toLowerCase().includes(q)||
     (x.patologo||'').toLowerCase().includes(q)||
     (x.anticorpo||'').toLowerCase().includes(q)
   );
-  // Urgenti in cima, poi per ID campione crescente
+  // FIX [UI/UX]: ordina per stato (da_fare → in_lavorazione → completata), urgenti in cima per gruppo
+  const _statoOrd={da_fare:0,in_lavorazione:1,completata:2};
   const _ihcIdNum=s=>{const m=(s||'').match(/^(\d+)/);return m?parseInt(m[1]):0;};
   arr.sort((a,b)=>{
+    const sa=_statoOrd[a.stato||'da_fare']??0, sb=_statoOrd[b.stato||'da_fare']??0;
+    if(sa!==sb) return sa-sb;
     if(a.priorita==='urgente'&&b.priorita!=='urgente') return -1;
     if(b.priorita==='urgente'&&a.priorita!=='urgente') return 1;
     return _ihcIdNum(a.campione_id)-_ihcIdNum(b.campione_id);
@@ -4226,14 +4232,14 @@ function renderIHC(){
   }
   const prioBadge={urgente:'<span class="badge bg-red">🔴 Urgente</span>',normale:'<span class="badge bg-blue">Normale</span>',differibile:'<span class="badge" style="background:var(--bg4);color:var(--text3);border-color:var(--border2)">Differibile</span>'};
   const statoBadge={da_fare:'<span class="badge bg-red">Da fare</span>',in_lavorazione:'<span class="badge bg-yellow">In lavorazione</span>',completata:'<span class="badge bg-green">Completata</span>'};
-  el.innerHTML=arr.map(r=>`
+  const cardHtml=r=>`
     <div class="campione-card" onclick="openNuovaIHC(loadIHC().find(x=>x.id==='${r.id}'))" style="${r.priorita==='urgente'?'border-color:#fca5a5;background:#fff8f8':''}">
       <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px">
         <div style="flex:1;min-width:0">
           <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:5px">
             <span class="campione-id" style="font-size:16px">${esc(r.campione_id||'—')}</span>
             ${prioBadge[r.priorita]||prioBadge.normale}
-            ${statoBadge[r.stato]||statoBadge.da_fare}
+            ${statoBadge[r.stato||'da_fare']}
           </div>
           <div style="font-size:13px;color:var(--text2);margin-bottom:4px"><strong>Patologo:</strong> ${esc(r.patologo||'—')}</div>
           ${_ihcChips(r)}
@@ -4242,7 +4248,23 @@ function renderIHC(){
           ${r.data_richiesta?fmtDate(r.data_richiesta):''}
         </div>
       </div>
-    </div>`).join('');
+    </div>`;
+  // FIX [UI/UX]: sezioni visive separate quando si mostra tutto
+  if(_ihcFilter==='all'){
+    const sez=[
+      {stato:'da_fare',     label:'🔴 Da fare',       col:'var(--red)'},
+      {stato:'in_lavorazione', label:'🟡 In lavorazione', col:'var(--yellow)'},
+      {stato:'completata',  label:'🟢 Completate',    col:'var(--green)'},
+    ];
+    const html=sez.map(s=>{
+      const cards=arr.filter(r=>(r.stato||'da_fare')===s.stato);
+      if(!cards.length) return '';
+      return `<div style="font-size:11px;font-weight:700;color:${s.col};text-transform:uppercase;letter-spacing:.8px;margin:16px 0 8px;padding-bottom:4px;border-bottom:2px solid ${s.col}33">${s.label} &nbsp;<span style="font-weight:400;opacity:.8">(${cards.length})</span></div>`+cards.map(cardHtml).join('');
+    }).join('');
+    el.innerHTML=html||'<div class="empty"><div class="e-ico">🔬</div><p>Nessuna richiesta IHC</p></div>';
+  } else {
+    el.innerHTML=arr.map(cardHtml).join('');
+  }
 }
 
 function openNuovaIHC(preset){
