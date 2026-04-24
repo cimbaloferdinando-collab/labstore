@@ -4191,7 +4191,11 @@ async function toggleIHCAnticorpo(id, item){
   const done=Array.isArray(r.anticorpi_done)?[...r.anticorpi_done]:[];
   const idx=done.indexOf(item);
   if(idx>=0) done.splice(idx,1); else done.push(item);
-  arr[i]={...r, anticorpi_done:done, modificato:new Date().toISOString()};
+  // FIX [UI/UX]: auto-completamento — se tutti i chip sono spuntati → stato='completata'
+  const items=(r.anticorpo||'').split(/[,\n]+/).map(s=>s.trim()).filter(Boolean);
+  const allDone=items.length>0&&items.every(it=>done.includes(it));
+  const newStato=allDone?'completata':(r.stato==='completata'?'da_fare':r.stato||'da_fare');
+  arr[i]={...r, anticorpi_done:done, stato:newStato, modificato:new Date().toISOString()};
   await saveIHCArr(arr);
   renderIHC();
   renderDashboard();
