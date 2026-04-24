@@ -4216,6 +4216,14 @@ function setIHCFilter(f,btn){
 
 function renderIHC(){
   const el=document.getElementById('ihc-list'); if(!el) return;
+  // FIX [UI/UX]: migra record storici — se tutti i chip sono spuntati, porta stato a 'completata'
+  const _allIhc=loadIHC();
+  const _toMigrate=_allIhc.filter(r=>{
+    const items=(r.anticorpo||'').split(/[,\n]+/).map(s=>s.trim()).filter(Boolean);
+    const done=Array.isArray(r.anticorpi_done)?r.anticorpi_done:[];
+    return items.length>0&&items.every(it=>done.includes(it))&&r.stato!=='completata';
+  });
+  if(_toMigrate.length){ _toMigrate.forEach(r=>r.stato='completata'); saveIHCArr(_allIhc); }
   const q=(document.getElementById('ihc-search')?.value||'').toLowerCase();
   let arr=loadIHC();
   // FIX [UI/UX]: normalizza stato mancante come 'da_fare' prima del filtro
