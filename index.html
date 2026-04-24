@@ -1767,6 +1767,8 @@ function _updateSyncWarning(){
 const _SUPA_STRIP={
   ordini:['ddtImages','scanOrdine'],
   archivio_ordini:['ddtImages','scanOrdine'],
+  // FIX [INFRASTRUTTURA]: lotto_aperto è localStorage-only, colonna non esiste su Supabase
+  products:['lotto_aperto'],
 };
 // FIX [INFRASTRUTTURA]: valori default per campi NOT NULL che JS non imposta sempre
 const _SUPA_DEFAULTS={
@@ -3024,18 +3026,21 @@ function saveProduct(){
   // Se cat è Altro o vuoto, prova a determinarlo in modo intelligente
   const fornitoreVal=document.getElementById('f-fornitore').value.trim();
   const catFinal=cat&&cat!=='Altro'?cat:smartCategorize(nome,fornitoreVal,document.getElementById('f-barcode').value.trim());
+  const _existing=id?loadP().find(x=>x.id===id):null;
   const p={id:id||genId(),nome,cat:catFinal,
     fornitore:fornitoreVal,
     barcode:document.getElementById('f-barcode').value.trim(),
     lotto:document.getElementById('f-lotto').value.trim(),
     scadenza:document.getElementById('f-scadenza').value,
     qty:qty_new,
-    qty_init:id ? (loadP().find(x=>x.id===id)?.qty_init ?? qty_new) : qty_new,
+    qty_init:id ? (_existing?.qty_init ?? qty_new) : qty_new,
     unita:document.getElementById('f-unita').value.trim(),
     min:parseFloat(document.getElementById('f-min').value)||0,
     pos:document.getElementById('f-pos').value.trim(),
     note:document.getElementById('f-note').value.trim(),
-    lotti:getLottiFromForm() // FEATURE 6: lotti multipli
+    lotti:getLottiFromForm(), // FEATURE 6: lotti multipli
+    // FIX [MAGAZZINO]: preserva lotto_aperto quando si modifica il prodotto
+    ...(_existing?.lotto_aperto ? {lotto_aperto:_existing.lotto_aperto} : {})
   };
   // Calcola qty totale inclusi lotti aggiuntivi
   if(p.lotti.length) p.qty = qty_new + p.lotti.reduce((s,l)=>s+(l.qty||0),0);
