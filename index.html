@@ -1019,31 +1019,52 @@ textarea{resize:vertical;min-height:60px}
       <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px">Range ID casi lavorati + vetri</div>
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
         <div style="background:var(--bg2);border-radius:8px;padding:10px;border:1px solid var(--border)">
-          <div style="font-size:11px;color:var(--blue);font-weight:600;margin-bottom:6px">Istologia</div>
-          <input type="text" id="color-range-ist-from" placeholder="Da es. 2764/26" style="width:100%;margin-bottom:5px;font-family:DM Mono,monospace;font-size:12px">
-          <input type="text" id="color-range-ist-to" placeholder="A es. 2800/26" style="width:100%;margin-bottom:5px;font-family:DM Mono,monospace;font-size:12px">
-          <div style="display:flex;align-items:center;gap:6px;margin-top:4px">
-            <span style="font-size:10px;color:var(--text3);white-space:nowrap">N° vetri</span>
-            <input type="number" id="color-vetri-ist" min="0" value="0" placeholder="0" style="width:70px;font-family:DM Mono,monospace;font-size:13px;font-weight:700;color:var(--blue);text-align:center">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+            <div style="font-size:11px;color:var(--blue);font-weight:600">Istologia</div>
+            <div style="display:flex;align-items:center;gap:4px">
+              <span style="font-size:10px;color:var(--text3);white-space:nowrap">Vetri</span>
+              <input type="number" id="color-vetri-ist" min="0" value="0" placeholder="0" style="width:52px;font-family:DM Mono,monospace;font-size:12px;font-weight:700;color:var(--blue);text-align:center">
+            </div>
           </div>
+          <div style="display:flex;gap:3px;margin-bottom:5px">
+            <input type="text" id="color-range-ist-from" placeholder="Da es. 2764/26" style="flex:1;font-family:DM Mono,monospace;font-size:11px">
+            <span style="align-self:center;color:var(--text3);font-size:10px">→</span>
+            <input type="text" id="color-range-ist-to" placeholder="A" style="flex:1;font-family:DM Mono,monospace;font-size:11px">
+            <button class="btn btn-sm btn-primary" onclick="addColorRange('ist')" style="padding:3px 7px;font-size:13px">＋</button>
+          </div>
+          <div id="color-ranges-ist" style="display:flex;flex-wrap:wrap;gap:3px;min-height:20px"></div>
         </div>
         <div style="background:var(--bg2);border-radius:8px;padding:10px;border:1px solid var(--border)">
-          <div style="font-size:11px;color:var(--teal);font-weight:600;margin-bottom:6px">Citologia</div>
-          <input type="text" id="color-range-cit-from" placeholder="Da es. 2764/26" style="width:100%;margin-bottom:5px;font-family:DM Mono,monospace;font-size:12px">
-          <input type="text" id="color-range-cit-to" placeholder="A es. 2800/26" style="width:100%;margin-bottom:5px;font-family:DM Mono,monospace;font-size:12px">
-          <div style="display:flex;align-items:center;gap:6px;margin-top:4px">
-            <span style="font-size:10px;color:var(--text3);white-space:nowrap">N° vetri</span>
-            <input type="number" id="color-vetri-cit" min="0" value="0" placeholder="0" style="width:70px;font-family:DM Mono,monospace;font-size:13px;font-weight:700;color:var(--teal);text-align:center">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+            <div style="font-size:11px;color:var(--teal);font-weight:600">Citologia</div>
+            <div style="display:flex;align-items:center;gap:4px">
+              <span style="font-size:10px;color:var(--text3);white-space:nowrap">Vetri</span>
+              <input type="number" id="color-vetri-cit" min="0" value="0" placeholder="0" style="width:52px;font-family:DM Mono,monospace;font-size:12px;font-weight:700;color:var(--teal);text-align:center">
+            </div>
           </div>
+          <div style="display:flex;gap:3px;margin-bottom:5px">
+            <input type="text" id="color-range-cit-from" placeholder="Da es. 2764/26" style="flex:1;font-family:DM Mono,monospace;font-size:11px">
+            <span style="align-self:center;color:var(--text3);font-size:10px">→</span>
+            <input type="text" id="color-range-cit-to" placeholder="A" style="flex:1;font-family:DM Mono,monospace;font-size:11px">
+            <button class="btn btn-sm btn-primary" onclick="addColorRange('cit')" style="padding:3px 7px;font-size:13px">＋</button>
+          </div>
+          <div id="color-ranges-cit" style="display:flex;flex-wrap:wrap;gap:3px;min-height:20px"></div>
         </div>
         <div style="background:var(--bg2);border-radius:8px;padding:10px;border:1px solid var(--border)">
-          <div style="font-size:11px;color:var(--purple);font-weight:600;margin-bottom:6px">Pap LupoLab</div>
-          <input type="text" id="color-range-pap-from" placeholder="Da es. 100/26L" style="width:100%;margin-bottom:5px;font-family:DM Mono,monospace;font-size:12px">
-          <input type="text" id="color-range-pap-to" placeholder="A es. 150/26L" style="width:100%;margin-bottom:5px;font-family:DM Mono,monospace;font-size:12px">
-          <div style="display:flex;align-items:center;gap:6px;margin-top:4px">
-            <span style="font-size:10px;color:var(--text3);white-space:nowrap">N° vetri</span>
-            <input type="number" id="color-vetri-pap" min="0" value="0" placeholder="0" style="width:70px;font-family:DM Mono,monospace;font-size:13px;font-weight:700;color:var(--purple);text-align:center">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+            <div style="font-size:11px;color:var(--purple);font-weight:600">Pap LupoLab</div>
+            <div style="display:flex;align-items:center;gap:4px">
+              <span style="font-size:10px;color:var(--text3);white-space:nowrap">Vetri</span>
+              <input type="number" id="color-vetri-pap" min="0" value="0" placeholder="0" style="width:52px;font-family:DM Mono,monospace;font-size:12px;font-weight:700;color:var(--purple);text-align:center">
+            </div>
           </div>
+          <div style="display:flex;gap:3px;margin-bottom:5px">
+            <input type="text" id="color-range-pap-from" placeholder="Da es. 100/26L" style="flex:1;font-family:DM Mono,monospace;font-size:11px">
+            <span style="align-self:center;color:var(--text3);font-size:10px">→</span>
+            <input type="text" id="color-range-pap-to" placeholder="A" style="flex:1;font-family:DM Mono,monospace;font-size:11px">
+            <button class="btn btn-sm btn-primary" onclick="addColorRange('pap')" style="padding:3px 7px;font-size:13px">＋</button>
+          </div>
+          <div id="color-ranges-pap" style="display:flex;flex-wrap:wrap;gap:3px;min-height:20px"></div>
         </div>
       </div>
     </div>
@@ -3674,6 +3695,7 @@ function getOpenLottoByName(reagentName){
 }
 
 let procCasiList = [];
+let colorRangeLists = {ist:[], cit:[], pap:[]};
 
 function openNuovoProcessatore(preset){
   procCasiList = preset?.casi || [];
@@ -3719,8 +3741,8 @@ function addRangeCasiProc(){
       for(let n=nFrom;n<=nTo;n++) procCasiList.push(n+'/'+anno);
     } else { procCasiList.push(from); if(to) procCasiList.push(to); }
   }
-  document.getElementById('proc-caso-from').value=preset?.casi_da||'';
-  document.getElementById('proc-caso-to').value=preset?.casi_a||'';
+  document.getElementById('proc-caso-from').value='';
+  document.getElementById('proc-caso-to').value='';
   renderProcCasiList();
 }
 
@@ -3746,7 +3768,6 @@ function initReagentiProcFissi(preset){
               || (preset ? null : lastReag.find(r=>(r.nome||'').toLowerCase().includes(nome.toLowerCase().replace('%','').trim())));
     const stato = src?.stato || 'verificato';
     const lotto = src?.lotto || getOpenLottoByName(nome);
-    const disabled = stato==='verificato' ? 'disabled' : '';
     const div = document.createElement('div');
     div.className = 'reagente-usato-row';
     div.dataset.nome = nome;
@@ -3759,28 +3780,21 @@ function initReagentiProcFissi(preset){
         <option value="rabboccato" ${stato==='rabboccato'?'selected':''}>➕ Rabboccato</option>
         <option value="sostituito" ${stato==='sostituito'?'selected':''}>🔄 Sostituito</option>
       </select>
-      <input class="reag-lotto-input" type="text" placeholder="Lotto" value="${esc(lotto)}" ${disabled}
-        style="width:110px;font-family:\'DM Mono\',monospace;font-size:12px;background:${stato==='verificato'?'var(--bg3)':'var(--bg2)'}">`;
+      <input class="reag-lotto-input" type="text" placeholder="Lotto" value="${esc(lotto)}"
+        style="width:110px;font-family:\'DM Mono\',monospace;font-size:12px">`;
     rl.appendChild(div);
   });
 }
 
-// FIX [TRACCIABILITÀ]: Cambio stato reagente — aggiorna campo lotto
+// FIX [TRACCIABILITÀ]: Cambio stato reagente — aggiorna campo lotto (sempre editabile)
 function onStatoReagChange(sel, tipo){
   const row = sel.closest('.reagente-usato-row');
   const input = row.querySelector('.reag-lotto-input');
   const lastLotto = row.dataset.lastLotto || '';
   if(sel.value==='verificato'){
     input.value = lastLotto;
-    input.disabled = true;
-    input.style.background = 'var(--bg3)';
-  } else if(sel.value==='rabboccato'){
-    input.disabled = false;
-    input.style.background = 'var(--bg2)';
   } else if(sel.value==='sostituito'){
     input.value = '';
-    input.disabled = false;
-    input.style.background = 'var(--bg2)';
   }
 }
 
@@ -3945,6 +3959,27 @@ async function saveColoratoreReg(arr, deletedId){
   }catch(e){ enqueue({type:'coloratore'}); }
 }
 
+// FIX [TRACCIABILITÀ]: Range dinamici coloratore per tipo
+function renderColorRangeList(type){
+  const el=document.getElementById('color-ranges-'+type); if(!el) return;
+  el.innerHTML=colorRangeLists[type].map((r,i)=>
+    `<span style="display:inline-flex;align-items:center;gap:3px;background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:2px 6px;font-family:DM Mono,monospace;font-size:11px">
+      ${esc(r.from)}${r.to&&r.to!==r.from?' → '+esc(r.to):''}
+      <button onclick="removeColorRange('${type}',${i})" style="background:none;border:none;cursor:pointer;color:var(--red);font-size:10px;padding:0 0 0 3px">✕</button>
+    </span>`
+  ).join('');
+}
+function addColorRange(type){
+  const from=(document.getElementById('color-range-'+type+'-from')?.value||'').trim();
+  const to=(document.getElementById('color-range-'+type+'-to')?.value||'').trim();
+  if(!from){ toast('Inserisci almeno il caso iniziale','error'); return; }
+  colorRangeLists[type].push({from, to:to||from});
+  document.getElementById('color-range-'+type+'-from').value='';
+  document.getElementById('color-range-'+type+'-to').value='';
+  renderColorRangeList(type);
+}
+function removeColorRange(type,i){ colorRangeLists[type].splice(i,1); renderColorRangeList(type); }
+
 function openNuovoColoratore(preset){
   document.getElementById('color-edit-id').value = preset?.id||'';
   document.getElementById('color-modal-title').textContent = preset ? 'Modifica Registro Coloratore' : 'Registro Coloratore';
@@ -3953,13 +3988,13 @@ function openNuovoColoratore(preset){
   document.getElementById('color-cicli-ee').value = preset?.cicli_ee||0;
   document.getElementById('color-cicli-ee-cit').value = preset?.cicli_ee_cit||0;
   document.getElementById('color-cicli-pap').value = preset?.cicli_pap||0;
-  // Range casi + vetri
-  document.getElementById('color-range-ist-from').value = preset?.range_ist?.from||'';
-  document.getElementById('color-range-ist-to').value   = preset?.range_ist?.to||'';
-  document.getElementById('color-range-cit-from').value = preset?.range_cit?.from||'';
-  document.getElementById('color-range-cit-to').value   = preset?.range_cit?.to||'';
-  document.getElementById('color-range-pap-from').value = preset?.range_pap?.from||'';
-  document.getElementById('color-range-pap-to').value   = preset?.range_pap?.to||'';
+  // Range casi + vetri — lista dinamica per tipo
+  colorRangeLists={ist:[],cit:[],pap:[]};
+  for(const t of['ist','cit','pap']){
+    if(preset?.['ranges_'+t]?.length) colorRangeLists[t]=[...preset['ranges_'+t]];
+    else if(preset?.['range_'+t]?.from) colorRangeLists[t]=[{from:preset['range_'+t].from, to:preset['range_'+t].to||''}];
+    renderColorRangeList(t);
+  }
   document.getElementById('color-vetri-ist').value = preset?.vetri_ist||0;
   document.getElementById('color-vetri-cit').value = preset?.vetri_cit||0;
   document.getElementById('color-vetri-pap').value = preset?.vetri_pap||0;
@@ -3995,7 +4030,6 @@ function initReagentiColorFissi(preset){
               || (preset ? null : lastReag.find(r=>(r.nome||'').toLowerCase().includes(nome.toLowerCase().replace('%','').trim())));
     const stato = src?.stato || 'verificato';
     const lotto = src?.lotto || getOpenLottoByName(nome);
-    const disabled = stato==='verificato' ? 'disabled' : '';
     const div = document.createElement('div');
     div.className = 'reagente-usato-row';
     div.dataset.nome = nome;
@@ -4008,8 +4042,8 @@ function initReagentiColorFissi(preset){
         <option value="rabboccato" ${stato==='rabboccato'?'selected':''}>➕ Rabboccato</option>
         <option value="sostituito" ${stato==='sostituito'?'selected':''}>🔄 Sostituito</option>
       </select>
-      <input class="reag-lotto-input" type="text" placeholder="Lotto" value="${esc(lotto)}" ${disabled}
-        style="width:110px;font-family:\'DM Mono\',monospace;font-size:12px;background:${stato==='verificato'?'var(--bg3)':'var(--bg2)'}">`;
+      <input class="reag-lotto-input" type="text" placeholder="Lotto" value="${esc(lotto)}"
+        style="width:110px;font-family:\'DM Mono\',monospace;font-size:12px">`;
     rl.appendChild(div);
   });
 }
@@ -4035,9 +4069,9 @@ async function saveColoratore(){
     cicli_ee:     parseInt(document.getElementById('color-cicli-ee').value)||0,
     cicli_ee_cit: parseInt(document.getElementById('color-cicli-ee-cit').value)||0,
     cicli_pap:    parseInt(document.getElementById('color-cicli-pap').value)||0,
-    range_ist: { from: document.getElementById('color-range-ist-from').value.trim(), to: document.getElementById('color-range-ist-to').value.trim() },
-    range_cit: { from: document.getElementById('color-range-cit-from').value.trim(), to: document.getElementById('color-range-cit-to').value.trim() },
-    range_pap: { from: document.getElementById('color-range-pap-from').value.trim(), to: document.getElementById('color-range-pap-to').value.trim() },
+    ranges_ist: [...colorRangeLists.ist],
+    ranges_cit: [...colorRangeLists.cit],
+    ranges_pap: [...colorRangeLists.pap],
     vetri_ist: parseInt(document.getElementById('color-vetri-ist').value)||0,
     vetri_cit: parseInt(document.getElementById('color-vetri-cit').value)||0,
     vetri_pap: parseInt(document.getElementById('color-vetri-pap').value)||0,
@@ -4062,13 +4096,19 @@ function renderColoratore(){
   const to = document.getElementById('color-filter-to')?.value;
   if(from) arr=arr.filter(x=>x.data>=from);
   if(to) arr=arr.filter(x=>x.data<=to);
-  // FIX [TRACCIABILITÀ]: Range search numerico su tutti i range coloratore
+  // FIX [TRACCIABILITÀ]: Range search numerico su tutti i range coloratore (nuovo + backward compat)
   if(q) arr=arr.filter(x=>{
     if((x.reagenti||[]).some(r=>(r.lotto||'').toLowerCase().includes(q)||(r.nome||'').toLowerCase().includes(q))) return true;
-    for(const rng of[x.range_ist,x.range_cit,x.range_pap]){
+    const allRanges=[
+      ...(x.ranges_ist||[]),...(x.ranges_cit||[]),...(x.ranges_pap||[]),
+      ...(x.range_ist?.from?[x.range_ist]:[]),
+      ...(x.range_cit?.from?[x.range_cit]:[]),
+      ...(x.range_pap?.from?[x.range_pap]:[]),
+    ];
+    const qn=parseInt(q.match(/^(\d+)/)?.[1]);
+    for(const rng of allRanges){
       if(!rng?.from) continue;
       if((rng.from||'').toLowerCase().includes(q)||(rng.to||'').toLowerCase().includes(q)) return true;
-      const qn=parseInt(q.match(/^(\d+)/)?.[1]);
       if(qn){
         const dn=parseInt((rng.from||'').match(/^(\d+)/)?.[1]);
         const an=parseInt((rng.to||'').match(/^(\d+)/)?.[1]);
@@ -4096,11 +4136,12 @@ function renderColoratore(){
     const hasNew=(reg.reagenti||[]).some(r=>!(prev.reagenti||[]).find(p=>(p.lotto||p.nome)===(r.lotto||r.nome)));
     return hasNew ? {label:'🔄 Cambiato',cls:'bg-red'} : {label:'➕ Rabboccato',cls:'bg-yellow'};
   };
-  const rng=r=>r?.from?(r.from+(r.to&&r.to!==r.from?' → '+String(r.to).split('/')[0]:'')):'—';
-  const rngVetri=(r,v,c)=>{
-    const r_str=rng(r);
+  const getRanges=(reg,t)=>reg['ranges_'+t]?.length?reg['ranges_'+t]:(reg['range_'+t]?.from?[reg['range_'+t]]:[]);
+  const rngArr=(arr,v,c)=>{
+    const rs=(arr||[]).filter(r=>r?.from);
+    const r_str=rs.map(r=>r.from+(r.to&&r.to!==r.from?' → '+String(r.to).split('/')[0]:'')).join('<br>');
     const v_str=v?`<span style="margin-left:5px;font-weight:700;color:${c}">${v}v</span>`:'';
-    return r_str==='—'&&!v?'—':`${r_str==='—'?'':r_str}${v_str}`;
+    return rs.length===0&&!v?'—':(r_str||'—')+v_str;
   };
 
   el.innerHTML=`<div style="overflow-x:auto">
@@ -4123,11 +4164,11 @@ function renderColoratore(){
         return `<tr>
           <td style="font-weight:600;white-space:nowrap">${fmtDate(reg.data)}</td>
           <td style="text-align:center;font-family:'DM Mono',monospace;font-weight:700;color:var(--blue)">${reg.cicli_ee||0}</td>
-          <td style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text3)">${rngVetri(reg.range_ist,reg.vetri_ist,'var(--blue)')}</td>
+          <td style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text3)">${rngArr(getRanges(reg,'ist'),reg.vetri_ist,'var(--blue)')}</td>
           <td style="text-align:center;font-family:'DM Mono',monospace;font-weight:700;color:var(--teal)">${reg.cicli_ee_cit||0}</td>
-          <td style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text3)">${rngVetri(reg.range_cit,reg.vetri_cit,'var(--teal)')}</td>
+          <td style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text3)">${rngArr(getRanges(reg,'cit'),reg.vetri_cit,'var(--teal)')}</td>
           <td style="text-align:center;font-family:'DM Mono',monospace;font-weight:700;color:var(--purple)">${reg.cicli_pap||0}</td>
-          <td style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text3)">${rngVetri(reg.range_pap,reg.vetri_pap,'var(--purple)')}</td>
+          <td style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text3)">${rngArr(getRanges(reg,'pap'),reg.vetri_pap,'var(--purple)')}</td>
           <td><span class="badge ${stato.cls}" style="font-size:11px">${stato.label}</span></td>
           <td style="white-space:nowrap">
             <button class="btn btn-sm" onclick="openNuovoColoratore(loadColoratore().find(x=>x.id==='${reg.id}'))">✎</button>
