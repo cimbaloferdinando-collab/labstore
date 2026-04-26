@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LupoLab AP — Design Preview</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0b0e;
+  --bg2:#111318;
+  --bg3:#1a1d24;
+  --bg4:#222630;
+  --border:rgba(255,255,255,0.07);
+  --border2:rgba(255,255,255,0.13);
+  --text:#f0f1f3;
+  --text2:#9299a8;
+  --text3:#525a6a;
+  --accent:#c8a96e;
+  --accent2:#3d7fff;
+  --green:#00c48c;
+  --green-bg:rgba(0,196,140,0.10);
+  --red:#ff3b5c;
+  --red-bg:rgba(255,59,92,0.10);
+  --yellow:#f5a623;
+  --yellow-bg:rgba(245,166,35,0.10);
+  --blue:#3d7fff;
+  --blue-bg:rgba(61,127,255,0.10);
+  --teal:#00b8d9;
+  --purple:#a78bfa;
+  --purple-bg:rgba(167,139,250,0.10);
+  --r:12px;--r-sm:8px;--r-lg:18px;
+  --shadow:0 2px 16px rgba(0,0,0,0.55);
+  --shadow-lg:0 8px 40px rgba(0,0,0,0.75);
+}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;line-height:1.5;min-height:100vh}
+
+/* ── LAYOUT ── */
+.layout{display:grid;grid-template-columns:220px 1fr;grid-template-rows:58px 1fr;min-height:100vh}
+
+/* ── HEADER ── */
+header{
+  grid-column:1/-1;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 20px;height:58px;
+  background:#0d0e12;
+  border-bottom:1px solid rgba(200,169,110,0.18);
+  box-shadow:0 1px 0 rgba(255,255,255,0.03);
+  position:sticky;top:0;z-index:100;
+}
+.logo{
+  font-family:'Cormorant Garamond',serif;
+  font-weight:600;font-size:21px;
+  color:var(--accent);letter-spacing:0.04em;
+  display:flex;align-items:center;gap:8px;cursor:pointer
+}
+.logo-badge{
+  background:var(--accent);color:#0a0b0e;
+  font-size:9px;font-weight:700;letter-spacing:0.14em;
+  border-radius:4px;padding:2px 6px;font-family:'DM Sans',sans-serif
+}
+.hdr-act{display:flex;align-items:center;gap:6px}
+
+/* ── SIDEBAR ── */
+.sidebar{
+  background:#0d0e12;
+  border-right:1px solid rgba(200,169,110,0.07);
+  padding:16px 10px;
+  overflow-y:auto;
+}
+.nav-lbl{
+  font-size:9px;font-weight:700;letter-spacing:0.15em;
+  text-transform:uppercase;color:var(--text3);
+  padding:14px 10px 6px;
+}
+.nav-item{
+  display:flex;align-items:center;gap:10px;
+  padding:9px 12px;border-radius:var(--r);
+  cursor:pointer;font-size:13px;font-weight:500;
+  color:var(--text3);letter-spacing:0.02em;
+  transition:all 0.15s;margin-bottom:1px;
+  border:1px solid transparent;
+}
+.nav-item:hover{background:rgba(255,255,255,0.04);color:var(--text2)}
+.nav-item.active{
+  background:rgba(200,169,110,0.08);
+  color:var(--accent);
+  border-color:rgba(200,169,110,0.15);
+}
+.nav-icon{font-size:15px;width:18px;text-align:center}
+.nav-div{height:1px;background:rgba(255,255,255,0.04);margin:8px 4px}
+
+/* ── MAIN ── */
+.main{padding:24px;overflow-y:auto;background:var(--bg)}
+.page-title{
+  font-family:'Cormorant Garamond',serif;
+  font-size:28px;font-weight:600;color:var(--text);
+  letter-spacing:0.01em;margin-bottom:4px;
+}
+.page-sub{font-size:12px;color:var(--text3);letter-spacing:0.03em;margin-bottom:20px}
+
+/* ── STATS GRID ── */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+.stat-card{
+  background:linear-gradient(145deg,#13161e,#0f1218);
+  border:1px solid rgba(255,255,255,0.06);
+  border-radius:var(--r-lg);
+  padding:18px 20px;
+  box-shadow:var(--shadow),inset 0 1px 0 rgba(255,255,255,0.04);
+  position:relative;overflow:hidden;cursor:pointer;
+  transition:transform 0.2s,box-shadow 0.2s;
+}
+.stat-card:hover{transform:translateY(-2px);box-shadow:0 6px 28px rgba(0,0,0,0.6),inset 0 1px 0 rgba(255,255,255,0.06)}
+.stat-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent,var(--accent),transparent);
+  opacity:0.35;
+}
+.stat-card.blue::before{background:linear-gradient(90deg,transparent,var(--blue),transparent)}
+.stat-card.green::before{background:linear-gradient(90deg,transparent,var(--green),transparent)}
+.stat-card.red::before{background:linear-gradient(90deg,transparent,var(--red),transparent)}
+.stat-val{
+  font-family:'DM Mono',monospace;font-size:34px;font-weight:700;
+  color:var(--text);letter-spacing:-0.02em;line-height:1;margin-bottom:6px;
+}
+.stat-val.amber{color:var(--accent)}
+.stat-val.blue{color:var(--blue)}
+.stat-val.green{color:var(--green)}
+.stat-val.red{color:var(--red)}
+.stat-label{
+  font-size:9px;font-weight:700;letter-spacing:0.14em;
+  text-transform:uppercase;color:var(--text3);
+}
+.stat-delta{
+  font-size:10px;color:var(--green);margin-top:4px;
+  font-family:'DM Mono',monospace;
+}
+
+/* ── CARD ── */
+.card{
+  background:linear-gradient(160deg,#13161e 0%,#0f1218 100%);
+  border:1px solid rgba(255,255,255,0.06);
+  border-radius:var(--r-lg);
+  box-shadow:var(--shadow);
+  margin-bottom:16px;overflow:hidden;
+}
+.card-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:16px 20px;border-bottom:1px solid rgba(255,255,255,0.04);
+}
+.card-title{
+  font-size:10px;font-weight:700;letter-spacing:0.12em;
+  text-transform:uppercase;color:var(--text3);
+}
+.card-act{display:flex;align-items:center;gap:8px}
+.card-body{padding:20px}
+
+/* ── BUTTONS ── */
+.btn{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:8px 16px;border-radius:999px;
+  border:1px solid rgba(255,255,255,0.10);
+  background:#1a1d24;color:var(--text2);
+  font-size:12px;font-weight:600;letter-spacing:0.03em;
+  cursor:pointer;transition:all 0.15s;white-space:nowrap;
+  box-shadow:0 1px 3px rgba(0,0,0,0.4),inset 0 1px 0 rgba(255,255,255,0.05);
+  font-family:'DM Sans',sans-serif;
+}
+.btn:hover{background:#222630;border-color:rgba(255,255,255,0.18);color:var(--text);transform:translateY(-1px)}
+.btn-primary{
+  background:linear-gradient(135deg,#2563eb,#1d4ed8);
+  border-color:rgba(61,127,255,0.35);color:#fff;
+  box-shadow:0 2px 14px rgba(37,99,235,0.35);
+}
+.btn-primary:hover{box-shadow:0 4px 20px rgba(37,99,235,0.5)}
+.btn-ok{
+  background:linear-gradient(135deg,#059669,#047857);
+  border-color:rgba(0,196,140,0.35);color:#fff;
+  box-shadow:0 2px 14px rgba(5,150,105,0.3);
+}
+.btn-warn{
+  background:linear-gradient(135deg,#d97706,#b45309);
+  border-color:rgba(245,166,35,0.35);color:#fff;
+  box-shadow:0 2px 14px rgba(217,119,6,0.3);
+}
+.btn-danger{
+  background:linear-gradient(135deg,#dc2626,#b91c1c);
+  border-color:rgba(255,59,92,0.35);color:#fff;
+  box-shadow:0 2px 14px rgba(220,38,38,0.3);
+}
+.btn-sm{padding:5px 12px;font-size:11px}
+
+/* ── BADGES ── */
+.badge{
+  display:inline-flex;align-items:center;
+  font-size:9px;font-weight:700;letter-spacing:0.12em;
+  text-transform:uppercase;border-radius:4px;
+  padding:3px 8px;border:1px solid;
+}
+.bg-green{background:var(--green-bg);color:var(--green);border-color:rgba(0,196,140,0.25)}
+.bg-red{background:var(--red-bg);color:var(--red);border-color:rgba(255,59,92,0.25)}
+.bg-yellow{background:var(--yellow-bg);color:var(--yellow);border-color:rgba(245,166,35,0.25)}
+.bg-blue{background:var(--blue-bg);color:var(--blue);border-color:rgba(61,127,255,0.25)}
+.bg-purple{background:var(--purple-bg);color:var(--purple);border-color:rgba(167,139,250,0.25)}
+
+/* ── TABLE ── */
+table{width:100%;border-collapse:collapse}
+thead th{
+  background:rgba(255,255,255,0.02);
+  color:var(--text3);font-size:9px;font-weight:700;
+  letter-spacing:0.12em;text-transform:uppercase;
+  padding:10px 16px;border-bottom:1px solid rgba(255,255,255,0.06);
+  text-align:left;
+}
+tbody tr{border-bottom:1px solid rgba(255,255,255,0.03);transition:background 0.12s}
+tbody tr:hover{background:rgba(255,255,255,0.025)}
+tbody td{padding:13px 16px;font-size:13px;color:var(--text2)}
+.mono{font-family:'DM Mono',monospace;font-size:12px}
+
+/* ── INPUTS ── */
+.fg{margin-bottom:12px}
+.fg label{display:block;font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--text3);margin-bottom:6px}
+input,select{
+  width:100%;background:#0f1015;
+  border:1px solid rgba(255,255,255,0.08);
+  border-radius:var(--r-sm);color:var(--text);
+  font-size:13px;padding:10px 12px;
+  font-family:'DM Sans',sans-serif;
+  transition:border-color 0.15s,box-shadow 0.15s;
+}
+input:focus,select:focus{
+  border-color:rgba(200,169,110,0.35);
+  box-shadow:0 0 0 3px rgba(200,169,110,0.08);
+  outline:none;
+}
+input::placeholder{color:var(--text3)}
+
+/* ── PROG BAR ── */
+.prog-wrap{display:flex;align-items:center;gap:8px}
+.prog-bar{flex:1;height:4px;background:rgba(255,255,255,0.06);border-radius:99px;overflow:hidden}
+.prog-fill{height:100%;border-radius:99px;transition:width 0.3s}
+.prog-pct{font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;min-width:30px;text-align:right}
+
+/* ── SECTION TITLE ── */
+.section{margin-bottom:28px}
+.section-hdr{
+  font-size:10px;font-weight:700;letter-spacing:0.16em;
+  text-transform:uppercase;color:var(--text3);
+  margin-bottom:14px;display:flex;align-items:center;gap:10px;
+}
+.section-hdr::after{content:'';flex:1;height:1px;background:rgba(255,255,255,0.05)}
+
+/* ── MODAL PREVIEW ── */
+.modal-preview{
+  background:linear-gradient(160deg,#13161e 0%,#0f1218 100%);
+  border:1px solid rgba(255,255,255,0.08);
+  border-radius:var(--r-lg);
+  box-shadow:0 24px 80px rgba(0,0,0,0.8),inset 0 1px 0 rgba(255,255,255,0.05);
+  padding:24px;
+}
+.modal-title{
+  font-family:'Cormorant Garamond',serif;
+  font-size:20px;font-weight:600;color:var(--text);
+  letter-spacing:0.01em;margin-bottom:20px;
+  display:flex;align-items:center;justify-content:space-between;
+}
+
+/* ── REAGENTE ROW ── */
+.reag-row{
+  display:flex;align-items:center;gap:8px;
+  padding:10px 14px;border-radius:var(--r);
+  background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);
+  margin-bottom:6px;
+}
+.reag-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+
+/* ── INSTRUMENT WIDGET ── */
+.instrument{
+  background:linear-gradient(145deg,#13161e,#0f1218);
+  border:1px solid rgba(255,255,255,0.06);
+  border-radius:var(--r-lg);padding:20px;
+  position:relative;overflow:hidden;
+}
+.instrument-val{
+  font-family:'DM Mono',monospace;
+  font-size:42px;font-weight:700;color:var(--text);
+  letter-spacing:-0.03em;line-height:1;
+}
+.instrument-unit{
+  font-size:11px;color:var(--text3);letter-spacing:0.1em;
+  text-transform:uppercase;margin-top:2px;
+}
+.instrument-label{
+  font-size:9px;font-weight:700;letter-spacing:0.14em;
+  text-transform:uppercase;color:var(--text3);margin-bottom:8px;
+}
+.instrument-bar{
+  height:3px;background:rgba(255,255,255,0.05);
+  border-radius:99px;margin-top:14px;overflow:hidden;
+}
+.instrument-fill{height:100%;border-radius:99px}
+
+/* ── PREVIEW LABEL ── */
+.preview-label{
+  font-size:10px;font-weight:700;letter-spacing:0.12em;
+  text-transform:uppercase;color:var(--accent);
+  border:1px solid rgba(200,169,110,0.2);
+  border-radius:4px;padding:3px 8px;margin-bottom:8px;
+  display:inline-block;
+}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar{width:5px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:99px}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="layout">
+<header>
+  <div style="display:flex;align-items:center;gap:12px">
+    <div class="logo">LupoLab <span class="logo-badge">AP</span></div>
+  </div>
+  <div class="hdr-act">
+    <button class="btn" style="font-size:11px;font-family:'DM Mono',monospace">⬡ Sync</button>
+    <button class="btn btn-ok" style="font-size:11px">💾 Salva</button>
+    <button class="btn" style="font-size:11px">📥 Backup</button>
+    <div style="width:1px;height:18px;background:rgba(255,255,255,0.1);margin:0 4px"></div>
+    <button class="btn btn-primary">＋ Campione</button>
+    <button class="btn" style="background:rgba(0,184,217,0.12);border-color:rgba(0,184,217,0.25);color:var(--teal)">＋ Pap L</button>
+    <div style="width:1px;height:18px;background:rgba(255,255,255,0.1);margin:0 4px"></div>
+    <button class="btn">📦 Mag. ▾</button>
+  </div>
+</header>
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div class="nav-item active"><span class="nav-icon">🏠</span>Dashboard</div>
+  <div class="nav-div"></div>
+  <div class="nav-lbl">Tracciabilità</div>
+  <div class="nav-item"><span class="nav-icon">🧬</span>Campioni</div>
+  <div class="nav-item"><span class="nav-icon">⚗️</span>Processatore</div>
+  <div class="nav-item"><span class="nav-icon">🎨</span>Coloratore</div>
+  <div class="nav-item"><span class="nav-icon">🔬</span>IHC</div>
+  <div class="nav-div"></div>
+  <div class="nav-lbl">Magazzino</div>
+  <div class="nav-item"><span class="nav-icon">📦</span>Inventario</div>
+  <div class="nav-item"><span class="nav-icon">↕</span>Movimenti</div>
+  <div class="nav-item"><span class="nav-icon">🚨</span>Allerte</div>
+  <div class="nav-item"><span class="nav-icon">🛒</span>Ordini</div>
+  <div class="nav-div"></div>
+  <div class="nav-lbl">Report</div>
+  <div class="nav-item"><span class="nav-icon">📊</span>Report mensile</div>
+  <div class="nav-item"><span class="nav-icon">🗑</span>Rifiuti</div>
+</nav>
+
+<!-- MAIN -->
+<main class="main">
+
+  <!-- WATERMARK PREVIEW -->
+  <div style="display:inline-flex;align-items:center;gap:8px;margin-bottom:20px;padding:6px 14px;background:rgba(200,169,110,0.06);border:1px solid rgba(200,169,110,0.15);border-radius:999px">
+    <span style="font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--accent)">Design Preview</span>
+    <span style="font-size:10px;color:var(--text3)">Ferrari Luce × Jony Ive — Non interattivo</span>
+  </div>
+
+  <div class="page-title">Dashboard</div>
+  <div class="page-sub">Domenica 26 Aprile 2026 — Laboratorio AP</div>
+
+  <!-- STAT CARDS -->
+  <div class="section">
+    <div class="section-hdr">KPI giornalieri</div>
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Campioni oggi</div>
+        <div class="stat-val amber">24</div>
+        <div class="stat-delta">↑ +3 rispetto a ieri</div>
+      </div>
+      <div class="stat-card blue">
+        <div class="stat-label">Campioni mese</div>
+        <div class="stat-val blue">312</div>
+        <div style="font-size:10px;color:var(--text3);margin-top:4px;font-family:'DM Mono',monospace">Aprile 2026</div>
+      </div>
+      <div class="stat-card green">
+        <div class="stat-label">Prodotti magazzino</div>
+        <div class="stat-val green">47</div>
+        <div style="font-size:10px;color:var(--text3);margin-top:4px">3 in scorta minima</div>
+      </div>
+      <div class="stat-card red">
+        <div class="stat-label">Allerte attive</div>
+        <div class="stat-val red">5</div>
+        <div style="font-size:10px;color:var(--text3);margin-top:4px">2 scadenze imminenti</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- INSTRUMENT WIDGETS ROW -->
+  <div class="section">
+    <div class="section-hdr">Processatore & Coloratore</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+
+      <div class="instrument">
+        <div class="instrument-label">Ultimo ciclo processatore</div>
+        <div class="instrument-val">24</div>
+        <div class="instrument-unit">casi processati</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:12px">
+          <span class="badge bg-green">Completato</span>
+          <span style="font-size:11px;color:var(--text3);font-family:'DM Mono',monospace">25 Apr</span>
+        </div>
+        <div class="instrument-bar"><div class="instrument-fill" style="width:85%;background:var(--green)"></div></div>
+      </div>
+
+      <div class="instrument">
+        <div class="instrument-label">Coloratore EE</div>
+        <div class="instrument-val" style="color:var(--blue)">18</div>
+        <div class="instrument-unit">casi ist. · 6 cit.</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:12px">
+          <span class="badge bg-blue">In corso</span>
+          <span style="font-size:11px;color:var(--text3);font-family:'DM Mono',monospace">Oggi</span>
+        </div>
+        <div class="instrument-bar"><div class="instrument-fill" style="width:60%;background:var(--blue)"></div></div>
+      </div>
+
+      <div class="instrument">
+        <div class="instrument-label">Ordini aperti</div>
+        <div class="instrument-val" style="color:var(--yellow)">3</div>
+        <div class="instrument-unit">in attesa ricezione</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:12px">
+          <span class="badge bg-yellow">Parziale</span>
+          <span style="font-size:11px;color:var(--text3);font-family:'DM Mono',monospace">1 urgente</span>
+        </div>
+        <div class="instrument-bar"><div class="instrument-fill" style="width:40%;background:var(--yellow)"></div></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- INVENTORY TABLE -->
+  <div class="section">
+    <div class="section-hdr">Inventario — Allerte</div>
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">Prodotti in scorta critica</span>
+        <div class="card-act">
+          <button class="btn btn-sm">Tutti →</button>
+        </div>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Prodotto</th>
+            <th>Categoria</th>
+            <th>Lotto</th>
+            <th>Quantità</th>
+            <th>Stato</th>
+            <th>Azione</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong style="color:var(--text)">Xilene puro</strong><br><span style="font-size:11px;color:var(--text3)">Epredia</span></td>
+            <td><span style="font-size:11px;color:var(--text3)">🧪 Reagenti</span></td>
+            <td><span class="mono" style="color:var(--accent)">LT240892</span></td>
+            <td>
+              <span class="mono" style="color:var(--red);font-weight:700">2</span>
+              <span style="font-size:11px;color:var(--text3)"> bidoni</span>
+              <div class="prog-wrap" style="margin-top:5px">
+                <div class="prog-bar"><div class="prog-fill" style="width:20%;background:var(--red)"></div></div>
+                <span class="prog-pct" style="color:var(--red)">20%</span>
+              </div>
+            </td>
+            <td><span class="badge bg-red">Critico</span></td>
+            <td><button class="btn btn-sm btn-primary">Ordina</button></td>
+          </tr>
+          <tr>
+            <td><strong style="color:var(--text)">Alcol 100%</strong><br><span style="font-size:11px;color:var(--text3)">Epredia</span></td>
+            <td><span style="font-size:11px;color:var(--text3)">🧪 Reagenti</span></td>
+            <td><span class="mono" style="color:var(--accent)">LT240710</span></td>
+            <td>
+              <span class="mono" style="color:var(--yellow);font-weight:700">5</span>
+              <span style="font-size:11px;color:var(--text3)"> bidoni</span>
+              <div class="prog-wrap" style="margin-top:5px">
+                <div class="prog-bar"><div class="prog-fill" style="width:42%;background:var(--yellow)"></div></div>
+                <span class="prog-pct" style="color:var(--yellow)">42%</span>
+              </div>
+            </td>
+            <td><span class="badge bg-yellow">Scorta bassa</span></td>
+            <td><button class="btn btn-sm">Ordina</button></td>
+          </tr>
+          <tr>
+            <td><strong style="color:var(--text)">Ematossilina</strong><br><span style="font-size:11px;color:var(--text3)">Bio Optica</span></td>
+            <td><span style="font-size:11px;color:var(--text3)">🎨 Coloranti</span></td>
+            <td><span class="mono" style="color:var(--accent)">BO231145</span></td>
+            <td>
+              <span class="mono" style="color:var(--green);font-weight:700">12</span>
+              <span style="font-size:11px;color:var(--text3)"> flaconi</span>
+              <div class="prog-wrap" style="margin-top:5px">
+                <div class="prog-bar"><div class="prog-fill" style="width:80%;background:var(--green)"></div></div>
+                <span class="prog-pct" style="color:var(--green)">80%</span>
+              </div>
+            </td>
+            <td><span class="badge bg-green">Ok</span></td>
+            <td><button class="btn btn-sm" style="opacity:0.4">Ordina</button></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- BOTTONI SHOWCASE -->
+  <div class="section">
+    <div class="section-hdr">Componenti — Bottoni</div>
+    <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center">
+      <button class="btn btn-primary">＋ Nuovo campione</button>
+      <button class="btn btn-ok">💾 Salva</button>
+      <button class="btn btn-warn">⚠ Attenzione</button>
+      <button class="btn btn-danger">🗑 Elimina</button>
+      <button class="btn">⬡ Sincronizza</button>
+      <button class="btn btn-sm">Azione</button>
+      <button class="btn btn-sm btn-primary">＋ Aggiungi</button>
+    </div>
+  </div>
+
+  <!-- BADGE SHOWCASE -->
+  <div class="section">
+    <div class="section-hdr">Componenti — Badge & stato</div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
+      <span class="badge bg-green">Verificato</span>
+      <span class="badge bg-red">Scaduto</span>
+      <span class="badge bg-yellow">In scadenza</span>
+      <span class="badge bg-blue">Inviato</span>
+      <span class="badge bg-purple">IHC</span>
+      <span class="badge" style="background:rgba(200,169,110,0.1);color:var(--accent);border-color:rgba(200,169,110,0.25)">Completato</span>
+    </div>
+  </div>
+
+  <!-- MODAL PREVIEW -->
+  <div class="section">
+    <div class="section-hdr">Componenti — Modal</div>
+    <div class="modal-preview">
+      <div class="modal-title">
+        <span>Nuovo Campione Istologico</span>
+        <button class="btn btn-sm" style="opacity:0.5">✕</button>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+        <div class="fg">
+          <label>ID Campione</label>
+          <input type="text" placeholder="es. 100/26H" value="101/26H">
+        </div>
+        <div class="fg">
+          <label>Data prelievo</label>
+          <input type="date" value="2026-04-26">
+        </div>
+        <div class="fg">
+          <label>Medico richiedente</label>
+          <input type="text" placeholder="Cognome Medico">
+        </div>
+        <div class="fg">
+          <label>Tipo campione</label>
+          <select><option>Biopsia endoscopica</option><option>Exeresi</option><option>Agobiopsia</option></select>
+        </div>
+      </div>
+      <div class="fg" style="margin-top:4px">
+        <label>Note cliniche</label>
+        <input type="text" placeholder="Diagnosi clinica, sospetto diagnostico…">
+      </div>
+      <!-- Reagenti -->
+      <div style="margin-top:16px;margin-bottom:8px;font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--text3)">Reagenti usati</div>
+      <div class="reag-row">
+        <div class="reag-dot" style="background:var(--green)"></div>
+        <span style="flex:1;font-size:13px;color:var(--text)">Ematossilina EE</span>
+        <span class="badge bg-green">Verificato</span>
+        <span class="mono" style="color:var(--accent);font-size:12px">LT240710</span>
+      </div>
+      <div class="reag-row">
+        <div class="reag-dot" style="background:var(--blue)"></div>
+        <span style="flex:1;font-size:13px;color:var(--text)">Eosina Y</span>
+        <span class="badge bg-blue">Rabboccato</span>
+        <span class="mono" style="color:var(--accent);font-size:12px">EY231089</span>
+      </div>
+      <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:20px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.05)">
+        <button class="btn">Annulla</button>
+        <button class="btn btn-primary">Salva campione →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER NOTE -->
+  <div style="text-align:center;padding:24px 0 12px;color:var(--text3);font-size:11px;letter-spacing:0.06em">
+    LupoLab AP — Design Preview · Ferrari Luce × Jony Ive · Solo visuale, non interattivo
+  </div>
+
+</main>
+</div>
+</body>
+</html>
