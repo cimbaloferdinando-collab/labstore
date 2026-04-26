@@ -5656,16 +5656,21 @@ function riceviParziale(id){
     ).join(' ');
     const found = prods.find(x=>x.nome.toLowerCase()===r.nome.toLowerCase());
     const fattore = found?.pezzi_per_conf||0;
-    const confHint = fattore>1 ? `<span style="font-size:10px;color:var(--accent2);font-family:'DM Mono',monospace;margin-left:6px">📦 ${Math.max(0,restante)} conf = ${Math.max(0,restante)*fattore} bidoni in magazzino</span>` : '';
     const matchBadge = restante>0
       ? (found
           ? `<span style="font-size:10px;color:var(--green);font-weight:600">✅ ${esc(found.nome)}</span>`
           : `<span style="font-size:10px;color:var(--yellow);font-weight:600">⚠️ Non trovato in magazzino — verrà creato</span>`)
       : '';
+    const fattoreField = fattore>1
+      ? `<div style="display:flex;align-items:center;gap:4px">
+          <label style="font-size:10px;margin:0;color:var(--accent2)">Pezzi/conf:</label>
+          <input type="number" class="recv-parz-fattore" data-idx="${i}" value="${fattore}" min="1" style="width:52px;text-align:center;font-family:'DM Mono',monospace;font-size:12px;font-weight:700;color:var(--accent2)" ${restante<=0?'disabled':''}>
+         </div>`
+      : `<input type="hidden" class="recv-parz-fattore" data-idx="${i}" value="1">`;
     return `<div style="padding:10px 0;border-bottom:1px solid var(--border);font-size:13px">
       <div style="margin-bottom:5px">
         <strong>${esc(r.nome)}</strong>
-        <div style="font-size:11px;color:var(--text3)">Ordinati: ${r.qty} ${r.unita||'pz'}${confHint} · Ricevuti: ${ricevuta} · Restano: ${Math.max(0,restante)}</div>
+        <div style="font-size:11px;color:var(--text3)">Ordinati: ${r.qty} ${r.unita||'pz'} · Ricevuti: ${ricevuta} · Restano: ${Math.max(0,restante)}${fattore>1?` <span style="color:var(--accent2);font-family:'DM Mono',monospace">(×${fattore} → ${Math.max(0,restante)*fattore} bidoni)</span>`:''}</div>
         ${storico?'<div style="margin-top:3px;display:flex;flex-wrap:wrap;gap:3px">'+storico+'</div>':''}
         ${matchBadge?'<div style="margin-top:3px">'+matchBadge+'</div>':''}
       </div>
@@ -5674,6 +5679,7 @@ function riceviParziale(id){
           <label style="font-size:10px;margin:0;color:var(--text3)">Arrivo:</label>
           <input type="number" class="recv-parz-qty" data-idx="${i}" value="${Math.max(0,restante)}" min="0" style="width:65px;text-align:center" ${restante<=0?'disabled':''}>
         </div>
+        ${fattoreField}
         <div style="display:flex;align-items:center;gap:4px">
           <label style="font-size:10px;margin:0;color:var(--text3)">Lotto:</label>
           <input type="text" class="recv-parz-lotto" data-idx="${i}" placeholder="opzionale" style="width:110px" ${restante<=0?'disabled':''}>
@@ -5718,6 +5724,8 @@ function confirmRicezioneParziale(id){
   document.querySelectorAll('.recv-parz-lotto').forEach(inp=>{ lottoByIdx[parseInt(inp.dataset.idx)] = inp.value.trim(); });
   const scadByIdx = {};
   document.querySelectorAll('.recv-parz-scad').forEach(inp=>{ scadByIdx[parseInt(inp.dataset.idx)] = inp.value; });
+  const fattoreByIdx = {};
+  document.querySelectorAll('.recv-parz-fattore').forEach(inp=>{ fattoreByIdx[parseInt(inp.dataset.idx)] = parseInt(inp.value)||1; });
   if(!o.ddtList) o.ddtList = [];
   const now = new Date().toISOString();
   const ddtEntry = { data: now, rif: ddt, righe: [] };
@@ -5736,8 +5744,8 @@ function confirmRicezioneParziale(id){
     ddtEntry.righe.push({nome:r.nome, qty:qtyArrivo, lotto, scadenza: scad});
     // Carico magazzino — replica logica "Carica" da scan
     let p = prods.find(x=>x.nome.toLowerCase()===r.nome.toLowerCase());
-    // FIX [MAGAZZINO]: conversione confezioni→bidoni se pezzi_per_conf valorizzato
-    const fattoreConf = p?.pezzi_per_conf||0;
+    // FIX [MAGAZZINO]: conversione confezioni→bidoni — usa fattore dal form (modificabile per consegna)
+    const fattoreConf = fattoreByIdx[idx]||1;
     const qtyBidoni = fattoreConf>1 ? qtyArrivo * fattoreConf : qtyArrivo;
     if(p){
       // Prodotto trovato: aggiorna qty, lotto, scadenza
