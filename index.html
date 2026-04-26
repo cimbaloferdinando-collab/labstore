@@ -5688,7 +5688,7 @@ renderDashboard();
   localStorage.setItem('ls_fix_confezioni_v2','1');
 })();
 
-setTimeout(()=>initialSync(), 300);
+initialSync();
 // FIX [INFRASTRUTTURA]: auto-sync silenzioso ogni 3 minuti — previene perdita dati se browser svuota localStorage
 setInterval(()=>{ if(IS_ONLINE&&SUPA_OK) forceSave(true); }, 3*60*1000);
 
