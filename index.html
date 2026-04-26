@@ -297,15 +297,6 @@ textarea{resize:vertical;min-height:60px}
   .frammento-chip{width:44px;height:44px;font-size:12px}
 }
 </style>
-  <script>
-    // Rimuovi service worker e pulisci cache per forzare aggiornamento
-    if('serviceWorker' in navigator){
-      navigator.serviceWorker.getRegistrations().then(regs=>{
-        regs.forEach(r=>r.unregister());
-      });
-    }
-    caches.keys().then(keys=>keys.forEach(k=>caches.delete(k)));
-  </script>
 </head>
 <body>
 <header>
@@ -5697,7 +5688,7 @@ renderDashboard();
   localStorage.setItem('ls_fix_confezioni_v2','1');
 })();
 
-initialSync();
+setTimeout(()=>initialSync(), 300);
 // FIX [INFRASTRUTTURA]: auto-sync silenzioso ogni 3 minuti — previene perdita dati se browser svuota localStorage
 setInterval(()=>{ if(IS_ONLINE&&SUPA_OK) forceSave(true); }, 3*60*1000);
 
