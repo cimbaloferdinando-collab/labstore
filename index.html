@@ -5593,6 +5593,20 @@ renderDashboard();
   localStorage.setItem('ls_fix_confezioni_v1','1');
 })();
 
+// FIX [MAGAZZINO]: Migrazione v2 — aggiunge alcol 99 (omesso nella v1)
+(function _fixConfezioniV2(){
+  if(localStorage.getItem('ls_fix_confezioni_v2')) return;
+  const prods=loadP(), movs=loadM();
+  let changed=false;
+  const p=prods.find(x=>(x.nome||'').toLowerCase().includes('alcol 99')||(x.nome||'').toLowerCase().includes('alcool 99'));
+  if(p){
+    const m=movs.find(x=>x.prodId===p.id&&x.tipo==='carico'&&x.qty===3);
+    if(m){ m.qty=12; m.note=(m.note||'')+' [corretto: 3 conf×4 bidoni]'; p.qty=Math.max(0,p.qty-3+12); changed=true; }
+  }
+  if(changed){ saveP(prods); saveM(movs); toast('Quantità corretta: 3 conf → 12 bidoni per alcol 99','info'); }
+  localStorage.setItem('ls_fix_confezioni_v2','1');
+})();
+
 initialSync();
 // FIX [INFRASTRUTTURA]: auto-sync silenzioso ogni 3 minuti — previene perdita dati se browser svuota localStorage
 setInterval(()=>{ if(IS_ONLINE&&SUPA_OK) forceSave(true); }, 3*60*1000);
