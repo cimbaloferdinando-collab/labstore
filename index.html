@@ -219,6 +219,83 @@ textarea{resize:vertical;min-height:60px}
   #quick-form-grid>button{grid-column:1/-1}
 }
 @media print{header,.sidebar,.btn,.filter-bar,.hdr-act{display:none!important}.main{padding:0}.layout{display:block}body{background:#fff;color:#000}}
+
+/* ── RESPONSIVE 600px: tablet piccolo / landscape mobile ── */
+@media(max-width:600px){
+  .main{padding:12px}
+  .page-title{font-size:22px}
+  .page-sub{font-size:12px;margin-bottom:14px}
+  .stats-grid{grid-template-columns:1fr 1fr}
+  .stat-val{font-size:24px}
+  .btn{min-height:44px;padding:10px 14px}
+  .btn-sm{min-height:38px;padding:8px 11px}
+  .modal{padding:16px}
+  .modal-title{font-size:17px;margin-bottom:14px}
+  .modal-footer{flex-wrap:wrap;gap:6px}
+  .modal-footer .btn{flex:1;min-width:0;justify-content:center;min-height:44px}
+  thead th{font-size:10px;padding:8px 10px;white-space:nowrap}
+  tbody td{padding:8px 10px}
+  .search-wrap input{min-width:0;width:100%}
+  #quick-form-grid{grid-template-columns:1fr!important}
+  #quick-form-grid>button{grid-column:1/-1}
+  .campione-id{font-size:17px}
+  .campione-card{padding:12px}
+  .form-grid{gap:8px}
+  .table-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+}
+
+/* ── RESPONSIVE 480px: smartphone ── */
+@media(max-width:480px){
+  header{padding:0 10px;height:52px}
+  .layout{min-height:calc(100vh - 52px)}
+  .sidebar{top:52px;height:calc(100vh - 52px)}
+  .logo{font-size:17px;gap:6px}
+  .logo-badge{display:none}
+  /* Modali full-width con !important per battere inline style */
+  .modal{
+    width:calc(100vw - 20px)!important;
+    max-width:calc(100vw - 20px)!important;
+    padding:14px;
+    border-radius:10px;
+    margin:10px
+  }
+  .modal-title{font-size:16px;margin-bottom:12px}
+  .stats-grid{grid-template-columns:1fr 1fr}
+  .stat-val{font-size:22px}
+  .stat-card{padding:12px}
+  .card-header{flex-wrap:wrap;gap:6px}
+  .filter-bar{gap:4px}
+  .f-btn{padding:5px 9px;font-size:11px;min-height:36px}
+  /* Toast full-width in basso */
+  #toast-container{bottom:10px;right:8px;left:8px;align-items:stretch}
+  .toast{min-width:0;width:100%}
+  /* Nascondi utility header su telefono, mostra solo nel menu ⋯ */
+  .hdr-util{display:none!important}
+  .hdr-sep-mobile{display:none!important}
+  /* Bottone ⋯ visibile solo su mobile */
+  .hdr-mobile-overflow{display:flex!important}
+  /* Reagente row wrappa su schermi piccoli */
+  .reagente-usato-row{flex-wrap:wrap;gap:6px}
+  .reagente-usato-row select.reag-stato{width:100%!important}
+  .reagente-usato-row input.reag-lotto-input{width:calc(100% - 0px)!important}
+  /* Chips caso processatore leggibili */
+  .pezzo-label{font-size:13px;min-width:24px}
+  /* Page title più compatto */
+  .page-title{font-size:20px}
+  .page-sub{margin-bottom:12px}
+  /* Empty state compatto */
+  .empty{padding:24px 12px}
+  .e-ico{font-size:30px}
+  /* Allerta badge compatta */
+  .badge{font-size:10px;padding:2px 6px}
+  /* Progress bar */
+  .prog-wrap{gap:5px}
+  .prog-pct{font-size:10px;min-width:24px}
+  /* campione fase dot più piccolo */
+  .fase-dot{width:24px;height:24px;font-size:11px}
+  /* frammento chip touch-friendly */
+  .frammento-chip{width:44px;height:44px;font-size:12px}
+}
 </style>
   <script>
     // Rimuovi service worker e pulisci cache per forzare aggiornamento
@@ -237,14 +314,14 @@ textarea{resize:vertical;min-height:60px}
     <div class="logo" onclick="showView('dashboard')" style="cursor:pointer">LupoLab <span class="logo-badge">AP</span></div>
   </div>
   <div class="hdr-act">
-    <button class="btn" id="sync-status" onclick="forceSync()" style="font-size:11px;font-family:'DM Mono',monospace" title="Sincronizza con cloud">⬡ Locale</button>
-    <button class="btn btn-ok" onclick="forceSave()" title="Salva tutto sul cloud" style="font-size:11px">💾 Salva</button>
-    <button class="btn" onclick="exportBackup()" title="Esporta backup locale JSON" style="font-size:11px">📥 Backup</button>
-    <button class="btn" id="undo-btn" onclick="undoLastAction()" title="Nessuna azione da annullare" style="font-size:11px;opacity:.4">↩ Annulla</button>
-    <div style="width:1px;height:20px;background:rgba(255,255,255,.15);margin:0 4px"></div>
+    <button class="btn hdr-util" id="sync-status" onclick="forceSync()" style="font-size:11px;font-family:'DM Mono',monospace" title="Sincronizza con cloud">⬡ Locale</button>
+    <button class="btn btn-ok hdr-util" onclick="forceSave()" title="Salva tutto sul cloud" style="font-size:11px">💾 Salva</button>
+    <button class="btn hdr-util" onclick="exportBackup()" title="Esporta backup locale JSON" style="font-size:11px">📥 Backup</button>
+    <button class="btn hdr-util" id="undo-btn" onclick="undoLastAction()" title="Nessuna azione da annullare" style="font-size:11px;opacity:.4">↩ Annulla</button>
+    <div class="hdr-sep-mobile" style="width:1px;height:20px;background:rgba(255,255,255,.15);margin:0 4px"></div>
     <button class="btn btn-primary" onclick="openNuovoCampione()" title="Nuovo campione">＋ Campione</button>
-    <button class="btn btn-pap-l" onclick="openNuovoCampioneSpec('pap_l')">＋ Pap L</button>
-    <button class="btn btn-pap-priv" onclick="openNuovoCampioneSpec('pap_priv')">＋ Pap Priv.</button>
+    <button class="btn btn-pap-l hdr-util" onclick="openNuovoCampioneSpec('pap_l')">＋ Pap L</button>
+    <button class="btn btn-pap-priv hdr-util" onclick="openNuovoCampioneSpec('pap_priv')">＋ Pap Priv.</button>
     <div style="width:1px;height:20px;background:rgba(255,255,255,.15);margin:0 4px"></div>
     <div class="hdr-ddrop" id="hdr-mag-drop">
       <button class="btn" onclick="toggleHdrDrop('hdr-mag-drop')" aria-label="Azioni magazzino">📦 Mag. ▾</button>
@@ -253,6 +330,19 @@ textarea{resize:vertical;min-height:60px}
         <button class="btn btn-warn" onclick="openScaricaModal();toggleHdrDrop('hdr-mag-drop')">⬇ Scarico</button>
         <button class="btn" onclick="openDDTModal();toggleHdrDrop('hdr-mag-drop')">📷 DDT</button>
         <button class="btn btn-primary" onclick="openAddModal();toggleHdrDrop('hdr-mag-drop')">＋ Prodotto</button>
+      </div>
+    </div>
+    <!-- Menu ⋯ visibile solo su smartphone (<480px) -->
+    <div class="hdr-ddrop hdr-mobile-overflow" id="hdr-more-drop" style="display:none">
+      <button class="btn" onclick="toggleHdrDrop('hdr-more-drop')" aria-label="Altre azioni" style="font-size:16px;padding:8px 12px">⋯</button>
+      <div class="hdr-ddrop-menu" id="hdr-more-drop-menu" style="right:0;min-width:180px">
+        <button class="btn" onclick="openNuovoCampioneSpec('pap_l');toggleHdrDrop('hdr-more-drop')">＋ Pap L</button>
+        <button class="btn" onclick="openNuovoCampioneSpec('pap_priv');toggleHdrDrop('hdr-more-drop')">＋ Pap Priv.</button>
+        <div style="height:1px;background:rgba(255,255,255,.15);margin:4px 0"></div>
+        <button class="btn btn-ok" onclick="forceSync();toggleHdrDrop('hdr-more-drop')" style="font-family:'DM Mono',monospace;font-size:11px">⬡ Sync</button>
+        <button class="btn btn-ok" onclick="forceSave();toggleHdrDrop('hdr-more-drop')">💾 Salva</button>
+        <button class="btn" onclick="exportBackup();toggleHdrDrop('hdr-more-drop')">📥 Backup</button>
+        <button class="btn" id="undo-btn-mobile" onclick="undoLastAction();toggleHdrDrop('hdr-more-drop')" style="opacity:.4">↩ Annulla</button>
       </div>
     </div>
   </div>
@@ -461,10 +551,10 @@ textarea{resize:vertical;min-height:60px}
             <div class="search-wrap"><span class="s-ico">🔍</span><input type="text" id="inv-search" placeholder="Cerca…" oninput="debouncedRenderInv()"></div>
           </div>
         </div>
-        <table>
+        <div class="table-scroll"><table>
           <thead><tr><th>Prodotto</th><th>Categoria</th><th>Lotto</th><th>Scadenza</th><th>Ini → Att</th><th>Livello</th><th>Azioni</th></tr></thead>
           <tbody id="inv-tbody"></tbody>
-        </table>
+        </table></div>
       </div>
     </div>
 
@@ -484,10 +574,10 @@ textarea{resize:vertical;min-height:60px}
           <span class="card-title">Storico movimenti</span>
           <button class="btn btn-sm btn-danger" onclick="clearMovimenti()">🗑 Svuota</button>
         </div>
-        <table>
+        <div class="table-scroll"><table>
           <thead><tr><th>Data/Ora</th><th>Tipo</th><th>Prodotto</th><th>Qtà</th><th>Lotto</th><th>Note</th></tr></thead>
           <tbody id="mov-tbody"></tbody>
-        </table>
+        </table></div>
       </div>
     </div>
 
@@ -507,10 +597,10 @@ textarea{resize:vertical;min-height:60px}
         <div class="card-header"><span class="card-title">📋 Log movimenti rifiuti</span>
           <button class="btn btn-sm btn-danger" onclick="clearWasteLog()">🗑 Svuota log</button>
         </div>
-        <table>
+        <div class="table-scroll"><table>
           <thead><tr><th>Data/Ora</th><th>Tipo rifiuto</th><th>Azione</th><th>Qtà bidoni</th><th>Note</th></tr></thead>
           <tbody id="waste-log-tbody"></tbody>
-        </table>
+        </table></div>
       </div>
     </div>
 
@@ -528,10 +618,10 @@ textarea{resize:vertical;min-height:60px}
       </div>
       <div class="card">
         <div class="card-header"><span class="card-title" id="allerte-count">0 prodotti</span></div>
-        <table>
+        <div class="table-scroll"><table>
           <thead><tr><th>Prodotto</th><th>Categoria</th><th>Fornitore</th><th>Lotto</th><th>Qtà / Min</th><th>Scadenza</th><th>Stato</th><th>Azione</th></tr></thead>
           <tbody id="allerte-tbody"></tbody>
-        </table>
+        </table></div>
       </div>
     </div>
 
@@ -555,10 +645,10 @@ textarea{resize:vertical;min-height:60px}
       </div>
       <div class="card">
         <div class="card-header"><span class="card-title" id="ordini-count">0 ordini</span></div>
-        <table>
+        <div class="table-scroll"><table>
           <thead><tr><th>Data</th><th>N° Ordine</th><th>Prodotti</th><th>Fornitore</th><th>Stato</th><th>Note</th><th>Azioni</th></tr></thead>
           <tbody id="ordini-tbody"></tbody>
-        </table>
+        </table></div>
       </div>
     </div>
 
@@ -2669,20 +2759,20 @@ function schedaTab(tab, el){
     // Add current lotto from product
     const infobox=p.lotto?`<div style="background:rgba(107,140,204,.08);border:1px solid rgba(107,140,204,.25);border-radius:var(--r);padding:10px 13px;margin-bottom:10px;font-size:13px"><strong>Lotto attuale:</strong> <span class="mono">${p.lotto}</span>${p.scadenza?' · Scadenza: '+fmtDate(p.scadenza):''}</div>`:'';
     if(!lotti.length){ content.innerHTML=infobox+'<div class="empty" style="padding:20px"><div class="e-ico">🏷</div><p>Nessun lotto nei movimenti</p></div>'; return; }
-    content.innerHTML=infobox+`<table><thead><tr><th>Lotto</th><th>Primo carico</th><th>Ultimo carico</th><th>Tot. caricato</th><th>N° movimenti</th></tr></thead><tbody>
+    content.innerHTML=infobox+`<div style="overflow-x:auto;-webkit-overflow-scrolling:touch"><table><thead><tr><th>Lotto</th><th>Primo carico</th><th>Ultimo carico</th><th>Tot. caricato</th><th>N° movimenti</th></tr></thead><tbody>
     ${lotti.map(l=>`<tr><td class="mono">${l.lotto}</td><td class="mono" style="font-size:11px">${fmtTs(l.prima)}</td><td class="mono" style="font-size:11px">${fmtTs(l.ultima)}</td><td class="mono">${l.totCaricato}</td><td class="mono">${l.movs}</td></tr>`).join('')}
-    </tbody></table>`;
+    </tbody></table></div>`;
   }
 
   else if(tab==='ordini'){
     const ords=loadOrd().filter(o=>o.righe&&o.righe.some(r=>r.nome.toLowerCase()===p.nome.toLowerCase()));
     if(!ords.length){ content.innerHTML='<div class="empty" style="padding:30px"><div class="e-ico">🛒</div><p>Nessun ordine per questo prodotto</p></div>'; return; }
     const statoMap={bozza:'📝 Bozza',inviato:'📤 Inviato',approvato:'✅ Approvato',ricevuto:'📦 Ricevuto',annullato:'❌ Annullato'};
-    content.innerHTML=`<table><thead><tr><th>N° Ordine</th><th>Data</th><th>Fornitore</th><th>Qtà ord.</th><th>Stato</th></tr></thead><tbody>
+    content.innerHTML=`<div style="overflow-x:auto;-webkit-overflow-scrolling:touch"><table><thead><tr><th>N° Ordine</th><th>Data</th><th>Fornitore</th><th>Qtà ord.</th><th>Stato</th></tr></thead><tbody>
     ${ords.map(o=>{
       const riga=o.righe.find(r=>r.nome.toLowerCase()===p.nome.toLowerCase());
       return `<tr><td><strong>${o.num||'—'}</strong></td><td class="mono" style="font-size:11px">${fmtDate(o.data)}</td><td style="color:var(--text2)">${o.fornitore||riga?.fornitore||'—'}</td><td class="mono">${riga?.qty||'—'} ${riga?.unita||''}</td><td>${statoMap[o.stato]||o.stato}</td></tr>`;
-    }).join('')}</tbody></table>`;
+    }).join('')}</tbody></table></div>`;
   }
 
   else if(tab==='grafico'){
@@ -5069,35 +5159,35 @@ function renderReport(){
   const ordAperti=ords.filter(o=>o.stato==='inviato'||o.stato==='approvato'||o.stato==='bozza');
   if(ordAperti.length){
     html+=`<div class="report-sec"><h3>🛒 Ordini in Corso</h3>
-    <table><thead><tr><th>N° Ordine</th><th>Data</th><th>Fornitore</th><th>Prodotti</th><th>Stato</th></tr></thead><tbody>
+    <div style="overflow-x:auto;-webkit-overflow-scrolling:touch"><table><thead><tr><th>N° Ordine</th><th>Data</th><th>Fornitore</th><th>Prodotti</th><th>Stato</th></tr></thead><tbody>
     ${ordAperti.map(o=>{
       const statoMap={bozza:'📝 Bozza',inviato:'📤 Inviato',approvato:'✅ Approvato'};
       return `<tr><td><strong>${o.num||'—'}</strong></td><td class="mono" style="font-size:12px">${fmtDate(o.data)}</td><td style="color:var(--text2)">${o.fornitore||'—'}</td><td style="font-size:12px">${o.righe.map(r=>r.nome).join(', ')}</td><td>${statoMap[o.stato]||o.stato}</td></tr>`;
     }).join('')}
-    </tbody></table></div>`;
+    </tbody></table></div></div>`;
   }
 
   if(daOrd.length){
     html+=`<div class="report-sec"><h3>🛒 Da Ordinare</h3>
-    <table><thead><tr><th>Prodotto</th><th>Categoria</th><th>Fornitore</th><th>Qtà attuale</th><th>Min.</th><th>Suggerito ordine</th></tr></thead><tbody>
+    <div style="overflow-x:auto;-webkit-overflow-scrolling:touch"><table><thead><tr><th>Prodotto</th><th>Categoria</th><th>Fornitore</th><th>Qtà attuale</th><th>Min.</th><th>Suggerito ordine</th></tr></thead><tbody>
     ${daOrd.map(p=>`<tr><td><strong>${p.nome}</strong></td><td><span class="cat-badge">${CAT_ICON[p.cat]||'📌'} ${p.cat}</span></td><td style="color:var(--text2)">${p.fornitore||'—'}</td><td style="color:var(--red)">${p.qty} ${p.unita}</td><td class="mono">${p.min} ${p.unita}</td><td style="color:var(--yellow);font-weight:600">+${Math.max(0,(p.min-p.qty)+p.min)} ${p.unita}</td></tr>`).join('')}
-    </tbody></table></div>`;
+    </tbody></table></div></div>`;
   }
 
   if(scaduti.length||inScad.length){
     const all=[...scaduti,...inScad];
     html+=`<div class="report-sec"><h3>⚠ Scadenze</h3>
-    <table><thead><tr><th>Prodotto</th><th>Categoria</th><th>Lotto</th><th>Scadenza</th><th>Stato</th></tr></thead><tbody>
+    <div style="overflow-x:auto;-webkit-overflow-scrolling:touch"><table><thead><tr><th>Prodotto</th><th>Categoria</th><th>Lotto</th><th>Scadenza</th><th>Stato</th></tr></thead><tbody>
     ${all.map(p=>`<tr><td><strong>${p.nome}</strong></td><td><span class="cat-badge">${CAT_ICON[p.cat]||'📌'} ${p.cat}</span></td><td class="mono">${p.lotto||'—'}</td><td>${scBadge(p.scadenza)}</td><td>${daysUntil(p.scadenza)<0?'<span class="badge bg-red">Scaduto</span>':'<span class="badge bg-yellow">In scadenza</span>'}</td></tr>`).join('')}
-    </tbody></table></div>`;
+    </tbody></table></div></div>`;
   }
 
   html+=`<div class="report-sec"><h3>📦 Inventario Completo per Categoria</h3>`;
   Object.entries(bycat).forEach(([cat,items])=>{
     html+=`<div style="margin-bottom:14px"><div style="font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.8px;margin-bottom:5px">${CAT_ICON[cat]||'📌'} ${cat}</div>
-    <table><thead><tr><th>Prodotto</th><th>Lotto</th><th>Scadenza</th><th>Qtà</th><th>Posizione</th></tr></thead><tbody>
+    <div style="overflow-x:auto;-webkit-overflow-scrolling:touch"><table><thead><tr><th>Prodotto</th><th>Lotto</th><th>Scadenza</th><th>Qtà</th><th>Posizione</th></tr></thead><tbody>
     ${items.map(p=>`<tr><td>${p.nome}${p.fornitore?`<br><small style="color:var(--text3)">${p.fornitore}</small>`:''}</td><td class="mono">${p.lotto||'—'}</td><td>${scBadge(p.scadenza)}</td><td style="color:var(--${qStat(p)})">${p.qty} ${p.unita||''}</td><td style="color:var(--text2);font-size:12px">${p.pos||'—'}</td></tr>`).join('')}
-    </tbody></table></div>`;
+    </tbody></table></div></div>`;
   });
   html+='</div>';
   document.getElementById('report-content').innerHTML=html;
@@ -5536,7 +5626,7 @@ function viewOrdine(id){
     </div>
     ${o.note?`<div style="background:var(--bg3);border-radius:var(--r);padding:10px;margin-bottom:12px;font-size:13px;color:var(--text2)">📝 ${o.note}</div>`:''}
     <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.7px;font-weight:600;margin-bottom:8px">Prodotti (${o.righe.length})</div>
-    <table><thead><tr><th>Prodotto</th><th>Ord.</th><th>Ric.</th><th>DDT</th><th></th></tr></thead><tbody>
+    <div style="overflow-x:auto;-webkit-overflow-scrolling:touch"><table><thead><tr><th>Prodotto</th><th>Ord.</th><th>Ric.</th><th>DDT</th><th></th></tr></thead><tbody>
     ${o.righe.map((r,i)=>{
       const ric=r.qtyRicevuta||0;
       const cls=ric>=r.qty?'color:var(--green)':ric>0?'color:var(--yellow)':'color:var(--text3)';
@@ -5551,7 +5641,7 @@ function viewOrdine(id){
         <td><button class="btn btn-sm" onclick="editRigaRicezione('${o.id}',${i})" title="Modifica qtà ricevuta">✎</button></td>
       </tr>`;
     }).join('')}
-    </tbody></table>
+    </tbody></table></div>
     ${(o.ddtList&&o.ddtList.length)?`
       <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.7px;font-weight:600;margin:14px 0 8px">📄 DDT ricevuti (${o.ddtList.length})</div>
       ${o.ddtList.map(d=>`<div style="padding:6px 0;border-bottom:1px solid var(--border);font-size:12px">
