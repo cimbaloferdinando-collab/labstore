@@ -2815,7 +2815,7 @@ function renderInv(){
       ${p.min?`<div style="font-size:10px;color:var(--text3);margin-top:2px">min: ${p.min}</div>`:''}
     </td>
     <td>${progBar(p)}</td>
-    <td><div style="display:flex;gap:4px;justify-content:flex-end"><button class="btn btn-sm" onclick="apriFlaconeProdotto('${p.id}')" title="Apri flacone">🔓</button><button class="btn btn-sm" onclick="openEditModal('${p.id}')">✎</button><button class="btn btn-sm btn-danger" onclick="deleteProduct('${p.id}')">✕</button></div></td>
+    <td><div style="display:flex;gap:4px;justify-content:flex-end"><button class="btn btn-sm" onclick="apriFlaconeProdotto('${p.id}')" title="Apri flacone">🔓</button><button class="btn btn-sm" onclick="mergeProductUI('${p.id}')" title="Unisci con altro prodotto">🔗</button><button class="btn btn-sm" onclick="openEditModal('${p.id}')">✎</button><button class="btn btn-sm btn-danger" onclick="deleteProduct('${p.id}')">✕</button></div></td>
   </tr>`).join('');
 }
 function adjQty(id,delta){
@@ -6336,6 +6336,100 @@ function rimuoviScanDdt(ordId, idx){
   toast('Scan DDT rimosso','info');
 }
 
+// ══════════════════════════════════════════
+// MAGAZZINO: Unisci prodotti duplicati
+// ══════════════════════════════════════════
+let _mergeTargetId = null;
+
+function mergeProductUI(sourceId){
+  _mergeTargetId = null;
+  const source = loadP().find(x=>x.id===sourceId); if(!source) return;
+  document.getElementById('merge-source-id').value = sourceId;
+  document.getElementById('merge-modal-title').textContent = 'Unisci: '+source.nome;
+  document.getElementById('merge-source-info').innerHTML =
+    `Verrà eliminato: <strong>${esc(source.nome)}</strong>${source.fornitore?' ('+esc(source.fornitore)+')':''} — <span style="font-family:'DM Mono',monospace;font-weight:700">${source.qty} ${source.unita||'pz'}</span>`;
+  document.getElementById('merge-search').value='';
+  document.getElementById('merge-preview').style.display='none';
+  document.getElementById('merge-confirm-btn').disabled=true;
+  renderMergeList();
+  document.getElementById('modal-merge-product').classList.add('open');
+}
+
+function renderMergeList(){
+  const sourceId=document.getElementById('merge-source-id').value;
+  const q=(document.getElementById('merge-search').value||'').toLowerCase();
+  const prods=loadP().filter(p=>p.id!==sourceId&&(!q||p.nome.toLowerCase().includes(q)||(p.fornitore||'').toLowerCase().includes(q)));
+  const el=document.getElementById('merge-product-list');
+  el.innerHTML=prods.map(p=>`
+    <div onclick="selectMergeTarget('${p.id}')" class="merge-item" data-id="${p.id}"
+      style="padding:10px 12px;cursor:pointer;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;transition:background .15s">
+      <div>
+        <div style="font-weight:500;font-size:13px">${esc(p.nome)}</div>
+        <div style="font-size:11px;color:var(--text3)">${esc(p.fornitore||'—')} · ${esc(p.cat||'—')}</div>
+      </div>
+      <span style="font-family:'DM Mono',monospace;font-weight:700;font-size:14px;color:var(--green)">${p.qty} ${p.unita||'pz'}</span>
+    </div>`).join('')||'<div style="padding:16px;text-align:center;color:var(--text3);font-size:13px">Nessun prodotto trovato</div>';
+}
+
+function selectMergeTarget(targetId){
+  _mergeTargetId=targetId;
+  const sourceId=document.getElementById('merge-source-id').value;
+  const prods=loadP();
+  const source=prods.find(x=>x.id===sourceId), target=prods.find(x=>x.id===targetId);
+  if(!source||!target) return;
+  document.querySelectorAll('.merge-item').forEach(el=>{
+    el.style.background=el.dataset.id===targetId?'var(--bg3)':'';
+    el.style.borderLeft=el.dataset.id===targetId?'3px solid var(--accent2)':'';
+  });
+  const preview=document.getElementById('merge-preview');
+  preview.style.display='block';
+  preview.innerHTML=`<div style="font-weight:600;margin-bottom:6px;font-size:12px;color:var(--text3);text-transform:uppercase;letter-spacing:.6px">Anteprima</div>
+    <div style="font-size:13px;line-height:1.8">
+      🗑 <span style="color:var(--red)">${esc(source.nome)}</span> verrà eliminato<br>
+      ✅ <span style="color:var(--green)">${esc(target.nome)}</span>: ${target.qty} + ${source.qty} = <strong style="font-family:'DM Mono',monospace">${target.qty+source.qty} ${target.unita||'pz'}</strong><br>
+      <span style="font-size:11px;color:var(--text3)">Tutti i movimenti verranno ricollegati a ${esc(target.nome)}</span>
+    </div>`;
+  document.getElementById('merge-confirm-btn').disabled=false;
+}
+
+function executeMerge(){
+  const sourceId=document.getElementById('merge-source-id').value;
+  const targetId=_mergeTargetId;
+  if(!sourceId||!targetId) return;
+  if(!confirm('Unire i due prodotti? L\'operazione non può essere annullata.')) return;
+  _takeSnapshot('Unisci prodotti');
+  const prods=loadP(), movs=loadM();
+  const source=prods.find(x=>x.id===sourceId), target=prods.find(x=>x.id===targetId);
+  if(!source||!target) return;
+  target.qty+=source.qty;
+  if(source.qty_init!==undefined) target.qty_init=(target.qty_init||0)+source.qty_init;
+  movs.forEach(m=>{ if(m.prodId===sourceId){ m.prodId=targetId; m.prod=target.nome; } });
+  const newProds=prods.filter(x=>x.id!==sourceId);
+  saveP(newProds, sourceId); saveM(movs);
+  closeModal('modal-merge-product');
+  renderInv();
+  toast('Uniti: '+source.nome+' → '+target.nome,'success');
+}
+
 </script>
+
+<!-- ══════════════════════════════
+     MODAL: UNISCI PRODOTTI
+══════════════════════════════ -->
+<div class="modal-overlay" id="modal-merge-product">
+  <div class="modal" style="width:500px;max-height:88vh;overflow-y:auto">
+    <div class="modal-title" id="merge-modal-title">Unisci prodotto</div>
+    <input type="hidden" id="merge-source-id">
+    <div id="merge-source-info" style="font-size:13px;color:var(--text2);background:var(--bg3);border-radius:var(--r);padding:10px;margin-bottom:12px;border-left:3px solid var(--red)"></div>
+    <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px">Seleziona il prodotto di destinazione</div>
+    <input type="text" id="merge-search" placeholder="Cerca per nome o fornitore…" style="width:100%;margin-bottom:8px" oninput="renderMergeList()">
+    <div id="merge-product-list" style="max-height:260px;overflow-y:auto;border:1px solid var(--border);border-radius:var(--r)"></div>
+    <div id="merge-preview" style="display:none;margin-top:10px;padding:10px;background:var(--bg3);border-radius:var(--r);border:1px solid var(--border)"></div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('modal-merge-product')">Annulla</button>
+      <button class="btn btn-primary" id="merge-confirm-btn" onclick="executeMerge()" disabled>🔗 Unisci</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
