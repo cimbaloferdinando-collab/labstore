@@ -5688,6 +5688,25 @@ renderDashboard();
   localStorage.setItem('ls_fix_confezioni_v2','1');
 })();
 
+// FIX [MAGAZZINO]: Migrazione v3 — unisce Alcol 99 in Alcol 100 (prodotti equivalenti)
+(function _mergeAlcol99in100(){
+  if(localStorage.getItem('ls_fix_merge_alcol99_v1')) return;
+  const prods=loadP(), movs=loadM();
+  const kw99=['alcol 99','alcool 99','alcol99','alcool99'];
+  const kw100=['alcol 100','alcool 100','alcol100','alcool100'];
+  const p99=prods.find(x=>kw99.some(k=>(x.nome||'').toLowerCase().includes(k)));
+  const p100=prods.find(x=>kw100.some(k=>(x.nome||'').toLowerCase().includes(k)));
+  if(!p99||!p100){ localStorage.setItem('ls_fix_merge_alcol99_v1','1'); return; }
+  p100.qty+=p99.qty;
+  if(p99.qty_init!==undefined) p100.qty_init=(p100.qty_init||0)+p99.qty_init;
+  movs.forEach(m=>{ if(m.prodId===p99.id){ m.prodId=p100.id; m.prod=p100.nome; } });
+  const newProds=prods.filter(x=>x.id!==p99.id);
+  saveP(newProds, p99.id);
+  saveM(movs);
+  toast('Alcol 99 unito in Alcol 100 ('+p99.qty+' unità trasferite)','success');
+  localStorage.setItem('ls_fix_merge_alcol99_v1','1');
+})();
+
 initialSync();
 // FIX [INFRASTRUTTURA]: auto-sync silenzioso ogni 3 minuti — previene perdita dati se browser svuota localStorage
 setInterval(()=>{ if(IS_ONLINE&&SUPA_OK) forceSave(true); }, 3*60*1000);
