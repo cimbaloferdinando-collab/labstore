@@ -1289,6 +1289,7 @@ textarea{resize:vertical;min-height:60px}
       <div class="fg"><label>Data Scadenza</label><input type="date" id="f-scadenza"></div>
       <div class="fg"><label>Quantità Attuale *</label><input type="number" id="f-qty" placeholder="0" min="0"></div>
       <div class="fg"><label>Unità di Misura</label><input type="text" id="f-unita" placeholder="pz, L, ml, conf…"></div>
+      <div class="fg"><label>Pezzi per confezione</label><input type="number" id="f-pezzi-conf" placeholder="0 = N/A" min="0" title="Se il prodotto arriva in confezioni (es. 4 bidoni/scatola), inserisci il numero. Lascia 0 se non applicabile."></div>
       <div class="fg"><label>Scorta Minima</label><input type="number" id="f-min" placeholder="0" min="0"></div>
       <div class="fg"><label>Posizione in Lab</label><input type="text" id="f-pos" placeholder="es. Frigo A, Scaffale 2…"></div>
       <!-- FEATURE 6: Lotti multipli -->
@@ -2810,6 +2811,7 @@ function renderInv(){
         <span style="color:var(--text3);font-size:13px">→</span>
         <span style="font-family:'DM Mono',monospace;font-size:17px;font-weight:700;color:${p.qty<=0?'var(--red)':p.min>0&&p.qty<=p.min?'var(--yellow)':'var(--green)'}">${p.qty}</span>
       </div>
+      ${p.pezzi_per_conf>1?`<div style="font-size:10px;color:var(--accent2);margin-top:1px;font-family:'DM Mono',monospace">📦 ${Math.floor(p.qty/p.pezzi_per_conf)} scatole (×${p.pezzi_per_conf})</div>`:''}
       ${p.min?`<div style="font-size:10px;color:var(--text3);margin-top:2px">min: ${p.min}</div>`:''}
     </td>
     <td>${progBar(p)}</td>
@@ -3023,7 +3025,7 @@ function clearWasteLog(){ if(!confirm('Svuotare il log rifiuti?')) return; saveW
 // ══════════════════════════════════════════
 function openAddModal(){
   document.getElementById('prod-modal-title').textContent='Nuovo Prodotto';
-  ['id','nome','fornitore','barcode','lotto','qty','unita','min','pos','note'].forEach(f=>{ const e=document.getElementById('f-'+f); if(e) e.value=''; });
+  ['id','nome','fornitore','barcode','lotto','qty','unita','pezzi-conf','min','pos','note'].forEach(f=>{ const e=document.getElementById('f-'+f); if(e) e.value=''; });
   document.getElementById('f-cat').value=''; document.getElementById('f-scadenza').value='';
   const lottiWrap=document.getElementById('f-lotti-list'); if(lottiWrap) lottiWrap.innerHTML=''; // FEATURE 6
   document.getElementById('modal-product').classList.add('open');
@@ -3031,7 +3033,7 @@ function openAddModal(){
 function openEditModal(id){
   const p=loadP().find(x=>x.id===id); if(!p) return;
   document.getElementById('prod-modal-title').textContent='Modifica Prodotto';
-  const fields={id:'id',nome:'nome','f-cat':'cat',fornitore:'fornitore',barcode:'barcode',lotto:'lotto',scadenza:'scadenza',qty:'qty',unita:'unita',min:'min',pos:'pos',note:'note'};
+  const fields={id:'id',nome:'nome','f-cat':'cat',fornitore:'fornitore',barcode:'barcode',lotto:'lotto',scadenza:'scadenza',qty:'qty',unita:'unita','pezzi-conf':'pezzi_per_conf',min:'min',pos:'pos',note:'note'};
   Object.entries(fields).forEach(([fid,pkey])=>{ const e=document.getElementById('f-'+fid.replace('f-','')); if(e) e.value=p[pkey]||''; });
   document.getElementById('f-cat').value=p.cat||'';
   document.getElementById('modal-product').classList.add('open');
@@ -3056,6 +3058,7 @@ function saveProduct(){
     qty:qty_new,
     qty_init:id ? (_existing?.qty_init ?? qty_new) : qty_new,
     unita:document.getElementById('f-unita').value.trim(),
+    pezzi_per_conf:parseInt(document.getElementById('f-pezzi-conf').value)||0,
     min:parseFloat(document.getElementById('f-min').value)||0,
     pos:document.getElementById('f-pos').value.trim(),
     note:document.getElementById('f-note').value.trim(),
@@ -5568,6 +5571,28 @@ function viewOrdine(id){
 
 buildProdDatalist();
 renderDashboard();
+
+// FIX [MAGAZZINO]: Migrazione one-shot — corregge movimenti storici xilene/alcol 95/alcol 100 da 3 (conf) a 12 (bidoni)
+(function _fixConfezioni(){
+  if(localStorage.getItem('ls_fix_confezioni_v1')) return;
+  const keywords=['xilene','alcol 95','alcool 95','alcol 100','alcool 100'];
+  const prods=loadP(), movs=loadM();
+  let changed=false;
+  keywords.forEach(kw=>{
+    const p=prods.find(x=>(x.nome||'').toLowerCase().includes(kw));
+    if(!p) return;
+    // Trova l'ultimo movimento di carico con qty=3 per questo prodotto
+    const m=movs.find(x=>x.prodId===p.id&&x.tipo==='carico'&&x.qty===3);
+    if(!m) return;
+    m.qty=12;
+    m.note=(m.note||'')+ ' [corretto: 3 conf×4 bidoni]';
+    p.qty = Math.max(0, p.qty - 3 + 12); // +9 bidoni
+    changed=true;
+  });
+  if(changed){ saveP(prods); saveM(movs); toast('Quantità corrette: 3 conf → 12 bidoni per xilene e alcol','info'); }
+  localStorage.setItem('ls_fix_confezioni_v1','1');
+})();
+
 initialSync();
 // FIX [INFRASTRUTTURA]: auto-sync silenzioso ogni 3 minuti — previene perdita dati se browser svuota localStorage
 setInterval(()=>{ if(IS_ONLINE&&SUPA_OK) forceSave(true); }, 3*60*1000);
@@ -5630,6 +5655,8 @@ function riceviParziale(id){
       `<span style="font-size:10px;background:var(--green-bg);color:var(--green);border-radius:3px;padding:1px 5px;border:1px solid #a7f3d0">+${rc.qty} ${rc.ddt||''} ${rc.data?new Date(rc.data).toLocaleDateString('it-IT'):''}</span>`
     ).join(' ');
     const found = prods.find(x=>x.nome.toLowerCase()===r.nome.toLowerCase());
+    const fattore = found?.pezzi_per_conf||0;
+    const confHint = fattore>1 ? `<span style="font-size:10px;color:var(--accent2);font-family:'DM Mono',monospace;margin-left:6px">📦 ${Math.max(0,restante)} conf = ${Math.max(0,restante)*fattore} bidoni in magazzino</span>` : '';
     const matchBadge = restante>0
       ? (found
           ? `<span style="font-size:10px;color:var(--green);font-weight:600">✅ ${esc(found.nome)}</span>`
@@ -5638,7 +5665,7 @@ function riceviParziale(id){
     return `<div style="padding:10px 0;border-bottom:1px solid var(--border);font-size:13px">
       <div style="margin-bottom:5px">
         <strong>${esc(r.nome)}</strong>
-        <div style="font-size:11px;color:var(--text3)">Ordinati: ${r.qty} ${r.unita||'pz'} · Ricevuti: ${ricevuta} · Restano: ${Math.max(0,restante)}</div>
+        <div style="font-size:11px;color:var(--text3)">Ordinati: ${r.qty} ${r.unita||'pz'}${confHint} · Ricevuti: ${ricevuta} · Restano: ${Math.max(0,restante)}</div>
         ${storico?'<div style="margin-top:3px;display:flex;flex-wrap:wrap;gap:3px">'+storico+'</div>':''}
         ${matchBadge?'<div style="margin-top:3px">'+matchBadge+'</div>':''}
       </div>
@@ -5709,10 +5736,13 @@ function confirmRicezioneParziale(id){
     ddtEntry.righe.push({nome:r.nome, qty:qtyArrivo, lotto, scadenza: scad});
     // Carico magazzino — replica logica "Carica" da scan
     let p = prods.find(x=>x.nome.toLowerCase()===r.nome.toLowerCase());
+    // FIX [MAGAZZINO]: conversione confezioni→bidoni se pezzi_per_conf valorizzato
+    const fattoreConf = p?.pezzi_per_conf||0;
+    const qtyBidoni = fattoreConf>1 ? qtyArrivo * fattoreConf : qtyArrivo;
     if(p){
       // Prodotto trovato: aggiorna qty, lotto, scadenza
-      p.qty += qtyArrivo;
-      if(p.qty_init===undefined) p.qty_init = qtyArrivo;
+      p.qty += qtyBidoni;
+      if(p.qty_init===undefined) p.qty_init = qtyBidoni;
       if(lotto) p.lotto = lotto;
       if(scad) p.scadenza = scad;
     } else {
@@ -5722,12 +5752,13 @@ function confirmRicezioneParziale(id){
         id: genId(), nome: r.nome, cat,
         fornitore: o.fornitore||'',
         barcode: '', lotto, scadenza: scad,
-        qty: qtyArrivo, qty_init: qtyArrivo,
+        qty: qtyBidoni, qty_init: qtyBidoni,
         unita: r.unita||'pz', min: 0, pos: '', note: ''
       };
       prods.push(p);
     }
-    movs.unshift({id:genId(),ts:now,tipo:'carico',prod:r.nome,prodId:p.id,qty:qtyArrivo,lotto,note:'Ricezione '+o.num+(ddt?' — DDT '+ddt:'')});
+    const movNote = 'Ricezione '+o.num+(ddt?' — DDT '+ddt:'')+(fattoreConf>1?' ('+qtyArrivo+' conf × '+fattoreConf+')':'');
+    movs.unshift({id:genId(),ts:now,tipo:'carico',prod:r.nome,prodId:p.id,qty:qtyBidoni,lotto,note:movNote});
   });
   if(!haRicevuto){ toast('Nessuna quantità inserita','error'); return; }
   const tuttoRicevuto = o.righe.every(r => (r.qtyRicevuta||0) >= r.qty);
