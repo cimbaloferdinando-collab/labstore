@@ -4,844 +4,456 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>LupoLab AP — Design Preview</title>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-/* S1 — Design Tokens + Base */
+/* Ferrari Luce — LupoLab AP Design System v2 */
+/* Principio: nero + bianco + accento SOLO per stati. Leggerezza, spazio, contrasto. */
+
 :root {
-  --bg: #0a0a0b;
-  --bg2: #111113;
-  --bg3: #191920;
-  --bg4: #1f2028;
-  --border: rgba(255,255,255,0.06);
-  --border2: rgba(255,255,255,0.12);
-  --accent: #c9a227;
+  --bg:      #09090b;
+  --bg2:     #0f0f12;
+  --bg3:     #141418;
+  --bg4:     #1a1a20;
+  --border:  rgba(255,255,255,0.05);
+  --border2: rgba(255,255,255,0.10);
+  --accent:  #c9a227;
   --accent2: #e8b800;
   --accent3: #b8920f;
-  --accent-light: rgba(232,184,0,0.12);
-  --green: #00d66b;
-  --green-bg: rgba(0,214,107,0.10);
-  --yellow: #e8b800;
-  --yellow-bg: rgba(232,184,0,0.10);
-  --red: #e03030;
-  --red-bg: rgba(224,48,48,0.10);
-  --orange: #f97316;
-  --orange-bg: rgba(249,115,22,0.10);
-  --blue: #3b82f6;
-  --blue-bg: rgba(59,130,246,0.10);
-  --teal: #00b4cc;
-  --teal-bg: rgba(0,180,204,0.10);
-  --purple: #a855f7;
-  --purple-bg: rgba(168,85,247,0.10);
-  --text: #f0f0f0;
-  --text2: #8a8a9a;
-  --text3: #525265;
-  --text4: #2a2a3a;
-  --r: 10px;
-  --r-sm: 6px;
-  --r-lg: 18px;
-  --shadow-sm: 0 1px 4px rgba(0,0,0,.50);
-  --shadow: 0 4px 16px rgba(0,0,0,.60);
-  --shadow-lg: 0 20px 48px rgba(0,0,0,.80), 0 8px 16px rgba(0,0,0,.50);
+  --accent-light: rgba(201,162,39,0.10);
+  --green:   #00d66b;
+  --green-bg: rgba(0,214,107,0.09);
+  --yellow:  #e8b800;
+  --yellow-bg: rgba(232,184,0,0.09);
+  --red:     #e03030;
+  --red-bg:  rgba(224,48,48,0.09);
+  --orange:  #f97316;
+  --orange-bg: rgba(249,115,22,0.09);
+  --blue:    #3b82f6;
+  --blue-bg: rgba(59,130,246,0.09);
+  --teal:    #00b4cc;
+  --teal-bg: rgba(0,180,204,0.09);
+  --purple:  #a855f7;
+  --purple-bg: rgba(168,85,247,0.09);
+  --text:    #ffffff;
+  --text2:   #a0a0b0;
+  --text3:   #52525e;
+  --text4:   #28282e;
+  --r:    10px;
+  --r-sm:  6px;
+  --r-lg: 16px;
+  --shadow: 0 8px 32px rgba(0,0,0,.70);
+  --shadow-lg: 0 24px 64px rgba(0,0,0,.85);
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body {
   background: var(--bg);
-  color: var(--text);
+  color: var(--text2);
   font-family: 'DM Sans', sans-serif;
   font-size: 14px;
   line-height: 1.5;
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
 }
-::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.10); border-radius: 99px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.18); }
-@keyframes scanAnim {
-  0%, 100% { top: 20%; }
-  50% { top: 80%; }
-}
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 99px; }
 @keyframes toastIn {
   from { opacity: 0; transform: translateX(20px); }
-  to { opacity: 1; transform: translateX(0); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes scanAnim {
+  0%,100% { top: 20%; } 50% { top: 80%; }
 }
 .view { display: none; }
 .view.active { display: block; }
-#sync-banner {
-  background: var(--blue-bg);
-  color: var(--blue);
-  border-bottom: 1px solid rgba(59,130,246,0.20);
-  padding: 7px 20px;
-  font-size: 12px;
-  font-weight: 500;
-  display: none;
-  align-items: center;
-  gap: 8px;
-}
-#sync-banner.show { display: flex; }
-.section { margin-bottom: 28px; }
-.section-hdr {
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--text3);
-  margin-bottom: 14px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.section-hdr::after {
-  content: '';
-  flex: 1;
-  height: 1px;
-  background: rgba(255,255,255,0.05);
-}
 
-/* S2 — Layout + Header */
+/* ── LAYOUT ── */
 .layout {
   display: grid;
-  grid-template-columns: 220px 1fr;
-  grid-template-rows: 58px 1fr;
+  grid-template-columns: 210px 1fr;
+  grid-template-rows: 54px 1fr;
   min-height: 100vh;
 }
+
+/* ── HEADER ── */
 header {
   grid-column: 1 / -1;
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 20px;
-  height: 58px;
-  background: #0d0e12;
-  border-bottom: 1px solid rgba(201,162,39,0.18);
-  box-shadow: 0 1px 0 rgba(255,255,255,0.03);
+  height: 54px;
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
   position: sticky;
   top: 0;
   z-index: 100;
 }
 .logo {
   font-family: 'Cormorant Garamond', serif;
-  font-weight: 600;
-  font-size: 21px;
-  color: var(--accent);
-  letter-spacing: 0.04em;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
-}
-.logo:hover { opacity: 0.85; }
-.logo-badge {
-  background: var(--accent);
-  color: #0a0a0b;
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  border-radius: 4px;
-  padding: 2px 6px;
-  font-family: 'DM Sans', sans-serif;
-}
-.hdr-act { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-.hdr-sep {
-  width: 1px;
-  height: 20px;
-  background: rgba(255,255,255,0.10);
-  margin: 0 4px;
-  flex-shrink: 0;
-}
-.hdr-sep-mobile {
-  width: 1px;
-  height: 20px;
-  background: rgba(255,255,255,0.10);
-  margin: 0 4px;
-}
-.main {
-  padding: 24px;
-  overflow-y: auto;
-  background: var(--bg);
-  max-width: 1400px;
-}
-.page-title {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 28px;
+  font-size: 20px;
   font-weight: 600;
   color: var(--text);
-  letter-spacing: 0.01em;
-  margin-bottom: 4px;
+  letter-spacing: 0.02em;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  cursor: pointer;
 }
-.page-sub {
-  font-size: 12px;
-  color: var(--text3);
-  letter-spacing: 0.03em;
-  margin-bottom: 20px;
+.logo:hover { opacity: 0.80; }
+.logo-badge {
+  background: var(--accent);
+  color: #09090b;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  border-radius: 3px;
+  padding: 2px 6px;
+  font-family: 'DM Mono', monospace;
 }
+.hdr-act { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
+.hdr-sep { width: 1px; height: 18px; background: var(--border2); margin: 0 3px; flex-shrink: 0; }
+.hdr-sep-mobile { width: 1px; height: 18px; background: var(--border); margin: 0 3px; }
 
-/* S3 — Sidebar + Navigazione */
+/* ── SIDEBAR ── */
 .sidebar {
-  background: #0d0e12;
-  border-right: 1px solid rgba(201,162,39,0.07);
-  padding: 16px 8px;
+  background: var(--bg2);
+  border-right: 1px solid var(--border);
+  padding: 12px 6px;
   overflow-y: auto;
   scrollbar-width: thin;
-  scrollbar-color: rgba(255,255,255,0.06) transparent;
+  scrollbar-color: rgba(255,255,255,0.05) transparent;
 }
 .nav-lbl {
   font-size: 9px;
   font-weight: 700;
-  letter-spacing: 0.15em;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--text3);
-  padding: 14px 10px 6px;
+  padding: 14px 10px 5px;
   user-select: none;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding-right: 10px;
 }
 .nav-lbl.clickable { cursor: pointer; }
 .nav-lbl.clickable:hover { color: var(--text2); }
 .nav-item {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 9px 12px;
-  border-radius: var(--r);
+  gap: 9px;
+  padding: 8px 10px;
+  border-radius: var(--r-sm);
   cursor: pointer;
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 400;
   color: var(--text3);
-  letter-spacing: 0.02em;
-  transition: all 0.15s;
+  transition: all 0.12s;
   margin-bottom: 1px;
-  border: 1px solid transparent;
   user-select: none;
 }
-.nav-item:hover {
-  background: rgba(255,255,255,0.04);
-  color: var(--text2);
-}
+.nav-item:hover { background: rgba(255,255,255,0.03); color: var(--text2); }
 .nav-item.active {
-  background: rgba(201,162,39,0.08);
+  background: rgba(201,162,39,0.09);
   color: var(--accent);
-  border-color: rgba(201,162,39,0.15);
-  font-weight: 600;
+  font-weight: 500;
 }
-#nav-dashboard.active {
-  background: rgba(201,162,39,0.08);
-  color: var(--accent);
-}
-.nav-icon {
-  font-size: 14px;
-  width: 18px;
-  text-align: center;
-  flex-shrink: 0;
-}
-.nav-div {
-  height: 1px;
-  background: rgba(255,255,255,0.04);
-  margin: 8px 6px;
-}
-#mag-submenu .nav-item,
-#cat-submenu .nav-item {
-  padding-left: 24px;
-  font-size: 12px;
-}
-#sidebar-backdrop {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.65);
-  z-index: 149;
-  touch-action: none;
-}
+#nav-dashboard.active { background: rgba(201,162,39,0.09); color: var(--accent); }
+.nav-icon { font-size: 13px; width: 16px; text-align: center; flex-shrink: 0; opacity: 0.75; }
+.nav-div { height: 1px; background: var(--border); margin: 6px 4px; }
+#mag-submenu .nav-item, #cat-submenu .nav-item { padding-left: 22px; font-size: 12px; }
+#sidebar-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.65); z-index: 149; }
 #sidebar-backdrop.show { display: block; }
 
-/* S4 — Bottoni + Dropdown */
+/* ── MAIN ── */
+.main { padding: 20px 24px; overflow-y: auto; background: var(--bg); max-width: 1400px; }
+.page-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 26px;
+  font-weight: 600;
+  color: var(--text);
+  letter-spacing: 0.01em;
+  margin-bottom: 2px;
+}
+.page-sub { font-size: 11px; color: var(--text3); letter-spacing: 0.04em; margin-bottom: 18px; text-transform: uppercase; }
+
+/* ── BUTTONS ── */
 .btn {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 8px 16px;
+  gap: 5px;
+  padding: 7px 14px;
   border-radius: 999px;
-  border: 1px solid rgba(255,255,255,0.10);
-  background: #1a1d24;
+  border: 1px solid var(--border2);
+  background: var(--bg3);
   color: var(--text2);
   font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.03em;
+  font-weight: 500;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: all 0.13s;
   white-space: nowrap;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05);
   font-family: 'DM Sans', sans-serif;
 }
-.btn:hover {
-  background: #222630;
-  border-color: rgba(255,255,255,0.18);
-  color: var(--text);
-  transform: translateY(-1px);
-}
+.btn:hover { background: var(--bg4); border-color: rgba(255,255,255,0.16); color: var(--text); transform: translateY(-1px); }
 .btn:active { transform: translateY(0); }
-.btn:disabled { opacity: 0.40; cursor: not-allowed; transform: none !important; }
-.btn-primary {
-  background: linear-gradient(135deg, #2563eb, #1d4ed8);
-  border-color: rgba(61,127,255,0.35);
-  color: #fff;
-  box-shadow: 0 2px 14px rgba(37,99,235,0.35);
-}
-.btn-primary:hover {
-  background: linear-gradient(135deg, #3b82f6, #2563eb);
-  color: #fff;
-  box-shadow: 0 4px 20px rgba(37,99,235,0.50);
-  border-color: rgba(61,127,255,0.50);
-}
-.btn-ok {
-  background: rgba(0,214,107,0.12);
-  border-color: rgba(0,214,107,0.25);
-  color: var(--green);
-}
-.btn-ok:hover { background: rgba(0,214,107,0.20); color: var(--green); }
-.btn-warn {
-  background: rgba(232,184,0,0.12);
-  border-color: rgba(232,184,0,0.25);
-  color: var(--yellow);
-}
-.btn-warn:hover { background: rgba(232,184,0,0.20); color: var(--yellow); }
-.btn-danger {
-  background: rgba(224,48,48,0.12);
-  border-color: rgba(224,48,48,0.25);
-  color: var(--red);
-}
-.btn-danger:hover { background: rgba(224,48,48,0.20); color: var(--red); }
-.btn-waste {
-  background: rgba(249,115,22,0.12);
-  border-color: rgba(249,115,22,0.25);
-  color: var(--orange);
-}
-.btn-waste:hover { background: rgba(249,115,22,0.20); }
-.btn-pap-l {
-  background: rgba(0,180,204,0.12);
-  border-color: rgba(0,180,204,0.25);
-  color: var(--teal);
-}
-.btn-pap-l:hover { background: rgba(0,180,204,0.22); }
-.btn-pap-priv {
-  background: rgba(168,85,247,0.12);
-  border-color: rgba(168,85,247,0.25);
-  color: var(--purple);
-}
-.btn-pap-priv:hover { background: rgba(168,85,247,0.22); }
-.btn-sm { padding: 5px 12px; font-size: 11px; }
-header .btn {
-  background: rgba(255,255,255,0.06);
-  color: rgba(255,255,255,0.75);
-  border-color: rgba(255,255,255,0.10);
-}
-header .btn:hover {
-  background: rgba(255,255,255,0.12);
-  color: #fff;
-  transform: translateY(-1px);
-}
-header .btn-primary {
-  background: linear-gradient(135deg, #2563eb, #1d4ed8);
-  color: #fff;
-  border-color: rgba(61,127,255,0.35);
-}
+.btn:disabled { opacity: 0.35; cursor: not-allowed; transform: none !important; }
+.btn-primary { background: var(--blue); border-color: var(--blue); color: #fff; font-weight: 600; }
+.btn-primary:hover { background: #2563eb; border-color: #2563eb; color: #fff; }
+.btn-ok { background: var(--green-bg); border-color: rgba(0,214,107,0.20); color: var(--green); }
+.btn-ok:hover { background: rgba(0,214,107,0.16); }
+.btn-warn { background: var(--yellow-bg); border-color: rgba(232,184,0,0.20); color: var(--yellow); }
+.btn-warn:hover { background: rgba(232,184,0,0.16); }
+.btn-danger { background: var(--red-bg); border-color: rgba(224,48,48,0.20); color: var(--red); }
+.btn-danger:hover { background: rgba(224,48,48,0.16); }
+.btn-waste { background: var(--orange-bg); border-color: rgba(249,115,22,0.20); color: var(--orange); }
+.btn-pap-l { background: var(--teal-bg); border-color: rgba(0,180,204,0.20); color: var(--teal); }
+.btn-pap-priv { background: var(--purple-bg); border-color: rgba(168,85,247,0.20); color: var(--purple); }
+.btn-sm { padding: 5px 11px; font-size: 11px; }
+header .btn { background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.65); border-color: var(--border); }
+header .btn:hover { background: rgba(255,255,255,0.09); color: var(--text); }
+header .btn-primary { background: var(--blue); border-color: var(--blue); color: #fff; }
 header .btn-primary:hover { color: #fff; }
-header .btn-ok {
-  background: rgba(0,214,107,0.15);
-  border-color: rgba(0,214,107,0.25);
-  color: var(--green);
-}
-header .btn-warn {
-  background: rgba(232,184,0,0.15);
-  border-color: rgba(232,184,0,0.25);
-  color: var(--yellow);
-}
-.btn-hamburger {
-  display: none;
-  background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(255,255,255,0.10);
-  color: rgba(255,255,255,0.85);
-  width: 40px;
-  height: 40px;
-  border-radius: var(--r-sm);
-  cursor: pointer;
-  font-size: 18px;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  padding: 0;
-  line-height: 1;
-}
+header .btn-ok { background: rgba(0,214,107,0.12); border-color: rgba(0,214,107,0.20); color: var(--green); }
+.btn-hamburger { display: none; background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: var(--text2); width: 38px; height: 38px; border-radius: var(--r-sm); cursor: pointer; font-size: 17px; align-items: center; justify-content: center; flex-shrink: 0; padding: 0; }
 .hdr-ddrop { position: relative; }
-.hdr-ddrop-menu {
-  display: none;
-  position: absolute;
-  top: calc(100% + 6px);
-  right: 0;
-  background: #13161e;
-  border: 1px solid rgba(255,255,255,0.10);
-  border-radius: var(--r);
-  box-shadow: var(--shadow-lg);
-  padding: 5px;
-  min-width: 170px;
-  z-index: 300;
-  flex-direction: column;
-  gap: 3px;
-}
+.hdr-ddrop-menu { display: none; position: absolute; top: calc(100% + 6px); right: 0; background: var(--bg3); border: 1px solid var(--border2); border-radius: var(--r); box-shadow: var(--shadow); padding: 4px; min-width: 160px; z-index: 300; flex-direction: column; gap: 2px; }
 .hdr-ddrop-menu.open { display: flex; }
-.hdr-ddrop-menu .btn {
-  justify-content: flex-start;
-  width: 100%;
-  border-radius: var(--r-sm);
-  background: transparent;
-  border-color: transparent;
-  box-shadow: none;
-}
-.hdr-ddrop-menu .btn:hover {
-  background: rgba(255,255,255,0.05);
-  border-color: rgba(255,255,255,0.08);
-}
+.hdr-ddrop-menu .btn { justify-content: flex-start; width: 100%; border-radius: var(--r-sm); background: transparent; border-color: transparent; box-shadow: none; }
+.hdr-ddrop-menu .btn:hover { background: rgba(255,255,255,0.05); border-color: transparent; }
 
-/* S5 — Forms + Filtri */
+/* ── FORMS + FILTRI ── */
 .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .fg { display: flex; flex-direction: column; gap: 4px; margin-bottom: 0; }
 .fg.full { grid-column: 1 / -1; }
-label {
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.10em;
-  text-transform: uppercase;
-  color: var(--text3);
-}
-input[type=text],
-input[type=number],
-input[type=date],
-input[type=time],
-input[type=email],
-select,
-textarea {
+label { font-size: 10px; font-weight: 600; letter-spacing: 0.09em; text-transform: uppercase; color: var(--text3); }
+input[type=text], input[type=number], input[type=date], input[type=time], input[type=email], select, textarea {
   width: 100%;
-  background: #0f1015;
-  border: 1px solid rgba(255,255,255,0.08);
+  background: var(--bg3);
+  border: 1px solid var(--border2);
   border-radius: var(--r-sm);
   color: var(--text);
   font-size: 13px;
-  padding: 10px 12px;
+  padding: 9px 11px;
   font-family: 'DM Sans', sans-serif;
-  transition: border-color 0.15s, box-shadow 0.15s;
+  transition: border-color 0.13s, box-shadow 0.13s;
   outline: none;
 }
 input:focus, select:focus, textarea:focus {
-  border-color: rgba(201,162,39,0.40);
-  box-shadow: 0 0 0 3px rgba(201,162,39,0.08);
+  border-color: rgba(201,162,39,0.45);
+  box-shadow: 0 0 0 2px rgba(201,162,39,0.07);
 }
-input::placeholder { color: var(--text4); }
+input::placeholder { color: var(--text3); }
 textarea { resize: vertical; min-height: 60px; }
 select { appearance: none; cursor: pointer; }
-.filter-bar {
-  display: flex;
-  gap: 6px;
-  margin-bottom: 14px;
-  flex-wrap: wrap;
-  align-items: center;
-}
-.f-btn {
-  padding: 5px 14px;
-  border-radius: 999px;
-  border: 1px solid rgba(255,255,255,0.08);
-  background: #111318;
-  color: var(--text3);
-  cursor: pointer;
-  font-size: 12px;
-  font-weight: 500;
-  transition: all 0.12s;
-  font-family: 'DM Sans', sans-serif;
-}
-.f-btn:hover {
-  border-color: rgba(201,162,39,0.30);
-  color: var(--accent);
-  background: rgba(201,162,39,0.05);
-}
-.f-btn.active {
-  background: rgba(201,162,39,0.10);
-  color: var(--accent);
-  border-color: rgba(201,162,39,0.30);
-  font-weight: 600;
-}
+.filter-bar { display: flex; gap: 5px; margin-bottom: 14px; flex-wrap: wrap; align-items: center; }
+.f-btn { padding: 5px 13px; border-radius: 999px; border: 1px solid var(--border); background: transparent; color: var(--text3); cursor: pointer; font-size: 11px; font-weight: 500; transition: all 0.12s; font-family: 'DM Sans', sans-serif; }
+.f-btn:hover { border-color: rgba(201,162,39,0.30); color: var(--accent); }
+.f-btn.active { background: rgba(201,162,39,0.08); color: var(--accent); border-color: rgba(201,162,39,0.25); font-weight: 600; }
 .search-wrap { position: relative; display: flex; align-items: center; }
-.search-wrap input { padding-left: 32px; min-width: 200px; }
-.s-ico {
-  position: absolute;
-  left: 10px;
-  font-size: 13px;
-  color: var(--text3);
-  pointer-events: none;
-}
+.search-wrap input { padding-left: 30px; min-width: 200px; }
+.s-ico { position: absolute; left: 9px; font-size: 12px; color: var(--text3); pointer-events: none; }
 
-/* S6 — Cards + Tabelle + Badge + Stato */
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
-  margin-bottom: 20px;
-}
+/* ── STAT CARDS — stile tachimetro: numero bianco dominante ── */
+.stats-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 16px; }
 .stat-card {
-  background: linear-gradient(145deg, #13161e, #0f1218);
-  border: 1px solid rgba(255,255,255,0.06);
-  border-radius: var(--r-lg);
-  padding: 18px 20px;
-  box-shadow: var(--shadow), inset 0 1px 0 rgba(255,255,255,0.04);
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 20px 18px 16px;
   position: relative;
   overflow: hidden;
   cursor: pointer;
-  transition: transform 0.20s, box-shadow 0.20s;
+  transition: border-color 0.15s;
 }
-.stat-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 32px rgba(0,0,0,0.70), inset 0 1px 0 rgba(255,255,255,0.06);
-}
-.stat-card::before {
+.stat-card:hover { border-color: var(--border2); }
+.stat-card::after {
   content: '';
   position: absolute;
-  top: 0; left: 0; right: 0;
+  bottom: 0; left: 0; right: 0;
   height: 2px;
-  background: linear-gradient(90deg, transparent, var(--accent), transparent);
-  opacity: 0.55;
+  background: var(--accent);
+  opacity: 0.40;
 }
-.stat-card.sc-blue::before, .stat-card.blue::before {
-  background: linear-gradient(90deg, transparent, var(--blue), transparent);
-}
-.stat-card.sc-green::before, .stat-card.green::before {
-  background: linear-gradient(90deg, transparent, var(--green), transparent);
-}
-.stat-card.sc-red::before, .stat-card.red::before {
-  background: linear-gradient(90deg, transparent, var(--red), transparent);
-}
-.stat-card.sc-orange::before, .stat-card.orange::before {
-  background: linear-gradient(90deg, transparent, var(--orange), transparent);
-}
+.stat-card.sc-blue::after  { background: var(--blue); opacity: 0.50; }
+.stat-card.sc-green::after { background: var(--green); opacity: 0.50; }
+.stat-card.sc-red::after   { background: var(--red); opacity: 0.55; }
+.stat-card.sc-orange::after{ background: var(--orange); opacity: 0.50; }
 .stat-lbl, .stat-label {
   font-size: 9px;
   font-weight: 700;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.13em;
   text-transform: uppercase;
   color: var(--text3);
-  margin-bottom: 8px;
+  margin-bottom: 10px;
+  display: block;
 }
 .stat-val {
   font-family: 'DM Mono', monospace;
-  font-size: 34px;
-  font-weight: 700;
-  color: var(--text);
-  letter-spacing: -0.02em;
+  font-size: 48px;
+  font-weight: 500;
+  color: var(--text);        /* BIANCO — come i numeri del tachimetro Luce */
+  letter-spacing: -0.03em;
   line-height: 1;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
 }
-.stat-val.amber, .stat-val.yellow { color: var(--accent); }
-.stat-val.blue { color: var(--blue); }
-.stat-val.green { color: var(--green); }
-.stat-val.red { color: var(--red); }
-.stat-val.orange { color: var(--orange); }
+/* colori solo per varianti specifiche */
+.stat-val.blue   { color: var(--text); }
+.stat-val.green  { color: var(--text); }
+.stat-val.red    { color: var(--red); }
+.stat-val.orange { color: var(--text); }
 .stat-sub, .stat-delta {
   font-size: 10px;
   color: var(--text3);
-  margin-top: 4px;
   font-family: 'DM Mono', monospace;
 }
+
+/* ── CARDS GENERICHE ── */
 .card {
-  background: linear-gradient(160deg, #13161e 0%, #0f1218 100%);
-  border: 1px solid rgba(255,255,255,0.06);
-  border-radius: var(--r-lg);
-  box-shadow: var(--shadow);
-  margin-bottom: 16px;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  margin-bottom: 12px;
   overflow: hidden;
 }
 .card-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 14px 20px;
-  border-bottom: 1px solid rgba(255,255,255,0.04);
+  padding: 13px 16px;
+  border-bottom: 1px solid var(--border);
 }
 .card-title {
   font-size: 10px;
   font-weight: 700;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.10em;
   text-transform: uppercase;
   color: var(--text3);
 }
-.card-act { display: flex; align-items: center; gap: 8px; }
-.card-body { padding: 20px; }
+.card-act { display: flex; align-items: center; gap: 6px; }
+/* titoli sezione interni alle card — stile pannello cockpit */
+.sec-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ── TABELLE ── */
 table { width: 100%; border-collapse: collapse; }
 thead th {
-  background: rgba(255,255,255,0.02);
   color: var(--text3);
   font-size: 9px;
   font-weight: 700;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.11em;
   text-transform: uppercase;
-  padding: 10px 16px;
-  border-bottom: 1px solid rgba(255,255,255,0.06);
+  padding: 9px 14px;
+  border-bottom: 1px solid var(--border);
   text-align: left;
 }
-tbody tr { border-bottom: 1px solid rgba(255,255,255,0.03); transition: background 0.12s; }
-tbody tr:hover { background: rgba(255,255,255,0.025); }
-tbody td { padding: 12px 16px; font-size: 13px; color: var(--text2); vertical-align: middle; }
+tbody tr { border-bottom: 1px solid rgba(255,255,255,0.03); transition: background 0.10s; }
+tbody tr:hover { background: rgba(255,255,255,0.02); }
+tbody td { padding: 11px 14px; font-size: 13px; color: var(--text2); vertical-align: middle; }
 .mono { font-family: 'DM Mono', monospace; font-size: 12px; }
+
+/* ── BADGE — chip stile MODE:DRY / POWER:TOUR ── */
 .badge {
   display: inline-flex;
   align-items: center;
   font-size: 9px;
   font-weight: 700;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.11em;
   text-transform: uppercase;
-  border-radius: 4px;
-  padding: 3px 8px;
+  border-radius: 3px;
+  padding: 2px 7px;
   border: 1px solid;
 }
-.bg-green { background: var(--green-bg); color: var(--green); border-color: rgba(0,214,107,0.25); }
-.bg-red { background: var(--red-bg); color: var(--red); border-color: rgba(224,48,48,0.25); }
-.bg-yellow { background: var(--yellow-bg); color: var(--yellow); border-color: rgba(232,184,0,0.25); }
-.bg-blue { background: var(--blue-bg); color: var(--blue); border-color: rgba(59,130,246,0.25); }
-.bg-purple { background: var(--purple-bg); color: var(--purple); border-color: rgba(168,85,247,0.25); }
-.bg-orange { background: var(--orange-bg); color: var(--orange); border-color: rgba(249,115,22,0.25); }
-.bg-teal { background: var(--teal-bg); color: var(--teal); border-color: rgba(0,180,204,0.25); }
-.cat-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 3px 9px;
-  border-radius: 4px;
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  background: rgba(255,255,255,0.05);
-  color: var(--text2);
-  border: 1px solid rgba(255,255,255,0.08);
-}
-.alert {
-  display: flex;
-  gap: 12px;
-  padding: 12px 14px;
-  border-radius: var(--r);
-  margin-bottom: 8px;
-  align-items: flex-start;
-  border: 1px solid;
-}
-.alert.red { background: var(--red-bg); border-color: rgba(224,48,48,0.25); }
-.alert.yellow { background: var(--yellow-bg); border-color: rgba(232,184,0,0.25); }
-.alert-title { font-weight: 600; color: var(--text); font-size: 13px; }
-.alert-msg { color: var(--text2); margin-top: 2px; font-size: 12px; }
-.prog-wrap { display: flex; align-items: center; gap: 8px; }
-.prog-bar {
-  flex: 1;
-  height: 3px;
-  background: rgba(255,255,255,0.06);
-  border-radius: 99px;
-  overflow: hidden;
-  min-width: 50px;
-}
-.prog-fill { height: 100%; border-radius: 99px; transition: width 0.3s; }
-.prog-pct {
-  font-size: 11px;
-  color: var(--text3);
-  font-family: 'DM Mono', monospace;
-  min-width: 30px;
-  text-align: right;
-}
+.bg-green  { background: var(--green-bg);  color: var(--green);  border-color: rgba(0,214,107,0.22); }
+.bg-red    { background: var(--red-bg);    color: var(--red);    border-color: rgba(224,48,48,0.22); }
+.bg-yellow { background: var(--yellow-bg); color: var(--yellow); border-color: rgba(232,184,0,0.22); }
+.bg-blue   { background: var(--blue-bg);   color: var(--blue);   border-color: rgba(59,130,246,0.22); }
+.bg-purple { background: var(--purple-bg); color: var(--purple); border-color: rgba(168,85,247,0.22); }
+.bg-orange { background: var(--orange-bg); color: var(--orange); border-color: rgba(249,115,22,0.22); }
+.bg-teal   { background: var(--teal-bg);   color: var(--teal);   border-color: rgba(0,180,204,0.22); }
+.cat-badge { display: inline-flex; align-items: center; gap: 3px; padding: 2px 8px; border-radius: 3px; font-size: 10px; font-weight: 600; letter-spacing: 0.07em; background: rgba(255,255,255,0.04); color: var(--text2); border: 1px solid var(--border); }
 
-/* S7 — Componenti + Modals + Responsive */
-.instrument {
-  background: linear-gradient(145deg, #13161e, #0f1218);
-  border: 1px solid rgba(255,255,255,0.06);
-  border-radius: var(--r-lg);
-  padding: 20px;
-  position: relative;
-  overflow: hidden;
-  box-shadow: var(--shadow), inset 0 1px 0 rgba(255,255,255,0.04);
-}
-.instrument::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent);
-}
-.instrument-label {
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--text3);
-  margin-bottom: 8px;
-}
-.instrument-val {
-  font-family: 'DM Mono', monospace;
-  font-size: 42px;
-  font-weight: 700;
-  color: var(--text);
-  letter-spacing: -0.03em;
-  line-height: 1;
-}
-.instrument-unit {
-  font-size: 11px;
-  color: var(--text3);
-  letter-spacing: 0.10em;
-  text-transform: uppercase;
-  margin-top: 2px;
-}
-.instrument-bar {
-  height: 3px;
-  background: rgba(255,255,255,0.05);
-  border-radius: 99px;
-  margin-top: 14px;
-  overflow: hidden;
-}
-.instrument-fill { height: 100%; border-radius: 99px; }
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.72);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.2s;
-  backdrop-filter: blur(4px);
-}
+/* ── ALERT ── */
+.alert { display: flex; gap: 10px; padding: 11px 13px; border-radius: var(--r-sm); margin-bottom: 7px; align-items: flex-start; border: 1px solid; }
+.alert.red    { background: var(--red-bg);    border-color: rgba(224,48,48,0.20); }
+.alert.yellow { background: var(--yellow-bg); border-color: rgba(232,184,0,0.20); }
+.alert-title { font-weight: 600; color: var(--text); font-size: 13px; }
+.alert-msg   { color: var(--text2); margin-top: 1px; font-size: 12px; }
+
+/* ── PROGRESS BAR — linea sottile luminosa ── */
+.prog-wrap { display: flex; align-items: center; gap: 7px; }
+.prog-bar  { flex: 1; height: 2px; background: rgba(255,255,255,0.06); border-radius: 99px; overflow: hidden; min-width: 40px; }
+.prog-fill { height: 100%; border-radius: 99px; transition: width 0.3s; }
+.prog-pct  { font-size: 10px; color: var(--text3); font-family: 'DM Mono', monospace; min-width: 28px; text-align: right; }
+
+/* ── COMPONENTI ── */
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.75); display: flex; align-items: center; justify-content: center; z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 0.18s; backdrop-filter: blur(6px); }
 .modal-overlay.open { opacity: 1; pointer-events: all; }
-.modal {
-  background: linear-gradient(160deg, #13161e 0%, #0f1218 100%);
-  border: 1px solid rgba(255,255,255,0.09);
-  border-radius: var(--r-lg);
-  padding: 24px;
-  box-shadow: 0 32px 80px rgba(0,0,0,0.85), inset 0 1px 0 rgba(255,255,255,0.05);
-  max-height: 90vh;
-  overflow-y: auto;
-  width: 480px;
-  max-width: 95vw;
-  transform: translateY(8px);
-  transition: transform 0.2s;
-}
+.modal { background: var(--bg2); border: 1px solid var(--border2); border-radius: var(--r-lg); padding: 24px; box-shadow: var(--shadow-lg); max-height: 90vh; overflow-y: auto; width: 480px; max-width: 95vw; transform: translateY(6px); transition: transform 0.18s; }
 .modal-overlay.open .modal { transform: translateY(0); }
-.modal-preview {
-  background: linear-gradient(160deg, #13161e 0%, #0f1218 100%);
-  border: 1px solid rgba(255,255,255,0.09);
-  border-radius: var(--r-lg);
-  box-shadow: 0 24px 80px rgba(0,0,0,0.80), inset 0 1px 0 rgba(255,255,255,0.05);
-  padding: 24px;
-}
-.modal-title {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 20px;
-  font-weight: 600;
-  color: var(--text);
-  letter-spacing: 0.01em;
-  margin-bottom: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-.modal-footer {
-  display: flex;
-  gap: 8px;
-  justify-content: flex-end;
-  margin-top: 20px;
-  padding-top: 16px;
-  border-top: 1px solid rgba(255,255,255,0.05);
-}
-.prod-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
-.prod-card {
-  background: linear-gradient(145deg, #13161e, #0f1218);
-  border: 1px solid rgba(255,255,255,0.06);
-  border-radius: var(--r);
-  padding: 14px;
-  cursor: pointer;
-  transition: all 0.15s;
-  position: relative;
-  overflow: hidden;
-  box-shadow: var(--shadow-sm);
-}
-.prod-card:hover { border-color: rgba(201,162,39,0.25); box-shadow: var(--shadow); transform: translateY(-2px); }
-.prod-card::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 2px;
-  background: var(--accent);
-  opacity: 0.40;
-}
-.prod-card-name { font-weight: 700; font-size: 13px; margin-bottom: 3px; line-height: 1.3; color: var(--text); }
-.prod-card-cat { font-size: 11px; color: var(--text3); margin-bottom: 10px; }
-.prod-card-qty { font-family: 'DM Mono', monospace; font-size: 24px; font-weight: 600; line-height: 1; }
-.prod-card-unit { font-size: 11px; color: var(--text3); margin-top: 3px; }
-.waste-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
-.waste-card {
-  background: linear-gradient(145deg, #13161e, #0f1218);
-  border: 1px solid rgba(255,255,255,0.06);
-  border-radius: var(--r);
-  padding: 16px;
-  box-shadow: var(--shadow-sm);
-}
-.campione-card {
-  background: linear-gradient(145deg, #13161e, #0f1218);
-  border: 1px solid rgba(255,255,255,0.06);
-  border-radius: var(--r);
-  padding: 16px;
-  margin-bottom: 8px;
-  cursor: pointer;
-  transition: all 0.15s;
-  box-shadow: var(--shadow-sm);
-}
-.campione-card:hover { border-color: rgba(201,162,39,0.25); box-shadow: var(--shadow); transform: translateY(-1px); }
-.campione-id { font-family: 'DM Mono', monospace; font-size: 20px; font-weight: 700; color: var(--accent); }
-.campione-tipo { font-size: 10px; font-weight: 700; color: var(--text3); text-transform: uppercase; letter-spacing: 0.10em; margin-top: 2px; }
-.fase-dot { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0; }
-.fase-dot.done { background: var(--green-bg); color: var(--green); border: 2px solid rgba(0,214,107,0.30); }
-.fase-dot.active { background: var(--blue-bg); color: var(--blue); border: 2px solid rgba(59,130,246,0.30); }
-.fase-dot.pending { background: rgba(255,255,255,0.04); color: var(--text3); border: 2px solid rgba(255,255,255,0.08); }
-.pezzo-row { display: flex; gap: 8px; align-items: center; padding: 8px 12px; background: rgba(255,255,255,0.02); border-radius: var(--r-sm); margin-bottom: 4px; border: 1px solid rgba(255,255,255,0.05); }
-.pezzo-label { font-family: 'DM Mono', monospace; font-weight: 700; font-size: 15px; min-width: 28px; color: var(--accent); }
-.frammento-chip { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 38px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: var(--r-sm); font-family: 'DM Mono', monospace; font-size: 11px; font-weight: 600; cursor: pointer; transition: all 0.12s; }
+.modal-title { font-family: 'Cormorant Garamond', serif; font-size: 19px; font-weight: 600; color: var(--text); letter-spacing: 0.01em; margin-bottom: 18px; display: flex; align-items: center; justify-content: space-between; }
+.modal-footer { display: flex; gap: 7px; justify-content: flex-end; margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border); }
+.prod-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px,1fr)); gap: 10px; }
+.prod-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--r); padding: 14px; cursor: pointer; transition: border-color 0.13s; position: relative; overflow: hidden; }
+.prod-card:hover { border-color: var(--border2); }
+.prod-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: var(--accent); opacity: 0.30; }
+.prod-card-name { font-weight: 600; font-size: 13px; margin-bottom: 2px; line-height: 1.3; color: var(--text); }
+.prod-card-cat  { font-size: 11px; color: var(--text3); margin-bottom: 10px; }
+.prod-card-qty  { font-family: 'DM Mono', monospace; font-size: 28px; font-weight: 500; line-height: 1; color: var(--text); }
+.prod-card-unit { font-size: 10px; color: var(--text3); margin-top: 3px; text-transform: uppercase; letter-spacing: 0.08em; }
+.waste-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px,1fr)); gap: 12px; }
+.waste-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--r); padding: 16px; }
+.campione-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--r); padding: 15px; margin-bottom: 7px; cursor: pointer; transition: border-color 0.13s; }
+.campione-card:hover { border-color: var(--border2); }
+.campione-id   { font-family: 'DM Mono', monospace; font-size: 20px; font-weight: 600; color: var(--text); }
+.campione-tipo { font-size: 9px; font-weight: 700; color: var(--text3); text-transform: uppercase; letter-spacing: 0.12em; margin-top: 2px; }
+.fase-dot { width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; flex-shrink: 0; }
+.fase-dot.done    { background: var(--green-bg); color: var(--green); border: 1px solid rgba(0,214,107,0.25); }
+.fase-dot.active  { background: var(--blue-bg);  color: var(--blue);  border: 1px solid rgba(59,130,246,0.25); }
+.fase-dot.pending { background: rgba(255,255,255,0.03); color: var(--text3); border: 1px solid var(--border); }
+.pezzo-row    { display: flex; gap: 7px; align-items: center; padding: 7px 11px; background: rgba(255,255,255,0.02); border-radius: var(--r-sm); margin-bottom: 3px; border: 1px solid var(--border); }
+.pezzo-label  { font-family: 'DM Mono', monospace; font-weight: 600; font-size: 14px; min-width: 26px; color: var(--text); }
+.frammento-chip { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 38px; background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: var(--r-sm); font-family: 'DM Mono', monospace; font-size: 11px; font-weight: 600; cursor: pointer; transition: all 0.12s; color: var(--text2); }
 .frammento-chip:hover { border-color: rgba(201,162,39,0.35); color: var(--accent); }
-.frammento-chip.done { background: var(--green-bg); border-color: rgba(0,214,107,0.30); color: var(--green); }
-.reagente-usato-row { display: flex; gap: 8px; align-items: center; padding: 8px 12px; border: 1px solid rgba(255,255,255,0.06); border-radius: var(--r-sm); margin-bottom: 6px; background: rgba(255,255,255,0.02); transition: border-color 0.12s; }
-.reagente-usato-row:hover { border-color: rgba(255,255,255,0.12); }
+.frammento-chip.done { background: var(--green-bg); border-color: rgba(0,214,107,0.25); color: var(--green); }
+.reagente-usato-row { display: flex; gap: 7px; align-items: center; padding: 8px 11px; border: 1px solid var(--border); border-radius: var(--r-sm); margin-bottom: 5px; background: rgba(255,255,255,0.02); transition: border-color 0.12s; }
+.reagente-usato-row:hover { border-color: var(--border2); }
 #barcode-video-wrap { position: relative; width: 100%; border-radius: var(--r); overflow: hidden; background: #000; margin: 10px 0; }
 #barcode-video, #cs-video, #ss-video { width: 100%; display: block; max-height: 250px; object-fit: cover; }
-.scan-line { position: absolute; top: 50%; left: 0; right: 0; height: 2px; background: rgba(201,162,39,0.80); animation: scanAnim 2s ease-in-out infinite; box-shadow: 0 0 8px rgba(201,162,39,0.60); }
-.scan-result-box { display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: rgba(255,255,255,0.03); border-radius: var(--r-sm); font-size: 13px; border: 1px solid rgba(255,255,255,0.08); }
-.sr-label { font-size: 10px; font-weight: 700; color: var(--text3); text-transform: uppercase; letter-spacing: 0.08em; }
-.sr-val { font-family: 'DM Mono', monospace; color: var(--text); }
-#toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; }
-.toast { padding: 12px 16px; border-radius: var(--r); font-size: 13px; font-weight: 500; box-shadow: var(--shadow-lg); animation: toastIn 0.2s ease; display: flex; align-items: center; gap: 8px; min-width: 220px; border: 1px solid transparent; }
-.toast.success { background: var(--green-bg); color: var(--green); border-color: rgba(0,214,107,0.25); }
-.toast.error { background: var(--red-bg); color: var(--red); border-color: rgba(224,48,48,0.25); }
-.toast.info { background: var(--blue-bg); color: var(--blue); border-color: rgba(59,130,246,0.25); }
-.toast.warn { background: var(--yellow-bg); color: var(--yellow); border-color: rgba(232,184,0,0.25); }
-.home-list-item { display: flex; align-items: center; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid rgba(255,255,255,0.04); cursor: pointer; font-size: 13px; gap: 8px; }
+.scan-line { position: absolute; top: 50%; left: 0; right: 0; height: 1px; background: rgba(201,162,39,0.90); animation: scanAnim 2s ease-in-out infinite; box-shadow: 0 0 8px rgba(201,162,39,0.70); }
+.scan-result-box { display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: var(--bg3); border-radius: var(--r-sm); font-size: 13px; border: 1px solid var(--border); }
+.sr-label { font-size: 9px; font-weight: 700; color: var(--text3); text-transform: uppercase; letter-spacing: 0.09em; }
+.sr-val   { font-family: 'DM Mono', monospace; color: var(--text); }
+#toast-container { position: fixed; bottom: 18px; right: 18px; z-index: 9999; display: flex; flex-direction: column; gap: 7px; }
+.toast { padding: 11px 15px; border-radius: var(--r); font-size: 13px; font-weight: 500; box-shadow: var(--shadow-lg); animation: toastIn 0.2s ease; display: flex; align-items: center; gap: 7px; min-width: 210px; border: 1px solid transparent; }
+.toast.success { background: var(--green-bg); color: var(--green); border-color: rgba(0,214,107,0.22); }
+.toast.error   { background: var(--red-bg);   color: var(--red);   border-color: rgba(224,48,48,0.22); }
+.toast.info    { background: var(--blue-bg);  color: var(--blue);  border-color: rgba(59,130,246,0.22); }
+.toast.warn    { background: var(--yellow-bg);color: var(--yellow);border-color: rgba(232,184,0,0.22); }
+.home-list-item { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border); cursor: pointer; font-size: 13px; gap: 8px; color: var(--text2); }
 .home-list-item:last-child { border-bottom: none; }
-.home-list-item:hover { color: var(--accent); }
-.home-empty { text-align: center; color: var(--text3); font-size: 13px; padding: 14px 0; }
-.empty { text-align: center; padding: 40px 20px; color: var(--text3); }
-.e-ico { font-size: 40px; margin-bottom: 10px; opacity: 0.40; }
-.report-sec { margin-bottom: 24px; }
-.report-sec h3 { font-family: 'Cormorant Garamond', serif; font-size: 17px; font-weight: 700; color: var(--accent); margin-bottom: 12px; padding-bottom: 6px; border-bottom: 1px solid rgba(255,255,255,0.06); }
-.report-kv { display: flex; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid rgba(255,255,255,0.04); font-size: 13px; }
-.reag-row { display: flex; align-items: center; gap: 8px; padding: 10px 14px; border-radius: var(--r); background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); margin-bottom: 6px; }
-.reag-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-.preview-label { font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); border: 1px solid rgba(201,162,39,0.20); border-radius: 4px; padding: 3px 8px; margin-bottom: 8px; display: inline-block; }
-@media (max-width: 900px) {
+.home-list-item:hover { color: var(--text); }
+.home-empty { text-align: center; color: var(--text3); font-size: 12px; padding: 16px 0; }
+.empty { text-align: center; padding: 36px 20px; color: var(--text3); }
+.e-ico { font-size: 36px; margin-bottom: 8px; opacity: 0.35; display: block; }
+.report-sec { margin-bottom: 22px; }
+.report-sec h3 { font-family: 'Cormorant Garamond', serif; font-size: 16px; font-weight: 600; color: var(--accent); margin-bottom: 10px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+.report-kv { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.03); font-size: 13px; }
+#sync-banner { background: var(--blue-bg); color: var(--blue); border-bottom: 1px solid rgba(59,130,246,0.18); padding: 7px 20px; font-size: 12px; display: none; align-items: center; gap: 8px; }
+#sync-banner.show { display: flex; }
+
+/* ── RESPONSIVE ── */
+@media (max-width:900px) {
   .btn-hamburger { display: flex; }
-  .sidebar { display: block !important; position: fixed; top: 58px; left: 0; bottom: 0; z-index: 150; width: 260px; transform: translateX(-100%); transition: transform 0.25s ease; box-shadow: var(--shadow-lg); }
+  .sidebar { display: block !important; position: fixed; top: 54px; left: 0; bottom: 0; z-index: 150; width: 250px; transform: translateX(-100%); transition: transform 0.22s ease; box-shadow: var(--shadow-lg); }
   .sidebar.open { transform: translateX(0); }
-  .stats-grid { grid-template-columns: repeat(2, 1fr); }
-  .waste-grid { grid-template-columns: 1fr; }
-  .prod-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
+  .stats-grid { grid-template-columns: repeat(2,1fr); }
+  .waste-grid, .prod-grid { grid-template-columns: 1fr; }
   .form-grid { grid-template-columns: 1fr; }
   .main { padding: 14px; }
 }
@@ -851,53 +463,57 @@ tbody td { padding: 12px 16px; font-size: 13px; color: var(--text2); vertical-al
   .layout { display: block; }
   body { background: #fff; color: #000; }
 }
-@media (max-width: 600px) {
+@media (max-width:600px) {
   .main { padding: 12px; }
   .page-title { font-size: 22px; }
   .stats-grid { grid-template-columns: 1fr 1fr; }
-  .stat-val { font-size: 26px; }
+  .stat-val { font-size: 36px; }
   .btn { min-height: 44px; }
   .btn-sm { min-height: 38px; }
-  .modal, .modal-preview { padding: 16px; }
-  .modal-title { font-size: 17px; margin-bottom: 14px; }
+  .modal { padding: 16px; }
+  .modal-title { font-size: 17px; }
 }
-@media (max-width: 480px) {
-  header { padding: 0 10px; height: 52px; }
+@media (max-width:480px) {
+  header { padding: 0 10px; height: 50px; }
   .logo { font-size: 17px; }
   .logo-badge { display: none; }
   .stats-grid { grid-template-columns: 1fr 1fr; }
-  .stat-val { font-size: 22px; }
-  .stat-card { padding: 12px; }
+  .stat-val { font-size: 30px; }
+  .stat-card { padding: 14px 12px 12px; }
   #toast-container { bottom: 10px; right: 8px; left: 8px; }
   .toast { min-width: 0; width: 100%; }
-  .frammento-chip { width: 44px; height: 44px; font-size: 12px; }
 }
 </style>
-
 </head>
 <body>
 
-<!-- HEADER -->
+<div id="sidebar-backdrop"></div>
 <div class="layout">
+
+<!-- HEADER — identico a index.html -->
 <header>
-  <div style="display:flex;align-items:center;gap:12px">
+  <div style="display:flex;align-items:center;gap:10px">
+    <button class="btn-hamburger" aria-label="Menu">☰</button>
     <div class="logo">LupoLab <span class="logo-badge">AP</span></div>
   </div>
   <div class="hdr-act">
-    <button class="btn" style="font-size:11px;font-family:'DM Mono',monospace">⬡ Sync</button>
+    <button class="btn" style="font-size:11px;font-family:'DM Mono',monospace">⬡ Locale</button>
     <button class="btn btn-ok" style="font-size:11px">💾 Salva</button>
     <button class="btn" style="font-size:11px">📥 Backup</button>
-    <div style="width:1px;height:18px;background:rgba(255,255,255,0.1);margin:0 4px"></div>
+    <button class="btn" style="font-size:11px;opacity:.4">↩ Annulla</button>
+    <div class="hdr-sep"></div>
     <button class="btn btn-primary">＋ Campione</button>
-    <button class="btn" style="background:rgba(0,184,217,0.12);border-color:rgba(0,184,217,0.25);color:var(--teal)">＋ Pap L</button>
-    <div style="width:1px;height:18px;background:rgba(255,255,255,0.1);margin:0 4px"></div>
-    <button class="btn">📦 Mag. ▾</button>
+    <button class="btn btn-pap-l">＋ Pap L</button>
+    <div class="hdr-sep"></div>
+    <div class="hdr-ddrop">
+      <button class="btn">📦 Mag. ▾</button>
+    </div>
   </div>
 </header>
 
-<!-- SIDEBAR -->
+<!-- SIDEBAR — identica a index.html -->
 <nav class="sidebar">
-  <div class="nav-item active"><span class="nav-icon">🏠</span>Dashboard</div>
+  <div class="nav-item active" id="nav-dashboard"><span class="nav-icon">🏠</span>Dashboard</div>
   <div class="nav-div"></div>
   <div class="nav-lbl">Tracciabilità</div>
   <div class="nav-item"><span class="nav-icon">🧬</span>Campioni</div>
@@ -905,250 +521,345 @@ tbody td { padding: 12px 16px; font-size: 13px; color: var(--text2); vertical-al
   <div class="nav-item"><span class="nav-icon">🎨</span>Coloratore</div>
   <div class="nav-item"><span class="nav-icon">🔬</span>IHC</div>
   <div class="nav-div"></div>
-  <div class="nav-lbl">Magazzino</div>
-  <div class="nav-item"><span class="nav-icon">📦</span>Inventario</div>
-  <div class="nav-item"><span class="nav-icon">↕</span>Movimenti</div>
-  <div class="nav-item"><span class="nav-icon">🚨</span>Allerte</div>
-  <div class="nav-item"><span class="nav-icon">🛒</span>Ordini</div>
+  <div class="nav-lbl clickable"><span>📦 Magazzino</span><span>▾</span></div>
+  <div id="mag-submenu">
+    <div class="nav-item"><span class="nav-icon">📋</span>Inventario</div>
+    <div class="nav-item"><span class="nav-icon">↕</span>Movimenti</div>
+    <div class="nav-item"><span class="nav-icon">🚨</span>Allerte</div>
+    <div class="nav-item"><span class="nav-icon">🛒</span>Ordini</div>
+    <div class="nav-item"><span class="nav-icon">🗂</span>Arch. Ordini</div>
+    <div class="nav-item"><span class="nav-icon">📋</span>Schede Tecniche</div>
+  </div>
   <div class="nav-div"></div>
-  <div class="nav-lbl">Report</div>
-  <div class="nav-item"><span class="nav-icon">📊</span>Report mensile</div>
   <div class="nav-item"><span class="nav-icon">🗑</span>Rifiuti</div>
+  <div class="nav-item"><span class="nav-icon">📊</span>Report</div>
+  <div class="nav-div"></div>
+  <div class="nav-lbl clickable"><span>Categorie</span><span>▾</span></div>
+  <div id="cat-submenu">
+    <div class="nav-item"><span class="nav-icon">🧪</span>Reagenti</div>
+    <div class="nav-item"><span class="nav-icon">🔬</span>IHC</div>
+    <div class="nav-item"><span class="nav-icon">🪟</span>Vetrini</div>
+    <div class="nav-item"><span class="nav-icon">📁</span>Cassette</div>
+    <div class="nav-item"><span class="nav-icon">🎨</span>Coloranti</div>
+    <div class="nav-item"><span class="nav-icon">🧤</span>Consumabili</div>
+    <div class="nav-item"><span class="nav-icon">🔬</span>Kit Color.</div>
+    <div class="nav-item"><span class="nav-icon">⚔</span>Lame</div>
+    <div class="nav-item"><span class="nav-icon">📌</span>Altro</div>
+  </div>
 </nav>
 
-<!-- MAIN -->
+<!-- MAIN — dashboard identica a index.html con dati mock -->
 <main class="main">
 
-  <!-- WATERMARK PREVIEW -->
-  <div style="display:inline-flex;align-items:center;gap:8px;margin-bottom:20px;padding:6px 14px;background:rgba(200,169,110,0.06);border:1px solid rgba(200,169,110,0.15);border-radius:999px">
-    <span style="font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--accent)">Design Preview</span>
-    <span style="font-size:10px;color:var(--text3)">Ferrari Luce × Jony Ive — Non interattivo</span>
+  <!-- Watermark preview -->
+  <div style="display:inline-flex;align-items:center;gap:8px;margin-bottom:16px;padding:4px 12px;background:rgba(201,162,39,0.06);border:1px solid rgba(201,162,39,0.14);border-radius:999px">
+    <span style="font-size:9px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--accent)">Design Preview</span>
+    <span style="font-size:9px;color:var(--text3)">Ferrari Luce — non interattivo</span>
   </div>
 
-  <div class="page-title">Dashboard</div>
-  <div class="page-sub">Domenica 26 Aprile 2026 — Laboratorio AP</div>
+  <!-- Titolo pagina — come index.html -->
+  <div class="page-title">Home</div>
+  <div class="page-sub">Lunedì 27 Aprile 2026 — Laboratorio AP</div>
 
-  <!-- STAT CARDS -->
-  <div class="section">
-    <div class="section-hdr">KPI giornalieri</div>
-    <div class="stats-grid">
-      <div class="stat-card">
-        <div class="stat-label">Campioni oggi</div>
-        <div class="stat-val amber">24</div>
-        <div class="stat-delta">↑ +3 rispetto a ieri</div>
+  <!-- STAT CARDS — 4 colonne come index.html -->
+  <div class="stats-grid">
+    <div class="stat-card sc-blue">
+      <span class="stat-lbl">Campioni oggi</span>
+      <div class="stat-val">24</div>
+      <div class="stat-sub">↑ +3 rispetto a ieri</div>
+    </div>
+    <div class="stat-card sc-green">
+      <span class="stat-lbl">Campioni mese</span>
+      <div class="stat-val">312</div>
+      <div class="stat-sub">Aprile 2026</div>
+    </div>
+    <div class="stat-card">
+      <span class="stat-lbl">Prodotti magazzino</span>
+      <div class="stat-val">47</div>
+      <div class="stat-sub">3 in scorta minima</div>
+    </div>
+    <div class="stat-card sc-red">
+      <span class="stat-lbl">Allerte attive</span>
+      <div class="stat-val red">5</div>
+      <div class="stat-sub">2 scadenze imminenti</div>
+    </div>
+  </div>
+
+  <!-- WIDGET RAPIDO: Registra caso al volo — come index.html -->
+  <div class="card" style="margin-bottom:12px;padding:14px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <div class="sec-label">🧬 Registra caso rapido</div>
+      <button class="btn btn-sm">Tutti i casi →</button>
+    </div>
+    <div id="quick-form-grid" style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr auto;gap:8px;align-items:end">
+      <div class="fg" style="margin:0">
+        <label>ID Caso *</label>
+        <input type="text" placeholder="es. 2764/26" style="font-family:'DM Mono',monospace;font-weight:600">
       </div>
-      <div class="stat-card blue">
-        <div class="stat-label">Campioni mese</div>
-        <div class="stat-val blue">312</div>
-        <div style="font-size:10px;color:var(--text3);margin-top:4px;font-family:'DM Mono',monospace">Aprile 2026</div>
+      <div class="fg" style="margin:0">
+        <label>Tipo *</label>
+        <select>
+          <option>Istologia</option>
+          <option>Citologia</option>
+          <option>Pap LupoLab</option>
+          <option>Pap Privato</option>
+        </select>
       </div>
-      <div class="stat-card green">
-        <div class="stat-label">Prodotti magazzino</div>
-        <div class="stat-val green">47</div>
-        <div style="font-size:10px;color:var(--text3);margin-top:4px">3 in scorta minima</div>
+      <div class="fg" style="margin:0">
+        <label>Provenienza</label>
+        <input type="text" placeholder="Reparto / medico">
       </div>
-      <div class="stat-card red">
-        <div class="stat-label">Allerte attive</div>
-        <div class="stat-val red">5</div>
-        <div style="font-size:10px;color:var(--text3);margin-top:4px">2 scadenze imminenti</div>
+      <div class="fg" style="margin:0">
+        <label>Descrizione breve</label>
+        <input type="text" placeholder="es. Biopsia colon">
+      </div>
+      <button class="btn btn-primary" style="height:36px;margin-bottom:0;font-size:16px;padding:0 14px">＋</button>
+    </div>
+    <!-- Lista casi oggi (mock) -->
+    <div style="margin-top:10px">
+      <div class="home-list-item">
+        <span style="font-family:'DM Mono',monospace;font-size:13px;color:var(--text);font-weight:600">2764/26</span>
+        <span style="font-size:12px;color:var(--text2)">Biopsia gastrica — Reparto Gastro</span>
+        <span class="badge bg-blue">Istologia</span>
+      </div>
+      <div class="home-list-item">
+        <span style="font-family:'DM Mono',monospace;font-size:13px;color:var(--text);font-weight:600">2763/26</span>
+        <span style="font-size:12px;color:var(--text2)">Lesione cervicale — Dr. Rossi</span>
+        <span class="badge bg-purple">Pap L</span>
+      </div>
+      <div class="home-list-item">
+        <span style="font-family:'DM Mono',monospace;font-size:13px;color:var(--text);font-weight:600">2762/26</span>
+        <span style="font-size:12px;color:var(--text2)">Agobiopsia tiroide — Chirurgia</span>
+        <span class="badge bg-blue">Istologia</span>
       </div>
     </div>
   </div>
 
-  <!-- INSTRUMENT WIDGETS ROW -->
-  <div class="section">
-    <div class="section-hdr">Processatore & Coloratore</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
-
-      <div class="instrument">
-        <div class="instrument-label">Ultimo ciclo processatore</div>
-        <div class="instrument-val">24</div>
-        <div class="instrument-unit">casi processati</div>
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:12px">
-          <span class="badge bg-green">Completato</span>
-          <span style="font-size:11px;color:var(--text3);font-family:'DM Mono',monospace">25 Apr</span>
-        </div>
-        <div class="instrument-bar"><div class="instrument-fill" style="width:85%;background:var(--green)"></div></div>
+  <!-- COLORATORE: tabella giornaliera — come index.html -->
+  <div class="card" style="margin-bottom:12px;padding:14px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <div class="sec-label">🎨 Coloratore</div>
+      <div style="display:flex;gap:6px">
+        <button class="btn btn-sm btn-primary">＋ Nuovo</button>
+        <button class="btn btn-sm">Storico →</button>
       </div>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>Data</th>
+          <th>Tipo ciclo</th>
+          <th>Ist.</th>
+          <th>Cit.</th>
+          <th>Pap L</th>
+          <th>Stato</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="mono" style="color:var(--text)">27/04/26</span></td>
+          <td style="color:var(--text)">EE Standard</td>
+          <td><span class="mono" style="color:var(--text);font-weight:600">18</span></td>
+          <td><span class="mono">6</span></td>
+          <td><span class="mono">4</span></td>
+          <td><span class="badge bg-blue">In corso</span></td>
+        </tr>
+        <tr>
+          <td><span class="mono" style="color:var(--text)">26/04/26</span></td>
+          <td style="color:var(--text)">EE Standard</td>
+          <td><span class="mono" style="color:var(--text);font-weight:600">22</span></td>
+          <td><span class="mono">8</span></td>
+          <td><span class="mono">3</span></td>
+          <td><span class="badge bg-green">Completato</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
 
-      <div class="instrument">
-        <div class="instrument-label">Coloratore EE</div>
-        <div class="instrument-val" style="color:var(--blue)">18</div>
-        <div class="instrument-unit">casi ist. · 6 cit.</div>
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:12px">
-          <span class="badge bg-blue">In corso</span>
-          <span style="font-size:11px;color:var(--text3);font-family:'DM Mono',monospace">Oggi</span>
-        </div>
-        <div class="instrument-bar"><div class="instrument-fill" style="width:60%;background:var(--blue)"></div></div>
+  <!-- IHC widget — come index.html -->
+  <div class="card" style="margin-bottom:12px;padding:14px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <div class="sec-label">🔬 IHC</div>
+      <div style="display:flex;gap:6px">
+        <button class="btn btn-sm btn-primary">＋ Nuova</button>
+        <button class="btn btn-sm">Tutte →</button>
       </div>
-
-      <div class="instrument">
-        <div class="instrument-label">Ordini aperti</div>
-        <div class="instrument-val" style="color:var(--yellow)">3</div>
-        <div class="instrument-unit">in attesa ricezione</div>
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:12px">
-          <span class="badge bg-yellow">Parziale</span>
-          <span style="font-size:11px;color:var(--text3);font-family:'DM Mono',monospace">1 urgente</span>
-        </div>
-        <div class="instrument-bar"><div class="instrument-fill" style="width:40%;background:var(--yellow)"></div></div>
-      </div>
-
+    </div>
+    <div class="home-list-item">
+      <span style="font-family:'DM Mono',monospace;color:var(--text);font-weight:600">2758/26</span>
+      <span style="font-size:12px;color:var(--text2);flex:1">Ki-67, p53 — Biopsia mammella</span>
+      <span class="badge bg-yellow">In attesa</span>
+    </div>
+    <div class="home-list-item">
+      <span style="font-family:'DM Mono',monospace;color:var(--text);font-weight:600">2751/26</span>
+      <span style="font-size:12px;color:var(--text2);flex:1">CD3, CD20 — Linfoma</span>
+      <span class="badge bg-green">Pronto</span>
     </div>
   </div>
 
-  <!-- INVENTORY TABLE -->
-  <div class="section">
-    <div class="section-hdr">Inventario — Allerte</div>
-    <div class="card">
-      <div class="card-header">
-        <span class="card-title">Prodotti in scorta critica</span>
-        <div class="card-act">
-          <button class="btn btn-sm">Tutti →</button>
+  <!-- PROCESSATORE + ALLERTE magazzino — 2 colonne come index.html -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+    <div class="card" style="margin:0;padding:14px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <div class="sec-label">⚗️ Processatore</div>
+        <button class="btn btn-sm">Storico →</button>
+      </div>
+      <div class="home-list-item">
+        <span style="font-size:12px;color:var(--text2)">Ultimo ciclo</span>
+        <span style="font-family:'DM Mono',monospace;font-size:20px;font-weight:500;color:var(--text)">24</span>
+        <span style="font-size:11px;color:var(--text3)">casi · 26 Apr</span>
+      </div>
+      <div style="margin-top:8px">
+        <div class="prog-wrap">
+          <span style="font-size:10px;color:var(--text3);min-width:60px">Completato</span>
+          <div class="prog-bar"><div class="prog-fill" style="width:100%;background:var(--green)"></div></div>
+          <span class="prog-pct" style="color:var(--green)">100%</span>
         </div>
       </div>
-      <table>
-        <thead>
-          <tr>
-            <th>Prodotto</th>
-            <th>Categoria</th>
-            <th>Lotto</th>
-            <th>Quantità</th>
-            <th>Stato</th>
-            <th>Azione</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td><strong style="color:var(--text)">Xilene puro</strong><br><span style="font-size:11px;color:var(--text3)">Epredia</span></td>
-            <td><span style="font-size:11px;color:var(--text3)">🧪 Reagenti</span></td>
-            <td><span class="mono" style="color:var(--accent)">LT240892</span></td>
-            <td>
-              <span class="mono" style="color:var(--red);font-weight:700">2</span>
-              <span style="font-size:11px;color:var(--text3)"> bidoni</span>
-              <div class="prog-wrap" style="margin-top:5px">
-                <div class="prog-bar"><div class="prog-fill" style="width:20%;background:var(--red)"></div></div>
-                <span class="prog-pct" style="color:var(--red)">20%</span>
-              </div>
-            </td>
-            <td><span class="badge bg-red">Critico</span></td>
-            <td><button class="btn btn-sm btn-primary">Ordina</button></td>
-          </tr>
-          <tr>
-            <td><strong style="color:var(--text)">Alcol 100%</strong><br><span style="font-size:11px;color:var(--text3)">Epredia</span></td>
-            <td><span style="font-size:11px;color:var(--text3)">🧪 Reagenti</span></td>
-            <td><span class="mono" style="color:var(--accent)">LT240710</span></td>
-            <td>
-              <span class="mono" style="color:var(--yellow);font-weight:700">5</span>
-              <span style="font-size:11px;color:var(--text3)"> bidoni</span>
-              <div class="prog-wrap" style="margin-top:5px">
-                <div class="prog-bar"><div class="prog-fill" style="width:42%;background:var(--yellow)"></div></div>
-                <span class="prog-pct" style="color:var(--yellow)">42%</span>
-              </div>
-            </td>
-            <td><span class="badge bg-yellow">Scorta bassa</span></td>
-            <td><button class="btn btn-sm">Ordina</button></td>
-          </tr>
-          <tr>
-            <td><strong style="color:var(--text)">Ematossilina</strong><br><span style="font-size:11px;color:var(--text3)">Bio Optica</span></td>
-            <td><span style="font-size:11px;color:var(--text3)">🎨 Coloranti</span></td>
-            <td><span class="mono" style="color:var(--accent)">BO231145</span></td>
-            <td>
-              <span class="mono" style="color:var(--green);font-weight:700">12</span>
-              <span style="font-size:11px;color:var(--text3)"> flaconi</span>
-              <div class="prog-wrap" style="margin-top:5px">
-                <div class="prog-bar"><div class="prog-fill" style="width:80%;background:var(--green)"></div></div>
-                <span class="prog-pct" style="color:var(--green)">80%</span>
-              </div>
-            </td>
-            <td><span class="badge bg-green">Ok</span></td>
-            <td><button class="btn btn-sm" style="opacity:0.4">Ordina</button></td>
-          </tr>
-        </tbody>
-      </table>
     </div>
-  </div>
-
-  <!-- BOTTONI SHOWCASE -->
-  <div class="section">
-    <div class="section-hdr">Componenti — Bottoni</div>
-    <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center">
-      <button class="btn btn-primary">＋ Nuovo campione</button>
-      <button class="btn btn-ok">💾 Salva</button>
-      <button class="btn btn-warn">⚠ Attenzione</button>
-      <button class="btn btn-danger">🗑 Elimina</button>
-      <button class="btn">⬡ Sincronizza</button>
-      <button class="btn btn-sm">Azione</button>
-      <button class="btn btn-sm btn-primary">＋ Aggiungi</button>
-    </div>
-  </div>
-
-  <!-- BADGE SHOWCASE -->
-  <div class="section">
-    <div class="section-hdr">Componenti — Badge & stato</div>
-    <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
-      <span class="badge bg-green">Verificato</span>
-      <span class="badge bg-red">Scaduto</span>
-      <span class="badge bg-yellow">In scadenza</span>
-      <span class="badge bg-blue">Inviato</span>
-      <span class="badge bg-purple">IHC</span>
-      <span class="badge" style="background:rgba(200,169,110,0.1);color:var(--accent);border-color:rgba(200,169,110,0.25)">Completato</span>
-    </div>
-  </div>
-
-  <!-- MODAL PREVIEW -->
-  <div class="section">
-    <div class="section-hdr">Componenti — Modal</div>
-    <div class="modal-preview">
-      <div class="modal-title">
-        <span>Nuovo Campione Istologico</span>
-        <button class="btn btn-sm" style="opacity:0.5">✕</button>
+    <div class="card" style="margin:0;padding:14px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <div class="sec-label">🚨 Magazzino</div>
+        <button class="btn btn-sm">Tutte →</button>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
-        <div class="fg">
-          <label>ID Campione</label>
-          <input type="text" placeholder="es. 100/26H" value="101/26H">
+      <div class="home-list-item">
+        <span style="font-size:12px;color:var(--text2)">Xilene puro</span>
+        <div class="prog-wrap" style="flex:1;margin:0 10px">
+          <div class="prog-bar"><div class="prog-fill" style="width:20%;background:var(--red)"></div></div>
         </div>
-        <div class="fg">
-          <label>Data prelievo</label>
-          <input type="date" value="2026-04-26">
+        <span class="badge bg-red">Critico</span>
+      </div>
+      <div class="home-list-item">
+        <span style="font-size:12px;color:var(--text2)">Alcol 100%</span>
+        <div class="prog-wrap" style="flex:1;margin:0 10px">
+          <div class="prog-bar"><div class="prog-fill" style="width:42%;background:var(--yellow)"></div></div>
         </div>
-        <div class="fg">
-          <label>Medico richiedente</label>
-          <input type="text" placeholder="Cognome Medico">
+        <span class="badge bg-yellow">Basso</span>
+      </div>
+      <div class="home-list-item">
+        <span style="font-size:12px;color:var(--text2)">Ematossilina EE</span>
+        <div class="prog-wrap" style="flex:1;margin:0 10px">
+          <div class="prog-bar"><div class="prog-fill" style="width:80%;background:var(--green)"></div></div>
         </div>
-        <div class="fg">
-          <label>Tipo campione</label>
-          <select><option>Biopsia endoscopica</option><option>Exeresi</option><option>Agobiopsia</option></select>
-        </div>
-      </div>
-      <div class="fg" style="margin-top:4px">
-        <label>Note cliniche</label>
-        <input type="text" placeholder="Diagnosi clinica, sospetto diagnostico…">
-      </div>
-      <!-- Reagenti -->
-      <div style="margin-top:16px;margin-bottom:8px;font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--text3)">Reagenti usati</div>
-      <div class="reag-row">
-        <div class="reag-dot" style="background:var(--green)"></div>
-        <span style="flex:1;font-size:13px;color:var(--text)">Ematossilina EE</span>
-        <span class="badge bg-green">Verificato</span>
-        <span class="mono" style="color:var(--accent);font-size:12px">LT240710</span>
-      </div>
-      <div class="reag-row">
-        <div class="reag-dot" style="background:var(--blue)"></div>
-        <span style="flex:1;font-size:13px;color:var(--text)">Eosina Y</span>
-        <span class="badge bg-blue">Rabboccato</span>
-        <span class="mono" style="color:var(--accent);font-size:12px">EY231089</span>
-      </div>
-      <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:20px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.05)">
-        <button class="btn">Annulla</button>
-        <button class="btn btn-primary">Salva campione →</button>
+        <span class="badge bg-green">Ok</span>
       </div>
     </div>
   </div>
 
-  <!-- FOOTER NOTE -->
-  <div style="text-align:center;padding:24px 0 12px;color:var(--text3);font-size:11px;letter-spacing:0.06em">
-    LupoLab AP — Design Preview · Ferrari Luce × Jony Ive · Solo visuale, non interattivo
+  <!-- 2-col: scadenze + ordini — come index.html -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+    <div class="card" style="margin:0;padding:14px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <span class="card-title">⏰ In scadenza (30gg)</span>
+      </div>
+      <div class="home-list-item">
+        <span style="font-size:12px;color:var(--text)">Fissativo 10% NBF</span>
+        <span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--red)">3 mag 26</span>
+        <span class="badge bg-red">6 gg</span>
+      </div>
+      <div class="home-list-item">
+        <span style="font-size:12px;color:var(--text)">Kit PAS — Bio Optica</span>
+        <span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--yellow)">18 mag 26</span>
+        <span class="badge bg-yellow">21 gg</span>
+      </div>
+      <div class="home-list-item">
+        <span style="font-size:12px;color:var(--text)">Eosina Y 1%</span>
+        <span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text3)">25 mag 26</span>
+        <span class="badge bg-yellow">28 gg</span>
+      </div>
+    </div>
+    <div class="card" style="margin:0;padding:14px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <span class="card-title">🛒 Ordini aperti</span>
+        <button class="btn btn-sm">Tutti →</button>
+      </div>
+      <div class="home-list-item">
+        <span style="font-family:'DM Mono',monospace;font-size:12px;color:var(--accent)">3/EPR/2026</span>
+        <span style="font-size:12px;color:var(--text2);flex:1">Epredia — 4 prodotti</span>
+        <span class="badge bg-blue">Inviato</span>
+      </div>
+      <div class="home-list-item">
+        <span style="font-family:'DM Mono',monospace;font-size:12px;color:var(--accent)">2/BIO/2026</span>
+        <span style="font-size:12px;color:var(--text2);flex:1">Bio Optica — 2 prodotti</span>
+        <span class="badge bg-yellow">Parziale</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- PRODOTTI MAGAZZINO grid — come index.html -->
+  <div class="card" style="padding:14px;margin-bottom:12px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <div class="sec-label">📦 Magazzino</div>
+      <button class="btn btn-sm">Tutti →</button>
+    </div>
+    <input type="text" placeholder="Cerca prodotto..." style="margin-bottom:10px">
+    <div class="prod-grid">
+      <div class="prod-card">
+        <div class="prod-card-cat">🧪 Reagenti</div>
+        <div class="prod-card-name">Xilene puro</div>
+        <div class="prod-card-qty" style="color:var(--red)">2</div>
+        <div class="prod-card-unit">bidoni · Epredia</div>
+        <div class="prog-wrap" style="margin-top:8px">
+          <div class="prog-bar"><div class="prog-fill" style="width:20%;background:var(--red)"></div></div>
+          <span class="prog-pct" style="color:var(--red)">20%</span>
+        </div>
+      </div>
+      <div class="prod-card">
+        <div class="prod-card-cat">🧪 Reagenti</div>
+        <div class="prod-card-name">Alcol assoluto 100%</div>
+        <div class="prod-card-qty" style="color:var(--yellow)">5</div>
+        <div class="prod-card-unit">bidoni · Epredia</div>
+        <div class="prog-wrap" style="margin-top:8px">
+          <div class="prog-bar"><div class="prog-fill" style="width:42%;background:var(--yellow)"></div></div>
+          <span class="prog-pct" style="color:var(--yellow)">42%</span>
+        </div>
+      </div>
+      <div class="prod-card">
+        <div class="prod-card-cat">🎨 Coloranti</div>
+        <div class="prod-card-name">Ematossilina EE</div>
+        <div class="prod-card-qty">12</div>
+        <div class="prod-card-unit">flaconi · Bio Optica</div>
+        <div class="prog-wrap" style="margin-top:8px">
+          <div class="prog-bar"><div class="prog-fill" style="width:80%;background:var(--green)"></div></div>
+          <span class="prog-pct" style="color:var(--green)">80%</span>
+        </div>
+      </div>
+      <div class="prod-card">
+        <div class="prod-card-cat">🪟 Vetrini</div>
+        <div class="prod-card-name">Vetrini SuperFrost</div>
+        <div class="prod-card-qty">8</div>
+        <div class="prod-card-unit">scatole · Epredia</div>
+        <div class="prog-wrap" style="margin-top:8px">
+          <div class="prog-bar"><div class="prog-fill" style="width:65%;background:var(--blue)"></div></div>
+          <span class="prog-pct" style="color:var(--blue)">65%</span>
+        </div>
+      </div>
+      <div class="prod-card">
+        <div class="prod-card-cat">📁 Cassette</div>
+        <div class="prod-card-name">Cassette biopsie</div>
+        <div class="prod-card-qty">340</div>
+        <div class="prod-card-unit">pz · LabFor</div>
+        <div class="prog-wrap" style="margin-top:8px">
+          <div class="prog-bar"><div class="prog-fill" style="width:90%;background:var(--green)"></div></div>
+          <span class="prog-pct" style="color:var(--green)">90%</span>
+        </div>
+      </div>
+      <div class="prod-card">
+        <div class="prod-card-cat">🔬 IHC</div>
+        <div class="prod-card-name">Ki-67 — Roche</div>
+        <div class="prod-card-qty">3</div>
+        <div class="prod-card-unit">kit · Roche</div>
+        <div class="prog-wrap" style="margin-top:8px">
+          <div class="prog-bar"><div class="prog-fill" style="width:30%;background:var(--yellow)"></div></div>
+          <span class="prog-pct" style="color:var(--yellow)">30%</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer note -->
+  <div style="text-align:center;padding:20px 0 10px;color:var(--text3);font-size:10px;letter-spacing:0.08em;text-transform:uppercase">
+    LupoLab AP — Design Preview · Ferrari Luce · Solo visuale, non interattivo
   </div>
 
 </main>
