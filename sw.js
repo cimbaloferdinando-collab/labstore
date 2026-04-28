@@ -1,4 +1,4 @@
-const CACHE = 'labstore-v5';
+const CACHE = 'labstore-v6';
 
 self.addEventListener('install', e => {
   e.waitUntil(
