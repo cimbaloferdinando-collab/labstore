@@ -100,7 +100,6 @@
     </div>
     <div id="cat-submenu" style="display:block">
       <div class="nav-item" onclick="goCategory('Reagenti')"><span class="nav-icon">🧪</span>Reagenti</div>
-      <div class="nav-item" onclick="goCategory('IHC')"><span class="nav-icon">🔬</span>IHC</div>
       <div class="nav-item" onclick="goCategory('Vetrini')"><span class="nav-icon">🪟</span>Vetrini</div>
       <div class="nav-item" onclick="goCategory('Cassette')"><span class="nav-icon">📁</span>Cassette</div>
       <div class="nav-item" onclick="goCategory('Coloranti')"><span class="nav-icon">🎨</span>Coloranti</div>
@@ -229,7 +228,6 @@
       <div class="filter-bar" id="inv-filter-bar">
         <button class="f-btn active" onclick="setInvFilter('all',this)">Tutti</button>
         <button class="f-btn" onclick="setInvFilter('Reagenti',this)">🧪 Reagenti</button>
-        <button class="f-btn" onclick="setInvFilter('IHC',this)">🔬 IHC</button>
         <button class="f-btn" onclick="setInvFilter('Vetrini',this)">🪟 Vetrini</button>
         <button class="f-btn" onclick="setInvFilter('Cassette',this)">📁 Cassette</button>
         <button class="f-btn" onclick="setInvFilter('Coloranti',this)">🎨 Coloranti</button>
@@ -1016,7 +1014,7 @@
         <div class="fg full"><label>Nome Prodotto *</label><input type="text" id="cs-nome" placeholder="Nome prodotto"></div>
         <div class="fg"><label>Categoria *</label>
           <select id="cs-cat"><option value="">Seleziona…</option>
-            <option>Reagenti</option><option>IHC</option><option>Vetrini</option><option>Cassette</option>
+            <option>Reagenti</option><option>Vetrini</option><option>Cassette</option>
             <option>Coloranti</option><option>Consumabili</option><option>Kit Colorazioni</option><option>Lame</option><option>Altro</option>
           </select></div>
         <div class="fg"><label>Fornitore</label><input type="text" id="cs-fornitore" placeholder="Fornitore"></div>
@@ -1079,7 +1077,7 @@
       <div class="fg full"><label>Nome Prodotto *</label><input type="text" id="f-nome" placeholder="es. Xilene, Ematossilina Mayer…"></div>
       <div class="fg"><label>Categoria *</label>
         <select id="f-cat"><option value="">Seleziona…</option>
-          <option>Reagenti</option><option>IHC</option><option>Vetrini</option><option>Cassette</option>
+          <option>Reagenti</option><option>Vetrini</option><option>Cassette</option>
           <option>Coloranti</option><option>Consumabili</option><option>Kit Colorazioni</option><option>Lame</option><option>Altro</option>
         </select></div>
       <div class="fg"><label>Fornitore</label><input type="text" id="f-fornitore" placeholder="es. Dako, Leica…"></div>
@@ -1294,6 +1292,31 @@
 <div id="toast-container"></div>
 
 <script defer src="app.js"></script>
+
+<script>
+// FIX [INFRASTRUTTURA]: pulizia definitiva prodotti IHC — elimina da localStorage e Supabase, esegue una volta sola
+window.addEventListener('load', async function() {
+  const FLAG = 'ls_ihc_prod_purge_v1';
+  if (localStorage.getItem(FLAG)) return;
+  try {
+    const raw = localStorage.getItem('ls_products');
+    if (raw) {
+      const all = JSON.parse(raw);
+      const clean = all.filter(p => p.categoria !== 'IHC');
+      if (clean.length < all.length) {
+        localStorage.setItem('ls_products', JSON.stringify(clean));
+      }
+    }
+  } catch(e) {}
+  try {
+    await fetch(SUPA_URL + '/rest/v1/products?categoria=eq.IHC', {
+      method: 'DELETE',
+      headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY }
+    });
+  } catch(e) {}
+  localStorage.setItem(FLAG, '1');
+});
+</script>
 
 <!-- ══════════════════════════════
      MODAL: UNISCI PRODOTTI
