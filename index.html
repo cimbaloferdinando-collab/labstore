@@ -830,6 +830,11 @@
             <button class="btn btn-sm btn-primary" onclick="addColorRange('ist')" style="padding:3px 7px;font-size:13px">＋</button>
           </div>
           <div id="color-ranges-ist" style="display:flex;flex-wrap:wrap;gap:3px;min-height:20px"></div>
+          <div style="display:flex;gap:3px;margin-top:5px">
+            <input type="text" id="color-singolo-ist" placeholder="Singolo caso…" style="flex:1;font-family:DM Mono,monospace;font-size:11px" onkeydown="if(event.key==='Enter') addColorSingolo('ist')">
+            <button class="btn btn-sm btn-ok" onclick="addColorSingolo('ist')" style="padding:3px 7px;font-size:13px">＋</button>
+          </div>
+          <div style="font-size:11px;color:var(--text3);margin-top:3px">N° casi: <span id="color-count-ist" style="font-weight:600;color:var(--blue)">0</span></div>
         </div>
         <div style="background:var(--bg2);border-radius:8px;padding:10px;border:1px solid var(--border)">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
@@ -846,6 +851,11 @@
             <button class="btn btn-sm btn-primary" onclick="addColorRange('cit')" style="padding:3px 7px;font-size:13px">＋</button>
           </div>
           <div id="color-ranges-cit" style="display:flex;flex-wrap:wrap;gap:3px;min-height:20px"></div>
+          <div style="display:flex;gap:3px;margin-top:5px">
+            <input type="text" id="color-singolo-cit" placeholder="Singolo caso…" style="flex:1;font-family:DM Mono,monospace;font-size:11px" onkeydown="if(event.key==='Enter') addColorSingolo('cit')">
+            <button class="btn btn-sm btn-ok" onclick="addColorSingolo('cit')" style="padding:3px 7px;font-size:13px">＋</button>
+          </div>
+          <div style="font-size:11px;color:var(--text3);margin-top:3px">N° casi: <span id="color-count-cit" style="font-weight:600;color:var(--teal)">0</span></div>
         </div>
         <div style="background:var(--bg2);border-radius:8px;padding:10px;border:1px solid var(--border)">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
@@ -862,6 +872,11 @@
             <button class="btn btn-sm btn-primary" onclick="addColorRange('pap')" style="padding:3px 7px;font-size:13px">＋</button>
           </div>
           <div id="color-ranges-pap" style="display:flex;flex-wrap:wrap;gap:3px;min-height:20px"></div>
+          <div style="display:flex;gap:3px;margin-top:5px">
+            <input type="text" id="color-singolo-pap" placeholder="Singolo caso…" style="flex:1;font-family:DM Mono,monospace;font-size:11px" onkeydown="if(event.key==='Enter') addColorSingolo('pap')">
+            <button class="btn btn-sm btn-ok" onclick="addColorSingolo('pap')" style="padding:3px 7px;font-size:13px">＋</button>
+          </div>
+          <div style="font-size:11px;color:var(--text3);margin-top:3px">N° casi: <span id="color-count-pap" style="font-weight:600;color:var(--purple)">0</span></div>
         </div>
       </div>
     </div>
