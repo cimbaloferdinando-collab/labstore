@@ -1298,7 +1298,7 @@
     const raw = localStorage.getItem('ls_products');
     if (!raw) return;
     const all = JSON.parse(raw);
-    const clean = all.filter(function(p) { return (p.categoria||'').toLowerCase() !== 'ihc'; });
+    const clean = all.filter(function(p) { return !(p.categoria||'').toLowerCase().includes('ihc'); });
     if (clean.length < all.length) {
       localStorage.setItem('ls_products', JSON.stringify(clean));
     }
