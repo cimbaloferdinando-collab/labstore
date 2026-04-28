@@ -1291,30 +1291,33 @@
 
 <div id="toast-container"></div>
 
+<script>
+// FIX [INFRASTRUTTURA]: rimozione permanente prodotti IHC — gira in modo sincrono prima di app.js
+(function() {
+  try {
+    const raw = localStorage.getItem('ls_products');
+    if (!raw) return;
+    const all = JSON.parse(raw);
+    const clean = all.filter(function(p) { return p.categoria !== 'IHC'; });
+    if (clean.length < all.length) {
+      localStorage.setItem('ls_products', JSON.stringify(clean));
+    }
+  } catch(e) {}
+})();
+</script>
+
 <script defer src="app.js"></script>
 
 <script>
-// FIX [INFRASTRUTTURA]: pulizia definitiva prodotti IHC — elimina da localStorage e Supabase, esegue una volta sola
-window.addEventListener('load', async function() {
-  const FLAG = 'ls_ihc_prod_purge_v2';
-  if (localStorage.getItem(FLAG)) return;
+// FIX [INFRASTRUTTURA]: DELETE su Supabase prodotti IHC — dopo caricamento
+window.addEventListener('load', function() {
   try {
-    const raw = localStorage.getItem('ls_products');
-    if (raw) {
-      const all = JSON.parse(raw);
-      const clean = all.filter(p => p.categoria !== 'IHC');
-      if (clean.length < all.length) {
-        localStorage.setItem('ls_products', JSON.stringify(clean));
-      }
-    }
-  } catch(e) {}
-  try {
-    await fetch(SUPA_URL + '/rest/v1/products?categoria=eq.IHC', {
+    const url = SUPA_URL + '/rest/v1/products?categoria=eq.IHC';
+    fetch(url, {
       method: 'DELETE',
       headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY }
     });
   } catch(e) {}
-  localStorage.setItem(FLAG, '1');
 });
 </script>
 
