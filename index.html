@@ -1291,7 +1291,42 @@
 
 <div id="toast-container"></div>
 
+<script>
+// FIX [INFRASTRUTTURA]: intercetta localStorage.getItem — filtra IHC da ls_products ad ogni lettura
+(function() {
+  var _origGet = Storage.prototype.getItem;
+  Storage.prototype.getItem = function(key) {
+    var val = _origGet.call(this, key);
+    if (key === 'ls_products' && val) {
+      try {
+        var arr = JSON.parse(val);
+        var clean = arr.filter(function(p) {
+          return !(p.categoria||'').toLowerCase().includes('ihc');
+        });
+        if (clean.length < arr.length) {
+          Storage.prototype.setItem.call(this, key, JSON.stringify(clean));
+          return JSON.stringify(clean);
+        }
+      } catch(e) {}
+    }
+    return val;
+  };
+})();
+</script>
+
 <script defer src="app.js"></script>
+
+<script>
+// FIX [INFRASTRUTTURA]: DELETE Supabase prodotti IHC — post load
+window.addEventListener('load', function() {
+  try {
+    fetch(SUPA_URL + '/rest/v1/products?categoria=eq.IHC', {
+      method: 'DELETE',
+      headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY }
+    });
+  } catch(e) {}
+});
+</script>
 
 <!-- ══════════════════════════════
      MODAL: UNISCI PRODOTTI
