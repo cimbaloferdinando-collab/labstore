@@ -1296,7 +1296,7 @@
 <script>
 // FIX [INFRASTRUTTURA]: pulizia definitiva prodotti IHC — elimina da localStorage e Supabase, esegue una volta sola
 window.addEventListener('load', async function() {
-  const FLAG = 'ls_ihc_prod_purge_v1';
+  const FLAG = 'ls_ihc_prod_purge_v2';
   if (localStorage.getItem(FLAG)) return;
   try {
     const raw = localStorage.getItem('ls_products');
