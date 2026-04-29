@@ -149,6 +149,136 @@ table { border-collapse: collapse; width: 100%; }
 .truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .hidden   { display: none !important; }
 
+/* ══════════════════════════════════════════════
+   T3 — TAB NAV + RAIL SIDEBAR
+   ══════════════════════════════════════════════ */
+
+/* ── TAB NAV ── */
+.tab-nav {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  height: 44px;
+  display: flex;
+  align-items: stretch;
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  padding: 0 16px 0 56px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  position: sticky;
+  top: 52px;
+  z-index: 190;
+  box-shadow: var(--shadow-xs);
+}
+.tab-nav::-webkit-scrollbar { display: none; }
+
+.tab-item {
+  display: flex;
+  align-items: center;
+  padding: 0 15px;
+  height: 44px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text3);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  white-space: nowrap;
+  transition: color var(--ease), border-color var(--ease);
+  user-select: none;
+  flex-shrink: 0;
+  letter-spacing: 0.01em;
+}
+.tab-item:hover { color: var(--text2); }
+.tab-item.active {
+  color: var(--accent);
+  border-bottom-color: var(--accent2);
+  font-weight: 600;
+}
+
+/* ── RAIL ── */
+.rail {
+  grid-column: 1;
+  grid-row: 3;
+  width: 48px;
+  background: var(--bg2);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 8px 0;
+  position: sticky;
+  top: 96px;
+  height: calc(100vh - 96px);
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+.rail::-webkit-scrollbar { display: none; }
+
+.rail-item {
+  position: relative;
+  width: 100%;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  color: var(--text3);
+  cursor: pointer;
+  transition: color var(--ease), background var(--ease);
+  border-left: 3px solid transparent;
+  border-radius: 0 var(--r-sm) var(--r-sm) 0;
+  flex-shrink: 0;
+  user-select: none;
+}
+.rail-item:hover {
+  background: var(--bg3);
+  color: var(--text2);
+}
+.rail-item.active {
+  background: var(--accent-light);
+  color: var(--accent2);
+  border-left-color: var(--accent2);
+}
+/* Tooltip rail */
+.rail-item::after {
+  content: attr(title);
+  position: absolute;
+  left: calc(100% + 8px);
+  top: 50%;
+  transform: translateY(-50%);
+  background: var(--accent);
+  color: #fff;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  padding: 4px 9px;
+  border-radius: var(--r-sm);
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.12s;
+  z-index: 300;
+  box-shadow: var(--shadow-sm);
+}
+.rail-item:hover::after { opacity: 1; }
+
+.rail-div {
+  width: 24px;
+  height: 1px;
+  background: var(--border);
+  margin: 5px auto;
+  flex-shrink: 0;
+}
+
+/* ── MAIN CONTENT AREA ── */
+.main {
+  grid-column: 2;
+  grid-row: 3;
+  padding: 22px 26px;
+  overflow-y: auto;
+  min-height: calc(100vh - 96px);
+}
+
 /* ── VISTE (placeholder T2+) ── */
 .view         { display: none; }
 .view.active  { display: block; }
@@ -310,8 +440,38 @@ table { border-collapse: collapse; width: 100%; }
       </div>
     </header>
 
-    <!-- Tab nav e Rail vengono aggiunti in T3 -->
-    <!-- Main viene aggiunto in T4+ -->
+    <!-- ── TAB NAV ── -->
+    <nav class="tab-nav" id="tab-nav">
+      <div class="tab-item active" data-tab="home">Home</div>
+      <div class="tab-item" data-tab="tracciabilita">Tracciabilità</div>
+      <div class="tab-item" data-tab="processatore">Processatore</div>
+      <div class="tab-item" data-tab="coloratore">Coloratore</div>
+      <div class="tab-item" data-tab="ihc">IHC</div>
+      <div class="tab-item" data-tab="magazzino">Magazzino</div>
+      <div class="tab-item" data-tab="ordini">Ordini</div>
+      <div class="tab-item" data-tab="rifiuti">Rifiuti</div>
+      <div class="tab-item" data-tab="report">Report</div>
+    </nav>
+
+    <!-- ── RAIL ── -->
+    <aside class="rail" id="rail">
+      <div class="rail-item active" title="Home" data-tab="home">🏠</div>
+      <div class="rail-div"></div>
+      <div class="rail-item" title="Tracciabilità" data-tab="tracciabilita">🧬</div>
+      <div class="rail-item" title="Processatore"  data-tab="processatore">⚗️</div>
+      <div class="rail-item" title="Coloratore"    data-tab="coloratore">🎨</div>
+      <div class="rail-item" title="IHC"           data-tab="ihc">🔬</div>
+      <div class="rail-div"></div>
+      <div class="rail-item" title="Magazzino"     data-tab="magazzino">📦</div>
+      <div class="rail-item" title="Ordini"        data-tab="ordini">🛒</div>
+      <div class="rail-div"></div>
+      <div class="rail-item" title="Rifiuti"       data-tab="rifiuti">🗑️</div>
+      <div class="rail-item" title="Report"        data-tab="report">📊</div>
+    </aside>
+
+    <!-- ── MAIN — contenuto aggiunto in T4+ ── -->
+    <main class="main" id="main-content">
+    </main>
 
   </div><!-- /app-shell -->
 
