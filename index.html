@@ -25,6 +25,7 @@
     <button class="btn hdr-util" id="sync-status" onclick="forceSync()" style="font-size:11px;font-family:'DM Mono',monospace" title="Sincronizza con cloud">⬡ Locale</button>
     <button class="btn btn-ok hdr-util" onclick="forceSave()" title="Salva tutto sul cloud" style="font-size:11px">💾 Salva</button>
     <button class="btn hdr-util" onclick="exportBackup()" title="Esporta backup locale JSON" style="font-size:11px">📥 Backup</button>
+    <button class="btn hdr-util" onclick="importBackup()" title="Ripristina backup da file JSON" style="font-size:11px">📤 Ripristina</button>
     <button class="btn hdr-util" onclick="hardResetFromCloud()" title="Sostituisce inventario locale con dati cloud" style="font-size:11px">🔄 Reset cloud</button>
     <button class="btn hdr-util" id="undo-btn" onclick="undoLastAction()" title="Nessuna azione da annullare" style="font-size:11px;opacity:.4">↩ Annulla</button>
     <div class="hdr-sep-mobile" style="width:1px;height:20px;background:rgba(255,255,255,.15);margin:0 4px"></div>
@@ -51,6 +52,7 @@
         <button class="btn btn-ok" onclick="forceSync();toggleHdrDrop('hdr-more-drop')" style="font-family:'DM Mono',monospace;font-size:11px">⬡ Sync</button>
         <button class="btn btn-ok" onclick="forceSave();toggleHdrDrop('hdr-more-drop')">💾 Salva</button>
         <button class="btn" onclick="exportBackup();toggleHdrDrop('hdr-more-drop')">📥 Backup</button>
+        <button class="btn" onclick="importBackup();toggleHdrDrop('hdr-more-drop')">📤 Ripristina</button>
         <button class="btn" id="undo-btn-mobile" onclick="undoLastAction();toggleHdrDrop('hdr-more-drop')" style="opacity:.4">↩ Annulla</button>
       </div>
     </div>
