@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LupoLab AP — V1</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+
+/* ══════════════════════════════════════════════
+   T1 — CSS FOUNDATION
+   Tokens, reset, tipografia, scrollbar, animazioni
+   ══════════════════════════════════════════════ */
+
+/* ── TOKENS ── */
+:root {
+  /* Brand */
+  --accent:       #0b1f3e;
+  --accent2:      #1d4ed8;
+  --accent3:      #1e3a6e;
+  --accent-light: rgba(11,31,62,0.07);
+
+  /* Superfici */
+  --bg:           #f4f6f9;
+  --bg2:          #ffffff;
+  --bg3:          #f0f2f6;
+  --bg4:          #e4e8f0;
+
+  /* Bordi */
+  --border:       #e8eaf0;
+  --border2:      #d0d5e0;
+
+  /* Semantici */
+  --green:        #059669;
+  --green-bg:     #ecfdf5;
+  --green-border: #a7f3d0;
+  --red:          #dc2626;
+  --red-bg:       #fef2f2;
+  --red-border:   #fca5a5;
+  --yellow:       #d97706;
+  --yellow-bg:    #fffbeb;
+  --yellow-border:#fcd34d;
+  --blue:         #2563eb;
+  --blue-bg:      #eff6ff;
+  --blue-border:  #bfdbfe;
+  --orange:       #ea580c;
+  --orange-bg:    #fff7ed;
+  --orange-border:#fed7aa;
+  --purple:       #7c3aed;
+  --purple-bg:    #f5f3ff;
+  --purple-border:#ddd6fe;
+  --teal:         #0891b2;
+  --teal-bg:      #ecfeff;
+  --teal-border:  #a5f3fc;
+  --gray:         #6b7280;
+  --gray-bg:      #f9fafb;
+  --gray-border:  #e5e7eb;
+
+  /* Testo */
+  --text:         #0b1f3e;
+  --text2:        #374151;
+  --text3:        #6b7280;
+  --text4:        #b0b8c8;
+
+  /* Geometria */
+  --r:            8px;
+  --r-sm:         5px;
+  --r-lg:         12px;
+  --r-xl:         16px;
+
+  /* Ombre */
+  --shadow-xs:  0 1px 2px rgba(11,31,62,0.06);
+  --shadow-sm:  0 1px 3px rgba(11,31,62,0.08), 0 1px 2px rgba(11,31,62,0.04);
+  --shadow:     0 4px 12px rgba(11,31,62,0.10), 0 2px 4px rgba(11,31,62,0.06);
+  --shadow-lg:  0 16px 40px rgba(11,31,62,0.14), 0 4px 8px rgba(11,31,62,0.08);
+
+  /* Transizioni */
+  --ease:       0.14s ease;
+}
+
+/* ── RESET ── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text2);
+  background: var(--bg);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+a { text-decoration: none; color: inherit; }
+button { font-family: inherit; cursor: pointer; border: none; background: none; }
+ul, ol { list-style: none; }
+img { display: block; max-width: 100%; }
+table { border-collapse: collapse; width: 100%; }
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar              { width: 5px; height: 5px; }
+::-webkit-scrollbar-track        { background: transparent; }
+::-webkit-scrollbar-thumb        { background: var(--border2); border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover  { background: var(--text3); }
+* { scrollbar-width: thin; scrollbar-color: var(--border2) transparent; }
+
+/* ── TIPOGRAFIA ── */
+.font-serif  { font-family: 'Cormorant Garamond', serif; }
+.font-mono   { font-family: 'DM Mono', monospace; }
+.mono        { font-family: 'DM Mono', monospace; font-size: 12px; }
+
+/* ── ANIMAZIONI ── */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes toastIn {
+  from { opacity: 0; transform: translateX(16px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.45; }
+}
+@keyframes scanLine {
+  0%, 100% { top: 15%; }
+  50%       { top: 80%; }
+}
+
+/* ── UTILITY ── */
+.sr-only {
+  position: absolute; width: 1px; height: 1px;
+  padding: 0; margin: -1px; overflow: hidden;
+  clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+}
+.truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hidden   { display: none !important; }
+
+/* ── VISTE (placeholder T2+) ── */
+.view         { display: none; }
+.view.active  { display: block; }
+
+  </style>
+</head>
+<body>
+
+  <!-- L'HTML delle zone verrà aggiunto nelle task successive (T2–T6) -->
+  <div id="app-root"></div>
+
+</body>
+</html>
