@@ -279,6 +279,117 @@ table { border-collapse: collapse; width: 100%; }
   min-height: calc(100vh - 96px);
 }
 
+/* ══════════════════════════════════════════════
+   T4 — KPI STRIP 5-col + GREETING
+   ══════════════════════════════════════════════ */
+
+/* ── GREETING ── */
+.greeting {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+.greeting-name {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 30px;
+  font-weight: 700;
+  color: var(--accent);
+  letter-spacing: -0.3px;
+  line-height: 1.1;
+}
+.greeting-meta {
+  font-size: 11px;
+  color: var(--text3);
+  margin-top: 4px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.greeting-clock {
+  text-align: right;
+  flex-shrink: 0;
+}
+.greeting-clock-time {
+  font-family: 'DM Mono', monospace;
+  font-size: 22px;
+  font-weight: 500;
+  color: var(--accent);
+  line-height: 1;
+}
+.greeting-clock-date {
+  font-size: 11px;
+  color: var(--text3);
+  margin-top: 3px;
+}
+
+/* ── KPI GRID ── */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.kpi-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 14px 16px 13px;
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+  transition: box-shadow var(--ease), transform var(--ease);
+  position: relative;
+  overflow: hidden;
+}
+.kpi-card:hover {
+  box-shadow: var(--shadow);
+  transform: translateY(-1px);
+}
+/* top accent bar */
+.kpi-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: var(--accent2);
+  border-radius: var(--r) var(--r) 0 0;
+}
+.kpi-card.k-green::before  { background: var(--green); }
+.kpi-card.k-red::before    { background: var(--red); }
+.kpi-card.k-yellow::before { background: var(--yellow); }
+.kpi-card.k-blue::before   { background: var(--blue); }
+.kpi-card.k-teal::before   { background: var(--teal); }
+
+.kpi-lbl {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text3);
+  margin-bottom: 7px;
+}
+.kpi-val {
+  font-family: 'DM Mono', monospace;
+  font-size: 38px;
+  font-weight: 500;
+  color: var(--accent);
+  line-height: 1;
+  margin-bottom: 5px;
+}
+.kpi-val.blue   { color: var(--blue); }
+.kpi-val.green  { color: var(--green); }
+.kpi-val.red    { color: var(--red); }
+.kpi-val.yellow { color: var(--yellow); }
+.kpi-val.teal   { color: var(--teal); }
+
+.kpi-delta {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: var(--text3);
+}
+.kpi-delta.up   { color: var(--green); }
+.kpi-delta.down { color: var(--red); }
+
 /* ── VISTE (placeholder T2+) ── */
 .view         { display: none; }
 .view.active  { display: block; }
@@ -469,8 +580,52 @@ table { border-collapse: collapse; width: 100%; }
       <div class="rail-item" title="Report"        data-tab="report">📊</div>
     </aside>
 
-    <!-- ── MAIN — contenuto aggiunto in T4+ ── -->
+    <!-- ── MAIN ── -->
     <main class="main" id="main-content">
+
+      <!-- GREETING -->
+      <div class="greeting">
+        <div>
+          <div class="greeting-name">Buongiorno, Ferdinando</div>
+          <div class="greeting-meta">mar 29 apr 2026 · 14 casi oggi · 3 IHC pendenti · 7 allerte magazzino</div>
+        </div>
+        <div class="greeting-clock">
+          <div class="greeting-clock-time" id="clock-main">--:--</div>
+          <div class="greeting-clock-date">mar 29 apr 2026</div>
+        </div>
+      </div>
+
+      <!-- KPI STRIP 5-col -->
+      <div class="kpi-grid">
+        <div class="kpi-card k-blue">
+          <div class="kpi-lbl">Campioni oggi</div>
+          <div class="kpi-val blue">14</div>
+          <div class="kpi-delta up">↑ +2 vs ieri</div>
+        </div>
+        <div class="kpi-card k-teal">
+          <div class="kpi-lbl">IHC pendenti</div>
+          <div class="kpi-val teal">3</div>
+          <div class="kpi-delta">2 urgenti oggi</div>
+        </div>
+        <div class="kpi-card k-green">
+          <div class="kpi-lbl">Cicli oggi</div>
+          <div class="kpi-val green">4</div>
+          <div class="kpi-delta">2 proc · 2 col</div>
+        </div>
+        <div class="kpi-card k-green">
+          <div class="kpi-lbl">Confermati</div>
+          <div class="kpi-val green">4</div>
+          <div class="kpi-delta">3 processati</div>
+        </div>
+        <div class="kpi-card k-red">
+          <div class="kpi-lbl">Allerte mag.</div>
+          <div class="kpi-val red">7</div>
+          <div class="kpi-delta down">2 scadenze</div>
+        </div>
+      </div>
+
+      <!-- Tabelle e Bottom vengono aggiunti in T5–T6 -->
+
     </main>
 
   </div><!-- /app-shell -->
