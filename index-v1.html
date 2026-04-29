@@ -153,12 +153,167 @@ table { border-collapse: collapse; width: 100%; }
 .view         { display: none; }
 .view.active  { display: block; }
 
+/* ══════════════════════════════════════════════
+   T2 — LAYOUT SHELL + HEADER
+   ══════════════════════════════════════════════ */
+
+/* ── APP SHELL GRID ── */
+.app-shell {
+  display: grid;
+  grid-template-rows: 52px 44px 1fr;
+  grid-template-columns: 48px 1fr;
+  min-height: 100vh;
+}
+
+/* ── HEADER ── */
+.app-header {
+  grid-column: 1 / -1;
+  grid-row: 1;
+  height: 52px;
+  background: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px 0 0;
+  position: sticky;
+  top: 0;
+  z-index: 200;
+  box-shadow: 0 2px 8px rgba(11,31,62,0.30);
+}
+
+/* Logo */
+.logo {
+  width: 48px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  cursor: pointer;
+  border-right: 1px solid rgba(255,255,255,0.08);
+}
+.logo-mark {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: -0.5px;
+  line-height: 1;
+  user-select: none;
+}
+
+/* Centro header */
+.hdr-center {
+  flex: 1;
+  padding: 0 12px;
+}
+
+/* Azioni header */
+.hdr-act {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Chip sync */
+.sync-chip {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 11px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.16);
+  background: rgba(255,255,255,0.07);
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: rgba(255,255,255,0.72);
+  cursor: pointer;
+  transition: background var(--ease);
+  user-select: none;
+}
+.sync-chip:hover { background: rgba(255,255,255,0.14); }
+.sync-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--green);
+  flex-shrink: 0;
+  box-shadow: 0 0 0 2px rgba(5,150,105,0.25);
+}
+.sync-dot.offline { background: var(--yellow); box-shadow: 0 0 0 2px rgba(217,119,6,0.25); }
+
+/* Separatore header */
+.hdr-sep {
+  width: 1px; height: 20px;
+  background: rgba(255,255,255,0.16);
+  flex-shrink: 0;
+  margin: 0 2px;
+}
+
+/* Orario header */
+.hdr-time {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: rgba(255,255,255,0.48);
+  letter-spacing: 0.04em;
+  padding: 0 2px;
+}
+
+/* Bottoni header */
+.btn-hdr {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 12px;
+  border-radius: var(--r-sm);
+  border: 1px solid rgba(255,255,255,0.18);
+  background: rgba(255,255,255,0.09);
+  color: rgba(255,255,255,0.88);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background var(--ease);
+  white-space: nowrap;
+}
+.btn-hdr:hover { background: rgba(255,255,255,0.18); color: #fff; }
+.btn-hdr.primary {
+  background: #fff;
+  color: var(--accent);
+  border-color: #fff;
+  font-weight: 600;
+}
+.btn-hdr.primary:hover { background: #e8f0fe; }
+
   </style>
 </head>
 <body>
 
-  <!-- L'HTML delle zone verrà aggiunto nelle task successive (T2–T6) -->
-  <div id="app-root"></div>
+  <div class="app-shell">
+
+    <!-- ── HEADER ── -->
+    <header class="app-header">
+      <div class="logo" title="LupoLab AP">
+        <span class="logo-mark">L</span>
+      </div>
+      <div class="hdr-center"></div>
+      <div class="hdr-act">
+        <div class="sync-chip">
+          <span class="sync-dot"></span>
+          sync · <span id="sync-time">29 apr 12:04</span>
+        </div>
+        <div class="hdr-sep"></div>
+        <span class="hdr-time" id="live-time">--:--</span>
+        <div class="hdr-sep"></div>
+        <button class="btn-hdr">📷 Scan</button>
+        <button class="btn-hdr">🔬 IHC</button>
+        <button class="btn-hdr primary">＋ Nuovo caso</button>
+      </div>
+    </header>
+
+    <!-- Tab nav e Rail vengono aggiunti in T3 -->
+    <!-- Main viene aggiunto in T4+ -->
+
+  </div><!-- /app-shell -->
 
 </body>
 </html>
