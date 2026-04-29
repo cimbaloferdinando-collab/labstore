@@ -390,6 +390,113 @@ table { border-collapse: collapse; width: 100%; }
 .kpi-delta.up   { color: var(--green); }
 .kpi-delta.down { color: var(--red); }
 
+/* ══════════════════════════════════════════════
+   T5 — TABELLE CICLI 7-col
+   ══════════════════════════════════════════════ */
+
+/* ── CARD GENERICA ── */
+.card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 16px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg3);
+}
+.card-title {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--text2);
+  flex: 1;
+}
+.card-sub {
+  font-size: 11px;
+  color: var(--text3);
+}
+.card-link {
+  font-size: 11px;
+  color: var(--accent2);
+  font-weight: 500;
+  cursor: pointer;
+  transition: color var(--ease);
+  white-space: nowrap;
+}
+.card-link:hover { color: var(--accent); text-decoration: underline; }
+
+/* ── TABLES GRID (affiancate 2-col) ── */
+.tables-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+/* ── TABELLA ── */
+.table-wrap { overflow-x: auto; }
+
+table { width: 100%; border-collapse: collapse; }
+
+thead th {
+  text-align: left;
+  padding: 9px 12px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--text3);
+  background: var(--bg3);
+  border-bottom: 2px solid var(--border);
+  white-space: nowrap;
+}
+thead th:first-child { padding-left: 16px; }
+thead th:last-child  { padding-right: 16px; }
+
+tbody tr {
+  border-bottom: 1px solid var(--border);
+  transition: background var(--ease);
+}
+tbody tr:last-child { border-bottom: none; }
+tbody tr:hover { background: var(--bg3); }
+
+tbody td {
+  padding: 9px 12px;
+  font-size: 12px;
+  color: var(--text2);
+  vertical-align: middle;
+  white-space: nowrap;
+}
+tbody td:first-child { padding-left: 16px; }
+tbody td:last-child  { padding-right: 16px; }
+
+/* ── BADGE ── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 9px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 600;
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+.badge-green  { background: var(--green-bg);  color: var(--green);  border-color: var(--green-border); }
+.badge-red    { background: var(--red-bg);    color: var(--red);    border-color: var(--red-border); }
+.badge-yellow { background: var(--yellow-bg); color: var(--yellow); border-color: var(--yellow-border); }
+.badge-blue   { background: var(--blue-bg);   color: var(--blue);   border-color: var(--blue-border); }
+.badge-orange { background: var(--orange-bg); color: var(--orange); border-color: var(--orange-border); }
+.badge-purple { background: var(--purple-bg); color: var(--purple); border-color: var(--purple-border); }
+.badge-teal   { background: var(--teal-bg);   color: var(--teal);   border-color: var(--teal-border); }
+.badge-gray   { background: var(--gray-bg);   color: var(--gray);   border-color: var(--gray-border); }
+
 /* ── VISTE (placeholder T2+) ── */
 .view         { display: none; }
 .view.active  { display: block; }
@@ -624,7 +731,154 @@ table { border-collapse: collapse; width: 100%; }
         </div>
       </div>
 
-      <!-- Tabelle e Bottom vengono aggiunti in T5–T6 -->
+      <!-- TABELLE CICLI 7-col affiancate -->
+      <div class="tables-grid">
+
+        <!-- PROCESSATORE — 7 col: ID · Data · Tipo · Programma · Cassette · Pezzi · Stato -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Processatore</span>
+            <span class="card-sub">Ultimi 5 cicli</span>
+            <span class="card-link">apri storico →</span>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Data</th>
+                  <th>Tipo</th>
+                  <th>Programma</th>
+                  <th>Cassette</th>
+                  <th>Pezzi</th>
+                  <th>Stato</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="mono">P-0412</td>
+                  <td class="mono">29/04</td>
+                  <td>Ist. standard</td>
+                  <td class="mono">STD-8H</td>
+                  <td>20</td>
+                  <td>18</td>
+                  <td><span class="badge badge-green">Completato</span></td>
+                </tr>
+                <tr>
+                  <td class="mono">P-0411</td>
+                  <td class="mono">29/04</td>
+                  <td>Ist. rapido</td>
+                  <td class="mono">RAP-4H</td>
+                  <td>6</td>
+                  <td>6</td>
+                  <td><span class="badge badge-green">Completato</span></td>
+                </tr>
+                <tr>
+                  <td class="mono">P-0410</td>
+                  <td class="mono">28/04</td>
+                  <td>Ist. standard</td>
+                  <td class="mono">STD-8H</td>
+                  <td>24</td>
+                  <td>22</td>
+                  <td><span class="badge badge-green">Completato</span></td>
+                </tr>
+                <tr>
+                  <td class="mono">P-0409</td>
+                  <td class="mono">28/04</td>
+                  <td>Ist. notturno</td>
+                  <td class="mono">NOT-12H</td>
+                  <td>14</td>
+                  <td>14</td>
+                  <td><span class="badge badge-yellow">In corso</span></td>
+                </tr>
+                <tr>
+                  <td class="mono">P-0408</td>
+                  <td class="mono">27/04</td>
+                  <td>Ist. standard</td>
+                  <td class="mono">STD-8H</td>
+                  <td>10</td>
+                  <td>10</td>
+                  <td><span class="badge badge-green">Completato</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- COLORATORE — 7 col: ID · Data · Tipo · Ist. · Nad. · Tot. · Stato -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Coloratore</span>
+            <span class="card-sub">Ultimi 5 cicli</span>
+            <span class="card-link">apri storico →</span>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Data</th>
+                  <th>Tipo</th>
+                  <th>Ist.</th>
+                  <th>Nad.</th>
+                  <th>Tot.</th>
+                  <th>Stato</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="mono">C-0387</td>
+                  <td class="mono">29/04</td>
+                  <td>EE standard</td>
+                  <td>18</td>
+                  <td>0</td>
+                  <td>18</td>
+                  <td><span class="badge badge-green">Completato</span></td>
+                </tr>
+                <tr>
+                  <td class="mono">C-0386</td>
+                  <td class="mono">29/04</td>
+                  <td>PAS</td>
+                  <td>4</td>
+                  <td>2</td>
+                  <td>6</td>
+                  <td><span class="badge badge-green">Completato</span></td>
+                </tr>
+                <tr>
+                  <td class="mono">C-0385</td>
+                  <td class="mono">28/04</td>
+                  <td>EE standard</td>
+                  <td>22</td>
+                  <td>0</td>
+                  <td>22</td>
+                  <td><span class="badge badge-green">Completato</span></td>
+                </tr>
+                <tr>
+                  <td class="mono">C-0384</td>
+                  <td class="mono">28/04</td>
+                  <td>Giemsa</td>
+                  <td>6</td>
+                  <td>0</td>
+                  <td>6</td>
+                  <td><span class="badge badge-yellow">In corso</span></td>
+                </tr>
+                <tr>
+                  <td class="mono">C-0383</td>
+                  <td class="mono">27/04</td>
+                  <td>EE standard</td>
+                  <td>14</td>
+                  <td>3</td>
+                  <td>17</td>
+                  <td><span class="badge badge-green">Completato</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div><!-- /tables-grid -->
+
+      <!-- Bottom 3-col aggiunto in T6 -->
 
     </main>
 
