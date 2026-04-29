@@ -497,6 +497,62 @@ tbody td:last-child  { padding-right: 16px; }
 .badge-teal   { background: var(--teal-bg);   color: var(--teal);   border-color: var(--teal-border); }
 .badge-gray   { background: var(--gray-bg);   color: var(--gray);   border-color: var(--gray-border); }
 
+/* ══════════════════════════════════════════════
+   T6 — BOTTOM 3-col
+   ══════════════════════════════════════════════ */
+
+/* ── BOTTOM GRID 3-col ── */
+.bottom-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+/* ── LIST ITEMS ── */
+.list-wrap {
+  padding: 0 0 4px;
+}
+.list-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
+  gap: 10px;
+  transition: background var(--ease);
+}
+.list-item:last-child { border-bottom: none; }
+.list-item:hover { background: var(--bg3); }
+.list-item-empty {
+  justify-content: center;
+  color: var(--text3);
+  font-size: 12px;
+  font-style: italic;
+}
+.list-item-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.list-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.list-meta {
+  font-size: 11px;
+  color: var(--text3);
+  font-family: 'DM Mono', monospace;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 /* ── VISTE (placeholder T2+) ── */
 .view         { display: none; }
 .view.active  { display: block; }
@@ -878,7 +934,106 @@ tbody td:last-child  { padding-right: 16px; }
 
       </div><!-- /tables-grid -->
 
-      <!-- Bottom 3-col aggiunto in T6 -->
+      <!-- BOTTOM 3-col -->
+      <div class="bottom-grid">
+
+        <!-- IHC DA COMPLETARE -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">IHC da completare</span>
+            <span class="badge badge-yellow">3 pendenti</span>
+          </div>
+          <div class="list-wrap">
+            <div class="list-item">
+              <div class="list-item-main">
+                <span class="list-label">CD20 · Biopsia linfonodo</span>
+                <span class="list-meta">CP-2026-0412</span>
+              </div>
+              <span class="badge badge-red">Urgente</span>
+            </div>
+            <div class="list-item">
+              <div class="list-item-main">
+                <span class="list-label">Ki-67 · Carcinoma mammario</span>
+                <span class="list-meta">CP-2026-0407</span>
+              </div>
+              <span class="badge badge-yellow">Oggi</span>
+            </div>
+            <div class="list-item">
+              <div class="list-item-main">
+                <span class="list-label">p53 · Adenocarcinoma colon</span>
+                <span class="list-meta">CP-2026-0401</span>
+              </div>
+              <span class="badge badge-blue">Programmato</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ORDINI APERTI -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Ordini aperti</span>
+            <span class="badge badge-blue">2 attivi</span>
+          </div>
+          <div class="list-wrap">
+            <div class="list-item">
+              <div class="list-item-main">
+                <span class="list-label">Bio Optica — vetrini SuperFrost+</span>
+                <span class="list-meta">3/BIO/2026 · inviato 24 apr</span>
+              </div>
+              <span class="badge badge-yellow">In attesa</span>
+            </div>
+            <div class="list-item">
+              <div class="list-item-main">
+                <span class="list-label">Epredia — cassette bioptiche</span>
+                <span class="list-meta">4/EPR/2026 · inviato 26 apr</span>
+              </div>
+              <span class="badge badge-yellow">In attesa</span>
+            </div>
+            <div class="list-item list-item-empty">
+              Nessun altro ordine attivo
+            </div>
+          </div>
+        </div>
+
+        <!-- ALLERTE MAGAZZINO -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Allerte magazzino</span>
+            <span class="badge badge-red">7 allerte</span>
+          </div>
+          <div class="list-wrap">
+            <div class="list-item">
+              <div class="list-item-main">
+                <span class="list-label">Xilolo puro — scorta critica</span>
+                <span class="list-meta">2 L rimasti · min 5 L</span>
+              </div>
+              <span class="badge badge-red">Critico</span>
+            </div>
+            <div class="list-item">
+              <div class="list-item-main">
+                <span class="list-label">Anticorpo CD3 — scadenza</span>
+                <span class="list-meta">Scade 30 apr 2026</span>
+              </div>
+              <span class="badge badge-yellow">Avviso</span>
+            </div>
+            <div class="list-item">
+              <div class="list-item-main">
+                <span class="list-label">Alcol 96° — scorta bassa</span>
+                <span class="list-meta">3 L rimasti · min 8 L</span>
+              </div>
+              <span class="badge badge-yellow">Avviso</span>
+            </div>
+            <div class="list-item">
+              <div class="list-item-main">
+                <span class="list-label">+ 4 altri prodotti</span>
+                <span class="list-meta">vedi magazzino →</span>
+              </div>
+              <span class="badge badge-gray">Info</span>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /bottom-grid -->
 
     </main>
 
