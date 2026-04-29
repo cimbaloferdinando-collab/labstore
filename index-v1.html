@@ -553,7 +553,182 @@ tbody td:last-child  { padding-right: 16px; }
   white-space: nowrap;
 }
 
-/* ── VISTE (placeholder T2+) ── */
+/* ══════════════════════════════════════════════
+   T7 — UTILITY CSS + RESPONSIVE + PRINT
+   ══════════════════════════════════════════════ */
+
+/* ── BOTTONI GENERICI ── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 14px;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--border2);
+  background: var(--bg2);
+  color: var(--text2);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--ease);
+  white-space: nowrap;
+  box-shadow: var(--shadow-sm);
+}
+.btn:hover {
+  border-color: var(--accent2);
+  color: var(--accent2);
+  background: var(--blue-bg);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow);
+}
+.btn:active  { transform: translateY(0); }
+.btn:disabled { opacity: 0.42; cursor: not-allowed; transform: none !important; }
+
+.btn-primary { background: var(--blue); border-color: var(--blue); color: #fff; font-weight: 600; }
+.btn-primary:hover { background: #1d4ed8; border-color: #1d4ed8; color: #fff; }
+.btn-ok      { background: var(--green-bg);  border-color: var(--green-border); color: var(--green); }
+.btn-ok:hover { background: #d1fae5; }
+.btn-warn    { background: var(--yellow-bg); border-color: var(--yellow-border); color: var(--yellow); }
+.btn-warn:hover { background: #fef3c7; }
+.btn-danger  { background: var(--red-bg);    border-color: var(--red-border);   color: var(--red); }
+.btn-danger:hover { background: #fee2e2; }
+.btn-sm      { padding: 5px 11px; font-size: 11px; }
+
+/* ── FORM ── */
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.fg        { display: flex; flex-direction: column; gap: 4px; }
+.fg.full   { grid-column: 1 / -1; }
+label {
+  font-size: 10px; font-weight: 700;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--text3);
+}
+input[type=text], input[type=number], input[type=date],
+input[type=time], input[type=email], select, textarea {
+  width: 100%; padding: 8px 11px;
+  border: 1.5px solid var(--border2); border-radius: var(--r-sm);
+  background: var(--bg2); color: var(--text);
+  font-family: 'DM Sans', sans-serif; font-size: 13px;
+  transition: border-color var(--ease), box-shadow var(--ease);
+  outline: none;
+}
+input:focus, select:focus, textarea:focus {
+  border-color: var(--accent2);
+  box-shadow: 0 0 0 3px rgba(29,78,216,0.10);
+}
+input::placeholder { color: var(--text4); }
+textarea { resize: vertical; min-height: 60px; }
+select { appearance: none; cursor: pointer; }
+
+/* ── TOAST ── */
+#toast-container {
+  position: fixed; bottom: 18px; right: 18px;
+  z-index: 9999;
+  display: flex; flex-direction: column; gap: 7px;
+}
+.toast {
+  padding: 11px 15px; border-radius: var(--r);
+  font-size: 13px; font-weight: 500;
+  box-shadow: var(--shadow-lg);
+  animation: toastIn 0.2s ease;
+  display: flex; align-items: center; gap: 8px;
+  min-width: 220px; border: 1px solid transparent;
+}
+.toast.success { background: var(--green-bg);  color: var(--green);  border-color: var(--green-border); }
+.toast.error   { background: var(--red-bg);    color: var(--red);    border-color: var(--red-border); }
+.toast.info    { background: var(--blue-bg);   color: var(--blue);   border-color: var(--blue-border); }
+.toast.warn    { background: var(--yellow-bg); color: var(--yellow); border-color: var(--yellow-border); }
+
+/* ── MODAL ── */
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(11,31,62,0.45);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 1000;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.18s;
+  backdrop-filter: blur(3px);
+}
+.modal-overlay.open { opacity: 1; pointer-events: all; }
+.modal {
+  background: var(--bg2); border-radius: var(--r-lg);
+  padding: 24px; box-shadow: var(--shadow-lg);
+  max-height: 90vh; overflow-y: auto;
+  width: 480px; max-width: 95vw;
+  border: 1px solid var(--border);
+  transform: translateY(8px);
+  transition: transform 0.18s;
+}
+.modal-overlay.open .modal { transform: translateY(0); }
+.modal-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 20px; font-weight: 700;
+  color: var(--accent); margin-bottom: 18px;
+}
+.modal-footer {
+  display: flex; gap: 8px; justify-content: flex-end;
+  margin-top: 18px; padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+
+/* ── PROGRESS BAR ── */
+.prog-wrap { display: flex; align-items: center; gap: 8px; }
+.prog-bar  { flex: 1; height: 5px; background: var(--bg4); border-radius: 99px; overflow: hidden; }
+.prog-fill { height: 100%; border-radius: 99px; transition: width 0.3s; }
+.prog-pct  { font-size: 11px; color: var(--text3); font-family: 'DM Mono', monospace; min-width: 32px; text-align: right; }
+
+/* ── EMPTY STATE ── */
+.empty {
+  text-align: center; padding: 32px 16px;
+  color: var(--text3); font-size: 13px;
+}
+.empty-icon { font-size: 28px; margin-bottom: 8px; }
+
+/* ── PREVIEW BADGE ── */
+.preview-watermark {
+  display: inline-flex; align-items: center; gap: 8px;
+  margin-bottom: 16px; padding: 4px 12px;
+  background: rgba(29,78,216,0.07);
+  border: 1px solid rgba(29,78,216,0.18);
+  border-radius: 999px;
+}
+.preview-watermark-label {
+  font-size: 9px; font-weight: 700;
+  letter-spacing: 0.11em; text-transform: uppercase;
+  color: var(--accent2);
+}
+.preview-watermark-sub { font-size: 9px; color: var(--text3); }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 1100px) {
+  .tables-grid  { grid-template-columns: 1fr; }
+  .bottom-grid  { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 900px) {
+  .kpi-grid     { grid-template-columns: repeat(3, 1fr); }
+  .bottom-grid  { grid-template-columns: 1fr; }
+  .main         { padding: 14px; }
+  .tab-nav      { padding-left: 16px; }
+}
+@media (max-width: 600px) {
+  .kpi-grid     { grid-template-columns: 1fr 1fr; }
+  .kpi-val      { font-size: 28px; }
+  .app-shell    { grid-template-columns: 0 1fr; }
+  .rail         { display: none; }
+  .tab-nav      { padding-left: 12px; }
+  .greeting-name { font-size: 22px; }
+}
+
+/* ── PRINT ── */
+@media print {
+  .app-header, .tab-nav, .rail, .btn, .btn-hdr { display: none !important; }
+  .main { padding: 0; }
+  body  { background: #fff; }
+  .card { box-shadow: none; border: 1px solid #ccc; }
+}
+
+/* ── VISTE ── */
 .view         { display: none; }
 .view.active  { display: block; }
 
@@ -1038,6 +1213,55 @@ tbody td:last-child  { padding-right: 16px; }
     </main>
 
   </div><!-- /app-shell -->
+
+  <!-- TOAST CONTAINER -->
+  <div id="toast-container"></div>
+
+  <script>
+  // FIX [UI/UX]: live clock — aggiorna ogni 30s
+  function updateClock() {
+    const now = new Date();
+    const hhmm = now.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+    const el = document.getElementById('live-time');
+    const el2 = document.getElementById('clock-main');
+    if (el)  el.textContent  = hhmm;
+    if (el2) el2.textContent = hhmm;
+  }
+  updateClock();
+  setInterval(updateClock, 30000);
+
+  // FIX [UI/UX]: tab nav + rail sincronizzati via data-tab
+  function activateTab(tab) {
+    document.querySelectorAll('.tab-item').forEach(t => {
+      t.classList.toggle('active', t.dataset.tab === tab);
+    });
+    document.querySelectorAll('.rail-item').forEach(r => {
+      r.classList.toggle('active', r.dataset.tab === tab);
+    });
+    document.querySelectorAll('.view').forEach(v => {
+      v.classList.toggle('active', v.dataset.view === tab);
+    });
+  }
+
+  document.querySelectorAll('.tab-item').forEach(t => {
+    t.addEventListener('click', () => activateTab(t.dataset.tab));
+  });
+  document.querySelectorAll('.rail-item').forEach(r => {
+    r.addEventListener('click', () => activateTab(r.dataset.tab));
+  });
+
+  // FIX [UI/UX]: toast helper
+  function showToast(msg, type = 'info', duration = 3000) {
+    const icons = { success: '✓', error: '✕', info: 'ℹ', warn: '⚠' };
+    const c = document.getElementById('toast-container');
+    if (!c) return;
+    const t = document.createElement('div');
+    t.className = `toast ${type}`;
+    t.innerHTML = `<span>${icons[type] || 'ℹ'}</span><span>${msg}</span>`;
+    c.appendChild(t);
+    setTimeout(() => t.remove(), duration);
+  }
+  </script>
 
 </body>
 </html>
