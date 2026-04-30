@@ -1017,21 +1017,112 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
     <!-- ══ ARCHIVIO ORDINI ══ -->
     <div class="view" data-view="arch-ordini">
       <div class="pg-hdr"><div class="pg-title">Archivio Ordini</div></div>
+      <!-- filtri -->
       <div class="filter-bar" style="margin-bottom:12px">
         <button class="chip active" onclick="filterChip(this,'arch')">Tutti</button>
         <button class="chip" onclick="filterChip(this,'arch')">Epredia</button>
         <button class="chip" onclick="filterChip(this,'arch')">Bio Optica</button>
         <button class="chip" onclick="filterChip(this,'arch')">Roche</button>
         <button class="chip" onclick="filterChip(this,'arch')">LabFor</button>
+        <div style="flex:1"></div>
+        <select class="search-inp" style="width:auto;padding:6px 10px"><option>2026</option><option>2025</option></select>
       </div>
-      <div class="card"><div style="overflow-x:auto"><table class="tbl">
-        <thead><tr><th>Rif. ordine</th><th>Fornitore</th><th>Data inv.</th><th>Data ric.</th><th>Prodotti</th><th>DDT</th><th>Totale €</th></tr></thead>
-        <tbody>
-          <tr><td class="mono">2/LAB/2026</td><td>LabFor</td><td class="mono">10/04</td><td class="mono">16/04</td><td>2</td><td class="mono">DDT-22041</td><td class="mono">480</td></tr>
-          <tr><td class="mono">1/EPR/2026</td><td>Epredia</td><td class="mono">15/03</td><td class="mono">22/03</td><td>5</td><td class="mono">DDT-19872</td><td class="mono">2.140</td></tr>
-          <tr><td class="mono">3/ROC/2025</td><td>Roche</td><td class="mono">10/12/25</td><td class="mono">19/12/25</td><td>3</td><td class="mono">DDT-88221</td><td class="mono">960</td></tr>
-        </tbody>
-      </table></div></div>
+
+      <div style="display:grid;grid-template-columns:360px 1fr;gap:14px;align-items:start">
+
+        <!-- lista ordini archiviati -->
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div class="ord-card active-ord" onclick="showArchOrdine('a1')" data-id="a1">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+              <span class="mono" style="font-weight:700;color:var(--accent)">2/LAB/2026</span>
+              <span class="badge bg-green">Ricevuto</span>
+            </div>
+            <div style="font-size:12px;color:var(--text2)">LabFor · 2 prodotti · € 480</div>
+            <div style="font-size:10px;color:var(--text3);font-family:'DM Mono',monospace;margin-top:2px">Inv. 10/04/2026 · Ric. 16/04/2026 · DDT-22041</div>
+            <div style="display:flex;gap:6px;margin-top:8px;font-size:10px;color:var(--text3)">
+              <span>📎 1 ordine PDF</span><span>📦 1 DDT</span>
+            </div>
+          </div>
+          <div class="ord-card" onclick="showArchOrdine('a2')" data-id="a2">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+              <span class="mono" style="font-weight:700;color:var(--accent)">1/EPR/2026</span>
+              <span class="badge bg-green">Ricevuto</span>
+            </div>
+            <div style="font-size:12px;color:var(--text2)">Epredia · 5 prodotti · € 2.140</div>
+            <div style="font-size:10px;color:var(--text3);font-family:'DM Mono',monospace;margin-top:2px">Inv. 15/03/2026 · Ric. 22/03/2026 · DDT-19872</div>
+            <div style="display:flex;gap:6px;margin-top:8px;font-size:10px;color:var(--text3)">
+              <span>📎 1 ordine PDF</span><span>📦 2 DDT</span>
+            </div>
+          </div>
+          <div class="ord-card" onclick="showArchOrdine('a3')" data-id="a3">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+              <span class="mono" style="font-weight:700;color:var(--accent)">3/ROC/2025</span>
+              <span class="badge bg-green">Ricevuto</span>
+            </div>
+            <div style="font-size:12px;color:var(--text2)">Roche · 3 prodotti · € 960</div>
+            <div style="font-size:10px;color:var(--text3);font-family:'DM Mono',monospace;margin-top:2px">Inv. 10/12/2025 · Ric. 19/12/2025 · DDT-88221</div>
+            <div style="display:flex;gap:6px;margin-top:8px;font-size:10px;color:var(--text3)">
+              <span style="color:var(--text3);font-style:italic">Nessun documento allegato</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- pannello dettaglio con documenti -->
+        <div class="card" id="arch-detail">
+          <div style="padding:16px 20px;border-bottom:1px solid var(--border)">
+            <div style="font-size:10px;font-weight:700;letter-spacing:.10em;text-transform:uppercase;color:var(--text3);margin-bottom:4px">2/LAB/2026 · LabFor · Ricevuto 16/04/2026</div>
+            <div style="font-size:12px;color:var(--text3)">Alcol 96° denaturato (10 L) · Buffer fosfato pH 7.4 (5 L)</div>
+          </div>
+
+          <!-- sezione documenti -->
+          <div style="padding:16px 20px">
+            <div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);margin-bottom:12px">Documenti allegati</div>
+
+            <!-- ordine originale -->
+            <div style="margin-bottom:14px">
+              <div style="font-size:11px;font-weight:600;color:var(--accent);margin-bottom:8px">Ordine originale</div>
+              <div style="display:flex;gap:10px;align-items:start">
+                <div style="width:72px;height:88px;background:var(--blue-bg);border:2px solid var(--blue-bd);border-radius:6px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">📄<span style="font-size:8px;color:var(--blue);font-weight:700;margin-top:2px">PDF</span></div>
+                <div style="flex:1">
+                  <div style="font-size:12px;font-weight:600;color:var(--text)">Ordine_2-LAB-2026.pdf</div>
+                  <div style="font-size:10px;color:var(--text3);margin-bottom:8px">Caricato il 10/04/2026 · 142 KB</div>
+                  <div style="display:flex;gap:6px">
+                    <button class="hbtn2" style="font-size:11px">👁 Visualizza</button>
+                    <button class="hbtn2" style="font-size:11px">⬇ Scarica</button>
+                    <button class="hbtn2 danger" style="font-size:11px">🗑 Elimina</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- DDT allegati -->
+            <div style="margin-bottom:14px">
+              <div style="font-size:11px;font-weight:600;color:var(--accent);margin-bottom:8px">DDT ricevuti</div>
+              <div style="display:flex;gap:10px;align-items:start;margin-bottom:10px">
+                <div style="width:72px;height:88px;background:var(--green-bg,#f0fdf4);border:2px solid var(--green-bd,#bbf7d0);border-radius:6px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">📦<span style="font-size:8px;color:var(--green);font-weight:700;margin-top:2px">DDT</span></div>
+                <div style="flex:1">
+                  <div style="font-size:12px;font-weight:600;color:var(--text)">DDT N° 22041 del 16/04/2026</div>
+                  <div style="font-size:10px;color:var(--text3);margin-bottom:8px">Caricato il 16/04/2026 · 98 KB</div>
+                  <div style="display:flex;gap:6px">
+                    <button class="hbtn2" style="font-size:11px">👁 Visualizza</button>
+                    <button class="hbtn2" style="font-size:11px">⬇ Scarica</button>
+                    <button class="hbtn2 danger" style="font-size:11px">🗑 Elimina</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- upload nuovo documento -->
+            <div style="border:2px dashed var(--border);border-radius:var(--r);padding:16px;text-align:center;cursor:pointer" onclick="document.getElementById('arch-upload').click()">
+              <div style="font-size:20px;margin-bottom:4px">📎</div>
+              <div style="font-size:12px;color:var(--text3)">Allega ordine PDF / foto · DDT (PDF, JPG, PNG)</div>
+              <div style="font-size:10px;color:var(--text3);margin-top:2px">Clicca o trascina qui</div>
+              <input type="file" id="arch-upload" accept=".pdf,.jpg,.jpeg,.png" multiple style="display:none">
+            </div>
+          </div>
+        </div>
+
+      </div>
     </div><!-- /arch-ordini -->
 
     <!-- ══ SCHEDE TECNICHE ══ -->
@@ -1156,6 +1247,12 @@ function showOrdine(id){
   document.querySelectorAll('.ord-card').forEach(c=>c.classList.remove('active-ord'));
   const card=document.querySelector(`.ord-card[data-id="${id}"]`);
   if(card)card.classList.add('active-ord');
+}
+
+// FIX [UI/UX]: visual feedback card archivio ordini
+function showArchOrdine(id){
+  document.querySelectorAll('#view-arch-ordini .ord-card, [data-view="arch-ordini"] .ord-card').forEach(c=>c.classList.remove('active-ord'));
+  event.currentTarget.classList.add('active-ord');
 }
 
 // FIX [UI/UX]: grafici campioni SVG + init interazioni
