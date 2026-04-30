@@ -376,6 +376,37 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
 
       </div><!-- /grafici campioni -->
 
+      <!-- GRAFICI MAGAZZINO / ORDINI -->
+      <div style="margin-bottom:8px;display:flex;align-items:center;gap:10px">
+        <div style="font-family:'Libre Baskerville',serif;font-size:16px;font-weight:700;color:var(--accent)">Magazzino &amp; Ordini</div>
+        <div style="flex:1;height:1px;background:var(--border)"></div>
+        <span style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em">Analisi</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:24px">
+
+        <!-- 4. Top 10 prodotti — horizontal bar -->
+        <div class="card">
+          <div class="card-hdr"><span class="card-title">Top 10 consumati</span><span class="card-sub">Apr 2026</span></div>
+          <div style="padding:10px 14px"><svg id="chart-hbar" width="100%" viewBox="0 0 240 170"></svg></div>
+        </div>
+
+        <!-- 5. Previsione esaurimento — tabella/card -->
+        <div class="card">
+          <div class="card-hdr"><span class="card-title">Previsione esaurimento</span><span class="card-sub">Scorte critiche</span></div>
+          <div id="prev-table" style="padding:0"></div>
+        </div>
+
+        <!-- 6. Frequenza ordini per fornitore — vertical bar -->
+        <div class="card">
+          <div class="card-hdr"><span class="card-title">Ordini per fornitore</span><span class="card-sub">Nov 2025 — Apr 2026</span></div>
+          <div style="padding:12px 14px">
+            <svg id="chart-vbar" width="100%" viewBox="0 0 280 140" style="overflow:visible"></svg>
+            <div style="display:flex;gap:10px;margin-top:8px;font-size:10px;flex-wrap:wrap" id="vbar-legend"></div>
+          </div>
+        </div>
+
+      </div><!-- /grafici magazzino -->
+
     </div><!-- /view-home -->
   </main>
 
@@ -499,6 +530,96 @@ document.addEventListener('DOMContentLoaded',function(){
   }
 
 });
+
+  // 4. HORIZONTAL BAR — top 10 prodotti
+  const hbarData=[
+    {name:'Xilolo puro',cat:'Reagente',qty:48,color:'#2563eb'},
+    {name:'Alcol 96°',cat:'Reagente',qty:36,color:'#2563eb'},
+    {name:'Formalina 10%',cat:'Reagente',qty:32,color:'#2563eb'},
+    {name:'Vetrini SuperFrost',cat:'Consumabile',qty:30,color:'#0891b2'},
+    {name:'Cassette biopt.',cat:'Consumabile',qty:28,color:'#0891b2'},
+    {name:'Paraffina',cat:'Reagente',qty:24,color:'#2563eb'},
+    {name:'Ematossilina',cat:'Colorante',qty:18,color:'#7c3aed'},
+    {name:'Eosina Y',cat:'Colorante',qty:16,color:'#7c3aed'},
+    {name:'Copriogetti',cat:'Consumabile',qty:14,color:'#0891b2'},
+    {name:'Montante sintet.',cat:'Reagente',qty:10,color:'#2563eb'},
+  ];
+  const hsvg=document.getElementById('chart-hbar');
+  if(hsvg){
+    const maxQ=50,rowH=16,PL=90,PR=36,PT=4;
+    hbarData.forEach((d,i)=>{
+      const y=PT+i*rowH;
+      const barW=(d.qty/maxQ)*(240-PL-PR);
+      const rect=svgEl('rect',{x:PL,y:y+2,width:barW,height:rowH-4,fill:d.color,rx:'2',opacity:'0.85'});
+      hsvg.appendChild(rect);
+      const lbl=svgEl('text',{x:PL-4,y:y+rowH/2+3,'text-anchor':'end','font-family':'DM Sans,sans-serif','font-size':'8',fill:'#374151'});
+      lbl.textContent=d.name.length>14?d.name.slice(0,13)+'…':d.name;
+      hsvg.appendChild(lbl);
+      const val=svgEl('text',{x:PL+barW+4,y:y+rowH/2+3,'font-family':'DM Mono,monospace','font-size':'8',fill:d.color});
+      val.textContent=d.qty;hsvg.appendChild(val);
+    });
+  }
+
+  // 5. PREVISIONE ESAURIMENTO — tabella HTML
+  const prevData=[
+    {name:'Xilolo puro',qty:'2 L',rate:'0.4 L/g',days:5,st:'red'},
+    {name:'Anticorpo CD3',qty:'1 fl',rate:'—',days:1,st:'red'},
+    {name:'Alcol 96°',qty:'3 L',rate:'0.3 L/g',days:10,st:'orange'},
+    {name:'Acido Periodico',qty:'80 ml',rate:'5 ml/g',days:16,st:'yellow'},
+    {name:'Cassette biopt.',qty:'120 pz',rate:'12 pz/g',days:10,st:'orange'},
+    {name:'Paraffina',qty:'1.2 kg',rate:'0.1 kg/g',days:12,st:'orange'},
+  ];
+  const prevTbl=document.getElementById('prev-table');
+  if(prevTbl){
+    const stMap={red:'background:var(--red-bg);color:var(--red)',orange:'background:var(--orange-bg);color:var(--orange)',yellow:'background:var(--yellow-bg);color:var(--yellow)'};
+    const lblMap={red:'< 7 gg',orange:'< 14 gg',yellow:'< 30 gg'};
+    let html='<table style="width:100%;border-collapse:collapse">';
+    html+='<thead><tr style="background:#f8fafc;border-bottom:2px solid var(--border)">';
+    ['Prodotto','Giacenza','Giorni','Stato'].forEach(h=>{html+=`<th style="text-align:left;padding:7px 10px;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text3)">${h}</th>`;});
+    html+='</tr></thead><tbody>';
+    prevData.forEach(d=>{
+      html+=`<tr style="border-bottom:1px solid var(--border)">
+        <td style="padding:7px 10px;font-size:11px;color:var(--text)">${d.name}</td>
+        <td style="padding:7px 10px;font-family:'DM Mono',monospace;font-size:11px;color:var(--text3)">${d.qty}</td>
+        <td style="padding:7px 10px;font-family:'DM Mono',monospace;font-size:12px;font-weight:700;color:var(--text)">${d.days}</td>
+        <td style="padding:7px 10px"><span style="padding:2px 8px;border-radius:999px;font-size:10px;font-weight:600;${stMap[d.st]}">${lblMap[d.st]}</span></td>
+      </tr>`;
+    });
+    html+='</tbody></table>';
+    prevTbl.innerHTML=html;
+  }
+
+  // 6. VERTICAL GROUPED BAR — ordini per fornitore
+  const vbarColors={Epredia:'#2563eb',BiOptca:'#0891b2',Roche:'#7c3aed',LabFor:'#ea580c'};
+  const vbarForn=['Epredia','BiOptca','Roche','LabFor'];
+  const vbarMesi=['Nov','Dic','Gen','Feb','Mar','Apr'];
+  const vbarData={Epredia:[2,1,2,2,1,2],BiOptca:[1,1,1,2,1,1],Roche:[0,1,0,1,0,1],LabFor:[1,0,1,0,1,1]};
+  const vsvg=document.getElementById('chart-vbar');
+  const vleg=document.getElementById('vbar-legend');
+  if(vsvg){
+    const W=280,H=120,PL=20,PR=8,PT=8,PB=20;
+    const maxV=3,iw=W-PL-PR,ih=H-PT-PB;
+    const nm=vbarMesi.length,gw=iw/nm,bw=gw*0.18;
+    vbarMesi.forEach((m,mi)=>{
+      const gx=PL+mi*gw;
+      vbarForn.forEach((f,fi)=>{
+        const v=vbarData[f][mi];
+        if(!v)return;
+        const bh=ih*(v/maxV);
+        vsvg.appendChild(svgEl('rect',{x:gx+fi*(bw+1)+3,y:PT+ih-bh,width:bw,height:bh,fill:Object.values(vbarColors)[fi],rx:'2',opacity:'0.85'}));
+      });
+      svgText(vsvg,gx+gw/2,H-4,m,{'text-anchor':'middle'});
+    });
+    vsvg.appendChild(svgEl('line',{x1:PL,y1:PT+ih,x2:W-PR,y2:PT+ih,stroke:'#e2e8f0','stroke-width':'1'}));
+  }
+  if(vleg){
+    vbarForn.forEach((f,i)=>{
+      const d=document.createElement('span');
+      d.style.cssText='display:flex;align-items:center;gap:4px';
+      d.innerHTML=`<span style="width:10px;height:10px;border-radius:2px;background:${Object.values(vbarColors)[i]};display:inline-block"></span>${f}`;
+      vleg.appendChild(d);
+    });
+  }
 
 // FIX [UI/UX]: expand righe cicli
 document.querySelectorAll('.expandable').forEach(row=>{
