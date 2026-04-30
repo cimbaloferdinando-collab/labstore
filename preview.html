@@ -904,25 +904,108 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
       <div class="pg-hdr">
         <div class="pg-title">Rifiuti</div>
         <div style="display:flex;gap:6px">
-          <button class="hbtn2 danger">＋ Pieno</button>
+          <button class="hbtn2 danger">＋ Registra bidone pieno</button>
           <button class="hbtn2">↺ Aggiorna vuoti</button>
+          <button class="hbtn2">🗑 Svuota log</button>
         </div>
       </div>
+
+      <!-- 4 card grandi: solidi pieni/vuoti, liquidi pieni/vuoti -->
       <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px">
-        <div class="cer-big red"><div class="cer-code">180103*</div><div class="cer-desc">Rifiuti a rischio infettivo</div><div class="cer-counts"><span>🔴 <b>2</b> pieni</span><span>⚪ <b>1</b> vuoto</span></div><div style="display:flex;gap:6px;margin-top:10px"><button class="hbtn2" style="flex:1;font-size:11px">＋ Pieno</button><button class="hbtn2" style="flex:1;font-size:11px">Svuota</button></div></div>
-        <div class="cer-big yellow"><div class="cer-code">150110*</div><div class="cer-desc">Imballaggi contaminati</div><div class="cer-counts"><span>🟡 <b>1</b> pieno</span><span>⚪ <b>2</b> vuoti</span></div><div style="display:flex;gap:6px;margin-top:10px"><button class="hbtn2" style="flex:1;font-size:11px">＋ Pieno</button><button class="hbtn2" style="flex:1;font-size:11px">Svuota</button></div></div>
-        <div class="cer-big gray"><div class="cer-code">150202*</div><div class="cer-desc">Assorbenti, filtranti</div><div class="cer-counts"><span>⚪ <b>0</b> pieni</span><span>⚪ <b>3</b> vuoti</span></div><div style="display:flex;gap:6px;margin-top:10px"><button class="hbtn2" style="flex:1;font-size:11px">＋ Pieno</button><button class="hbtn2" style="flex:1;font-size:11px">Svuota</button></div></div>
-        <div class="cer-big yellow"><div class="cer-code">180106*</div><div class="cer-desc">Sostanze chimiche pericolose</div><div class="cer-counts"><span>🟡 <b>1</b> pieno</span><span>⚪ <b>1</b> vuoto</span></div><div style="display:flex;gap:6px;margin-top:10px"><button class="hbtn2" style="flex:1;font-size:11px">＋ Pieno</button><button class="hbtn2" style="flex:1;font-size:11px">Svuota</button></div></div>
+        <div class="kpi-card" style="border-top:4px solid var(--orange)">
+          <div class="kpi-lbl">Solidi pieni</div>
+          <div class="kpi-val" style="color:var(--orange)">3</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:4px">bidoni totali</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-lbl">Solidi vuoti</div>
+          <div class="kpi-val" style="color:var(--text3)">4</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:4px">disponibili</div>
+        </div>
+        <div class="kpi-card" style="border-top:4px solid var(--blue)">
+          <div class="kpi-lbl">Liquidi pieni</div>
+          <div class="kpi-val" style="color:var(--blue)">1</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:4px">taniche totali</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-lbl">Liquidi vuoti</div>
+          <div class="kpi-val" style="color:var(--text3)">2</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:4px">disponibili</div>
+        </div>
       </div>
+
+      <!-- griglia CER con pieni/vuoti/smaltiti -->
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px">
+        <div class="cer-big red">
+          <div style="font-size:24px;margin-bottom:4px">☣</div>
+          <div class="cer-code">180103*</div>
+          <div class="cer-desc">Rifiuti a rischio infettivo</div>
+          <div class="cer-counts">
+            <span>🔴 <b>2</b> pieni</span>
+            <span>⚪ <b>1</b> vuoto</span>
+            <span style="color:var(--green);font-size:10px">✓ <b>7</b> smalt.</span>
+          </div>
+          <div style="display:flex;gap:6px;margin-top:10px">
+            <button class="hbtn2" style="flex:1;font-size:11px">＋ Pieno</button>
+            <button class="hbtn2" style="flex:1;font-size:11px">Svuota</button>
+          </div>
+        </div>
+        <div class="cer-big yellow">
+          <div style="font-size:24px;margin-bottom:4px">🧴</div>
+          <div class="cer-code">150110*</div>
+          <div class="cer-desc">Imballaggi contaminati</div>
+          <div class="cer-counts">
+            <span>🟡 <b>1</b> pieno</span>
+            <span>⚪ <b>2</b> vuoti</span>
+            <span style="color:var(--green);font-size:10px">✓ <b>2</b> smalt.</span>
+          </div>
+          <div style="display:flex;gap:6px;margin-top:10px">
+            <button class="hbtn2" style="flex:1;font-size:11px">＋ Pieno</button>
+            <button class="hbtn2" style="flex:1;font-size:11px">Svuota</button>
+          </div>
+        </div>
+        <div class="cer-big red">
+          <div style="font-size:24px;margin-bottom:4px">🧤</div>
+          <div class="cer-code">150202*</div>
+          <div class="cer-desc">Assorbenti contaminati</div>
+          <div class="cer-counts">
+            <span>⚪ <b>0</b> pieni</span>
+            <span>⚪ <b>1</b> vuoto</span>
+            <span style="color:var(--green);font-size:10px">✓ <b>3</b> smalt.</span>
+          </div>
+          <div style="display:flex;gap:6px;margin-top:10px">
+            <button class="hbtn2" style="flex:1;font-size:11px">＋ Pieno</button>
+            <button class="hbtn2" style="flex:1;font-size:11px">Svuota</button>
+          </div>
+        </div>
+        <div class="cer-big yellow" style="border-color:var(--blue-bd,#bfdbfe)">
+          <div style="font-size:24px;margin-bottom:4px">💧</div>
+          <div class="cer-code" style="color:var(--blue)">180106*</div>
+          <div class="cer-desc">Liquidi chimici pericolosi</div>
+          <div class="cer-counts">
+            <span style="color:var(--blue)">🔵 <b>1</b> piena</span>
+            <span>⚪ <b>2</b> vuote</span>
+            <span style="color:var(--green);font-size:10px">✓ <b>3</b> smalt.</span>
+          </div>
+          <div style="display:flex;gap:6px;margin-top:10px">
+            <button class="hbtn2" style="flex:1;font-size:11px">＋ Piena</button>
+            <button class="hbtn2" style="flex:1;font-size:11px">Svuota</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- storico smaltimenti -->
       <div class="card">
-        <div class="card-hdr"><span class="card-title">Storico smaltimenti</span><button class="hbtn2" style="font-size:11px">Svuota log</button></div>
+        <div class="card-hdr"><span class="card-title">Storico smaltimenti</span><span class="card-sub">Anno 2026</span><button class="hbtn2" style="font-size:11px">Svuota log</button></div>
         <table class="tbl">
-          <thead><tr><th>Data</th><th>CER</th><th>N° bidoni</th><th>Ditta</th><th>Formulario</th></tr></thead>
+          <thead><tr><th>Data</th><th>CER</th><th>Tipo</th><th>N° contenitori</th><th>Ditta</th><th>Formulario</th></tr></thead>
           <tbody>
-            <tr><td class="mono">28/03/2026</td><td class="mono">180103*</td><td>3</td><td>Ecolab Servizi</td><td class="mono">FIR-2026-0328</td></tr>
-            <tr><td class="mono">28/03/2026</td><td class="mono">150110*</td><td>2</td><td>Ecolab Servizi</td><td class="mono">FIR-2026-0328</td></tr>
-            <tr><td class="mono">14/03/2026</td><td class="mono">180106*</td><td>1</td><td>Ecolab Servizi</td><td class="mono">FIR-2026-0314</td></tr>
-            <tr><td class="mono">28/02/2026</td><td class="mono">180103*</td><td>4</td><td>Ecolab Servizi</td><td class="mono">FIR-2026-0228</td></tr>
+            <tr><td class="mono">28/03/2026</td><td class="mono">180103*</td><td>Bidoni solidi</td><td>3</td><td>Ecolab Servizi</td><td class="mono">FIR-2026-0328</td></tr>
+            <tr><td class="mono">28/03/2026</td><td class="mono">150110*</td><td>Bidoni solidi</td><td>2</td><td>Ecolab Servizi</td><td class="mono">FIR-2026-0328</td></tr>
+            <tr><td class="mono">14/03/2026</td><td class="mono">180106*</td><td>Tanica liquidi</td><td>1</td><td>Ecolab Servizi</td><td class="mono">FIR-2026-0314</td></tr>
+            <tr><td class="mono">28/02/2026</td><td class="mono">180103*</td><td>Bidoni solidi</td><td>4</td><td>Ecolab Servizi</td><td class="mono">FIR-2026-0228</td></tr>
+            <tr><td class="mono">14/02/2026</td><td class="mono">150202*</td><td>Bidoni solidi</td><td>2</td><td>Ecolab Servizi</td><td class="mono">FIR-2026-0214</td></tr>
+            <tr><td class="mono">28/01/2026</td><td class="mono">180103*</td><td>Bidoni solidi</td><td>3</td><td>Ecolab Servizi</td><td class="mono">FIR-2026-0128</td></tr>
           </tbody>
         </table>
       </div>
