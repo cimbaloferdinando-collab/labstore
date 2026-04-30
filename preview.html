@@ -548,6 +548,68 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
       </div>
     </div><!-- /processatore -->
 
+    <!-- ══ COLORATORE ══ -->
+    <div class="view" data-view="coloratore">
+      <div class="pg-hdr">
+        <div class="pg-title">Coloratore</div>
+        <button class="hbtn2 primary">＋ Nuovo ciclo</button>
+      </div>
+
+      <!-- ricerca inversa -->
+      <div class="card" style="margin-bottom:14px;padding:14px 16px">
+        <div style="font-size:10px;font-weight:700;letter-spacing:.10em;text-transform:uppercase;color:var(--text3);margin-bottom:8px">🔍 Ricerca inversa — tracciabilità lotti colorazione</div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input class="search-inp" style="width:220px" placeholder="ID caso es. 2764/26" id="col-search">
+          <button class="hbtn2 primary" onclick="searchCaso('col')">Cerca lotti</button>
+          <span style="font-size:12px;color:var(--text3)">→ Trova tutti i reagenti di colorazione usati per quel caso</span>
+        </div>
+        <div id="col-search-result" style="display:none;margin-top:10px;padding:10px;background:var(--blue-bg);border:1px solid var(--blue-bd);border-radius:var(--r-sm);font-size:12px"></div>
+      </div>
+
+      <!-- mini statistiche -->
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px">
+        <div class="cnt-card"><div class="cnt-lbl">Cicli apr</div><div class="cnt-val" style="color:var(--blue)">22</div></div>
+        <div class="cnt-card"><div class="cnt-lbl">Vetrini medi/ciclo</div><div class="cnt-val" style="color:var(--accent)">16.4</div></div>
+        <div class="cnt-card"><div class="cnt-lbl">H&amp;E Ist.</div><div class="cnt-val" style="color:var(--teal)">16</div></div>
+        <div class="cnt-card"><div class="cnt-lbl">H&amp;E Cito/PAP</div><div class="cnt-val" style="color:var(--purple)">6</div></div>
+      </div>
+
+      <!-- filtri programma -->
+      <div class="filter-bar">
+        <button class="chip active" onclick="filterChip(this,'col')">Tutti</button>
+        <button class="chip" onclick="filterChip(this,'col')">H&amp;E Istologia</button>
+        <button class="chip" onclick="filterChip(this,'col')">H&amp;E Citologia/PAP</button>
+        <button class="chip" onclick="filterChip(this,'col')">PAS</button>
+        <button class="chip" onclick="filterChip(this,'col')">Giemsa</button>
+      </div>
+
+      <!-- tabella cicli -->
+      <div class="card">
+        <div class="card-hdr"><span class="card-title">Ultimi cicli coloratore</span><span class="card-sub">Clicca riga per dettaglio</span></div>
+        <div style="overflow-x:auto">
+          <table class="tbl">
+            <thead><tr><th></th><th>ID</th><th>Data</th><th>Programma</th><th>Ist.</th><th>Nad.</th><th>Tot.</th><th>Stato</th></tr></thead>
+            <tbody>
+              <tr class="expandable" data-id="cc387"><td class="exp-arrow">▸</td><td class="mono">C-0387</td><td class="mono">29/04</td><td><span class="badge bg-teal">H&amp;E Ist.</span></td><td>18</td><td>0</td><td>18</td><td><span class="badge bg-green">Completato</span></td></tr>
+              <tr class="exp-row hidden" id="exp-cc387"><td colspan="8"><div class="exp-body"><b>Casi:</b> 2773/26, 2774/26, 2771/26<br><b>Reagenti:</b> Ematossilina Mayer <span class="mono">lot.EM-2025-0811 sc.08/2027</span> · Eosina Y <span class="mono">lot.EO-2025-1204 sc.12/2027</span> · Alcol 96° <span class="mono">lot.AL-2025-1108</span> · Xilolo <span class="mono">lot.XI-2025-0904</span> · Montante sintetico <span class="mono">lot.MS-2026-0115</span><br><span class="note-ok">Nessuna anomalia</span></div></td></tr>
+
+              <tr class="expandable" data-id="cc386"><td class="exp-arrow">▸</td><td class="mono">C-0386</td><td class="mono">29/04</td><td><span class="badge bg-purple">H&amp;E Cito/PAP</span></td><td>4</td><td>2</td><td>6</td><td><span class="badge bg-green">Completato</span></td></tr>
+              <tr class="exp-row hidden" id="exp-cc386"><td colspan="8"><div class="exp-body"><b>Casi:</b> 2770/26 (PAP, 4 ist.) · 2774/26 (BAL, 2 nad.)<br><b>Reagenti:</b> Ematossilina Mayer <span class="mono">lot.EM-2025-0811</span> · Eosina Y <span class="mono">lot.EO-2025-1204</span> · Alcol 70° <span class="mono">lot.AL70-2026-0301</span><br><span class="note-ok">Nessuna anomalia</span></div></td></tr>
+
+              <tr class="expandable" data-id="cc385"><td class="exp-arrow">▸</td><td class="mono">C-0385</td><td class="mono">28/04</td><td><span class="badge bg-teal">H&amp;E Ist.</span></td><td>22</td><td>0</td><td>22</td><td><span class="badge bg-green">Completato</span></td></tr>
+              <tr class="exp-row hidden" id="exp-cc385"><td colspan="8"><div class="exp-body"><b>Casi:</b> 2769/26, 2767/26, 2766/26<br><b>Reagenti:</b> Ematossilina Mayer <span class="mono">lot.EM-2025-0811</span> · Eosina Y <span class="mono">lot.EO-2025-1204</span> · Xilolo <span class="mono">lot.XI-2025-0904</span><br><span class="note-ok">Nessuna anomalia</span></div></td></tr>
+
+              <tr class="expandable" data-id="cc384"><td class="exp-arrow">▸</td><td class="mono">C-0384</td><td class="mono">28/04</td><td><span class="badge bg-orange">Giemsa</span></td><td>6</td><td>0</td><td>6</td><td><span class="badge bg-yellow">In corso</span></td></tr>
+              <tr class="exp-row hidden" id="exp-cc384"><td colspan="8"><div class="exp-body"><b>Casi:</b> 2768/26 (Gastroenterol., 6 ist.)<br><b>Reagenti:</b> Giemsa <span class="mono">lot.GI-2025-1030 sc.10/2027</span> · Metanolo <span class="mono">lot.ME-2025-0822</span> · Buffer fosfato <span class="mono">lot.BF-2026-0201</span><br><span class="note-ok">Ciclo in esecuzione</span></div></td></tr>
+
+              <tr class="expandable" data-id="cc383"><td class="exp-arrow">▸</td><td class="mono">C-0383</td><td class="mono">27/04</td><td><span class="badge bg-teal">H&amp;E Ist.</span></td><td>14</td><td>3</td><td>17</td><td><span class="badge bg-green">Completato</span></td></tr>
+              <tr class="exp-row hidden" id="exp-cc383"><td colspan="8"><div class="exp-body"><b>Casi:</b> 2765/26 (Ginecol., 14 ist.) · BAL 2764/26 (Pneumol., 3 nad.)<br><b>Reagenti:</b> Ematossilina Mayer <span class="mono">lot.EM-2025-0811</span> · Eosina Y <span class="mono">lot.EO-2025-1204</span> · Alcol 96° <span class="mono">lot.AL-2025-1108</span><br><span class="note-ok">Nessuna anomalia</span></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div><!-- /coloratore -->
+
   </main>
 
   <!-- PAGINE PLACEHOLDER -->
