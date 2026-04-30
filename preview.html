@@ -411,19 +411,14 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
         <div class="card">
           <div class="card-hdr"><span class="card-title">Processatore</span><span class="card-sub">Ultimi 5 cicli</span><span class="card-lnk">storico →</span></div>
           <div style="overflow-x:auto">
-            <table class="tbl">
-              <thead><tr><th></th><th>ID</th><th>Data</th><th>Tipo</th><th>Prog.</th><th>Pezzi</th><th>Stato</th></tr></thead>
+            <table class="tbl" style="font-size:10px">
+              <thead><tr><th>Data partenza</th><th>Range casi ID</th><th>Cassette</th><th>Stato reagenti</th></tr></thead>
               <tbody>
-                <tr class="expandable" data-id="p412"><td class="exp-arrow">▸</td><td class="mono">P-0412</td><td class="mono">29/04</td><td>Std</td><td class="mono">STD-8H</td><td>18</td><td><span class="badge bg-green">Completato</span></td></tr>
-                <tr class="exp-row hidden" id="exp-p412"><td colspan="7"><div class="exp-body"><b>Casi:</b> 2764/26 (Chir.Gen., 8 pz) · 2765/26 (Ginecol., 4 pz) · 2766/26 (Urologia, 6 pz)<br><b>Reagenti:</b> Formalina 10% lot.FT-2026-0312 · Alcol 96° lot.AL-2025-1108 · Xilolo lot.XI-2025-0904<br><span class="note-ok">Nessuna anomalia</span></div></td></tr>
-                <tr class="expandable" data-id="p411"><td class="exp-arrow">▸</td><td class="mono">P-0411</td><td class="mono">29/04</td><td>Rapido</td><td class="mono">RAP-4H</td><td>6</td><td><span class="badge bg-green">Completato</span></td></tr>
-                <tr class="exp-row hidden" id="exp-p411"><td colspan="7"><div class="exp-body"><b>Casi:</b> 2763/26 (Dermatol., 6 pz)<br><b>Reagenti:</b> Formalina 10% lot.FT-2026-0312 · Alcol 96° lot.AL-2025-1108<br><span class="note-ok">Nessuna anomalia</span></div></td></tr>
-                <tr class="expandable" data-id="p410"><td class="exp-arrow">▸</td><td class="mono">P-0410</td><td class="mono">28/04</td><td>Std</td><td class="mono">STD-8H</td><td>22</td><td><span class="badge bg-green">Completato</span></td></tr>
-                <tr class="exp-row hidden" id="exp-p410"><td colspan="7"><div class="exp-body"><b>Casi:</b> 2759/26 (Chir.Gen., 12 pz) · 2760/26 (Endoscopia, 10 pz)<br><b>Reagenti:</b> Formalina 10% lot.FT-2026-0312 · Alcol 96° lot.AL-2025-1108 · Paraffina lot.PA-2026-0201<br><span class="note-warn">⚠ Temperatura ciclo +0.5°C — verificare</span></div></td></tr>
-                <tr class="expandable" data-id="p409"><td class="exp-arrow">▸</td><td class="mono">P-0409</td><td class="mono">28/04</td><td>Notturno</td><td class="mono">NOT-12H</td><td>14</td><td><span class="badge bg-yellow">In corso</span></td></tr>
-                <tr class="exp-row hidden" id="exp-p409"><td colspan="7"><div class="exp-body"><b>Casi:</b> 2755/26 (Chir.Gen., 14 pz)<br><b>Reagenti:</b> Formalina 10% lot.FT-2026-0312 · Alcol 96° lot.AL-2025-1108<br><span class="note-ok">In elaborazione</span></div></td></tr>
-                <tr class="expandable" data-id="p408"><td class="exp-arrow">▸</td><td class="mono">P-0408</td><td class="mono">27/04</td><td>Std</td><td class="mono">STD-8H</td><td>10</td><td><span class="badge bg-green">Completato</span></td></tr>
-                <tr class="exp-row hidden" id="exp-p408"><td colspan="7"><div class="exp-body"><b>Casi:</b> 2750/26 (Ginecol., 10 pz)<br><b>Reagenti:</b> Formalina 10% lot.FT-2026-0299 · Alcol 96° lot.AL-2025-1108<br><span class="note-ok">Nessuna anomalia</span></div></td></tr>
+                <tr><td class="mono">29/04 06:00</td><td class="mono">2764/26 → 2766/26</td><td>20</td><td><span class="badge bg-green" style="font-size:8px">✅ Verif.</span></td></tr>
+                <tr><td class="mono">29/04 08:30</td><td class="mono">2763/26 → 2763/26</td><td>6</td><td><span class="badge bg-green" style="font-size:8px">✅ Verif.</span></td></tr>
+                <tr><td class="mono">28/04 06:00</td><td class="mono">2759/26 → 2760/26</td><td>24</td><td><span class="badge bg-blue" style="font-size:8px">➕ Rabb.</span></td></tr>
+                <tr><td class="mono">28/04 22:00</td><td class="mono">2755/26 → 2758/26</td><td>14</td><td><span class="badge bg-yellow" style="font-size:8px">In corso</span></td></tr>
+                <tr><td class="mono">27/04 06:00</td><td class="mono">2750/26 → 2754/26</td><td>10</td><td><span class="badge bg-orange" style="font-size:8px">🔄 Sost.</span></td></tr>
               </tbody>
             </table>
           </div>
@@ -601,27 +596,33 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
         <div class="cnt-card"><div class="cnt-lbl">In corso</div><div class="cnt-val" style="color:var(--green)">1</div></div>
       </div>
 
-      <!-- tabella cicli -->
+      <!-- storico cicli -->
       <div class="card">
-        <div class="card-hdr"><span class="card-title">Ultimi cicli processatore</span><span class="card-sub">Clicca riga per dettaglio</span></div>
+        <div class="card-hdr"><span class="card-title">Storico cicli processatore</span><span class="card-sub">Clicca riga per dettaglio reagenti</span></div>
         <div style="overflow-x:auto">
           <table class="tbl">
-            <thead><tr><th></th><th>ID</th><th>Data</th><th>Tipo</th><th>Programma</th><th>Cassette</th><th>Pezzi</th><th>Stato</th></tr></thead>
+            <thead><tr><th></th><th>Data partenza</th><th>Range casi ID</th><th>Cassette</th><th>Stato reagenti</th></tr></thead>
             <tbody>
-              <tr class="expandable" data-id="pp412"><td class="exp-arrow">▸</td><td class="mono">P-0412</td><td class="mono">29/04</td><td>Standard</td><td class="mono">STD-8H</td><td>20</td><td>18</td><td><span class="badge bg-green">Completato</span></td></tr>
-              <tr class="exp-row hidden" id="exp-pp412"><td colspan="8"><div class="exp-body"><b>Casi:</b> 2773/26 (Urologia, 6 pz) · 2774/26 (Pneumologia, 5 pz) · 2771/26 (Gastro, 7 pz)<br><b>Reagenti:</b> Formalina 10% <span class="mono">lot.FT-2026-0312 sc.12/2026</span> · Alcol 96° <span class="mono">lot.AL-2025-1108 sc.11/2027</span> · Xilolo puro <span class="mono">lot.XI-2025-0904 sc.09/2027</span> · Paraffina <span class="mono">lot.PA-2026-0201 sc.02/2028</span><br><span class="note-ok">Nessuna anomalia registrata</span></div></td></tr>
+              <tr class="expandable" data-id="pp412"><td class="exp-arrow">▸</td><td class="mono">29/04/2026 06:00</td><td class="mono">2764/26 → 2766/26</td><td>20</td><td><span class="badge bg-green">✅ Verificato</span></td></tr>
+              <tr class="exp-row hidden" id="exp-pp412"><td colspan="5"><div class="exp-body"><b>Casi:</b> 2764/26 (Chir.Gen., 8 pz) · 2765/26 (Ginecol., 6 pz) · 2766/26 (Urologia, 6 pz)<br><b>Reagenti:</b> Formalina 10% <span class="mono">lot.FT-2026-0312 sc.12/2026</span> · Alcol 96° <span class="mono">lot.AL-2025-1108 sc.11/2027</span> · Xilolo puro <span class="mono">lot.XI-2025-0904 sc.09/2027</span> · Paraffina <span class="mono">lot.PA-2026-0201 sc.02/2028</span><br><span class="note-ok">Nessuna anomalia registrata</span></div></td></tr>
 
-              <tr class="expandable" data-id="pp411"><td class="exp-arrow">▸</td><td class="mono">P-0411</td><td class="mono">29/04</td><td>Rapido</td><td class="mono">RAP-4H</td><td>6</td><td>6</td><td><span class="badge bg-green">Completato</span></td></tr>
-              <tr class="exp-row hidden" id="exp-pp411"><td colspan="8"><div class="exp-body"><b>Casi:</b> 2772/26 (Dr.ssa Russo, 1 pz) · 2775/26 (Ginecologia, 5 pz)<br><b>Reagenti:</b> Formalina 10% <span class="mono">lot.FT-2026-0312</span> · Alcol 96° <span class="mono">lot.AL-2025-1108</span> · Xilolo puro <span class="mono">lot.XI-2025-0904</span><br><span class="note-ok">Nessuna anomalia registrata</span></div></td></tr>
+              <tr class="expandable" data-id="pp411"><td class="exp-arrow">▸</td><td class="mono">29/04/2026 08:30</td><td class="mono">2763/26 → 2763/26</td><td>6</td><td><span class="badge bg-green">✅ Verificato</span></td></tr>
+              <tr class="exp-row hidden" id="exp-pp411"><td colspan="5"><div class="exp-body"><b>Casi:</b> 2763/26 (Dermatol., 6 pz)<br><b>Reagenti:</b> Formalina 10% <span class="mono">lot.FT-2026-0312</span> · Alcol 96° <span class="mono">lot.AL-2025-1108</span> · Xilolo puro <span class="mono">lot.XI-2025-0904</span><br><span class="note-ok">Nessuna anomalia registrata</span></div></td></tr>
 
-              <tr class="expandable" data-id="pp410"><td class="exp-arrow">▸</td><td class="mono">P-0410</td><td class="mono">28/04</td><td>Standard</td><td class="mono">STD-8H</td><td>24</td><td>22</td><td><span class="badge bg-green">Completato</span></td></tr>
-              <tr class="exp-row hidden" id="exp-pp410"><td colspan="8"><div class="exp-body"><b>Casi:</b> 2769/26 (Dermatologia, 3 pz) · 2767/26 (Chir.Gen., 5 pz) · 2766/26 (Urologia, 14 pz)<br><b>Reagenti:</b> Formalina 10% <span class="mono">lot.FT-2026-0312</span> · Alcol 96° <span class="mono">lot.AL-2025-1108</span> · Paraffina <span class="mono">lot.PA-2026-0201</span><br><span class="note-warn">⚠ Temperatura picco +0.5°C alle 02:14 — verificare sensore</span></div></td></tr>
+              <tr class="expandable" data-id="pp410"><td class="exp-arrow">▸</td><td class="mono">28/04/2026 06:00</td><td class="mono">2759/26 → 2760/26</td><td>24</td><td><span class="badge bg-blue">➕ Rabboccato</span></td></tr>
+              <tr class="exp-row hidden" id="exp-pp410"><td colspan="5"><div class="exp-body"><b>Casi:</b> 2759/26 (Chir.Gen., 12 pz) · 2760/26 (Endoscopia, 12 pz)<br><b>Reagenti:</b> Formalina 10% <span class="mono">lot.FT-2026-0312</span> · Alcol 96° <span class="mono">lot.AL-2025-1108</span> · Paraffina <span class="mono">lot.PA-2026-0201</span><br><span class="note-warn">⚠ Temperatura picco +0.5°C alle 02:14 — verificare sensore</span></div></td></tr>
 
-              <tr class="expandable" data-id="pp409"><td class="exp-arrow">▸</td><td class="mono">P-0409</td><td class="mono">28/04</td><td>Notturno</td><td class="mono">NOT-12H</td><td>14</td><td>14</td><td><span class="badge bg-yellow">In corso</span></td></tr>
-              <tr class="exp-row hidden" id="exp-pp409"><td colspan="8"><div class="exp-body"><b>Casi:</b> 2768/26 (Endoscopia, 2 pz) · 2776/26 (Chir.Gen., 4 pz) · 2765/26 (Ginecologia, 8 pz)<br><b>Reagenti:</b> Formalina 10% <span class="mono">lot.FT-2026-0312</span> · Alcol 96° <span class="mono">lot.AL-2025-1108</span><br><span class="note-ok">Ciclo in esecuzione — avvio ore 22:00</span></div></td></tr>
+              <tr class="expandable" data-id="pp409"><td class="exp-arrow">▸</td><td class="mono">28/04/2026 22:00</td><td class="mono">2755/26 → 2758/26</td><td>14</td><td><span class="badge bg-yellow">In corso</span></td></tr>
+              <tr class="exp-row hidden" id="exp-pp409"><td colspan="5"><div class="exp-body"><b>Casi:</b> 2755/26 (Chir.Gen., 4 pz) · 2756/26 (Ginecol., 4 pz) · 2757/26 (Endoscopia, 3 pz) · 2758/26 (Gastro, 3 pz)<br><b>Reagenti:</b> Formalina 10% <span class="mono">lot.FT-2026-0312</span> · Alcol 96° <span class="mono">lot.AL-2025-1108</span><br><span class="note-ok">Ciclo in esecuzione — avvio ore 22:00</span></div></td></tr>
 
-              <tr class="expandable" data-id="pp408"><td class="exp-arrow">▸</td><td class="mono">P-0408</td><td class="mono">27/04</td><td>Standard</td><td class="mono">STD-8H</td><td>10</td><td>10</td><td><span class="badge bg-green">Completato</span></td></tr>
-              <tr class="exp-row hidden" id="exp-pp408"><td colspan="8"><div class="exp-body"><b>Casi:</b> 2764/26 (Chir.Gen., 8 pz) · 2763/26 (Dermatologia, 2 pz)<br><b>Reagenti:</b> Formalina 10% <span class="mono">lot.FT-2026-0299 sc.08/2026</span> · Alcol 96° <span class="mono">lot.AL-2025-1108</span> · Xilolo puro <span class="mono">lot.XI-2025-0904</span><br><span class="note-ok">Nessuna anomalia registrata</span></div></td></tr>
+              <tr class="expandable" data-id="pp408"><td class="exp-arrow">▸</td><td class="mono">27/04/2026 06:00</td><td class="mono">2750/26 → 2754/26</td><td>10</td><td><span class="badge bg-orange">🔄 Sostituito</span></td></tr>
+              <tr class="exp-row hidden" id="exp-pp408"><td colspan="5"><div class="exp-body"><b>Casi:</b> 2750/26 (Ginecol., 3 pz) · 2751/26 (Chir.Gen., 4 pz) · 2752/26 (Urologia, 3 pz)<br><b>Reagenti:</b> Formalina 10% <span class="mono">lot.FT-2026-0299 sc.08/2026</span> · Alcol 96° <span class="mono">lot.AL-2025-1108</span> · Xilolo puro <span class="mono">lot.XI-2025-0904</span><br><span class="note-ok">Nessuna anomalia registrata</span></div></td></tr>
+
+              <tr class="expandable" data-id="pp407"><td class="exp-arrow">▸</td><td class="mono">25/04/2026 06:00</td><td class="mono">2743/26 → 2749/26</td><td>22</td><td><span class="badge bg-green">✅ Verificato</span></td></tr>
+              <tr class="exp-row hidden" id="exp-pp407"><td colspan="5"><div class="exp-body"><b>Casi:</b> 2743/26 – 2749/26 (vari reparti, 22 pz)<br><b>Reagenti:</b> Formalina 10% <span class="mono">lot.FT-2026-0299</span> · Alcol 96° <span class="mono">lot.AL-2025-1108</span> · Paraffina <span class="mono">lot.PA-2026-0201</span><br><span class="note-ok">Nessuna anomalia registrata</span></div></td></tr>
+
+              <tr class="expandable" data-id="pp406"><td class="exp-arrow">▸</td><td class="mono">24/04/2026 06:00</td><td class="mono">2738/26 → 2742/26</td><td>16</td><td><span class="badge bg-green">✅ Verificato</span></td></tr>
+              <tr class="exp-row hidden" id="exp-pp406"><td colspan="5"><div class="exp-body"><b>Casi:</b> 2738/26 – 2742/26 (vari reparti, 16 pz)<br><b>Reagenti:</b> Formalina 10% <span class="mono">lot.FT-2026-0299</span> · Alcol 96° <span class="mono">lot.AL-2025-1108</span> · Xilolo puro <span class="mono">lot.XI-2025-0904</span><br><span class="note-ok">Nessuna anomalia registrata</span></div></td></tr>
             </tbody>
           </table>
         </div>
