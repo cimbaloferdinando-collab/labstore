@@ -495,6 +495,59 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
       </div>
     </div><!-- /campioni -->
 
+    <!-- ══ PROCESSATORE ══ -->
+    <div class="view" data-view="processatore">
+      <div class="pg-hdr">
+        <div class="pg-title">Processatore</div>
+        <button class="hbtn2 primary">＋ Nuovo ciclo</button>
+      </div>
+
+      <!-- cerca per ID caso -->
+      <div class="card" style="margin-bottom:14px;padding:14px 16px">
+        <div style="font-size:10px;font-weight:700;letter-spacing:.10em;text-transform:uppercase;color:var(--text3);margin-bottom:8px">🔍 Ricerca inversa — tracciabilità lotti</div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input class="search-inp" style="width:220px" placeholder="ID caso es. 2764/26" id="proc-search">
+          <button class="hbtn2 primary" onclick="searchCaso('proc')">Cerca lotti</button>
+          <span style="font-size:12px;color:var(--text3)">→ Trova tutti i reagenti (con lotto) usati nel ciclo che conteneva quel caso</span>
+        </div>
+        <div id="proc-search-result" style="display:none;margin-top:10px;padding:10px;background:var(--blue-bg);border:1px solid var(--blue-bd);border-radius:var(--r-sm);font-size:12px"></div>
+      </div>
+
+      <!-- mini statistiche -->
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px">
+        <div class="cnt-card"><div class="cnt-lbl">Cicli apr</div><div class="cnt-val" style="color:var(--blue)">18</div></div>
+        <div class="cnt-card"><div class="cnt-lbl">Pezzi medi/ciclo</div><div class="cnt-val" style="color:var(--accent)">14.2</div></div>
+        <div class="cnt-card"><div class="cnt-lbl">Anomalie apr</div><div class="cnt-val" style="color:var(--yellow)">1</div></div>
+        <div class="cnt-card"><div class="cnt-lbl">In corso</div><div class="cnt-val" style="color:var(--green)">1</div></div>
+      </div>
+
+      <!-- tabella cicli -->
+      <div class="card">
+        <div class="card-hdr"><span class="card-title">Ultimi cicli processatore</span><span class="card-sub">Clicca riga per dettaglio</span></div>
+        <div style="overflow-x:auto">
+          <table class="tbl">
+            <thead><tr><th></th><th>ID</th><th>Data</th><th>Tipo</th><th>Programma</th><th>Cassette</th><th>Pezzi</th><th>Stato</th></tr></thead>
+            <tbody>
+              <tr class="expandable" data-id="pp412"><td class="exp-arrow">▸</td><td class="mono">P-0412</td><td class="mono">29/04</td><td>Standard</td><td class="mono">STD-8H</td><td>20</td><td>18</td><td><span class="badge bg-green">Completato</span></td></tr>
+              <tr class="exp-row hidden" id="exp-pp412"><td colspan="8"><div class="exp-body"><b>Casi:</b> 2773/26 (Urologia, 6 pz) · 2774/26 (Pneumologia, 5 pz) · 2771/26 (Gastro, 7 pz)<br><b>Reagenti:</b> Formalina 10% <span class="mono">lot.FT-2026-0312 sc.12/2026</span> · Alcol 96° <span class="mono">lot.AL-2025-1108 sc.11/2027</span> · Xilolo puro <span class="mono">lot.XI-2025-0904 sc.09/2027</span> · Paraffina <span class="mono">lot.PA-2026-0201 sc.02/2028</span><br><span class="note-ok">Nessuna anomalia registrata</span></div></td></tr>
+
+              <tr class="expandable" data-id="pp411"><td class="exp-arrow">▸</td><td class="mono">P-0411</td><td class="mono">29/04</td><td>Rapido</td><td class="mono">RAP-4H</td><td>6</td><td>6</td><td><span class="badge bg-green">Completato</span></td></tr>
+              <tr class="exp-row hidden" id="exp-pp411"><td colspan="8"><div class="exp-body"><b>Casi:</b> 2772/26 (Dr.ssa Russo, 1 pz) · 2775/26 (Ginecologia, 5 pz)<br><b>Reagenti:</b> Formalina 10% <span class="mono">lot.FT-2026-0312</span> · Alcol 96° <span class="mono">lot.AL-2025-1108</span> · Xilolo puro <span class="mono">lot.XI-2025-0904</span><br><span class="note-ok">Nessuna anomalia registrata</span></div></td></tr>
+
+              <tr class="expandable" data-id="pp410"><td class="exp-arrow">▸</td><td class="mono">P-0410</td><td class="mono">28/04</td><td>Standard</td><td class="mono">STD-8H</td><td>24</td><td>22</td><td><span class="badge bg-green">Completato</span></td></tr>
+              <tr class="exp-row hidden" id="exp-pp410"><td colspan="8"><div class="exp-body"><b>Casi:</b> 2769/26 (Dermatologia, 3 pz) · 2767/26 (Chir.Gen., 5 pz) · 2766/26 (Urologia, 14 pz)<br><b>Reagenti:</b> Formalina 10% <span class="mono">lot.FT-2026-0312</span> · Alcol 96° <span class="mono">lot.AL-2025-1108</span> · Paraffina <span class="mono">lot.PA-2026-0201</span><br><span class="note-warn">⚠ Temperatura picco +0.5°C alle 02:14 — verificare sensore</span></div></td></tr>
+
+              <tr class="expandable" data-id="pp409"><td class="exp-arrow">▸</td><td class="mono">P-0409</td><td class="mono">28/04</td><td>Notturno</td><td class="mono">NOT-12H</td><td>14</td><td>14</td><td><span class="badge bg-yellow">In corso</span></td></tr>
+              <tr class="exp-row hidden" id="exp-pp409"><td colspan="8"><div class="exp-body"><b>Casi:</b> 2768/26 (Endoscopia, 2 pz) · 2776/26 (Chir.Gen., 4 pz) · 2765/26 (Ginecologia, 8 pz)<br><b>Reagenti:</b> Formalina 10% <span class="mono">lot.FT-2026-0312</span> · Alcol 96° <span class="mono">lot.AL-2025-1108</span><br><span class="note-ok">Ciclo in esecuzione — avvio ore 22:00</span></div></td></tr>
+
+              <tr class="expandable" data-id="pp408"><td class="exp-arrow">▸</td><td class="mono">P-0408</td><td class="mono">27/04</td><td>Standard</td><td class="mono">STD-8H</td><td>10</td><td>10</td><td><span class="badge bg-green">Completato</span></td></tr>
+              <tr class="exp-row hidden" id="exp-pp408"><td colspan="8"><div class="exp-body"><b>Casi:</b> 2764/26 (Chir.Gen., 8 pz) · 2763/26 (Dermatologia, 2 pz)<br><b>Reagenti:</b> Formalina 10% <span class="mono">lot.FT-2026-0299 sc.08/2026</span> · Alcol 96° <span class="mono">lot.AL-2025-1108</span> · Xilolo puro <span class="mono">lot.XI-2025-0904</span><br><span class="note-ok">Nessuna anomalia registrata</span></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div><!-- /processatore -->
+
   </main>
 
   <!-- PAGINE PLACEHOLDER -->
@@ -734,6 +787,21 @@ document.querySelectorAll('.expandable').forEach(row=>{
 });
 
 // FIX [UI/UX]: pagine placeholder lazy — create al primo click
+// FIX [UI/UX]: ricerca inversa per ID caso
+function searchCaso(prefix){
+  const inp=document.getElementById(prefix+'-search');
+  const res=document.getElementById(prefix+'-search-result');
+  if(!inp||!res)return;
+  const q=(inp.value||'').trim();
+  if(!q){res.style.display='none';return;}
+  res.style.display='block';
+  res.innerHTML=`<b>Caso ${q}</b> — trovato nel ciclo <span class="mono">P-0408</span> (27/04/2026)<br>
+    <b>Reagenti utilizzati:</b><br>
+    · Formalina tamponata 10% — <span class="mono">lot.FT-2026-0299</span> · sc. ago 2026 (Epredia)<br>
+    · Alcol 96° denaturato — <span class="mono">lot.AL-2025-1108</span> · sc. nov 2027 (LabFor)<br>
+    · Xilolo puro — <span class="mono">lot.XI-2025-0904</span> · sc. set 2027 (Roche)`;
+}
+
 // Viste statiche — non creare placeholder
 const staticViews=new Set(['home','campioni','processatore','coloratore','inventario','ordini','allerte','rifiuti','report','movimenti','arch-ordini','schede']);
 
