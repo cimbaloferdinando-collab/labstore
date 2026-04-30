@@ -410,6 +410,18 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
     </div><!-- /view-home -->
   </main>
 
+  <!-- PAGINE PLACEHOLDER -->
+  <template id="tpl-placeholder">
+    <div style="max-width:600px;margin:60px auto;text-align:center;padding:0 24px">
+      <div style="font-size:48px;margin-bottom:16px" class="ph-icon"></div>
+      <div style="font-family:'Libre Baskerville',serif;font-size:24px;font-weight:700;color:var(--accent);margin-bottom:8px" class="ph-title"></div>
+      <div style="color:var(--text3);font-size:14px;margin-bottom:28px" class="ph-desc"></div>
+      <div style="display:inline-flex;align-items:center;gap:6px;padding:6px 16px;background:var(--blue-bg);border:1px solid var(--blue-bd);border-radius:var(--r);color:var(--blue);font-size:12px;font-weight:500">
+        🚧 Sezione in costruzione — disponibile nella versione completa
+      </div>
+    </div>
+  </template>
+
 </div>
 <script>
 function updateClock(){
@@ -634,13 +646,46 @@ document.querySelectorAll('.expandable').forEach(row=>{
   });
 });
 
+// FIX [UI/UX]: pagine placeholder lazy — create al primo click
+const phConfig={
+  campioni:    {icon:'🧬',title:'Campioni',desc:'Registrazione e tracciabilità campioni: Istologia, Citologia, PAP test, PAP privato.'},
+  processatore:{icon:'⚗️',title:'Processatore',desc:'Cicli processatore tissutale con tracciabilità reagenti e ricerca inversa per ID caso.'},
+  coloratore:  {icon:'🎨',title:'Coloratore',desc:'Cicli coloratore automatico H&E, PAS, Giemsa con tracciabilità lotti reagenti.'},
+  inventario:  {icon:'📦',title:'Inventario',desc:'Gestione prodotti: carico/scarico, scadenze, scorte minime, DDT e barcode GS1-128.'},
+  movimenti:   {icon:'↕️',title:'Movimenti',desc:'Storico cronologico di tutti i movimenti carico e scarico del magazzino.'},
+  allerte:     {icon:'🚨',title:'Allerte',desc:'Prodotti esauriti, sotto scorta minima o in scadenza. Ordina direttamente dalle allerte.'},
+  ordini:      {icon:'🛒',title:'Ordini',desc:'Ciclo ordini a fornitori (Epredia, Bio Optica, Roche, LabFor) con ricezione DDT e carico automatico.'},
+  'arch-ordini':{icon:'🗂️',title:'Archivio Ordini',desc:'Storico ordini completati con DDT e ricezioni per fornitore e anno.'},
+  schede:      {icon:'📋',title:'Schede Tecniche',desc:'Catalogo schede tecniche (TDS) e schede sicurezza (SDS) per fornitore.'},
+  rifiuti:     {icon:'🗑️',title:'Rifiuti',desc:'Gestione contenitori per codice CER: 180103*, 150110*, 150202*, 180106*. Storico smaltimenti.'},
+  report:      {icon:'📊',title:'Report',desc:'Report mensile: campioni lavorati, consumo reagenti, rifiuti, ordini. Esportabile in PDF.'},
+};
+
+function getOrCreateView(viewId){
+  let el=document.querySelector(`[data-view="${viewId}"].view`);
+  if(!el){
+    el=document.createElement('div');
+    el.className='view';el.setAttribute('data-view',viewId);
+    const cfg=phConfig[viewId]||{icon:'📄',title:viewId,desc:'Sezione disponibile a breve.'};
+    el.innerHTML=`<div style="max-width:600px;margin:60px auto;text-align:center;padding:0 24px">
+      <div style="font-size:48px;margin-bottom:16px">${cfg.icon}</div>
+      <div style="font-family:'Libre Baskerville',serif;font-size:24px;font-weight:700;color:var(--accent);margin-bottom:8px">${cfg.title}</div>
+      <div style="color:var(--text3);font-size:14px;margin-bottom:28px">${cfg.desc}</div>
+      <div style="display:inline-flex;align-items:center;gap:6px;padding:6px 16px;background:var(--blue-bg);border:1px solid var(--blue-bd);border-radius:var(--r);color:var(--blue);font-size:12px;font-weight:500">
+        🚧 Sezione in costruzione — disponibile nella versione completa
+      </div>
+    </div>`;
+    document.getElementById('main').appendChild(el);
+  }
+  return el;
+}
+
 document.querySelectorAll('.rail-item[data-view]').forEach(r=>{
   r.addEventListener('click',()=>{
     document.querySelectorAll('.rail-item').forEach(x=>x.classList.remove('active'));
     r.classList.add('active');
     document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
-    const t=document.querySelector(`[data-view="${r.dataset.view}"].view`);
-    if(t)t.classList.add('active');
+    getOrCreateView(r.dataset.view).classList.add('active');
   });
 });
 </script>
