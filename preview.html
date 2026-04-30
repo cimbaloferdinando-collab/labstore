@@ -208,6 +208,11 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
 .search-inp{padding:6px 10px 6px 28px;border:1.5px solid var(--border2);border-radius:var(--r-sm);font-size:12px;background:var(--surface);color:var(--text);outline:none;width:200px;font-family:'DM Sans',sans-serif}
 .search-inp:focus{border-color:var(--accent2);box-shadow:0 0 0 3px rgba(37,99,235,.10)}
 
+/* ORDINI */
+.ord-card{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r);padding:12px 14px;cursor:pointer;transition:border-color .13s,box-shadow .13s}
+.ord-card:hover{border-color:var(--accent2);box-shadow:var(--sh-sm)}
+.ord-card.active-ord{border-color:var(--accent2);box-shadow:0 0 0 3px rgba(37,99,235,.12)}
+
 /* RESPONSIVE */
 @media(max-width:900px){.main{padding:14px}}
 @media(max-width:700px){.app{grid-template-columns:0 1fr}.rail{display:none}}
@@ -671,6 +676,89 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
         </div>
       </div>
     </div><!-- /inventario -->
+
+    <!-- ══ ORDINI ══ -->
+    <div class="view" data-view="ordini">
+      <div class="pg-hdr">
+        <div class="pg-title">Ordini</div>
+        <button class="hbtn2 primary">＋ Nuovo ordine</button>
+      </div>
+      <div class="filter-bar" style="margin-bottom:14px">
+        <button class="chip active" onclick="filterChip(this,'ord')">Tutti</button>
+        <button class="chip" onclick="filterChip(this,'ord')">Bozza</button>
+        <button class="chip" onclick="filterChip(this,'ord')">Inviato</button>
+        <button class="chip" onclick="filterChip(this,'ord')">Parziale</button>
+        <button class="chip" onclick="filterChip(this,'ord')">Ricevuto</button>
+      </div>
+
+      <div style="display:grid;grid-template-columns:340px 1fr;gap:14px;align-items:start">
+
+        <!-- lista ordini -->
+        <div style="display:flex;flex-direction:column;gap:8px">
+
+          <div class="ord-card active-ord" onclick="showOrdine('ord1')">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+              <span class="mono" style="font-weight:700;color:var(--accent)">3/BIO/2026</span>
+              <span class="badge bg-yellow">Inviato</span>
+            </div>
+            <div style="font-size:12px;color:var(--text2);margin-bottom:2px">Bio Optica — 3 prodotti · 650 pz</div>
+            <div style="font-size:10px;color:var(--text3);font-family:'DM Mono',monospace;margin-bottom:8px">Inviato 24/04/2026</div>
+            <div style="height:4px;background:var(--border);border-radius:99px;overflow:hidden"><div style="width:0%;height:100%;background:var(--blue);border-radius:99px"></div></div>
+            <div style="font-size:10px;color:var(--text3);margin-top:3px;text-align:right">0% ricevuto</div>
+          </div>
+
+          <div class="ord-card" onclick="showOrdine('ord2')">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+              <span class="mono" style="font-weight:700;color:var(--accent)">4/EPR/2026</span>
+              <span class="badge bg-orange">Parziale</span>
+            </div>
+            <div style="font-size:12px;color:var(--text2);margin-bottom:2px">Epredia — 4 prodotti · 890 pz</div>
+            <div style="font-size:10px;color:var(--text3);font-family:'DM Mono',monospace;margin-bottom:8px">Inviato 26/04/2026 · DDT 88412</div>
+            <div style="height:4px;background:var(--border);border-radius:99px;overflow:hidden"><div style="width:55%;height:100%;background:var(--orange);border-radius:99px"></div></div>
+            <div style="font-size:10px;color:var(--text3);margin-top:3px;text-align:right">55% ricevuto</div>
+          </div>
+
+          <div class="ord-card" onclick="showOrdine('ord3')">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+              <span class="mono" style="font-weight:700;color:var(--accent)">5/ROC/2026</span>
+              <span class="badge bg-blue">Bozza</span>
+            </div>
+            <div style="font-size:12px;color:var(--text2);margin-bottom:2px">Roche — 2 prodotti · 8 pz</div>
+            <div style="font-size:10px;color:var(--text3);font-family:'DM Mono',monospace;margin-bottom:8px">Creato 28/04/2026</div>
+            <div style="height:4px;background:var(--border);border-radius:99px;overflow:hidden"><div style="width:0%;height:100%;background:var(--blue);border-radius:99px"></div></div>
+            <div style="font-size:10px;color:var(--text3);margin-top:3px;text-align:right">Bozza — non inviato</div>
+          </div>
+
+        </div>
+
+        <!-- pannello dettaglio -->
+        <div class="card" id="ordine-detail">
+          <!-- hero % -->
+          <div style="padding:20px 20px 16px;border-bottom:1px solid var(--border);text-align:center">
+            <div style="font-size:10px;font-weight:700;letter-spacing:.10em;text-transform:uppercase;color:var(--text3);margin-bottom:6px">3/BIO/2026 · Bio Optica · Inviato 24/04/2026</div>
+            <div style="font-family:'Libre Baskerville',serif;font-size:48px;font-weight:700;color:var(--blue);line-height:1">0%</div>
+            <div style="font-size:12px;color:var(--text3);margin-bottom:10px">0 / 650 pz ricevuti</div>
+            <div style="height:8px;background:var(--border);border-radius:99px;overflow:hidden;max-width:300px;margin:0 auto"><div style="width:0%;height:100%;background:var(--blue);border-radius:99px"></div></div>
+            <div style="display:flex;gap:8px;justify-content:center;margin-top:14px">
+              <button class="hbtn2 primary">📦 Registra ricezione</button>
+              <button class="hbtn2">↺ Reset</button>
+            </div>
+          </div>
+          <!-- righe ordine -->
+          <div style="overflow-x:auto">
+            <table class="tbl">
+              <thead><tr><th>Prodotto</th><th>Qtà ord.</th><th>Qtà ric.</th><th>%</th><th>DDT</th></tr></thead>
+              <tbody>
+                <tr><td>Vetrini SuperFrost Plus</td><td>500</td><td>0</td><td><div style="display:flex;align-items:center;gap:6px"><div style="width:60px;height:4px;background:var(--border);border-radius:99px;overflow:hidden"><div style="width:0%;height:100%;background:var(--blue);border-radius:99px"></div></div><span class="mono" style="font-size:10px">0%</span></div></td><td>—</td></tr>
+                <tr><td>Cassette bioptiche std</td><td>100</td><td>0</td><td><div style="display:flex;align-items:center;gap:6px"><div style="width:60px;height:4px;background:var(--border);border-radius:99px;overflow:hidden"><div style="width:0%;height:100%;background:var(--blue);border-radius:99px"></div></div><span class="mono" style="font-size:10px">0%</span></div></td><td>—</td></tr>
+                <tr><td>Portavetrini 100 posti</td><td>50</td><td>0</td><td><div style="display:flex;align-items:center;gap:6px"><div style="width:60px;height:4px;background:var(--border);border-radius:99px;overflow:hidden"><div style="width:0%;height:100%;background:var(--blue);border-radius:99px"></div></div><span class="mono" style="font-size:10px">0%</span></div></td><td>—</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </div><!-- /ordini -->
 
   </main>
 
