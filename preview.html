@@ -332,6 +332,50 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
 
       </div><!-- /storico cicli -->
 
+      <!-- GRAFICI CAMPIONI -->
+      <div style="margin-bottom:8px;display:flex;align-items:center;gap:10px">
+        <div style="font-family:'Libre Baskerville',serif;font-size:16px;font-weight:700;color:var(--accent)">Statistiche</div>
+        <div style="flex:1;height:1px;background:var(--border)"></div>
+        <span style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em">Campioni</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:18px">
+
+        <!-- 1. Andamento campioni — line chart SVG -->
+        <div class="card">
+          <div class="card-hdr"><span class="card-title">Andamento campioni</span><span class="card-sub">Set 2025 — Apr 2026</span></div>
+          <div style="padding:12px 14px">
+            <svg id="chart-line" width="100%" viewBox="0 0 280 140" style="overflow:visible"></svg>
+            <div style="display:flex;gap:12px;margin-top:8px;font-size:10px">
+              <span style="display:flex;align-items:center;gap:4px"><span style="width:12px;height:2px;background:#2563eb;display:inline-block;border-radius:1px"></span>Istologia</span>
+              <span style="display:flex;align-items:center;gap:4px"><span style="width:12px;height:2px;background:#0891b2;display:inline-block;border-radius:1px"></span>Citologia</span>
+              <span style="display:flex;align-items:center;gap:4px"><span style="width:12px;height:2px;background:#7c3aed;display:inline-block;border-radius:1px"></span>PAP</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. Distribuzione tipi — donut SVG -->
+        <div class="card">
+          <div class="card-hdr"><span class="card-title">Distribuzione tipi</span><span class="card-sub">Aprile 2026</span></div>
+          <div style="padding:12px 14px;display:flex;align-items:center;gap:16px">
+            <svg id="chart-donut" width="110" height="110" viewBox="0 0 110 110" style="flex-shrink:0"></svg>
+            <div style="font-size:11px;display:flex;flex-direction:column;gap:6px" id="donut-legend"></div>
+          </div>
+        </div>
+
+        <!-- 3. Confronto mese — grouped bar SVG -->
+        <div class="card">
+          <div class="card-hdr"><span class="card-title">Confronto mensile</span><span class="card-sub">Apr vs Mar 2026</span></div>
+          <div style="padding:12px 14px">
+            <svg id="chart-bar" width="100%" viewBox="0 0 280 140" style="overflow:visible"></svg>
+            <div style="display:flex;gap:12px;margin-top:8px;font-size:10px">
+              <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;background:#2563eb;display:inline-block;border-radius:2px"></span>Apr 2026</span>
+              <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;background:#bfdbfe;display:inline-block;border-radius:2px"></span>Mar 2026</span>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /grafici campioni -->
+
     </div><!-- /view-home -->
   </main>
 
@@ -342,6 +386,119 @@ function updateClock(){
   const el=document.getElementById('live-time');if(el)el.textContent=hm;
 }
 updateClock();setInterval(updateClock,30000);
+
+// FIX [UI/UX]: grafici campioni SVG
+document.addEventListener('DOMContentLoaded',function(){
+
+  // Helper SVG
+  function svgEl(tag,attrs){
+    const el=document.createElementNS('http://www.w3.org/2000/svg',tag);
+    Object.entries(attrs).forEach(([k,v])=>el.setAttribute(k,v));
+    return el;
+  }
+  function svgText(parent,x,y,txt,attrs={}){
+    const el=svgEl('text',{x,y,'font-family':'DM Sans,sans-serif','font-size':'9',fill:'#6b7280',...attrs});
+    el.textContent=txt;parent.appendChild(el);
+  }
+
+  // 1. LINE CHART — andamento campioni
+  const lineData={
+    labels:['Set','Ott','Nov','Dic','Gen','Feb','Mar','Apr'],
+    isto:  [148,162,155,98,171,188,195,206],
+    cito:  [38, 42, 40, 28, 45, 49, 52, 53],
+    pap:   [18, 22, 20, 12, 24, 26, 25, 26]
+  };
+  const lsvg=document.getElementById('chart-line');
+  if(lsvg){
+    const W=280,H=120,PL=28,PR=8,PT=8,PB=20;
+    const max=220,iw=W-PL-PR,ih=H-PT-PB;
+    const xs=lineData.labels.map((_,i)=>PL+i*(iw/(lineData.labels.length-1)));
+    const ys=v=>PT+ih-(v/max)*ih;
+    // grid
+    [0,50,100,150,200].forEach(v=>{
+      const y=ys(v);
+      lsvg.appendChild(svgEl('line',{x1:PL,y1:y,x2:W-PR,y2:y,stroke:'#e2e8f0','stroke-width':'1'}));
+      svgText(lsvg,0,y+3,v,'text-anchor','start');
+    });
+    // labels asse X
+    lineData.labels.forEach((l,i)=>svgText(lsvg,xs[i],H-4,l,{'text-anchor':'middle'}));
+    // linee
+    const colors={isto:'#2563eb',cito:'#0891b2',pap:'#7c3aed'};
+    ['isto','cito','pap'].forEach(key=>{
+      const pts=lineData[key];
+      // area sfumata
+      const apts=pts.map((v,i)=>`${xs[i]},${ys(v)}`).join(' ');
+      const area=svgEl('polygon',{points:`${PL},${ys(0)} ${apts} ${xs[pts.length-1]},${ys(0)}`,fill:colors[key],opacity:'0.08'});
+      lsvg.appendChild(area);
+      // linea
+      const d='M '+pts.map((v,i)=>`${xs[i]},${ys(v)}`).join(' L ');
+      lsvg.appendChild(svgEl('path',{d,stroke:colors[key],'stroke-width':'2',fill:'none','stroke-linejoin':'round'}));
+      // punti
+      pts.forEach((v,i)=>lsvg.appendChild(svgEl('circle',{cx:xs[i],cy:ys(v),r:'3',fill:'#fff',stroke:colors[key],'stroke-width':'2'})));
+    });
+  }
+
+  // 2. DONUT
+  const donutData=[
+    {label:'Istologia',val:612,pct:'72%',color:'#2563eb'},
+    {label:'Citologia',val:158,pct:'19%',color:'#0891b2'},
+    {label:'PAP',val:77,pct:'9%',color:'#7c3aed'},
+    {label:'PAP priv.',val:0,pct:'0%',color:'#ea580c'}
+  ];
+  const dsvg=document.getElementById('chart-donut');
+  const leg=document.getElementById('donut-legend');
+  if(dsvg){
+    const cx=55,cy=55,R=42,r=28,total=847;
+    let startAngle=-Math.PI/2;
+    donutData.forEach(d=>{
+      const angle=(d.val/total)*2*Math.PI;
+      const x1=cx+R*Math.cos(startAngle),y1=cy+R*Math.sin(startAngle);
+      const x2=cx+R*Math.cos(startAngle+angle),y2=cy+R*Math.sin(startAngle+angle);
+      const x3=cx+r*Math.cos(startAngle+angle),y3=cy+r*Math.sin(startAngle+angle);
+      const x4=cx+r*Math.cos(startAngle),y4=cy+r*Math.sin(startAngle);
+      const lg=angle>Math.PI?1:0;
+      const path=svgEl('path',{d:`M${x1},${y1} A${R},${R} 0 ${lg},1 ${x2},${y2} L${x3},${y3} A${r},${r} 0 ${lg},0 ${x4},${y4} Z`,fill:d.color,opacity:'0.85'});
+      dsvg.appendChild(path);
+      startAngle+=angle;
+    });
+    // centro
+    const ct=svgEl('text',{x:cx,y:cy-4,'text-anchor':'middle','font-family':'Libre Baskerville,serif','font-size':'16','font-weight':'700',fill:'#0f172a'});
+    ct.textContent='847';dsvg.appendChild(ct);
+    const cs=svgEl('text',{x:cx,y:cy+10,'text-anchor':'middle','font-family':'DM Sans,sans-serif','font-size':'8',fill:'#6b7280'});
+    cs.textContent='totale';dsvg.appendChild(cs);
+  }
+  if(leg){
+    donutData.forEach(d=>{
+      const row=document.createElement('div');
+      row.style.cssText='display:flex;align-items:center;gap:6px';
+      row.innerHTML=`<span style="width:10px;height:10px;border-radius:2px;background:${d.color};display:inline-block;flex-shrink:0"></span><span style="color:#374151">${d.label}</span><span style="font-family:DM Mono,monospace;color:#6b7280;margin-left:auto">${d.pct}</span>`;
+      leg.appendChild(row);
+    });
+  }
+
+  // 3. GROUPED BAR — confronto mese
+  const barData={labels:['Istologia','Citologia','PAP','PAP priv.'],apr:[206,53,26,0],mar:[195,52,25,0]};
+  const bsvg=document.getElementById('chart-bar');
+  if(bsvg){
+    const W=280,H=120,PL=8,PR=8,PT=8,PB=28;
+    const max=240,iw=W-PL-PR,ih=H-PT-PB;
+    const n=barData.labels.length,gw=iw/n,bw=gw*0.35,gap=gw*0.05;
+    barData.labels.forEach((lbl,i)=>{
+      const gx=PL+i*gw;
+      const va=barData.apr[i],vm=barData.mar[i];
+      const ha=ih*(va/max),hm=ih*(vm/max);
+      bsvg.appendChild(svgEl('rect',{x:gx+gap,y:PT+ih-ha,width:bw,height:ha,fill:'#2563eb',rx:'2'}));
+      bsvg.appendChild(svgEl('rect',{x:gx+gap+bw+2,y:PT+ih-hm,width:bw,height:hm,fill:'#bfdbfe',rx:'2'}));
+      // label valore apr
+      if(va>0){const tv=svgEl('text',{x:gx+gap+bw/2,y:PT+ih-ha-3,'text-anchor':'middle','font-size':'8','font-family':'DM Mono,monospace',fill:'#2563eb'});tv.textContent=va;bsvg.appendChild(tv);}
+      // label asse X
+      svgText(bsvg,gx+gw/2,H-4,lbl,{'text-anchor':'middle'});
+    });
+    // linea base
+    bsvg.appendChild(svgEl('line',{x1:PL,y1:PT+ih,x2:W-PR,y2:PT+ih,stroke:'#e2e8f0','stroke-width':'1'}));
+  }
+
+});
 
 // FIX [UI/UX]: expand righe cicli
 document.querySelectorAll('.expandable').forEach(row=>{
