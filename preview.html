@@ -430,21 +430,16 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
         </div>
 
         <div class="card">
-          <div class="card-hdr"><span class="card-title">Coloratore</span><span class="card-sub">Ultimi 5 cicli</span><span class="card-lnk">storico →</span></div>
+          <div class="card-hdr"><span class="card-title">Coloratore</span><span class="card-sub">Ultimi 5 giorni</span><span class="card-lnk">storico →</span></div>
           <div style="overflow-x:auto">
-            <table class="tbl">
-              <thead><tr><th></th><th>ID</th><th>Data</th><th>Tipo</th><th>Ist.</th><th>Nad.</th><th>Stato</th></tr></thead>
+            <table class="tbl" style="font-size:10px">
+              <thead><tr><th>Data</th><th>EE Ist. cicli</th><th>EE Ist. vtr</th><th>EE Cit. cicli</th><th>EE Cit. vtr</th><th>PAP cicli</th><th>PAP vtr</th><th>Reagenti</th></tr></thead>
               <tbody>
-                <tr class="expandable" data-id="c387"><td class="exp-arrow">▸</td><td class="mono">C-0387</td><td class="mono">29/04</td><td>H&amp;E Ist.</td><td>18</td><td>0</td><td><span class="badge bg-green">Completato</span></td></tr>
-                <tr class="exp-row hidden" id="exp-c387"><td colspan="7"><div class="exp-body"><b>Casi:</b> 2764/26, 2765/26, 2766/26<br><b>Reagenti:</b> Ematossilina Mayer lot.EM-2025-0811 · Eosina Y lot.EO-2025-1204 · Xilolo lot.XI-2025-0904<br><span class="note-ok">Nessuna anomalia</span></div></td></tr>
-                <tr class="expandable" data-id="c386"><td class="exp-arrow">▸</td><td class="mono">C-0386</td><td class="mono">29/04</td><td>PAS</td><td>4</td><td>2</td><td><span class="badge bg-green">Completato</span></td></tr>
-                <tr class="exp-row hidden" id="exp-c386"><td colspan="7"><div class="exp-body"><b>Casi:</b> 2763/26 (PAP test, 4 ist.) + 2762/26 (Cito, 2 nad.)<br><b>Reagenti:</b> Acido Periodico lot.AP-2025-0615 · Reattivo Schiff lot.RS-2026-0103<br><span class="note-ok">Nessuna anomalia</span></div></td></tr>
-                <tr class="expandable" data-id="c385"><td class="exp-arrow">▸</td><td class="mono">C-0385</td><td class="mono">28/04</td><td>H&amp;E Ist.</td><td>22</td><td>0</td><td><span class="badge bg-green">Completato</span></td></tr>
-                <tr class="exp-row hidden" id="exp-c385"><td colspan="7"><div class="exp-body"><b>Casi:</b> 2759/26, 2760/26<br><b>Reagenti:</b> Ematossilina Mayer lot.EM-2025-0811 · Eosina Y lot.EO-2025-1204<br><span class="note-ok">Nessuna anomalia</span></div></td></tr>
-                <tr class="expandable" data-id="c384"><td class="exp-arrow">▸</td><td class="mono">C-0384</td><td class="mono">28/04</td><td>Giemsa</td><td>6</td><td>0</td><td><span class="badge bg-yellow">In corso</span></td></tr>
-                <tr class="exp-row hidden" id="exp-c384"><td colspan="7"><div class="exp-body"><b>Casi:</b> 2758/26 (Gastro, 6 ist.)<br><b>Reagenti:</b> Giemsa lot.GI-2025-1030 · Metanolo lot.ME-2025-0822<br><span class="note-ok">In elaborazione</span></div></td></tr>
-                <tr class="expandable" data-id="c383"><td class="exp-arrow">▸</td><td class="mono">C-0383</td><td class="mono">27/04</td><td>H&amp;E Cito</td><td>14</td><td>3</td><td><span class="badge bg-green">Completato</span></td></tr>
-                <tr class="exp-row hidden" id="exp-c383"><td colspan="7"><div class="exp-body"><b>Casi:</b> 2750/26 (Ginecol., 14 ist.) + BAL 2751/26 (Pneumol., 3 nad.)<br><b>Reagenti:</b> Ematossilina Mayer lot.EM-2025-0811 · Eosina Y lot.EO-2025-1204<br><span class="note-ok">Nessuna anomalia</span></div></td></tr>
+                <tr><td class="mono">29/04</td><td>2</td><td>24</td><td>1</td><td>6</td><td>0</td><td>0</td><td><span class="badge bg-green" style="font-size:8px">✅ Verif.</span></td></tr>
+                <tr><td class="mono">28/04</td><td>1</td><td>22</td><td>0</td><td>0</td><td>1</td><td>4</td><td><span class="badge bg-blue" style="font-size:8px">➕ Rabb.</span></td></tr>
+                <tr><td class="mono">27/04</td><td>1</td><td>17</td><td>1</td><td>8</td><td>0</td><td>0</td><td><span class="badge bg-green" style="font-size:8px">✅ Verif.</span></td></tr>
+                <tr><td class="mono">26/04</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td><span style="font-size:10px;color:var(--text3)">—</span></td></tr>
+                <tr><td class="mono">25/04</td><td>2</td><td>30</td><td>1</td><td>5</td><td>1</td><td>6</td><td><span class="badge bg-orange" style="font-size:8px">🔄 Sost.</span></td></tr>
               </tbody>
             </table>
           </div>
@@ -668,27 +663,20 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
         <button class="chip" onclick="filterChip(this,'col')">Giemsa</button>
       </div>
 
-      <!-- tabella cicli -->
+      <!-- storico giorni -->
       <div class="card">
-        <div class="card-hdr"><span class="card-title">Ultimi cicli coloratore</span><span class="card-sub">Clicca riga per dettaglio</span></div>
+        <div class="card-hdr"><span class="card-title">Storico per giorno</span><span class="card-sub">Ogni riga = un giorno lavorativo</span></div>
         <div style="overflow-x:auto">
           <table class="tbl">
-            <thead><tr><th></th><th>ID</th><th>Data</th><th>Programma</th><th>Ist.</th><th>Nad.</th><th>Tot.</th><th>Stato</th></tr></thead>
+            <thead><tr><th>Data</th><th>EE Ist. cicli</th><th>EE Ist. vtr</th><th>EE Cit. cicli</th><th>EE Cit. vtr</th><th>PAP cicli</th><th>PAP vtr</th><th>Stato reagenti</th></tr></thead>
             <tbody>
-              <tr class="expandable" data-id="cc387"><td class="exp-arrow">▸</td><td class="mono">C-0387</td><td class="mono">29/04</td><td><span class="badge bg-teal">H&amp;E Ist.</span></td><td>18</td><td>0</td><td>18</td><td><span class="badge bg-green">Completato</span></td></tr>
-              <tr class="exp-row hidden" id="exp-cc387"><td colspan="8"><div class="exp-body"><b>Casi:</b> 2773/26, 2774/26, 2771/26<br><b>Reagenti:</b> Ematossilina Mayer <span class="mono">lot.EM-2025-0811 sc.08/2027</span> · Eosina Y <span class="mono">lot.EO-2025-1204 sc.12/2027</span> · Alcol 96° <span class="mono">lot.AL-2025-1108</span> · Xilolo <span class="mono">lot.XI-2025-0904</span> · Montante sintetico <span class="mono">lot.MS-2026-0115</span><br><span class="note-ok">Nessuna anomalia</span></div></td></tr>
-
-              <tr class="expandable" data-id="cc386"><td class="exp-arrow">▸</td><td class="mono">C-0386</td><td class="mono">29/04</td><td><span class="badge bg-purple">H&amp;E Cito/PAP</span></td><td>4</td><td>2</td><td>6</td><td><span class="badge bg-green">Completato</span></td></tr>
-              <tr class="exp-row hidden" id="exp-cc386"><td colspan="8"><div class="exp-body"><b>Casi:</b> 2770/26 (PAP, 4 ist.) · 2774/26 (BAL, 2 nad.)<br><b>Reagenti:</b> Ematossilina Mayer <span class="mono">lot.EM-2025-0811</span> · Eosina Y <span class="mono">lot.EO-2025-1204</span> · Alcol 70° <span class="mono">lot.AL70-2026-0301</span><br><span class="note-ok">Nessuna anomalia</span></div></td></tr>
-
-              <tr class="expandable" data-id="cc385"><td class="exp-arrow">▸</td><td class="mono">C-0385</td><td class="mono">28/04</td><td><span class="badge bg-teal">H&amp;E Ist.</span></td><td>22</td><td>0</td><td>22</td><td><span class="badge bg-green">Completato</span></td></tr>
-              <tr class="exp-row hidden" id="exp-cc385"><td colspan="8"><div class="exp-body"><b>Casi:</b> 2769/26, 2767/26, 2766/26<br><b>Reagenti:</b> Ematossilina Mayer <span class="mono">lot.EM-2025-0811</span> · Eosina Y <span class="mono">lot.EO-2025-1204</span> · Xilolo <span class="mono">lot.XI-2025-0904</span><br><span class="note-ok">Nessuna anomalia</span></div></td></tr>
-
-              <tr class="expandable" data-id="cc384"><td class="exp-arrow">▸</td><td class="mono">C-0384</td><td class="mono">28/04</td><td><span class="badge bg-orange">Giemsa</span></td><td>6</td><td>0</td><td>6</td><td><span class="badge bg-yellow">In corso</span></td></tr>
-              <tr class="exp-row hidden" id="exp-cc384"><td colspan="8"><div class="exp-body"><b>Casi:</b> 2768/26 (Gastroenterol., 6 ist.)<br><b>Reagenti:</b> Giemsa <span class="mono">lot.GI-2025-1030 sc.10/2027</span> · Metanolo <span class="mono">lot.ME-2025-0822</span> · Buffer fosfato <span class="mono">lot.BF-2026-0201</span><br><span class="note-ok">Ciclo in esecuzione</span></div></td></tr>
-
-              <tr class="expandable" data-id="cc383"><td class="exp-arrow">▸</td><td class="mono">C-0383</td><td class="mono">27/04</td><td><span class="badge bg-teal">H&amp;E Ist.</span></td><td>14</td><td>3</td><td>17</td><td><span class="badge bg-green">Completato</span></td></tr>
-              <tr class="exp-row hidden" id="exp-cc383"><td colspan="8"><div class="exp-body"><b>Casi:</b> 2765/26 (Ginecol., 14 ist.) · BAL 2764/26 (Pneumol., 3 nad.)<br><b>Reagenti:</b> Ematossilina Mayer <span class="mono">lot.EM-2025-0811</span> · Eosina Y <span class="mono">lot.EO-2025-1204</span> · Alcol 96° <span class="mono">lot.AL-2025-1108</span><br><span class="note-ok">Nessuna anomalia</span></div></td></tr>
+              <tr><td class="mono">29/04/2026</td><td>2</td><td>24</td><td>1</td><td>6</td><td>0</td><td>0</td><td><span class="badge bg-green">✅ Verificato</span></td></tr>
+              <tr><td class="mono">28/04/2026</td><td>1</td><td>22</td><td>0</td><td>0</td><td>1</td><td>4</td><td><span class="badge bg-blue">➕ Rabboccato</span></td></tr>
+              <tr><td class="mono">27/04/2026</td><td>1</td><td>17</td><td>1</td><td>8</td><td>0</td><td>0</td><td><span class="badge bg-green">✅ Verificato</span></td></tr>
+              <tr style="color:var(--text3)"><td class="mono">26/04/2026</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td><span style="font-size:11px">—</span></td></tr>
+              <tr><td class="mono">25/04/2026</td><td>2</td><td>30</td><td>1</td><td>5</td><td>1</td><td>6</td><td><span class="badge bg-orange">🔄 Sostituito</span></td></tr>
+              <tr><td class="mono">24/04/2026</td><td>1</td><td>18</td><td>1</td><td>7</td><td>0</td><td>0</td><td><span class="badge bg-green">✅ Verificato</span></td></tr>
+              <tr><td class="mono">23/04/2026</td><td>2</td><td>26</td><td>0</td><td>0</td><td>1</td><td>5</td><td><span class="badge bg-blue">➕ Rabboccato</span></td></tr>
             </tbody>
           </table>
         </div>
