@@ -610,6 +610,68 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
       </div>
     </div><!-- /coloratore -->
 
+    <!-- ══ INVENTARIO ══ -->
+    <div class="view" data-view="inventario">
+      <div class="pg-hdr">
+        <div class="pg-title">Inventario</div>
+        <div style="display:flex;gap:6px">
+          <button class="hbtn2 ok">⬆ Carico</button>
+          <button class="hbtn2 warn">⬇ Scarico</button>
+          <button class="hbtn2">📷 DDT</button>
+          <button class="hbtn2 primary">＋ Prodotto</button>
+        </div>
+      </div>
+
+      <!-- filtri categoria -->
+      <div style="font-size:10px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--text3);margin-bottom:5px">Categoria</div>
+      <div class="filter-bar">
+        <button class="chip active" onclick="filterChip(this,'inv')">Tutti</button>
+        <button class="chip" onclick="filterChip(this,'inv')">Reagenti</button>
+        <button class="chip" onclick="filterChip(this,'inv')">Coloranti</button>
+        <button class="chip" onclick="filterChip(this,'inv')">Consumabili</button>
+        <button class="chip" onclick="filterChip(this,'inv')">Vetreria</button>
+        <button class="chip" onclick="filterChip(this,'inv')">Anticorpi IHC</button>
+      </div>
+      <!-- filtri fornitore -->
+      <div style="font-size:10px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--text3);margin-bottom:5px">Fornitore</div>
+      <div class="filter-bar" style="margin-bottom:14px">
+        <button class="chip active" onclick="filterChip(this,'inv-f')">Tutti</button>
+        <button class="chip" onclick="filterChip(this,'inv-f')">Epredia</button>
+        <button class="chip" onclick="filterChip(this,'inv-f')">Bio Optica</button>
+        <button class="chip" onclick="filterChip(this,'inv-f')">Roche</button>
+        <button class="chip" onclick="filterChip(this,'inv-f')">LabFor</button>
+        <div style="flex:1"></div>
+        <input class="search-inp" placeholder="Cerca prodotto…">
+      </div>
+
+      <!-- legenda colori -->
+      <div style="display:flex;gap:12px;margin-bottom:10px;font-size:11px">
+        <span style="display:flex;align-items:center;gap:5px"><span style="width:12px;height:12px;background:var(--red-bg);border:1px solid var(--red-bd);border-radius:2px;display:inline-block"></span>Esaurito</span>
+        <span style="display:flex;align-items:center;gap:5px"><span style="width:12px;height:12px;background:var(--yellow-bg);border:1px solid var(--yellow-bd);border-radius:2px;display:inline-block"></span>Sotto scorta min.</span>
+        <span style="display:flex;align-items:center;gap:5px"><span style="width:12px;height:12px;background:var(--orange-bg);border:1px solid var(--orange-bd);border-radius:2px;display:inline-block"></span>In scadenza (&lt;30gg)</span>
+      </div>
+
+      <div class="card">
+        <div style="overflow-x:auto">
+          <table class="tbl">
+            <thead><tr><th>Prodotto</th><th>Codice</th><th>Fornitore</th><th>Lotto</th><th>Scadenza</th><th>Giacenza</th><th>Sc.Min.</th><th>U.M.</th><th>Stato</th><th></th></tr></thead>
+            <tbody>
+              <tr style="background:var(--red-bg)"><td>Xilolo puro</td><td class="mono">XI-001</td><td>Roche</td><td class="mono">XI-2025-0904</td><td class="mono">09/2027</td><td style="font-weight:700;color:var(--red)">2</td><td>5</td><td>L</td><td><span class="badge bg-red">Critico</span></td><td class="act-cell"><button class="act-btn">✏️</button></td></tr>
+              <tr style="background:var(--red-bg)"><td>Anticorpo CD3</td><td class="mono">AC-CD3</td><td>Roche</td><td class="mono">CD3-2024-0430</td><td class="mono" style="color:var(--red);font-weight:700">30/04/26</td><td>1</td><td>2</td><td>fl</td><td><span class="badge bg-red">Scade oggi</span></td><td class="act-cell"><button class="act-btn">✏️</button></td></tr>
+              <tr style="background:var(--yellow-bg)"><td>Alcol 96° denaturato</td><td class="mono">AL-001</td><td>LabFor</td><td class="mono">AL-2025-1108</td><td class="mono">11/2027</td><td style="color:var(--yellow);font-weight:700">3</td><td>8</td><td>L</td><td><span class="badge bg-yellow">Scorta bassa</span></td><td class="act-cell"><button class="act-btn">✏️</button></td></tr>
+              <tr style="background:var(--orange-bg)"><td>Acido Periodico</td><td class="mono">AP-001</td><td>Roche</td><td class="mono">AP-2025-0615</td><td class="mono" style="color:var(--orange);font-weight:700">15/05/26</td><td>80</td><td>50</td><td>ml</td><td><span class="badge bg-orange">Scade 15gg</span></td><td class="act-cell"><button class="act-btn">✏️</button></td></tr>
+              <tr><td>Formalina tamponata 10%</td><td class="mono">FT-001</td><td>Epredia</td><td class="mono">FT-2026-0312</td><td class="mono">12/2026</td><td>18</td><td>10</td><td>L</td><td><span class="badge bg-green">OK</span></td><td class="act-cell"><button class="act-btn">✏️</button></td></tr>
+              <tr><td>Vetrini SuperFrost Plus</td><td class="mono">VT-SF+</td><td>Bio Optica</td><td class="mono">SF-2026-0108</td><td class="mono">01/2028</td><td>420</td><td>200</td><td>pz</td><td><span class="badge bg-green">OK</span></td><td class="act-cell"><button class="act-btn">✏️</button></td></tr>
+              <tr style="background:var(--yellow-bg)"><td>Cassette bioptiche std</td><td class="mono">CB-STD</td><td>Epredia</td><td class="mono">CB-2026-0201</td><td class="mono">02/2028</td><td style="color:var(--yellow);font-weight:700">120</td><td>300</td><td>pz</td><td><span class="badge bg-yellow">Scorta bassa</span></td><td class="act-cell"><button class="act-btn">✏️</button></td></tr>
+              <tr><td>Ematossilina Mayer</td><td class="mono">EM-001</td><td>Bio Optica</td><td class="mono">EM-2025-0811</td><td class="mono">08/2027</td><td>2.4</td><td>1</td><td>L</td><td><span class="badge bg-green">OK</span></td><td class="act-cell"><button class="act-btn">✏️</button></td></tr>
+              <tr><td>Paraffina istologica</td><td class="mono">PA-001</td><td>Epredia</td><td class="mono">PA-2026-0201</td><td class="mono">02/2028</td><td>1.2</td><td>0.5</td><td>kg</td><td><span class="badge bg-green">OK</span></td><td class="act-cell"><button class="act-btn">✏️</button></td></tr>
+              <tr><td>Eosina Y soluzione</td><td class="mono">EO-001</td><td>Bio Optica</td><td class="mono">EO-2025-1204</td><td class="mono">12/2027</td><td>1.8</td><td>1</td><td>L</td><td><span class="badge bg-green">OK</span></td><td class="act-cell"><button class="act-btn">✏️</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div><!-- /inventario -->
+
   </main>
 
   <!-- PAGINE PLACEHOLDER -->
