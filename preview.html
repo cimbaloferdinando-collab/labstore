@@ -213,6 +213,18 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
 .ord-card:hover{border-color:var(--accent2);box-shadow:var(--sh-sm)}
 .ord-card.active-ord{border-color:var(--accent2);box-shadow:0 0 0 3px rgba(37,99,235,.12)}
 
+/* ALLERTE */
+.alert-row{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:12px 14px;display:flex;align-items:center;gap:10px;box-shadow:var(--sh-sm)}
+.alert-prod{font-size:13px;font-weight:600;color:var(--text);margin-bottom:2px}
+.alert-meta{font-size:11px;color:var(--text3)}
+
+/* RIFIUTI BIG CARD */
+.cer-big{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;box-shadow:var(--sh-sm)}
+.cer-big.red{border-top:3px solid var(--red)}.cer-big.yellow{border-top:3px solid var(--yellow)}.cer-big.gray{border-top:3px solid var(--text3)}
+.cer-code{font-family:'DM Mono',monospace;font-size:16px;font-weight:700;color:var(--accent);margin-bottom:4px}
+.cer-desc{font-size:11px;color:var(--text3);margin-bottom:10px}
+.cer-counts{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--text2)}
+
 /* RESPONSIVE */
 @media(max-width:900px){.main{padding:14px}}
 @media(max-width:700px){.app{grid-template-columns:0 1fr}.rail{display:none}}
@@ -759,6 +771,87 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
 
       </div>
     </div><!-- /ordini -->
+
+    <!-- ══ ALLERTE ══ -->
+    <div class="view" data-view="allerte">
+      <div class="pg-hdr">
+        <div class="pg-title">Allerte</div>
+        <button class="hbtn2 danger">🚨 Ordina da allerte</button>
+      </div>
+      <div class="filter-bar" style="margin-bottom:14px">
+        <button class="chip active" onclick="filterChip(this,'all')">Tutti <span style="background:var(--red);color:#fff;border-radius:999px;padding:0 5px;font-size:9px;margin-left:3px">7</span></button>
+        <button class="chip" onclick="filterChip(this,'all')">Esauriti</button>
+        <button class="chip" onclick="filterChip(this,'all')">Scorta bassa</button>
+        <button class="chip" onclick="filterChip(this,'all')">Scaduti</button>
+        <button class="chip" onclick="filterChip(this,'all')">In scadenza</button>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div class="alert-row" style="border-left:4px solid var(--red)">
+          <div style="flex:1"><div class="alert-prod">Xilolo puro</div><div class="alert-meta">Giacenza: <b>2 L</b> · Scorta min: 5 L · Roche · lot.XI-2025-0904</div></div>
+          <span class="badge bg-red">Critico</span>
+          <button class="hbtn2 danger" style="font-size:11px">🛒 Ordina</button>
+        </div>
+        <div class="alert-row" style="border-left:4px solid var(--red)">
+          <div style="flex:1"><div class="alert-prod">Anticorpo CD3</div><div class="alert-meta">Scade: <b>30/04/2026</b> (oggi) · Roche · lot.CD3-2024-0430</div></div>
+          <span class="badge bg-red">Scade oggi</span>
+          <button class="hbtn2 danger" style="font-size:11px">🛒 Ordina</button>
+        </div>
+        <div class="alert-row" style="border-left:4px solid var(--yellow)">
+          <div style="flex:1"><div class="alert-prod">Alcol 96° denaturato</div><div class="alert-meta">Giacenza: <b>3 L</b> · Scorta min: 8 L · LabFor · lot.AL-2025-1108</div></div>
+          <span class="badge bg-yellow">Scorta bassa</span>
+          <button class="hbtn2 warn" style="font-size:11px">🛒 Ordina</button>
+        </div>
+        <div class="alert-row" style="border-left:4px solid var(--orange)">
+          <div style="flex:1"><div class="alert-prod">Acido Periodico</div><div class="alert-meta">Scade: <b>15/05/2026</b> (15 gg) · Roche · lot.AP-2025-0615</div></div>
+          <span class="badge bg-orange">In scadenza</span>
+          <button class="hbtn2" style="font-size:11px">🛒 Ordina</button>
+        </div>
+        <div class="alert-row" style="border-left:4px solid var(--yellow)">
+          <div style="flex:1"><div class="alert-prod">Cassette bioptiche std</div><div class="alert-meta">Giacenza: <b>120 pz</b> · Scorta min: 300 pz · Epredia · lot.CB-2026-0201</div></div>
+          <span class="badge bg-yellow">Scorta bassa</span>
+          <button class="hbtn2 warn" style="font-size:11px">🛒 Ordina</button>
+        </div>
+        <div class="alert-row" style="border-left:4px solid var(--orange)">
+          <div style="flex:1"><div class="alert-prod">Anticorpo Ki-67</div><div class="alert-meta">Scade: <b>20/05/2026</b> (20 gg) · Roche · lot.KI67-2024-0520</div></div>
+          <span class="badge bg-orange">In scadenza</span>
+          <button class="hbtn2" style="font-size:11px">🛒 Ordina</button>
+        </div>
+        <div class="alert-row" style="border-left:4px solid var(--yellow)">
+          <div style="flex:1"><div class="alert-prod">Paraffina istologica</div><div class="alert-meta">Giacenza: <b>1.2 kg</b> · Scorta min: 2 kg · Epredia · lot.PA-2026-0201</div></div>
+          <span class="badge bg-yellow">Scorta bassa</span>
+          <button class="hbtn2 warn" style="font-size:11px">🛒 Ordina</button>
+        </div>
+      </div>
+    </div><!-- /allerte -->
+
+    <!-- ══ RIFIUTI ══ -->
+    <div class="view" data-view="rifiuti">
+      <div class="pg-hdr">
+        <div class="pg-title">Rifiuti</div>
+        <div style="display:flex;gap:6px">
+          <button class="hbtn2 danger">＋ Pieno</button>
+          <button class="hbtn2">↺ Aggiorna vuoti</button>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px">
+        <div class="cer-big red"><div class="cer-code">180103*</div><div class="cer-desc">Rifiuti a rischio infettivo</div><div class="cer-counts"><span>🔴 <b>2</b> pieni</span><span>⚪ <b>1</b> vuoto</span></div><div style="display:flex;gap:6px;margin-top:10px"><button class="hbtn2" style="flex:1;font-size:11px">＋ Pieno</button><button class="hbtn2" style="flex:1;font-size:11px">Svuota</button></div></div>
+        <div class="cer-big yellow"><div class="cer-code">150110*</div><div class="cer-desc">Imballaggi contaminati</div><div class="cer-counts"><span>🟡 <b>1</b> pieno</span><span>⚪ <b>2</b> vuoti</span></div><div style="display:flex;gap:6px;margin-top:10px"><button class="hbtn2" style="flex:1;font-size:11px">＋ Pieno</button><button class="hbtn2" style="flex:1;font-size:11px">Svuota</button></div></div>
+        <div class="cer-big gray"><div class="cer-code">150202*</div><div class="cer-desc">Assorbenti, filtranti</div><div class="cer-counts"><span>⚪ <b>0</b> pieni</span><span>⚪ <b>3</b> vuoti</span></div><div style="display:flex;gap:6px;margin-top:10px"><button class="hbtn2" style="flex:1;font-size:11px">＋ Pieno</button><button class="hbtn2" style="flex:1;font-size:11px">Svuota</button></div></div>
+        <div class="cer-big yellow"><div class="cer-code">180106*</div><div class="cer-desc">Sostanze chimiche pericolose</div><div class="cer-counts"><span>🟡 <b>1</b> pieno</span><span>⚪ <b>1</b> vuoto</span></div><div style="display:flex;gap:6px;margin-top:10px"><button class="hbtn2" style="flex:1;font-size:11px">＋ Pieno</button><button class="hbtn2" style="flex:1;font-size:11px">Svuota</button></div></div>
+      </div>
+      <div class="card">
+        <div class="card-hdr"><span class="card-title">Storico smaltimenti</span><button class="hbtn2" style="font-size:11px">Svuota log</button></div>
+        <table class="tbl">
+          <thead><tr><th>Data</th><th>CER</th><th>N° bidoni</th><th>Ditta</th><th>Formulario</th></tr></thead>
+          <tbody>
+            <tr><td class="mono">28/03/2026</td><td class="mono">180103*</td><td>3</td><td>Ecolab Servizi</td><td class="mono">FIR-2026-0328</td></tr>
+            <tr><td class="mono">28/03/2026</td><td class="mono">150110*</td><td>2</td><td>Ecolab Servizi</td><td class="mono">FIR-2026-0328</td></tr>
+            <tr><td class="mono">14/03/2026</td><td class="mono">180106*</td><td>1</td><td>Ecolab Servizi</td><td class="mono">FIR-2026-0314</td></tr>
+            <tr><td class="mono">28/02/2026</td><td class="mono">180103*</td><td>4</td><td>Ecolab Servizi</td><td class="mono">FIR-2026-0228</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div><!-- /rifiuti -->
 
   </main>
 
