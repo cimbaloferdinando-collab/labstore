@@ -1278,7 +1278,7 @@ function updateClock(){
 }
 updateClock();setInterval(updateClock,30000);
 
-// FIX [UI/UX]: ricerca inversa per ID caso
+// FIX [UI/UX]: ricerca inversa per ID caso (processatore e coloratore)
 function searchCaso(prefix){
   const inp=document.getElementById(prefix+'-search');
   const res=document.getElementById(prefix+'-search-result');
@@ -1286,11 +1286,25 @@ function searchCaso(prefix){
   const q=(inp.value||'').trim();
   if(!q){res.style.display='none';return;}
   res.style.display='block';
-  res.innerHTML=`<b>Caso ${q}</b> — trovato nel ciclo <span class="mono">P-0408</span> (27/04/2026)<br>
-    <b>Reagenti utilizzati:</b><br>
-    · Formalina tamponata 10% — <span class="mono">lot.FT-2026-0299</span> · sc. ago 2026 (Epredia)<br>
-    · Alcol 96° denaturato — <span class="mono">lot.AL-2025-1108</span> · sc. nov 2027 (LabFor)<br>
-    · Xilolo puro — <span class="mono">lot.XI-2025-0904</span> · sc. set 2027 (Roche)`;
+  if(prefix==='proc'||prefix==='proc2'){
+    res.innerHTML=`<b>Caso ${q}</b> — trovato nel ciclo <span class="mono">P-0408</span> del 27/04/2026<br>
+      <b>Range processato:</b> 2750/26 → 2754/26 · 10 cassette<br>
+      <b>Reagenti processatore:</b><br>
+      · Formalina tamponata 10% — <span class="mono">lot.FT-2026-0299</span> · sc. ago 2026 (Epredia)<br>
+      · Alcol 96° denaturato — <span class="mono">lot.AL-2025-1108</span> · sc. nov 2027 (LabFor)<br>
+      · Xilolo puro — <span class="mono">lot.XI-2025-0904</span> · sc. set 2027 (Roche)`;
+  } else {
+    res.innerHTML=`<b>Caso ${q}</b> — trovato nelle colorazioni del 27/04/2026<br>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px">
+        <div style="padding:8px 10px;background:#fff;border:1px solid var(--blue-bd,#bfdbfe);border-radius:6px">
+          <div style="font-size:11px;font-weight:700;color:var(--blue);margin-bottom:4px">H&amp;E Ist. — C-0383 · 27/04/2026</div>
+          <div style="font-size:11px">· Ematossilina Mayer <span class="mono" style="color:var(--accent)">lot.EM-2025-0811</span> sc. 08/2027 (Bio Optica)</div>
+          <div style="font-size:11px">· Eosina Y <span class="mono" style="color:var(--accent)">lot.EO-2025-1204</span> sc. 12/2027 (Bio Optica)</div>
+          <div style="font-size:11px">· Alcol 96° <span class="mono" style="color:var(--accent)">lot.AL-2025-1108</span> sc. 11/2027 (LabFor)</div>
+          <div style="font-size:11px">· Xilolo <span class="mono" style="color:var(--accent)">lot.XI-2025-0904</span> sc. 09/2027 (Roche)</div>
+        </div>
+      </div>`;
+  }
 }
 
 // FIX [UI/UX]: filtri chip
