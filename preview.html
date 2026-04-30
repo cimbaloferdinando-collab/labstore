@@ -1018,25 +1018,55 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
 
 </div>
 <script>
+// Helper SVG — globali per essere accessibili in tutto lo script
+function svgEl(tag,attrs){
+  const el=document.createElementNS('http://www.w3.org/2000/svg',tag);
+  Object.entries(attrs).forEach(([k,v])=>el.setAttribute(k,v));
+  return el;
+}
+function svgText(parent,x,y,txt,attrs={}){
+  const el=svgEl('text',{x,y,'font-family':'DM Sans,sans-serif','font-size':'9',fill:'#6b7280',...attrs});
+  el.textContent=txt;parent.appendChild(el);
+}
+
 function updateClock(){
   const t=new Date(),hm=t.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});
   const el=document.getElementById('live-time');if(el)el.textContent=hm;
 }
 updateClock();setInterval(updateClock,30000);
 
-// FIX [UI/UX]: grafici campioni SVG
-document.addEventListener('DOMContentLoaded',function(){
+// FIX [UI/UX]: ricerca inversa per ID caso
+function searchCaso(prefix){
+  const inp=document.getElementById(prefix+'-search');
+  const res=document.getElementById(prefix+'-search-result');
+  if(!inp||!res)return;
+  const q=(inp.value||'').trim();
+  if(!q){res.style.display='none';return;}
+  res.style.display='block';
+  res.innerHTML=`<b>Caso ${q}</b> — trovato nel ciclo <span class="mono">P-0408</span> (27/04/2026)<br>
+    <b>Reagenti utilizzati:</b><br>
+    · Formalina tamponata 10% — <span class="mono">lot.FT-2026-0299</span> · sc. ago 2026 (Epredia)<br>
+    · Alcol 96° denaturato — <span class="mono">lot.AL-2025-1108</span> · sc. nov 2027 (LabFor)<br>
+    · Xilolo puro — <span class="mono">lot.XI-2025-0904</span> · sc. set 2027 (Roche)`;
+}
 
-  // Helper SVG
-  function svgEl(tag,attrs){
-    const el=document.createElementNS('http://www.w3.org/2000/svg',tag);
-    Object.entries(attrs).forEach(([k,v])=>el.setAttribute(k,v));
-    return el;
-  }
-  function svgText(parent,x,y,txt,attrs={}){
-    const el=svgEl('text',{x,y,'font-family':'DM Sans,sans-serif','font-size':'9',fill:'#6b7280',...attrs});
-    el.textContent=txt;parent.appendChild(el);
-  }
+// FIX [UI/UX]: filtri chip
+function filterChip(btn,section){
+  const bar=btn.closest('.filter-bar');
+  if(!bar)return;
+  bar.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+// FIX [UI/UX]: visual feedback card ordine
+function showOrdine(id){
+  document.querySelectorAll('.ord-card').forEach(c=>c.classList.remove('active-ord'));
+  const card=document.querySelector(`.ord-card[data-id="${id}"]`);
+  if(card)card.classList.add('active-ord');
+}
+
+// FIX [UI/UX]: grafici campioni SVG + init interazioni
+document.addEventListener('DOMContentLoaded',function(){
 
   // 1. LINE CHART — andamento campioni
   const lineData={
@@ -1135,7 +1165,6 @@ document.addEventListener('DOMContentLoaded',function(){
     bsvg.appendChild(svgEl('line',{x1:PL,y1:PT+ih,x2:W-PR,y2:PT+ih,stroke:'#e2e8f0','stroke-width':'1'}));
   }
 
-});
 
   // 4. HORIZONTAL BAR — top 10 prodotti
   const hbarData=[
@@ -1156,8 +1185,7 @@ document.addEventListener('DOMContentLoaded',function(){
     hbarData.forEach((d,i)=>{
       const y=PT+i*rowH;
       const barW=(d.qty/maxQ)*(240-PL-PR);
-      const rect=svgEl('rect',{x:PL,y:y+2,width:barW,height:rowH-4,fill:d.color,rx:'2',opacity:'0.85'});
-      hsvg.appendChild(rect);
+      hsvg.appendChild(svgEl('rect',{x:PL,y:y+2,width:barW,height:rowH-4,fill:d.color,rx:'2',opacity:'0.85'}));
       const lbl=svgEl('text',{x:PL-4,y:y+rowH/2+3,'text-anchor':'end','font-family':'DM Sans,sans-serif','font-size':'8',fill:'#374151'});
       lbl.textContent=d.name.length>14?d.name.slice(0,13)+'…':d.name;
       hsvg.appendChild(lbl);
@@ -1227,118 +1255,98 @@ document.addEventListener('DOMContentLoaded',function(){
     });
   }
 
-// Report line chart (Gen–Apr 2026)
+  // Report line chart (Gen–Apr 2026)
   const rsvg=document.getElementById('report-line');
   if(rsvg){
     const rD={labels:['Gen','Feb','Mar','Apr'],isto:[171,188,195,206],cito:[45,49,52,57],pap:[24,26,25,26]};
-    const W=600,H=80,PL=28,PR=8,PT=8,PB=18;
-    const max=230,iw=W-PL-PR,ih=H-PT-PB,n=rD.labels.length;
-    const xs=rD.labels.map((_,i)=>PL+i*(iw/(n-1)));
-    const ys=v=>PT+ih-(v/max)*ih;
+    const rW=600,rH=80,rPL=28,rPR=8,rPT=8,rPB=18;
+    const rMax=230,riw=rW-rPL-rPR,rih=rH-rPT-rPB,rn=rD.labels.length;
+    const rxs=rD.labels.map((_,i)=>rPL+i*(riw/(rn-1)));
+    const rys=v=>rPT+rih-(v/rMax)*rih;
     [0,100,200].forEach(v=>{
-      rsvg.appendChild(svgEl('line',{x1:PL,y1:ys(v),x2:W-PR,y2:ys(v),stroke:'#e2e8f0','stroke-width':'1'}));
-      const t=svgEl('text',{x:0,y:ys(v)+3,'font-size':'8','font-family':'DM Mono,monospace',fill:'#6b7280'});t.textContent=v;rsvg.appendChild(t);
+      rsvg.appendChild(svgEl('line',{x1:rPL,y1:rys(v),x2:rW-rPR,y2:rys(v),stroke:'#e2e8f0','stroke-width':'1'}));
+      const t=svgEl('text',{x:0,y:rys(v)+3,'font-size':'8','font-family':'DM Mono,monospace',fill:'#6b7280'});t.textContent=v;rsvg.appendChild(t);
     });
-    rD.labels.forEach((l,i)=>{const t=svgEl('text',{x:xs[i],y:H-2,'text-anchor':'middle','font-size':'8','font-family':'DM Sans,sans-serif',fill:'#6b7280'});t.textContent=l;rsvg.appendChild(t);});
+    rD.labels.forEach((l,i)=>{const t=svgEl('text',{x:rxs[i],y:rH-2,'text-anchor':'middle','font-size':'8','font-family':'DM Sans,sans-serif',fill:'#6b7280'});t.textContent=l;rsvg.appendChild(t);});
     [{k:'isto',c:'#2563eb'},{k:'cito',c:'#0891b2'},{k:'pap',c:'#7c3aed'}].forEach(({k,c})=>{
-      const d='M '+rD[k].map((v,i)=>`${xs[i]},${ys(v)}`).join(' L ');
-      rsvg.appendChild(svgEl('path',{d,stroke:c,'stroke-width':'2',fill:'none','stroke-linejoin':'round'}));
-      rD[k].forEach((v,i)=>{
-        rsvg.appendChild(svgEl('circle',{cx:xs[i],cy:ys(v),r:'3',fill:'#fff',stroke:c,'stroke-width':'2'}));
-        const t=svgEl('text',{x:xs[i],y:ys(v)-5,'text-anchor':'middle','font-size':'7','font-family':'DM Mono,monospace',fill:c});t.textContent=v;rsvg.appendChild(t);
+      const pts=rD[k];
+      const dd='M '+pts.map((v,i)=>`${rxs[i]},${rys(v)}`).join(' L ');
+      rsvg.appendChild(svgEl('path',{d:dd,stroke:c,'stroke-width':'2',fill:'none','stroke-linejoin':'round'}));
+      pts.forEach((v,i)=>{
+        rsvg.appendChild(svgEl('circle',{cx:rxs[i],cy:rys(v),r:'3',fill:'#fff',stroke:c,'stroke-width':'2'}));
+        const t=svgEl('text',{x:rxs[i],y:rys(v)-5,'text-anchor':'middle','font-size':'7','font-family':'DM Mono,monospace',fill:c});t.textContent=v;rsvg.appendChild(t);
       });
     });
   }
 
-// FIX [UI/UX]: expand righe cicli
-document.querySelectorAll('.expandable').forEach(row=>{
-  row.addEventListener('click',()=>{
-    const id=row.dataset.id;
-    const exp=document.getElementById('exp-'+id);
-    const arrow=row.querySelector('.exp-arrow');
-    if(!exp)return;
-    const open=!exp.classList.contains('hidden');
-    exp.classList.toggle('hidden',open);
-    if(arrow)arrow.style.transform=open?'':'rotate(90deg)';
+  // FIX [UI/UX]: expand righe cicli
+  document.querySelectorAll('.expandable').forEach(row=>{
+    row.addEventListener('click',()=>{
+      const id=row.dataset.id;
+      const exp=document.getElementById('exp-'+id);
+      const arrow=row.querySelector('.exp-arrow');
+      if(!exp)return;
+      const open=!exp.classList.contains('hidden');
+      exp.classList.toggle('hidden',open);
+      if(arrow)arrow.style.transform=open?'':'rotate(90deg)';
+    });
   });
-});
 
-// FIX [UI/UX]: pagine placeholder lazy — create al primo click
-// FIX [UI/UX]: menu FC toggle
-const fcBtn=document.querySelector('.fc-btn');
-const fcMenu=document.getElementById('fc-menu');
-if(fcBtn&&fcMenu){
-  fcBtn.addEventListener('click',e=>{e.stopPropagation();fcMenu.style.display=fcMenu.style.display==='none'?'block':'none';});
-  document.addEventListener('click',()=>{if(fcMenu)fcMenu.style.display='none';});
-}
-
-// FIX [UI/UX]: ricerca inversa per ID caso
-function searchCaso(prefix){
-  const inp=document.getElementById(prefix+'-search');
-  const res=document.getElementById(prefix+'-search-result');
-  if(!inp||!res)return;
-  const q=(inp.value||'').trim();
-  if(!q){res.style.display='none';return;}
-  res.style.display='block';
-  res.innerHTML=`<b>Caso ${q}</b> — trovato nel ciclo <span class="mono">P-0408</span> (27/04/2026)<br>
-    <b>Reagenti utilizzati:</b><br>
-    · Formalina tamponata 10% — <span class="mono">lot.FT-2026-0299</span> · sc. ago 2026 (Epredia)<br>
-    · Alcol 96° denaturato — <span class="mono">lot.AL-2025-1108</span> · sc. nov 2027 (LabFor)<br>
-    · Xilolo puro — <span class="mono">lot.XI-2025-0904</span> · sc. set 2027 (Roche)`;
-}
-
-// Viste statiche — non creare placeholder
-const staticViews=new Set(['home','campioni','processatore','coloratore','inventario','ordini','allerte','rifiuti','report','movimenti','arch-ordini','schede']);
-
-// FIX [UI/UX]: filtri chip
-function filterChip(btn,section){
-  const bar=btn.closest('.filter-bar');
-  if(!bar)return;
-  bar.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
-  btn.classList.add('active');
-}
-
-const phConfig={
-  campioni:    {icon:'🧬',title:'Campioni',desc:'Registrazione e tracciabilità campioni: Istologia, Citologia, PAP test, PAP privato.'},
-  processatore:{icon:'⚗️',title:'Processatore',desc:'Cicli processatore tissutale con tracciabilità reagenti e ricerca inversa per ID caso.'},
-  coloratore:  {icon:'🎨',title:'Coloratore',desc:'Cicli coloratore automatico H&E, PAS, Giemsa con tracciabilità lotti reagenti.'},
-  inventario:  {icon:'📦',title:'Inventario',desc:'Gestione prodotti: carico/scarico, scadenze, scorte minime, DDT e barcode GS1-128.'},
-  movimenti:   {icon:'↕️',title:'Movimenti',desc:'Storico cronologico di tutti i movimenti carico e scarico del magazzino.'},
-  allerte:     {icon:'🚨',title:'Allerte',desc:'Prodotti esauriti, sotto scorta minima o in scadenza. Ordina direttamente dalle allerte.'},
-  ordini:      {icon:'🛒',title:'Ordini',desc:'Ciclo ordini a fornitori (Epredia, Bio Optica, Roche, LabFor) con ricezione DDT e carico automatico.'},
-  'arch-ordini':{icon:'🗂️',title:'Archivio Ordini',desc:'Storico ordini completati con DDT e ricezioni per fornitore e anno.'},
-  schede:      {icon:'📋',title:'Schede Tecniche',desc:'Catalogo schede tecniche (TDS) e schede sicurezza (SDS) per fornitore.'},
-  rifiuti:     {icon:'🗑️',title:'Rifiuti',desc:'Gestione contenitori per codice CER: 180103*, 150110*, 150202*, 180106*. Storico smaltimenti.'},
-  report:      {icon:'📊',title:'Report',desc:'Report mensile: campioni lavorati, consumo reagenti, rifiuti, ordini. Esportabile in PDF.'},
-};
-
-function getOrCreateView(viewId){
-  let el=document.querySelector(`[data-view="${viewId}"].view`);
-  if(!el&&!staticViews.has(viewId)){
-    el=document.createElement('div');
-    el.className='view';el.setAttribute('data-view',viewId);
-    const cfg=phConfig[viewId]||{icon:'📄',title:viewId,desc:'Sezione disponibile a breve.'};
-    el.innerHTML=`<div style="max-width:600px;margin:60px auto;text-align:center;padding:0 24px">
-      <div style="font-size:48px;margin-bottom:16px">${cfg.icon}</div>
-      <div style="font-family:'Libre Baskerville',serif;font-size:24px;font-weight:700;color:var(--accent);margin-bottom:8px">${cfg.title}</div>
-      <div style="color:var(--text3);font-size:14px;margin-bottom:28px">${cfg.desc}</div>
-      <div style="display:inline-flex;align-items:center;gap:6px;padding:6px 16px;background:var(--blue-bg);border:1px solid var(--blue-bd);border-radius:var(--r);color:var(--blue);font-size:12px;font-weight:500">
-        🚧 Sezione in costruzione — disponibile nella versione completa
-      </div>
-    </div>`;
-    document.getElementById('main').appendChild(el);
+  // FIX [UI/UX]: menu FC toggle
+  const fcBtn=document.querySelector('.fc-btn');
+  const fcMenu=document.getElementById('fc-menu');
+  if(fcBtn&&fcMenu){
+    fcBtn.addEventListener('click',e=>{e.stopPropagation();fcMenu.style.display=fcMenu.style.display==='none'?'block':'none';});
+    document.addEventListener('click',()=>{if(fcMenu)fcMenu.style.display='none';});
   }
-  return el;
-}
 
-document.querySelectorAll('.rail-item[data-view]').forEach(r=>{
-  r.addEventListener('click',()=>{
-    document.querySelectorAll('.rail-item').forEach(x=>x.classList.remove('active'));
-    r.classList.add('active');
-    document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
-    getOrCreateView(r.dataset.view).classList.add('active');
+  // Viste statiche — non creare placeholder
+  const staticViews=new Set(['home','campioni','processatore','coloratore','inventario','ordini','allerte','rifiuti','report','movimenti','arch-ordini','schede']);
+
+  const phConfig={
+    campioni:    {icon:'🧬',title:'Campioni',desc:'Registrazione e tracciabilità campioni: Istologia, Citologia, PAP test, PAP privato.'},
+    processatore:{icon:'⚗️',title:'Processatore',desc:'Cicli processatore tissutale con tracciabilità reagenti e ricerca inversa per ID caso.'},
+    coloratore:  {icon:'🎨',title:'Coloratore',desc:'Cicli coloratore automatico H&E, PAS, Giemsa con tracciabilità lotti reagenti.'},
+    inventario:  {icon:'📦',title:'Inventario',desc:'Gestione prodotti: carico/scarico, scadenze, scorte minime, DDT e barcode GS1-128.'},
+    movimenti:   {icon:'↕️',title:'Movimenti',desc:'Storico cronologico di tutti i movimenti carico e scarico del magazzino.'},
+    allerte:     {icon:'🚨',title:'Allerte',desc:'Prodotti esauriti, sotto scorta minima o in scadenza. Ordina direttamente dalle allerte.'},
+    ordini:      {icon:'🛒',title:'Ordini',desc:'Ciclo ordini a fornitori (Epredia, Bio Optica, Roche, LabFor) con ricezione DDT e carico automatico.'},
+    'arch-ordini':{icon:'🗂️',title:'Archivio Ordini',desc:'Storico ordini completati con DDT e ricezioni per fornitore e anno.'},
+    schede:      {icon:'📋',title:'Schede Tecniche',desc:'Catalogo schede tecniche (TDS) e schede sicurezza (SDS) per fornitore.'},
+    rifiuti:     {icon:'🗑️',title:'Rifiuti',desc:'Gestione contenitori per codice CER: 180103*, 150110*, 150202*, 180106*. Storico smaltimenti.'},
+    report:      {icon:'📊',title:'Report',desc:'Report mensile: campioni lavorati, consumo reagenti, rifiuti, ordini. Esportabile in PDF.'},
+  };
+
+  function getOrCreateView(viewId){
+    let el=document.querySelector(`[data-view="${viewId}"].view`);
+    if(!el&&!staticViews.has(viewId)){
+      el=document.createElement('div');
+      el.className='view';el.setAttribute('data-view',viewId);
+      const cfg=phConfig[viewId]||{icon:'📄',title:viewId,desc:'Sezione disponibile a breve.'};
+      el.innerHTML=`<div style="max-width:600px;margin:60px auto;text-align:center;padding:0 24px">
+        <div style="font-size:48px;margin-bottom:16px">${cfg.icon}</div>
+        <div style="font-family:'Libre Baskerville',serif;font-size:24px;font-weight:700;color:var(--accent);margin-bottom:8px">${cfg.title}</div>
+        <div style="color:var(--text3);font-size:14px;margin-bottom:28px">${cfg.desc}</div>
+        <div style="display:inline-flex;align-items:center;gap:6px;padding:6px 16px;background:var(--blue-bg);border:1px solid var(--blue-bd);border-radius:var(--r);color:var(--blue);font-size:12px;font-weight:500">
+          🚧 Sezione in costruzione — disponibile nella versione completa
+        </div>
+      </div>`;
+      document.getElementById('main').appendChild(el);
+    }
+    return el;
+  }
+
+  // FIX [UI/UX]: navigazione rail sidebar
+  document.querySelectorAll('.rail-item[data-view]').forEach(r=>{
+    r.addEventListener('click',()=>{
+      document.querySelectorAll('.rail-item').forEach(x=>x.classList.remove('active'));
+      r.classList.add('active');
+      document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+      getOrCreateView(r.dataset.view).classList.add('active');
+    });
   });
-});
+
+}); // fine DOMContentLoaded
 </script>
 </body>
 </html>
