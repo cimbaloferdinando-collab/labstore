@@ -297,20 +297,18 @@
     <!-- ══════ RIFIUTI ══════ -->
     <div class="view" id="view-rifiuti">
       <div class="page-title">Gestione Rifiuti</div>
-      <div class="page-sub">Tracciamento bidoni prodotti, smaltiti e disponibili</div>
-
-      <div style="display:flex;gap:7px;margin-bottom:18px;flex-wrap:wrap">
-        <button class="btn btn-waste" onclick="openRifiutiModal()">+ Registra bidone pieno</button>
+      <div class="page-sub">Tracciamento bidoni per codice CER: 180103*, 150110*, 150202*, 180106*</div>
+      <div style="display:flex;gap:7px;margin-bottom:16px;flex-wrap:wrap">
+        <button class="btn btn-waste" onclick="openRifiutiModal()">＋ Registra bidone pieno</button>
         <button class="btn" onclick="openVuotiModal()">🔄 Aggiorna bidoni vuoti</button>
       </div>
-
       <div class="waste-grid" id="waste-grid"></div>
-
       <div class="card">
-        <div class="card-header"><span class="card-title">📋 Log movimenti rifiuti</span>
+        <div class="card-header">
+          <span class="card-title">Log movimenti rifiuti</span>
           <button class="btn btn-sm btn-danger" onclick="clearWasteLog()">🗑 Svuota log</button>
         </div>
-        <div class="table-scroll"><table>
+        <div style="overflow-x:auto"><table>
           <thead><tr><th>Data/Ora</th><th>Tipo rifiuto</th><th>Azione</th><th>Qtà bidoni</th><th>Note</th></tr></thead>
           <tbody id="waste-log-tbody"></tbody>
         </table></div>
