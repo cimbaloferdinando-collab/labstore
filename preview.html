@@ -696,35 +696,34 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
         </div>
       </div>
 
-      <!-- filtri categoria -->
+      <!-- LIVELLO 1: Categoria -->
       <div style="font-size:10px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--text3);margin-bottom:5px">Categoria</div>
-      <div class="filter-bar" id="inv-cat-bar">
+      <div class="filter-bar" id="inv-cat-bar" style="margin-bottom:10px">
         <button class="chip active" onclick="invFilterCat(this,'tutti')">Tutti</button>
-        <button class="chip" onclick="invFilterCat(this,'reagenti')">Reagenti</button>
-        <button class="chip" onclick="invFilterCat(this,'ihc')">IHC</button>
-        <button class="chip" onclick="invFilterCat(this,'vetrini')">Vetrini</button>
-        <button class="chip" onclick="invFilterCat(this,'cassette')">Cassette</button>
-        <button class="chip" onclick="invFilterCat(this,'coloranti')">Coloranti</button>
-        <button class="chip" onclick="invFilterCat(this,'consumabili')">Consumabili</button>
-        <button class="chip" onclick="invFilterCat(this,'kit')">Kit Colorazioni</button>
-        <button class="chip" onclick="invFilterCat(this,'lame')">Lame</button>
-        <button class="chip" onclick="invFilterCat(this,'altro')">Altro</button>
+        <button class="chip" onclick="invFilterCat(this,'reagenti')">🧪 Reagenti</button>
+        <button class="chip" onclick="invFilterCat(this,'vetrini')">🪟 Vetrini</button>
+        <button class="chip" onclick="invFilterCat(this,'cassette')">📁 Cassette</button>
+        <button class="chip" onclick="invFilterCat(this,'coloranti')">🎨 Coloranti</button>
+        <button class="chip" onclick="invFilterCat(this,'consumabili')">🧤 Consumabili</button>
+        <button class="chip" onclick="invFilterCat(this,'kit')">🔬 Kit Color.</button>
+        <button class="chip" onclick="invFilterCat(this,'lame')">✕ Lame</button>
+        <button class="chip" onclick="invFilterCat(this,'altro')">📌 Altro</button>
       </div>
-      <!-- sotto-filtri prodotto (appaiono al click categoria) -->
-      <div id="inv-subcat-bar" style="display:none;margin-bottom:6px">
-        <div style="font-size:10px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--text3);margin-bottom:5px">Prodotto</div>
-        <div class="filter-bar" id="inv-subcat-chips"></div>
-      </div>
-      <!-- filtri fornitore -->
+
+      <!-- LIVELLO 2: Fornitore -->
       <div style="font-size:10px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--text3);margin-bottom:5px">Fornitore</div>
-      <div class="filter-bar" style="margin-bottom:14px">
-        <button class="chip active" onclick="filterChip(this,'inv-f')">Tutti</button>
-        <button class="chip" onclick="filterChip(this,'inv-f')">Epredia</button>
-        <button class="chip" onclick="filterChip(this,'inv-f')">Bio Optica</button>
-        <button class="chip" onclick="filterChip(this,'inv-f')">Ventana/Roche</button>
-        <button class="chip" onclick="filterChip(this,'inv-f')">LabFor</button>
-        <div style="flex:1"></div>
-        <input class="search-inp" placeholder="Cerca prodotto…">
+      <div class="filter-bar" id="inv-forn-bar" style="margin-bottom:10px">
+        <button class="chip active" onclick="invFilterForn(this,'tutti')">Tutti</button>
+        <button class="chip" onclick="invFilterForn(this,'epredia')">Epredia</button>
+        <button class="chip" onclick="invFilterForn(this,'bio-optica')">Bio Optica</button>
+        <button class="chip" onclick="invFilterForn(this,'ventana')">Ventana</button>
+        <button class="chip" onclick="invFilterForn(this,'altri')">Altri fornitori</button>
+      </div>
+
+      <!-- LIVELLO 3: Prodotto (dinamico, appare solo con categoria selezionata) -->
+      <div id="inv-prod-bar" style="display:none;margin-bottom:10px">
+        <div style="font-size:10px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--text3);margin-bottom:5px">Prodotto</div>
+        <div class="filter-bar" id="inv-prod-chips"></div>
       </div>
 
       <!-- legenda colori -->
@@ -738,26 +737,27 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
         <div style="overflow-x:auto">
           <table class="tbl">
             <thead><tr><th>Prodotto</th><th>Codice</th><th>Fornitore</th><th>Lotto</th><th>Scadenza</th><th>Giacenza</th><th>Sc.Min.</th><th>U.M.</th><th>Stato</th><th></th></tr></thead>
-            <tbody>
-              <tr style="background:var(--red-bg)"><td>Xilolo puro</td><td class="mono">XI-001</td><td>Roche</td><td class="mono">XI-2025-0904</td><td class="mono">09/2027</td><td style="font-weight:700;color:var(--red)">2</td><td>5</td><td>L</td><td><span class="badge bg-red">Critico</span></td><td class="act-cell"><button class="act-btn">✏️</button></td></tr>
-              <tr style="background:var(--red-bg)"><td>Anticorpo CD3</td><td class="mono">AC-CD3</td><td>Roche</td><td class="mono">CD3-2024-0430</td><td class="mono" style="color:var(--red);font-weight:700">30/04/26</td><td>1</td><td>2</td><td>fl</td><td><span class="badge bg-red">Scade oggi</span></td><td class="act-cell"><button class="act-btn">✏️</button></td></tr>
-              <tr style="background:var(--yellow-bg)"><td>Alcol 96° denaturato</td><td class="mono">AL-001</td><td>LabFor</td><td class="mono">AL-2025-1108</td><td class="mono">11/2027</td><td style="color:var(--yellow);font-weight:700">3</td><td>8</td><td>L</td><td><span class="badge bg-yellow">Scorta bassa</span></td><td class="act-cell"><button class="act-btn">✏️</button></td></tr>
-              <tr style="background:var(--orange-bg)"><td>Acido Periodico</td><td class="mono">AP-001</td><td>Roche</td><td class="mono">AP-2025-0615</td><td class="mono" style="color:var(--orange);font-weight:700">15/05/26</td><td>80</td><td>50</td><td>ml</td><td><span class="badge bg-orange">Scade 15gg</span></td><td class="act-cell"><button class="act-btn">✏️</button></td></tr>
-              <tr><td>Formalina tamponata 10%</td><td class="mono">FT-001</td><td>Epredia</td><td class="mono">FT-2026-0312</td><td class="mono">12/2026</td><td>18</td><td>10</td><td>L</td><td><span class="badge bg-green">OK</span></td><td class="act-cell"><button class="act-btn">✏️</button></td></tr>
-              <tr><td>Vetrini SuperFrost Plus</td><td class="mono">VT-SF+</td><td>Bio Optica</td><td class="mono">SF-2026-0108</td><td class="mono">01/2028</td><td>420</td><td>200</td><td>pz</td><td><span class="badge bg-green">OK</span></td><td class="act-cell"><button class="act-btn">✏️</button></td></tr>
-              <tr style="background:var(--yellow-bg)"><td>Cassette bioptiche std</td><td class="mono">CB-STD</td><td>Epredia</td><td class="mono">CB-2026-0201</td><td class="mono">02/2028</td><td style="color:var(--yellow);font-weight:700">120</td><td>300</td><td>pz</td><td><span class="badge bg-yellow">Scorta bassa</span></td><td class="act-cell"><button class="act-btn">✏️</button></td></tr>
-              <tr><td>Ematossilina Mayer</td><td class="mono">EM-001</td><td>Bio Optica</td><td class="mono">EM-2025-0811</td><td class="mono">08/2027</td><td>2.4</td><td>1</td><td>L</td><td><span class="badge bg-green">OK</span></td><td class="act-cell"><button class="act-btn">✏️</button></td></tr>
-              <tr><td>Paraffina istologica</td><td class="mono">PA-001</td><td>Epredia</td><td class="mono">PA-2026-0201</td><td class="mono">02/2028</td><td>1.2</td><td>0.5</td><td>kg</td><td><span class="badge bg-green">OK</span></td><td class="act-cell"><button class="act-btn">✏️</button></td></tr>
-              <tr><td>Eosina Y soluzione</td><td class="mono">EO-001</td><td>Bio Optica</td><td class="mono">EO-2025-1204</td><td class="mono">12/2027</td><td>1.8</td><td>1</td><td>L</td><td><span class="badge bg-green">OK</span></td><td class="act-cell"><button class="act-btn">✏️</button></td></tr>
-              <tr><td>Giemsa soluzione</td><td class="mono">GI-001</td><td>Bio Optica</td><td class="mono">GI-2025-1030</td><td class="mono">10/2027</td><td>0.8</td><td>0.5</td><td>L</td><td><span class="badge bg-green">OK</span></td><td class="act-cell"><button class="act-btn">✏️</button></td></tr>
-              <tr><td>Anticorpo CD20</td><td class="mono">AC-CD20</td><td>Ventana/Roche</td><td class="mono">CD20-2025-0811</td><td class="mono">08/2027</td><td>3</td><td>2</td><td>fl</td><td><span class="badge bg-green">OK</span></td><td class="act-cell"><button class="act-btn">✏️</button></td></tr>
-              <tr><td>Anticorpo Ki-67</td><td class="mono">AC-KI67</td><td>Ventana/Roche</td><td class="mono">KI67-2025-0615</td><td class="mono">06/2027</td><td>2</td><td>2</td><td>fl</td><td><span class="badge bg-green">OK</span></td><td class="act-cell"><button class="act-btn">✏️</button></td></tr>
-              <tr style="background:var(--yellow-bg)"><td>Reattivo di Schiff</td><td class="mono">RS-001</td><td>LabFor</td><td class="mono">RS-2026-0103</td><td class="mono">01/2027</td><td style="color:var(--yellow);font-weight:700">0.3</td><td>0.5</td><td>L</td><td><span class="badge bg-yellow">Scorta bassa</span></td><td class="act-cell"><button class="act-btn">✏️</button></td></tr>
-              <tr><td>Kit PAS completo</td><td class="mono">KP-001</td><td>Bio Optica</td><td class="mono">KP-2025-1101</td><td class="mono">11/2027</td><td>2</td><td>1</td><td>kit</td><td><span class="badge bg-green">OK</span></td><td class="act-cell"><button class="act-btn">✏️</button></td></tr>
-              <tr><td>Lame da bisturi n.22</td><td class="mono">LM-022</td><td>Epredia</td><td class="mono">LM22-2026-0115</td><td class="mono">01/2029</td><td>50</td><td>20</td><td>pz</td><td><span class="badge bg-green">OK</span></td><td class="act-cell"><button class="act-btn">✏️</button></td></tr>
-              <tr><td>Copriogetti 24×60</td><td class="mono">CO-2460</td><td>Epredia</td><td class="mono">CO-2026-0201</td><td class="mono">12/2029</td><td>800</td><td>300</td><td>pz</td><td><span class="badge bg-green">OK</span></td><td class="act-cell"><button class="act-btn">✏️</button></td></tr>
-              <tr><td>Montante sintetico</td><td class="mono">MS-001</td><td>Bio Optica</td><td class="mono">MS-2026-0115</td><td class="mono">01/2028</td><td>4</td><td>2</td><td>fl</td><td><span class="badge bg-green">OK</span></td><td class="act-cell"><button class="act-btn">✏️</button></td></tr>
-              <tr><td>Buffer fosfato pH 7.4</td><td class="mono">BF-001</td><td>LabFor</td><td class="mono">BF-2026-0201</td><td class="mono">02/2028</td><td>5</td><td>2</td><td>L</td><td><span class="badge bg-green">OK</span></td><td class="act-cell"><button class="act-btn">✏️</button></td></tr>
+            <tbody id="inv-tbody">
+              <tr data-cat="reagenti" data-forn="ventana" data-prod="xilene" style="background:var(--red-bg)"><td>Xilolo puro</td><td class="mono">XI-001</td><td>Ventana/Roche</td><td class="mono">XI-2025-0904</td><td class="mono">09/2027</td><td style="font-weight:700;color:var(--red)">2</td><td>5</td><td>L</td><td><span class="badge bg-red">Critico</span></td><td class="act-cell"><button class="act-btn">✏️</button></td></tr>
+              <tr data-cat="altro" data-forn="ventana" data-prod="" style="background:var(--red-bg)"><td>Anticorpo CD3</td><td class="mono">AC-CD3</td><td>Ventana/Roche</td><td class="mono">CD3-2024-0430</td><td class="mono" style="color:var(--red);font-weight:700">30/04/26</td><td>1</td><td>2</td><td>fl</td><td><span class="badge bg-red">Scade oggi</span></td><td class="act-cell"><button class="act-btn">✏️</button></td></tr>
+              <tr data-cat="reagenti" data-forn="altri" data-prod="alcol95" style="background:var(--yellow-bg)"><td>Alcol 96° denaturato</td><td class="mono">AL-001</td><td>LabFor</td><td class="mono">AL-2025-1108</td><td class="mono">11/2027</td><td style="color:var(--yellow);font-weight:700">3</td><td>8</td><td>L</td><td><span class="badge bg-yellow">Scorta bassa</span></td><td class="act-cell"><button class="act-btn">✏️</button></td></tr>
+              <tr data-cat="kit" data-forn="ventana" data-prod="pas" style="background:var(--orange-bg)"><td>Acido Periodico</td><td class="mono">AP-001</td><td>Ventana/Roche</td><td class="mono">AP-2025-0615</td><td class="mono" style="color:var(--orange);font-weight:700">15/05/26</td><td>80</td><td>50</td><td>ml</td><td><span class="badge bg-orange">Scade 15gg</span></td><td class="act-cell"><button class="act-btn">✏️</button></td></tr>
+              <tr data-cat="reagenti" data-forn="epredia" data-prod="formalina"><td>Formalina tamponata 10%</td><td class="mono">FT-001</td><td>Epredia</td><td class="mono">FT-2026-0312</td><td class="mono">12/2026</td><td>18</td><td>10</td><td>L</td><td><span class="badge bg-green">OK</span></td><td class="act-cell"><button class="act-btn">✏️</button></td></tr>
+              <tr data-cat="vetrini" data-forn="bio-optica" data-prod="tomo"><td>Vetrini SuperFrost Plus</td><td class="mono">VT-SF+</td><td>Bio Optica</td><td class="mono">SF-2026-0108</td><td class="mono">01/2028</td><td>420</td><td>200</td><td>pz</td><td><span class="badge bg-green">OK</span></td><td class="act-cell"><button class="act-btn">✏️</button></td></tr>
+              <tr data-cat="cassette" data-forn="epredia" data-prod="bianche" style="background:var(--yellow-bg)"><td>Cassette bioptiche std</td><td class="mono">CB-STD</td><td>Epredia</td><td class="mono">CB-2026-0201</td><td class="mono">02/2028</td><td style="color:var(--yellow);font-weight:700">120</td><td>300</td><td>pz</td><td><span class="badge bg-yellow">Scorta bassa</span></td><td class="act-cell"><button class="act-btn">✏️</button></td></tr>
+              <tr data-cat="coloranti" data-forn="bio-optica" data-prod="ema-mayer"><td>Ematossilina Mayer</td><td class="mono">EM-001</td><td>Bio Optica</td><td class="mono">EM-2025-0811</td><td class="mono">08/2027</td><td>2.4</td><td>1</td><td>L</td><td><span class="badge bg-green">OK</span></td><td class="act-cell"><button class="act-btn">✏️</button></td></tr>
+              <tr data-cat="altro" data-forn="epredia" data-prod="paraffina"><td>Paraffina istologica</td><td class="mono">PA-001</td><td>Epredia</td><td class="mono">PA-2026-0201</td><td class="mono">02/2028</td><td>1.2</td><td>0.5</td><td>kg</td><td><span class="badge bg-green">OK</span></td><td class="act-cell"><button class="act-btn">✏️</button></td></tr>
+              <tr data-cat="coloranti" data-forn="bio-optica" data-prod="eosina"><td>Eosina Y soluzione</td><td class="mono">EO-001</td><td>Bio Optica</td><td class="mono">EO-2025-1204</td><td class="mono">12/2027</td><td>1.8</td><td>1</td><td>L</td><td><span class="badge bg-green">OK</span></td><td class="act-cell"><button class="act-btn">✏️</button></td></tr>
+              <tr data-cat="kit" data-forn="bio-optica" data-prod="giemsa"><td>Giemsa soluzione</td><td class="mono">GI-001</td><td>Bio Optica</td><td class="mono">GI-2025-1030</td><td class="mono">10/2027</td><td>0.8</td><td>0.5</td><td>L</td><td><span class="badge bg-green">OK</span></td><td class="act-cell"><button class="act-btn">✏️</button></td></tr>
+              <tr data-cat="altro" data-forn="ventana" data-prod=""><td>Anticorpo CD20</td><td class="mono">AC-CD20</td><td>Ventana/Roche</td><td class="mono">CD20-2025-0811</td><td class="mono">08/2027</td><td>3</td><td>2</td><td>fl</td><td><span class="badge bg-green">OK</span></td><td class="act-cell"><button class="act-btn">✏️</button></td></tr>
+              <tr data-cat="altro" data-forn="ventana" data-prod=""><td>Anticorpo Ki-67</td><td class="mono">AC-KI67</td><td>Ventana/Roche</td><td class="mono">KI67-2025-0615</td><td class="mono">06/2027</td><td>2</td><td>2</td><td>fl</td><td><span class="badge bg-green">OK</span></td><td class="act-cell"><button class="act-btn">✏️</button></td></tr>
+              <tr data-cat="kit" data-forn="altri" data-prod="pas" style="background:var(--yellow-bg)"><td>Reattivo di Schiff</td><td class="mono">RS-001</td><td>LabFor</td><td class="mono">RS-2026-0103</td><td class="mono">01/2027</td><td style="color:var(--yellow);font-weight:700">0.3</td><td>0.5</td><td>L</td><td><span class="badge bg-yellow">Scorta bassa</span></td><td class="act-cell"><button class="act-btn">✏️</button></td></tr>
+              <tr data-cat="kit" data-forn="bio-optica" data-prod="pas"><td>Kit PAS completo</td><td class="mono">KP-001</td><td>Bio Optica</td><td class="mono">KP-2025-1101</td><td class="mono">11/2027</td><td>2</td><td>1</td><td>kit</td><td><span class="badge bg-green">OK</span></td><td class="act-cell"><button class="act-btn">✏️</button></td></tr>
+              <tr data-cat="lame" data-forn="epredia" data-prod="a35"><td>Lame microtomo A35</td><td class="mono">LM-A35</td><td>Epredia</td><td class="mono">LM35-2026-0115</td><td class="mono">01/2030</td><td>50</td><td>20</td><td>pz</td><td><span class="badge bg-green">OK</span></td><td class="act-cell"><button class="act-btn">✏️</button></td></tr>
+              <tr data-cat="lame" data-forn="bio-optica" data-prod="hp35"><td>Lame microtomo HP35</td><td class="mono">LM-HP35</td><td>Bio Optica</td><td class="mono">HP35-2026-0201</td><td class="mono">01/2030</td><td>30</td><td>10</td><td>pz</td><td><span class="badge bg-green">OK</span></td><td class="act-cell"><button class="act-btn">✏️</button></td></tr>
+              <tr data-cat="consumabili" data-forn="epredia" data-prod="cytocuvette"><td>Copriogetti 24×60</td><td class="mono">CO-2460</td><td>Epredia</td><td class="mono">CO-2026-0201</td><td class="mono">12/2029</td><td>800</td><td>300</td><td>pz</td><td><span class="badge bg-green">OK</span></td><td class="act-cell"><button class="act-btn">✏️</button></td></tr>
+              <tr data-cat="altro" data-forn="bio-optica" data-prod="montante"><td>Montante sintetico</td><td class="mono">MS-001</td><td>Bio Optica</td><td class="mono">MS-2026-0115</td><td class="mono">01/2028</td><td>4</td><td>2</td><td>fl</td><td><span class="badge bg-green">OK</span></td><td class="act-cell"><button class="act-btn">✏️</button></td></tr>
+              <tr data-cat="reagenti" data-forn="altri" data-prod=""><td>Buffer fosfato pH 7.4</td><td class="mono">BF-001</td><td>LabFor</td><td class="mono">BF-2026-0201</td><td class="mono">02/2028</td><td>5</td><td>2</td><td>L</td><td><span class="badge bg-green">OK</span></td><td class="act-cell"><button class="act-btn">✏️</button></td></tr>
             </tbody>
           </table>
         </div>
@@ -1315,28 +1315,47 @@ function filterChip(btn,section){
   btn.classList.add('active');
 }
 
-// FIX [UI/UX]: filtro categoria inventario con sotto-filtri prodotto
-const invSubcats={
-  reagenti:['Formalina 10%','Xilolo puro','Alcol 96°','Paraffina','Acido Periodico','Reattivo Schiff','Buffer fosfato'],
-  ihc:['Anticorpo CD3','Anticorpo CD20','Anticorpo Ki-67'],
-  vetrini:['Vetrini SuperFrost Plus'],
-  cassette:['Cassette bioptiche std'],
-  coloranti:['Ematossilina Mayer','Eosina Y','Giemsa'],
-  consumabili:['Copriogetti 24×60','Montante sintetico'],
-  kit:['Kit PAS completo'],
-  lame:['Lame da bisturi n.22'],
-  altro:[]
+// FIX [UI/UX]: filtri inventario 3 livelli — categoria / fornitore / prodotto
+let _invCat='tutti',_invForn='tutti',_invProd='tutti';
+const _invSubcats={
+  reagenti:['Tutti','Alcol 100','Alcool 95','Xilene','Formalina'],
+  vetrini:['Tutti','24x60','24x50','TOMO','P.O. Giallo','P.O. Blu'],
+  cassette:['Tutti','Bianche','Blu'],
+  coloranti:['Tutti','EA50','Eosina','Ema. Harris','Ema. Mayer','OG6'],
+  consumabili:['Tutti','Guanti L','Guanti M','Guanti S','Cytocuvette'],
+  kit:['Tutti','Giemsa','PAS','Reticolo','Gram','Ziehl','Grocott','Alcian','Masson','Giallo Congo','Van Gieson'],
+  lame:['Tutti','A35','HP35','MX35','Forbici'],
+  altro:['Tutti','Montante','Paraffina']
 };
+const _invProdKeys={'Alcol 100':'alcol100','Alcool 95':'alcol95','Xilene':'xilene','Formalina':'formalina','24x60':'24x60','24x50':'24x50','TOMO':'tomo','P.O. Giallo':'po-giallo','P.O. Blu':'po-blu','Bianche':'bianche','Blu':'blu','EA50':'ea50','Eosina':'eosina','Ema. Harris':'ema-harris','Ema. Mayer':'ema-mayer','OG6':'og6','Guanti L':'guanti-l','Guanti M':'guanti-m','Guanti S':'guanti-s','Cytocuvette':'cytocuvette','Giemsa':'giemsa','PAS':'pas','Reticolo':'reticolo','Gram':'gram','Ziehl':'ziehl','Grocott':'grocott','Alcian':'alcian','Masson':'masson','Giallo Congo':'giallo-congo','Van Gieson':'van-gieson','A35':'a35','HP35':'hp35','MX35':'mx35','Forbici':'forbici','Montante':'montante','Paraffina':'paraffina'};
+function _invApplyFilters(){
+  document.querySelectorAll('#inv-tbody tr').forEach(tr=>{
+    const ok=(_invCat==='tutti'||tr.dataset.cat===_invCat)&&
+             (_invForn==='tutti'||tr.dataset.forn===_invForn)&&
+             (_invProd==='tutti'||tr.dataset.prod===_invProd);
+    tr.style.display=ok?'':'none';
+  });
+}
 function invFilterCat(btn,cat){
   document.querySelectorAll('#inv-cat-bar .chip').forEach(c=>c.classList.remove('active'));
-  btn.classList.add('active');
-  const bar=document.getElementById('inv-subcat-bar');
-  const chips=document.getElementById('inv-subcat-chips');
-  const prods=invSubcats[cat]||[];
-  if(cat==='tutti'||prods.length===0){bar.style.display='none';return;}
-  chips.innerHTML='<button class="chip active" onclick="filterChip(this,\'inv-p\')">Tutti</button>'+
-    prods.map(p=>`<button class="chip" onclick="filterChip(this,'inv-p')">${p}</button>`).join('');
-  bar.style.display='block';
+  btn.classList.add('active');_invCat=cat;_invProd='tutti';
+  const bar=document.getElementById('inv-prod-bar');
+  const chips=document.getElementById('inv-prod-chips');
+  const prods=_invSubcats[cat]||[];
+  if(cat==='tutti'||!prods.length){bar.style.display='none';}
+  else{
+    chips.innerHTML=prods.map((p,i)=>`<button class="chip${i===0?' active':''}" onclick="invFilterProd(this,'${i===0?'tutti':(_invProdKeys[p]||p)}')">${p}</button>`).join('');
+    bar.style.display='block';
+  }
+  _invApplyFilters();
+}
+function invFilterForn(btn,forn){
+  document.querySelectorAll('#inv-forn-bar .chip').forEach(c=>c.classList.remove('active'));
+  btn.classList.add('active');_invForn=forn;_invApplyFilters();
+}
+function invFilterProd(btn,prod){
+  document.querySelectorAll('#inv-prod-chips .chip').forEach(c=>c.classList.remove('active'));
+  btn.classList.add('active');_invProd=prod;_invApplyFilters();
 }
 
 // FIX [UI/UX]: visual feedback card ordine
