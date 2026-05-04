@@ -342,7 +342,7 @@
     <div class="view" id="view-ordini">
       <div class="page-title">Ordini</div>
       <div class="page-sub">Richieste inviate all'amministrazione</div>
-      <div style="display:flex;gap:7px;margin-bottom:14px;flex-wrap:wrap">
+      <div style="display:flex;gap:7px;margin-bottom:10px;flex-wrap:wrap">
         <button class="btn btn-primary" onclick="openOrdineModal()">＋ Nuovo Ordine</button>
         <button class="btn btn-ok" onclick="openOrdineModal('da_allerte')">🚨 Ordina da Allerte</button>
         <button class="btn" onclick="openChecklist()" style="background:var(--purple-bg);color:var(--purple);border-color:#c4b5fd">📋 Checklist Riordino</button>
@@ -352,35 +352,23 @@
         <button class="f-btn" onclick="setOrdiniFilter('bozza',this)">📝 Bozza</button>
         <button class="f-btn" onclick="setOrdiniFilter('inviato',this)">📤 Inviato</button>
         <button class="f-btn" onclick="setOrdiniFilter('approvato',this)">✅ Approvato</button>
-        <button class="f-btn" onclick="setOrdiniFilter('parziale',this)">📦⏳ Parziale</button>
+        <button class="f-btn" onclick="setOrdiniFilter('parziale',this)">📦 Parziale</button>
         <button class="f-btn" onclick="setOrdiniFilter('ricevuto',this)">📦 Ricevuto</button>
         <button class="f-btn" onclick="setOrdiniFilter('annullato',this)">❌ Annullato</button>
       </div>
       <div class="card">
         <div class="card-header"><span class="card-title" id="ordini-count">0 ordini</span></div>
-        <div class="table-scroll"><table>
+        <div style="overflow-x:auto"><table>
           <thead><tr><th>Data</th><th>N° Ordine</th><th>Prodotti</th><th>Fornitore</th><th>Stato</th><th>Note</th><th>Azioni</th></tr></thead>
           <tbody id="ordini-tbody"></tbody>
         </table></div>
       </div>
     </div>
 
-    <!-- ══════ REPORT ══════ -->
-    <div class="view" id="view-report">
-      <div class="page-title">Report Mensile</div>
-      <div class="page-sub" id="report-period"></div>
-      <div style="display:flex;gap:7px;margin-bottom:18px">
-        <button class="btn btn-primary" onclick="renderReport()">🔄 Aggiorna</button>
-        <button class="btn" onclick="window.print()">🖨 Stampa PDF</button>
-      </div>
-      <div id="report-content"></div>
-    </div>
-
-
     <!-- ══════ ARCHIVIO ORDINI ══════ -->
     <div class="view" id="view-archivio">
       <div class="page-title">Archivio Ordini</div>
-      <div class="page-sub">Storico ordini per fornitore e mese</div>
+      <div class="page-sub">Storico ordini completati per fornitore e mese</div>
       <div style="display:flex;gap:7px;margin-bottom:14px;flex-wrap:wrap;align-items:center">
         <button class="btn btn-primary" onclick="openArchivioModal()">📷 Importa da foto</button>
         <select id="arch-filter-mese" onchange="renderArchivio()" style="min-width:130px">
@@ -399,7 +387,6 @@
       <div id="archivio-list"></div>
     </div>
 
-
     <!-- ══════ SCHEDE TECNICHE ══════ -->
     <div class="view" id="view-schede">
       <div class="page-title">Schede Tecniche</div>
@@ -411,6 +398,17 @@
         </select>
       </div>
       <div id="schede-list"></div>
+    </div>
+
+    <!-- ══════ REPORT ══════ -->
+    <div class="view" id="view-report">
+      <div class="page-title">Report Mensile</div>
+      <div class="page-sub" id="report-period"></div>
+      <div style="display:flex;gap:7px;margin-bottom:18px">
+        <button class="btn btn-primary" onclick="renderReport()">🔄 Aggiorna</button>
+        <button class="btn" onclick="window.print()">🖨 Stampa PDF</button>
+      </div>
+      <div id="report-content"></div>
     </div>
 
 
