@@ -416,56 +416,53 @@
 
     <!-- ══════ TRACCIABILITÀ ══════ -->
     <div class="view" id="view-tracciabilita">
-      <div class="page-title">🧬 Tracciabilità Campioni</div>
+      <div class="page-title">Tracciabilità Campioni</div>
       <div class="page-sub" id="tracc-stats"></div>
-      <div style="display:flex;gap:7px;margin-bottom:14px;flex-wrap:wrap;align-items:center">
+      <div style="display:flex;gap:7px;margin-bottom:10px;flex-wrap:wrap;align-items:center">
         <button class="btn btn-primary" onclick="openNuovoCampione()">＋ Nuovo Campione</button>
-        <button class="btn btn-primary" onclick="openNuovoCampioneSpec('pap_l')">＋ Pap LupoLab</button>
-        <button class="btn btn-primary" onclick="openNuovoCampioneSpec('pap_priv')" style="background:var(--purple);border-color:var(--purple)">＋ Pap Priv.</button>
-        <div class="filter-bar" style="margin:0" id="tracc-filter-bar">
-          <button class="f-btn active" onclick="setTraccFilter('all',this)">Tutti</button>
-          <button class="f-btn" onclick="setTraccFilter('istologia',this)">Istologia</button>
-          <button class="f-btn" onclick="setTraccFilter('citologia',this)">Citologia</button>
-          <button class="f-btn" onclick="setTraccFilter('pap',this)">Pap</button>
-          <button class="f-btn" onclick="setTraccFilter('pap_l',this)">Pap LupoLab</button>
-          <button class="f-btn" onclick="setTraccFilter('pap_priv',this)">Pap Privato</button>
-        </div>
+        <button class="btn btn-pap-l" onclick="openNuovoCampioneSpec('pap_l')">＋ Pap LupoLab</button>
+        <button class="btn btn-pap-priv" onclick="openNuovoCampioneSpec('pap_priv')">＋ Pap Priv.</button>
       </div>
-      <!-- Ricerca -->
-      <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
-        <div class="search-wrap"><span class="s-ico">🔍</span><input type="text" id="tracc-search" placeholder="Cerca per ID, provenienza…" oninput="debouncedRenderTracc()"></div>
+      <div class="filter-bar" id="tracc-filter-bar">
+        <button class="f-btn active" onclick="setTraccFilter('all',this)">Tutti</button>
+        <button class="f-btn" onclick="setTraccFilter('istologia',this)">Istologia</button>
+        <button class="f-btn" onclick="setTraccFilter('citologia',this)">Citologia</button>
+        <button class="f-btn" onclick="setTraccFilter('pap',this)">Pap</button>
+        <button class="f-btn" onclick="setTraccFilter('pap_l',this)">Pap LupoLab</button>
+        <button class="f-btn" onclick="setTraccFilter('pap_priv',this)">Pap Privato</button>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center">
+        <div class="search-wrap"><span class="s-ico">🔍</span><input type="text" id="tracc-search" placeholder="Cerca ID, provenienza…" oninput="debouncedRenderTracc()"></div>
         <input type="date" id="tracc-from" onchange="renderTracciabilita()" style="max-width:140px" title="Da">
         <input type="date" id="tracc-to" onchange="renderTracciabilita()" style="max-width:140px" title="A">
-        <input type="text" id="tracc-search-lotto" placeholder="Cerca per lotto reagente…" oninput="debouncedRenderTracc()" style="max-width:180px">
+        <input type="text" id="tracc-search-lotto" placeholder="Cerca lotto reagente…" oninput="debouncedRenderTracc()" style="max-width:180px">
       </div>
       <div id="tracc-list"></div>
     </div>
 
-
     <!-- ══════ PROCESSATORE ══════ -->
     <div class="view" id="view-processatore">
-      <div class="page-title">⚗️ Registro Processatore</div>
+      <div class="page-title">Registro Processatore</div>
       <div class="page-sub" id="proc-stats"></div>
-      <div style="display:flex;gap:7px;margin-bottom:14px;flex-wrap:wrap;align-items:center">
+      <div style="display:flex;gap:7px;margin-bottom:10px;flex-wrap:wrap;align-items:center">
         <button class="btn btn-primary" onclick="openNuovoProcessatore()">＋ Nuovo Ciclo</button>
         <button class="btn" onclick="cercaPerLotto()" title="Tracciabilità inversa lotto">🔍 Cerca Lotto</button>
+        <div class="search-wrap" style="margin-left:auto"><span class="s-ico">🔍</span><input type="text" id="proc-search" placeholder="Cerca ID caso o lotto…" oninput="renderProcessatore()"></div>
         <input type="date" id="proc-filter-from" onchange="renderProcessatore()" style="max-width:140px" title="Da">
         <input type="date" id="proc-filter-to" onchange="renderProcessatore()" style="max-width:140px" title="A">
-        <div class="search-wrap"><span class="s-ico">🔍</span><input type="text" id="proc-search" placeholder="Cerca per ID caso o lotto…" oninput="renderProcessatore()"></div>
       </div>
       <div id="proc-list"></div>
     </div>
 
     <!-- ══════ COLORATORE ══════ -->
     <div class="view" id="view-coloratore">
-      <div class="page-title">🎨 Registro Coloratore</div>
+      <div class="page-title">Registro Coloratore</div>
       <div class="page-sub" id="color-stats"></div>
       <div style="display:flex;gap:7px;margin-bottom:14px;flex-wrap:wrap;align-items:center">
         <button class="btn btn-primary" onclick="openNuovoColoratore()">＋ Nuovo Ciclo</button>
-
+        <div class="search-wrap" style="margin-left:auto"><span class="s-ico">🔍</span><input type="text" id="color-search" placeholder="Cerca ID caso o lotto…" oninput="renderColoratore()"></div>
         <input type="date" id="color-filter-from" onchange="renderColoratore()" style="max-width:140px" title="Da">
         <input type="date" id="color-filter-to" onchange="renderColoratore()" style="max-width:140px" title="A">
-        <div class="search-wrap"><span class="s-ico">🔍</span><input type="text" id="color-search" placeholder="Cerca per ID caso o lotto…" oninput="renderColoratore()"></div>
       </div>
       <div id="color-list"></div>
     </div>
