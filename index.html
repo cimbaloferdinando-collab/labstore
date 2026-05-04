@@ -17,23 +17,23 @@
 </head>
 <body>
 <header>
-  <div style="display:flex;align-items:center;gap:10px">
+  <div style="display:flex;align-items:center;gap:8px">
     <button class="btn-hamburger" onclick="toggleSidebar()" aria-label="Menu navigazione">☰</button>
-    <div class="logo" onclick="showView('dashboard')" style="cursor:pointer">LupoLab <span class="logo-badge">AP</span></div>
+    <div class="logo" onclick="showView('dashboard')">LupoLab <span class="logo-badge">AP</span></div>
   </div>
   <div class="hdr-act">
     <button class="btn hdr-util" id="sync-status" onclick="forceSync()" style="font-size:11px;font-family:'DM Mono',monospace" title="Sincronizza con cloud">⬡ Locale</button>
     <button class="btn btn-ok hdr-util" onclick="forceSave()" title="Salva tutto sul cloud" style="font-size:11px">💾 Salva</button>
-    <button class="btn hdr-util" onclick="exportBackup()" title="Esporta backup locale JSON" style="font-size:11px">📥 Backup</button>
-    <button class="btn hdr-util" onclick="importBackup()" title="Ripristina backup da file JSON" style="font-size:11px">📤 Ripristina</button>
-    <button class="btn hdr-util" onclick="hardResetFromCloud()" title="Sostituisce inventario locale con dati cloud" style="font-size:11px">🔄 Reset cloud</button>
-    <button class="btn hdr-util btn-warn" onclick="resetProductsFromCloud()" title="Sovrascrive prodotti locali con quelli Supabase (no merge)" style="font-size:11px">🔁 Prod. cloud</button>
+    <button class="btn hdr-util" onclick="exportBackup()" title="Esporta backup JSON" style="font-size:11px">📥 Backup</button>
+    <button class="btn hdr-util" onclick="importBackup()" title="Ripristina backup JSON" style="font-size:11px">📤 Ripristina</button>
+    <button class="btn hdr-util" onclick="hardResetFromCloud()" title="Sostituisce dati locali con cloud" style="font-size:11px">🔄 Reset</button>
+    <button class="btn hdr-util btn-warn" onclick="resetProductsFromCloud()" title="Sovrascrive prodotti con Supabase" style="font-size:11px">🔁 Prod.</button>
     <button class="btn hdr-util" id="undo-btn" onclick="undoLastAction()" title="Nessuna azione da annullare" style="font-size:11px;opacity:.4">↩ Annulla</button>
-    <div class="hdr-sep-mobile" style="width:1px;height:20px;background:rgba(255,255,255,.15);margin:0 4px"></div>
+    <div class="hdr-sep"></div>
     <button class="btn btn-primary" onclick="openNuovoCampione()" title="Nuovo campione">＋ Campione</button>
     <button class="btn btn-pap-l hdr-util" onclick="openNuovoCampioneSpec('pap_l')">＋ Pap L</button>
     <button class="btn btn-pap-priv hdr-util" onclick="openNuovoCampioneSpec('pap_priv')">＋ Pap Priv.</button>
-    <div style="width:1px;height:20px;background:rgba(255,255,255,.15);margin:0 4px"></div>
+    <div class="hdr-sep"></div>
     <div class="hdr-ddrop" id="hdr-mag-drop">
       <button class="btn" onclick="toggleHdrDrop('hdr-mag-drop')" aria-label="Azioni magazzino">📦 Mag. ▾</button>
       <div class="hdr-ddrop-menu" id="hdr-mag-drop-menu">
@@ -43,8 +43,7 @@
         <button class="btn btn-primary" onclick="openAddModal();toggleHdrDrop('hdr-mag-drop')">＋ Prodotto</button>
       </div>
     </div>
-    <!-- Menu ⋯ visibile solo su smartphone (<480px) -->
-    <div class="hdr-ddrop hdr-mobile-overflow" id="hdr-more-drop" style="display:none">
+    <div class="hdr-ddrop hdr-mobile-overflow" id="hdr-more-drop">
       <button class="btn" onclick="toggleHdrDrop('hdr-more-drop')" aria-label="Altre azioni" style="font-size:16px;padding:8px 12px">⋯</button>
       <div class="hdr-ddrop-menu" id="hdr-more-drop-menu" style="right:0;min-width:180px">
         <button class="btn" onclick="openNuovoCampioneSpec('pap_l');toggleHdrDrop('hdr-more-drop')">＋ Pap L</button>
@@ -65,52 +64,37 @@
 
 <div class="layout">
   <nav class="sidebar">
-    <!-- HOME -->
-    <div class="nav-item active" onclick="showView('dashboard')" id="nav-dashboard"><span class="nav-icon">🏠</span>Dashboard</div>
+    <div class="nav-item active" onclick="showView('dashboard')" id="nav-dashboard" data-tip="Dashboard"><span class="nav-icon">🏠</span></div>
     <div class="nav-div"></div>
-    <!-- TRACCIABILITÀ -->
     <div class="nav-lbl">Tracciabilità</div>
-    <div class="nav-item" onclick="showView('tracciabilita')" id="nav-tracciabilita"><span class="nav-icon">🧬</span>Campioni</div>
-    <div class="nav-item" onclick="showView('processatore')" id="nav-processatore"><span class="nav-icon">⚗️</span>Processatore</div>
-    <div class="nav-item" onclick="showView('coloratore')" id="nav-coloratore"><span class="nav-icon">🎨</span>Coloratore</div>
-    <div class="nav-item" onclick="showView('ihc')" id="nav-ihc"><span class="nav-icon">🔬</span>IHC</div>
-
+    <div class="nav-item" onclick="showView('tracciabilita')" id="nav-tracciabilita" data-tip="Campioni"><span class="nav-icon">🧬</span></div>
+    <div class="nav-item" onclick="showView('processatore')" id="nav-processatore" data-tip="Processatore"><span class="nav-icon">⚗️</span></div>
+    <div class="nav-item" onclick="showView('coloratore')" id="nav-coloratore" data-tip="Coloratore"><span class="nav-icon">🎨</span></div>
+    <div class="nav-item" onclick="showView('ihc')" id="nav-ihc" data-tip="IHC"><span class="nav-icon">🔬</span></div>
     <div class="nav-div"></div>
-
-    <!-- MAGAZZINO — sezione secondaria collassabile -->
-    <div class="nav-lbl clickable" onclick="toggleMagazzino()">
-      <span>📦 Magazzino</span><span id="mag-arrow">▾</span>
-    </div>
+    <div class="nav-lbl clickable" onclick="toggleMagazzino()"><span>📦</span><span id="mag-arrow">▾</span></div>
     <div id="mag-submenu" style="display:block">
-      <div class="nav-item" onclick="showView('inventario')" id="nav-inventario"><span class="nav-icon">📋</span>Inventario</div>
-      <div class="nav-item" onclick="showView('movimenti')" id="nav-movimenti"><span class="nav-icon">↕</span>Movimenti</div>
-      <div class="nav-item" onclick="showView('allerte')" id="nav-allerte"><span class="nav-icon">🚨</span>Allerte</div>
-      <div class="nav-item" onclick="showView('ordini')" id="nav-ordini"><span class="nav-icon">🛒</span>Ordini</div>
-      <div class="nav-item" onclick="showView('archivio')" id="nav-archivio"><span class="nav-icon">🗂</span>Arch. Ordini</div>
-      <div class="nav-item" onclick="showView('schede')" id="nav-schede"><span class="nav-icon">📋</span>Schede Tecniche</div>
+      <div class="nav-item" onclick="showView('inventario')" id="nav-inventario" data-tip="Inventario"><span class="nav-icon">📋</span></div>
+      <div class="nav-item" onclick="showView('movimenti')" id="nav-movimenti" data-tip="Movimenti"><span class="nav-icon">↕</span></div>
+      <div class="nav-item" onclick="showView('allerte')" id="nav-allerte" data-tip="Allerte"><span class="nav-icon">🚨</span></div>
+      <div class="nav-item" onclick="showView('ordini')" id="nav-ordini" data-tip="Ordini"><span class="nav-icon">🛒</span></div>
+      <div class="nav-item" onclick="showView('archivio')" id="nav-archivio" data-tip="Archivio Ordini"><span class="nav-icon">🗂</span></div>
+      <div class="nav-item" onclick="showView('schede')" id="nav-schede" data-tip="Schede Tecniche"><span class="nav-icon">📄</span></div>
     </div>
-
     <div class="nav-div"></div>
-
-    <!-- RIFIUTI e REPORT -->
-    <div class="nav-item" onclick="showView('rifiuti')" id="nav-rifiuti"><span class="nav-icon">🗑</span>Rifiuti</div>
-    <div class="nav-item" onclick="showView('report')" id="nav-report"><span class="nav-icon">📊</span>Report</div>
-
+    <div class="nav-item" onclick="showView('rifiuti')" id="nav-rifiuti" data-tip="Rifiuti"><span class="nav-icon">🗑</span></div>
+    <div class="nav-item" onclick="showView('report')" id="nav-report" data-tip="Report"><span class="nav-icon">📊</span></div>
     <div class="nav-div"></div>
-
-    <!-- CATEGORIE MAGAZZINO -->
-    <div class="nav-lbl clickable" onclick="toggleCategorie()">
-      <span>Categorie</span><span id="cat-arrow">▾</span>
-    </div>
+    <div class="nav-lbl clickable" onclick="toggleCategorie()"><span>Cat.</span><span id="cat-arrow">▾</span></div>
     <div id="cat-submenu" style="display:block">
-      <div class="nav-item" onclick="goCategory('Reagenti')"><span class="nav-icon">🧪</span>Reagenti</div>
-      <div class="nav-item" onclick="goCategory('Vetrini')"><span class="nav-icon">🪟</span>Vetrini</div>
-      <div class="nav-item" onclick="goCategory('Cassette')"><span class="nav-icon">📁</span>Cassette</div>
-      <div class="nav-item" onclick="goCategory('Coloranti')"><span class="nav-icon">🎨</span>Coloranti</div>
-      <div class="nav-item" onclick="goCategory('Consumabili')"><span class="nav-icon">🧤</span>Consumabili</div>
-      <div class="nav-item" onclick="goCategory('Kit Colorazioni')"><span class="nav-icon">🔬</span>Kit Color.</div>
-      <div class="nav-item" onclick="goCategory('Lame')"><span class="nav-icon">⚔</span>Lame</div>
-      <div class="nav-item" onclick="goCategory('Altro')"><span class="nav-icon">📌</span>Altro</div>
+      <div class="nav-item" onclick="goCategory('Reagenti')" data-tip="Reagenti"><span class="nav-icon">🧪</span></div>
+      <div class="nav-item" onclick="goCategory('Vetrini')" data-tip="Vetrini"><span class="nav-icon">🪟</span></div>
+      <div class="nav-item" onclick="goCategory('Cassette')" data-tip="Cassette"><span class="nav-icon">📁</span></div>
+      <div class="nav-item" onclick="goCategory('Coloranti')" data-tip="Coloranti"><span class="nav-icon">🎨</span></div>
+      <div class="nav-item" onclick="goCategory('Consumabili')" data-tip="Consumabili"><span class="nav-icon">🧤</span></div>
+      <div class="nav-item" onclick="goCategory('Kit Colorazioni')" data-tip="Kit Color."><span class="nav-icon">🔬</span></div>
+      <div class="nav-item" onclick="goCategory('Lame')" data-tip="Lame"><span class="nav-icon">⚔</span></div>
+      <div class="nav-item" onclick="goCategory('Altro')" data-tip="Altro"><span class="nav-icon">📌</span></div>
     </div>
   </nav>
 
