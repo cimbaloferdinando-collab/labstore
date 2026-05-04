@@ -242,7 +242,7 @@
         <button class="f-btn" onclick="setInvFilter('Lame',this)">⚔ Lame</button>
         <button class="f-btn" onclick="setInvFilter('Altro',this)">📌 Altro</button>
       </div>
-      <div class="filter-bar" id="inv-fornitore-bar" style="margin-top:4px">
+      <div class="filter-bar" id="inv-fornitore-bar">
         <span style="font-size:11px;color:var(--text3);padding:0 6px;align-self:center">Fornitore:</span>
         <button class="f-btn active" onclick="setFornFilter('all',this)">Tutti</button>
         <button class="f-btn" onclick="setFornFilter('Epredia',this)">Epredia</button>
@@ -250,21 +250,21 @@
         <button class="f-btn" onclick="setFornFilter('Ventana',this)">Ventana</button>
         <button class="f-btn" onclick="setFornFilter('__altri',this)">Altri fornitori</button>
       </div>
-      <div class="filter-bar" id="inv-sub-bar" style="margin-top:4px;display:none">
+      <div class="filter-bar" id="inv-sub-bar" style="display:none">
         <span style="font-size:11px;color:var(--text3);padding:0 6px;align-self:center" id="inv-sub-label">Sottofiltro:</span>
       </div>
-      <div class="filter-bar" id="inv-sub2-bar" style="margin-top:4px;display:none">
+      <div class="filter-bar" id="inv-sub2-bar" style="display:none">
         <span style="font-size:11px;color:var(--text3);padding:0 6px;align-self:center">Prodotto:</span>
       </div>
       <div class="card">
         <div class="card-header">
           <span class="card-title" id="inv-count">0 prodotti</span>
-          <div class="card-act">
+          <div style="display:flex;gap:6px;align-items:center">
             <button class="btn btn-sm" onclick="openInventarioFisico()" style="background:var(--purple-bg);color:var(--purple);border-color:#c4b5fd">📋 Verifica inventario</button>
             <div class="search-wrap"><span class="s-ico">🔍</span><input type="text" id="inv-search" placeholder="Cerca…" oninput="debouncedRenderInv()"></div>
           </div>
         </div>
-        <div class="table-scroll"><table>
+        <div style="overflow-x:auto"><table>
           <thead><tr><th>Prodotto</th><th>Categoria</th><th>Lotto</th><th>Scadenza</th><th>Ini → Att</th><th>Livello</th><th>Azioni</th></tr></thead>
           <tbody id="inv-tbody"></tbody>
         </table></div>
@@ -278,7 +278,7 @@
       <div style="display:flex;gap:7px;margin-bottom:14px;flex-wrap:wrap">
         <button class="btn btn-ok" onclick="openDDTModal()">📷 Carico da DDT</button>
         <button class="btn btn-ok" onclick="openCaricaScanModal()">⬆ Carico Scan</button>
-    <button class="btn btn-warn" onclick="openScaricaModal()">⬇ Scarico</button>
+        <button class="btn btn-warn" onclick="openScaricaModal()">⬇ Scarico</button>
         <button class="btn" onclick="openManualMovModal('carico')">＋ Carico manuale</button>
         <button class="btn" onclick="openManualMovModal('scarico')">− Scarico manuale</button>
       </div>
@@ -287,7 +287,7 @@
           <span class="card-title">Storico movimenti</span>
           <button class="btn btn-sm btn-danger" onclick="clearMovimenti()">🗑 Svuota</button>
         </div>
-        <div class="table-scroll"><table>
+        <div style="overflow-x:auto"><table>
           <thead><tr><th>Data/Ora</th><th>Tipo</th><th>Prodotto</th><th>Qtà</th><th>Lotto</th><th>Note</th></tr></thead>
           <tbody id="mov-tbody"></tbody>
         </table></div>
@@ -331,7 +331,7 @@
       </div>
       <div class="card">
         <div class="card-header"><span class="card-title" id="allerte-count">0 prodotti</span></div>
-        <div class="table-scroll"><table>
+        <div style="overflow-x:auto"><table>
           <thead><tr><th>Prodotto</th><th>Categoria</th><th>Fornitore</th><th>Lotto</th><th>Qtà / Min</th><th>Scadenza</th><th>Stato</th><th>Azione</th></tr></thead>
           <tbody id="allerte-tbody"></tbody>
         </table></div>
