@@ -102,111 +102,129 @@
 
     <!-- ══════ HOME ══════ -->
     <div class="view active" id="view-dashboard">
-      <div class="page-title">Home</div>
+      <div class="page-title">Dashboard</div>
       <div class="page-sub" id="dash-date"></div>
 
-      <!-- Stat cards -->
+      <!-- KPI strip -->
       <div class="stats-grid" id="stats-grid"></div>
-
-      <!-- WIDGET RAPIDO: Registra caso al volo -->
-      <div class="card" style="margin-bottom:14px;padding:14px">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-          <div style="font-weight:700;font-size:14px;color:var(--accent)">🧬 Registra caso rapido</div>
-          <button class="btn btn-sm" onclick="showView('tracciabilita')">Tutti i casi →</button>
-        </div>
-        <div id="quick-form-grid" style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr auto;gap:8px;align-items:end">
-          <div class="fg" style="margin:0">
-            <label>ID Caso *</label>
-            <input type="text" id="quick-id" placeholder="es. 2764/26" style="font-family:DM Mono,monospace;font-weight:700">
-          </div>
-          <div class="fg" style="margin:0">
-            <label>Tipo *</label>
-            <select id="quick-tipo">
-              <option value="istologia">Istologia</option>
-              <option value="citologia">Citologia</option>
-              <option value="pap_l">Pap LupoLab</option>
-              <option value="pap_priv">Pap Privato</option>
-            </select>
-          </div>
-          <div class="fg" style="margin:0">
-            <label>Provenienza</label>
-            <input type="text" id="quick-prov" placeholder="Reparto / medico">
-          </div>
-          <div class="fg" style="margin:0">
-            <label>Descrizione breve</label>
-            <input type="text" id="quick-desc" placeholder="es. Biopsia colon">
-          </div>
-          <button class="btn btn-primary" onclick="saveQuickCaso()" style="height:36px;margin-bottom:0">＋</button>
-        </div>
-        <div id="home-tracc-oggi" style="margin-top:10px"></div>
-      </div>
-
-      <!-- COLORATORE: tabella giornaliera -->
-      <div class="card" style="margin-bottom:14px;padding:14px">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-          <div style="font-weight:700;font-size:14px;color:var(--accent)">🎨 Coloratore</div>
-          <div style="display:flex;gap:6px">
-            <button class="btn btn-sm btn-primary" onclick="openNuovoColoratore()">＋ Nuovo</button>
-            <button class="btn btn-sm" onclick="showView('coloratore')">Storico →</button>
-          </div>
-        </div>
-        <div id="home-color-table"></div>
-        <div id="home-color-oggi" style="margin-top:8px"></div>
-      </div>
-
-      <!-- IHC widget -->
-      <div class="card" id="home-ihc-card" style="margin-bottom:14px;padding:14px">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-          <div style="font-weight:700;font-size:14px;color:var(--accent)">🔬 IHC</div>
-          <div style="display:flex;gap:6px">
-            <button class="btn btn-sm btn-primary" onclick="openNuovaIHC()">＋ Nuova</button>
-            <button class="btn btn-sm" onclick="showView('ihc')">Tutte →</button>
-          </div>
-        </div>
-        <div id="home-ihc-content"></div>
-      </div>
-
-      <!-- PROCESSATORE + ALLERTE magazzino -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
-        <div class="card" style="padding:14px">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-            <div style="font-weight:700;font-size:14px;color:var(--accent)">⚗️ Processatore</div>
-            <button class="btn btn-sm" onclick="showView('processatore')">Storico →</button>
-          </div>
-          <div id="home-proc-oggi"></div>
-        </div>
-        <div class="card" style="padding:14px">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-            <div style="font-weight:700;font-size:14px;color:var(--accent)">🚨 Magazzino</div>
-            <button class="btn btn-sm" onclick="showView('allerte')">Tutte →</button>
-          </div>
-          <div id="home-allerte-list" style="padding:4px 0"></div>
-        </div>
-      </div>
 
       <!-- Alert banners -->
       <div id="alerts-wrap"></div>
 
-      <!-- 2-col: scadenze + ordini -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px">
-        <div class="card" style="margin:0;padding:14px">
-          <div class="card-header" style="margin-bottom:8px"><span class="card-title">⏰ In scadenza (30gg)</span></div>
-          <div id="home-scadenze-list" style="padding:4px 0"></div>
+      <!-- Caso rapido -->
+      <div class="card" style="margin-bottom:14px">
+        <div class="card-header">
+          <span class="card-title">🧬 Registra caso rapido</span>
+          <button class="btn btn-sm" onclick="showView('tracciabilita')">Tutti i casi →</button>
         </div>
-        <div class="card" style="margin:0;padding:14px">
-          <div class="card-header" style="margin-bottom:8px"><span class="card-title">🛒 Ordini aperti</span><button class="btn btn-sm" onclick="showView('ordini')">Tutti →</button></div>
-          <div id="home-ordini-list" style="padding:4px 0"></div>
+        <div style="padding:14px">
+          <div id="quick-form-grid" style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr auto;gap:8px;align-items:end">
+            <div class="fg" style="margin:0">
+              <label>ID Caso *</label>
+              <input type="text" id="quick-id" placeholder="es. 2764/26" style="font-family:'DM Mono',monospace;font-weight:700">
+            </div>
+            <div class="fg" style="margin:0">
+              <label>Tipo *</label>
+              <select id="quick-tipo">
+                <option value="istologia">Istologia</option>
+                <option value="citologia">Citologia</option>
+                <option value="pap_l">Pap LupoLab</option>
+                <option value="pap_priv">Pap Privato</option>
+              </select>
+            </div>
+            <div class="fg" style="margin:0">
+              <label>Provenienza</label>
+              <input type="text" id="quick-prov" placeholder="Reparto / medico">
+            </div>
+            <div class="fg" style="margin:0">
+              <label>Descrizione breve</label>
+              <input type="text" id="quick-desc" placeholder="es. Biopsia colon">
+            </div>
+            <button class="btn btn-primary" onclick="saveQuickCaso()" style="height:36px;margin-bottom:0">＋</button>
+          </div>
+          <div id="home-tracc-oggi" style="margin-top:10px"></div>
         </div>
       </div>
 
-      <!-- PRODOTTI MAGAZZINO grid -->
-      <div class="card" style="padding:14px;margin-bottom:14px">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-          <div style="font-weight:700;font-size:14px;color:var(--accent)">📦 Magazzino</div>
-          <button class="btn btn-sm" onclick="showView('inventario')">Tutte →</button>
+      <!-- Coloratore + IHC -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px" id="home-panels">
+        <div class="card" style="margin:0">
+          <div class="card-header">
+            <span class="card-title">🎨 Coloratore</span>
+            <div style="display:flex;gap:6px">
+              <button class="btn btn-sm btn-primary" onclick="openNuovoColoratore()">＋ Nuovo</button>
+              <button class="btn btn-sm" onclick="showView('coloratore')">Storico →</button>
+            </div>
+          </div>
+          <div style="padding:12px">
+            <div id="home-color-table"></div>
+            <div id="home-color-oggi" style="margin-top:6px"></div>
+          </div>
         </div>
-        <input type="text" id="home-search" placeholder="Cerca prodotto..." oninput="renderHomeGrid()" style="margin-bottom:10px">
-        <div id="home-cat-grid"></div>
+        <div class="card" style="margin:0" id="home-ihc-card">
+          <div class="card-header">
+            <span class="card-title">🔬 IHC</span>
+            <div style="display:flex;gap:6px">
+              <button class="btn btn-sm btn-primary" onclick="openNuovaIHC()">＋ Nuova</button>
+              <button class="btn btn-sm" onclick="showView('ihc')">Tutte →</button>
+            </div>
+          </div>
+          <div style="padding:12px"><div id="home-ihc-content"></div></div>
+        </div>
+      </div>
+
+      <!-- Processatore + Allerte -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
+        <div class="card" style="margin:0">
+          <div class="card-header">
+            <span class="card-title">⚗️ Processatore</span>
+            <button class="btn btn-sm" onclick="showView('processatore')">Storico →</button>
+          </div>
+          <div style="padding:12px"><div id="home-proc-oggi"></div></div>
+        </div>
+        <div class="card" style="margin:0">
+          <div class="card-header">
+            <span class="card-title">🚨 Allerte magazzino</span>
+            <button class="btn btn-sm" onclick="showView('allerte')">Tutte →</button>
+          </div>
+          <div style="padding:12px"><div id="home-allerte-list"></div></div>
+        </div>
+      </div>
+
+      <!-- Scadenze + Ordini -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
+        <div class="card" style="margin:0">
+          <div class="card-header"><span class="card-title">⏰ In scadenza (30 gg)</span></div>
+          <div style="padding:12px"><div id="home-scadenze-list"></div></div>
+        </div>
+        <div class="card" style="margin:0">
+          <div class="card-header">
+            <span class="card-title">🛒 Ordini aperti</span>
+            <button class="btn btn-sm" onclick="showView('ordini')">Tutti →</button>
+          </div>
+          <div style="padding:12px"><div id="home-ordini-list"></div></div>
+        </div>
+      </div>
+
+      <!-- Magazzino prodotti -->
+      <div class="card" style="margin-bottom:14px">
+        <div class="card-header">
+          <span class="card-title">📦 Magazzino</span>
+          <button class="btn btn-sm" onclick="showView('inventario')">Inventario →</button>
+        </div>
+        <div style="padding:14px">
+          <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;align-items:center">
+            <input type="text" id="home-search" placeholder="Cerca prodotto…" oninput="renderHomeGrid()" style="flex:1;min-width:180px">
+          </div>
+          <div class="filter-bar" id="home-forn-bar" style="margin-bottom:10px">
+            <button class="f-btn active" onclick="setHomeFornFilter('all',this)">Tutti</button>
+            <button class="f-btn" onclick="setHomeFornFilter('Epredia',this)">Epredia</button>
+            <button class="f-btn" onclick="setHomeFornFilter('Bio Optica',this)">Bio Optica</button>
+            <button class="f-btn" onclick="setHomeFornFilter('Ventana',this)">Ventana</button>
+            <button class="f-btn" onclick="setHomeFornFilter('__altri',this)">Altri</button>
+          </div>
+          <div id="home-cat-grid"></div>
+        </div>
       </div>
 
     </div>
