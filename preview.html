@@ -27,9 +27,12 @@
   --orange:   #ea580c; --orange-bg:#fff7ed;--orange-bd:#fed7aa;
   --purple:   #7c3aed; --purple-bg:#f5f3ff;--purple-bd:#ddd6fe;
   --teal:     #0891b2; --teal-bg: #ecfeff; --teal-bd: #a5f3fc;
+  --bg2:      #ffffff;
+  --bg3:      #f7f9fc;
   --r:6px; --r-sm:4px; --r-lg:10px;
   --sh-sm:0 1px 3px rgba(15,23,42,.08);
   --sh:    0 4px 12px rgba(15,23,42,.10);
+  --shadow-lg:0 10px 25px -3px rgba(0,0,0,.08),0 4px 10px -4px rgba(0,0,0,.05);
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
@@ -229,6 +232,31 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
 .fc-item{padding:8px 14px;font-size:12px;font-weight:500;color:var(--text2);cursor:pointer;transition:background .12s}
 .fc-item:hover{background:var(--bg)}
 
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(15,23,42,.5);display:flex;align-items:center;justify-content:center;z-index:1000;opacity:0;pointer-events:none;transition:opacity .2s;backdrop-filter:blur(4px)}
+.modal-overlay.open{opacity:1;pointer-events:all}
+.modal{background:var(--bg2);border-radius:var(--r-lg);padding:24px;box-shadow:var(--shadow-lg);max-height:90vh;overflow-y:auto;width:480px;max-width:95vw;transform:translateY(8px);transition:transform .2s;border:1px solid var(--border)}
+.modal-overlay.open .modal{transform:translateY(0)}
+.modal-title{font-family:'Libre Baskerville',serif;font-size:20px;font-weight:700;color:var(--accent);margin-bottom:18px;letter-spacing:-.3px}
+.modal-footer{display:flex;gap:8px;justify-content:flex-end;margin-top:20px;padding-top:16px;border-top:1px solid var(--border)}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.fg{display:flex;flex-direction:column;gap:4px;margin-bottom:0}
+.fg.full{grid-column:1/-1}
+.fg label{font-size:11px;font-weight:600;color:var(--text3)}
+.fg input,.fg select,.fg textarea{padding:7px 10px;border:1.5px solid var(--border2);border-radius:var(--r-sm);font-size:13px;font-family:'DM Sans',sans-serif;color:var(--text);background:var(--surface);outline:none;transition:border-color .12s}
+.fg input:focus,.fg select:focus{border-color:var(--accent2);box-shadow:0 0 0 3px rgba(37,99,235,.10)}
+.btn{padding:8px 14px;border-radius:var(--r-sm);border:1.5px solid var(--border2);background:var(--surface);font-size:13px;font-weight:500;color:var(--text2);cursor:pointer;font-family:'DM Sans',sans-serif;transition:background .12s,border-color .12s}
+.btn:hover{background:var(--bg);border-color:var(--border2)}
+.btn-sm{padding:6px 10px;font-size:12px}
+.btn-primary{background:var(--accent2);color:#fff;border-color:var(--accent2);font-weight:600}
+.btn-primary:hover{background:#1d4ed8;border-color:#1d4ed8}
+.btn-ok{background:var(--green-bg);color:var(--green);border-color:var(--green-bd)}
+.btn-danger{background:var(--red-bg);color:var(--red);border-color:var(--red-bd)}
+.reagente-usato-row{display:flex;gap:8px;align-items:center;padding:8px 12px;border:1.5px solid var(--border);border-radius:var(--r-sm);margin-bottom:6px;background:var(--bg3);transition:border-color .12s}
+.reagente-usato-row select,.reagente-usato-row input{flex:1;padding:4px 8px;border:1px solid var(--border2);border-radius:var(--r-sm);font-size:12px;font-family:'DM Mono',monospace;background:var(--surface)}
+/* TOAST */
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(60px);background:#1a2f5e;color:#fff;padding:10px 20px;border-radius:var(--r);font-size:13px;font-weight:500;opacity:0;transition:opacity .2s,transform .2s;z-index:2000;pointer-events:none}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 @keyframes fadeIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
 
 /* RESPONSIVE */
@@ -574,7 +602,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
     <div class="view" data-view="processatore">
       <div class="pg-hdr">
         <div class="pg-title">Processatore</div>
-        <button class="hbtn2 primary">＋ Nuovo ciclo</button>
+        <button class="hbtn2 primary" onclick="openNuovoProcessatore()">＋ Nuovo ciclo</button>
       </div>
 
       <!-- cerca per ID caso -->
@@ -633,7 +661,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
     <div class="view" data-view="coloratore">
       <div class="pg-hdr">
         <div class="pg-title">Coloratore</div>
-        <button class="hbtn2 primary">＋ Nuovo ciclo</button>
+        <button class="hbtn2 primary" onclick="openNuovoColoratore()">＋ Nuovo ciclo</button>
       </div>
 
       <!-- ricerca inversa -->
@@ -1260,6 +1288,178 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
   </template>
 
 </div>
+<!-- TOAST -->
+<div class="toast" id="app-toast"></div>
+
+<!-- MODAL PROCESSATORE -->
+<div class="modal-overlay" id="modal-processatore">
+  <div class="modal" style="width:600px;max-height:92vh;overflow-y:auto">
+    <div class="modal-title">Nuovo Ciclo Processatore</div>
+    <div style="background:var(--bg3);border-radius:var(--r);padding:12px;margin-bottom:14px">
+      <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px">Informazioni ciclo</div>
+      <div class="form-grid">
+        <div class="fg" style="margin:0"><label>Data ciclo *</label><input type="date" id="proc-data"></div>
+        <div class="fg" style="margin:0"><label>Ora inizio</label><input type="time" id="proc-ora-inizio"></div>
+        <div class="fg" style="margin:0"><label>Ora fine</label><input type="time" id="proc-ora-fine"></div>
+        <div class="fg" style="margin:0"><label>Protocollo</label>
+          <select id="proc-protocollo">
+            <option value="standard">Standard notturno</option>
+            <option value="rapido">Rapido</option>
+            <option value="biopsie">Biopsie</option>
+            <option value="altro">Altro</option>
+          </select>
+        </div>
+        <div class="fg full" style="margin:0"><label>Note</label><input type="text" id="proc-note" placeholder="Note sul ciclo…"></div>
+      </div>
+    </div>
+    <div style="background:var(--bg3);border-radius:var(--r);padding:12px;margin-bottom:14px">
+      <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">Casi processati</div>
+      <div style="display:flex;gap:8px;margin-bottom:8px">
+        <input type="text" id="proc-caso-from" placeholder="Da (es. 2764/26)" style="flex:1;font-family:'DM Mono',monospace">
+        <span style="align-self:center;color:var(--text3)">→</span>
+        <input type="text" id="proc-caso-to" placeholder="A (es. 2800/26)" style="flex:1;font-family:'DM Mono',monospace">
+        <button class="btn btn-sm btn-primary" onclick="addRangeCasiProc()">＋ Range</button>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:8px">
+        <input type="text" id="proc-caso-singolo" placeholder="Oppure aggiungi singolo ID…" style="flex:1;font-family:'DM Mono',monospace" onkeydown="if(event.key==='Enter') addCasoSingoloProc()">
+        <button class="btn btn-sm btn-ok" onclick="addCasoSingoloProc()">＋</button>
+      </div>
+      <div id="proc-casi-list" style="display:flex;flex-wrap:wrap;gap:5px;min-height:32px;padding:6px;background:var(--bg2);border:1px solid var(--border);border-radius:6px"></div>
+      <div style="font-size:11px;color:var(--text3);margin-top:4px">N° casi: <span id="proc-casi-count" style="font-weight:600;color:var(--accent)">0</span> &nbsp;·&nbsp; <label style="display:inline;font-size:11px;color:var(--text3)">N° cassette: <input type="number" id="proc-n-cassette" min="0" step="1" placeholder="auto" style="width:65px;font-size:12px;padding:2px 6px;display:inline;vertical-align:middle;font-family:'DM Mono',monospace"></label></div>
+    </div>
+    <div style="background:var(--bg3);border-radius:var(--r);padding:12px;margin-bottom:14px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.8px">Reagenti processatore</div>
+        <button class="btn btn-sm" onclick="initReagentiProcPreview()">⟳ Auto</button>
+      </div>
+      <div style="font-size:11px;color:var(--text3);margin-bottom:8px">Lista fissa — verificato: lotto invariato · rabboccato: integrato · sostituito: nuovo lotto</div>
+      <div id="proc-reagenti-list"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('modal-processatore')">Annulla</button>
+      <button class="btn btn-primary" onclick="saveProcessatore()">💾 Salva</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL COLORATORE -->
+<div class="modal-overlay" id="modal-coloratore">
+  <div class="modal" style="width:640px;max-height:92vh;overflow-y:auto">
+    <div class="modal-title">Registro Coloratore</div>
+    <div style="background:var(--bg3);border-radius:var(--r);padding:12px;margin-bottom:14px">
+      <div class="form-grid">
+        <div class="fg" style="margin:0"><label>Data *</label><input type="date" id="color-data"></div>
+        <div class="fg" style="margin:0"><label>Note</label><input type="text" id="color-note" placeholder="Note…"></div>
+      </div>
+    </div>
+    <div style="background:var(--bg3);border-radius:var(--r);padding:12px;margin-bottom:14px">
+      <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px">N° cicli effettuati</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+        <div style="text-align:center;background:var(--bg2);border-radius:8px;padding:12px;border:1px solid var(--border)">
+          <div style="font-size:11px;color:var(--blue);font-weight:600;margin-bottom:6px">EE — Istologia</div>
+          <input type="number" id="color-cicli-ee" min="0" value="0" style="width:70px;text-align:center;font-family:'DM Mono',monospace;font-size:22px;font-weight:700;border:none;background:transparent;color:var(--blue)">
+          <div style="font-size:10px;color:var(--text3)">cicli</div>
+        </div>
+        <div style="text-align:center;background:var(--bg2);border-radius:8px;padding:12px;border:1px solid var(--border)">
+          <div style="font-size:11px;color:var(--teal);font-weight:600;margin-bottom:6px">EE — Citologia</div>
+          <input type="number" id="color-cicli-ee-cit" min="0" value="0" style="width:70px;text-align:center;font-family:'DM Mono',monospace;font-size:22px;font-weight:700;border:none;background:transparent;color:var(--teal)">
+          <div style="font-size:10px;color:var(--text3)">cicli</div>
+        </div>
+        <div style="text-align:center;background:var(--bg2);border-radius:8px;padding:12px;border:1px solid var(--border)">
+          <div style="font-size:11px;color:var(--purple);font-weight:600;margin-bottom:6px">PAP LupoLab</div>
+          <input type="number" id="color-cicli-pap" min="0" value="0" style="width:70px;text-align:center;font-family:'DM Mono',monospace;font-size:22px;font-weight:700;border:none;background:transparent;color:var(--purple)">
+          <div style="font-size:10px;color:var(--text3)">cicli</div>
+        </div>
+      </div>
+    </div>
+    <div style="background:var(--bg3);border-radius:var(--r);padding:12px;margin-bottom:14px">
+      <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px">Range ID casi lavorati + vetri</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+        <!-- Istologia -->
+        <div style="background:var(--bg2);border-radius:8px;padding:10px;border:1px solid var(--border)">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+            <div style="font-size:11px;color:var(--blue);font-weight:600">Istologia</div>
+            <div style="display:flex;align-items:center;gap:4px">
+              <span style="font-size:10px;color:var(--text3);white-space:nowrap">Vetri</span>
+              <input type="number" id="color-vetri-ist" min="0" value="0" style="width:52px;font-family:'DM Mono',monospace;font-size:12px;font-weight:700;color:var(--blue);text-align:center">
+            </div>
+          </div>
+          <div style="display:flex;gap:3px;margin-bottom:5px">
+            <input type="text" id="color-range-ist-from" placeholder="Da es. 2764/26" style="flex:1;font-family:'DM Mono',monospace;font-size:11px">
+            <span style="align-self:center;color:var(--text3);font-size:10px">→</span>
+            <input type="text" id="color-range-ist-to" placeholder="A" style="flex:1;font-family:'DM Mono',monospace;font-size:11px">
+            <button class="btn btn-sm btn-primary" onclick="addColorRange('ist')" style="padding:3px 7px;font-size:13px">＋</button>
+          </div>
+          <div id="color-ranges-ist" style="display:flex;flex-wrap:wrap;gap:3px;min-height:20px"></div>
+          <div style="display:flex;gap:3px;margin-top:5px">
+            <input type="text" id="color-singolo-ist" placeholder="Singolo caso…" style="flex:1;font-family:'DM Mono',monospace;font-size:11px" onkeydown="if(event.key==='Enter') addColorSingolo('ist')">
+            <button class="btn btn-sm btn-ok" onclick="addColorSingolo('ist')" style="padding:3px 7px;font-size:13px">＋</button>
+          </div>
+          <div style="font-size:11px;color:var(--text3);margin-top:3px">N° casi: <span id="color-count-ist" style="font-weight:600;color:var(--blue)">0</span></div>
+        </div>
+        <!-- Citologia -->
+        <div style="background:var(--bg2);border-radius:8px;padding:10px;border:1px solid var(--border)">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+            <div style="font-size:11px;color:var(--teal);font-weight:600">Citologia</div>
+            <div style="display:flex;align-items:center;gap:4px">
+              <span style="font-size:10px;color:var(--text3);white-space:nowrap">Vetri</span>
+              <input type="number" id="color-vetri-cit" min="0" value="0" style="width:52px;font-family:'DM Mono',monospace;font-size:12px;font-weight:700;color:var(--teal);text-align:center">
+            </div>
+          </div>
+          <div style="display:flex;gap:3px;margin-bottom:5px">
+            <input type="text" id="color-range-cit-from" placeholder="Da es. 2764/26" style="flex:1;font-family:'DM Mono',monospace;font-size:11px">
+            <span style="align-self:center;color:var(--text3);font-size:10px">→</span>
+            <input type="text" id="color-range-cit-to" placeholder="A" style="flex:1;font-family:'DM Mono',monospace;font-size:11px">
+            <button class="btn btn-sm btn-primary" onclick="addColorRange('cit')" style="padding:3px 7px;font-size:13px">＋</button>
+          </div>
+          <div id="color-ranges-cit" style="display:flex;flex-wrap:wrap;gap:3px;min-height:20px"></div>
+          <div style="display:flex;gap:3px;margin-top:5px">
+            <input type="text" id="color-singolo-cit" placeholder="Singolo caso…" style="flex:1;font-family:'DM Mono',monospace;font-size:11px" onkeydown="if(event.key==='Enter') addColorSingolo('cit')">
+            <button class="btn btn-sm btn-ok" onclick="addColorSingolo('cit')" style="padding:3px 7px;font-size:13px">＋</button>
+          </div>
+          <div style="font-size:11px;color:var(--text3);margin-top:3px">N° casi: <span id="color-count-cit" style="font-weight:600;color:var(--teal)">0</span></div>
+        </div>
+        <!-- PAP -->
+        <div style="background:var(--bg2);border-radius:8px;padding:10px;border:1px solid var(--border)">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+            <div style="font-size:11px;color:var(--purple);font-weight:600">Pap LupoLab</div>
+            <div style="display:flex;align-items:center;gap:4px">
+              <span style="font-size:10px;color:var(--text3);white-space:nowrap">Vetri</span>
+              <input type="number" id="color-vetri-pap" min="0" value="0" style="width:52px;font-family:'DM Mono',monospace;font-size:12px;font-weight:700;color:var(--purple);text-align:center">
+            </div>
+          </div>
+          <div style="display:flex;gap:3px;margin-bottom:5px">
+            <input type="text" id="color-range-pap-from" placeholder="Da es. 100/26L" style="flex:1;font-family:'DM Mono',monospace;font-size:11px">
+            <span style="align-self:center;color:var(--text3);font-size:10px">→</span>
+            <input type="text" id="color-range-pap-to" placeholder="A" style="flex:1;font-family:'DM Mono',monospace;font-size:11px">
+            <button class="btn btn-sm btn-primary" onclick="addColorRange('pap')" style="padding:3px 7px;font-size:13px">＋</button>
+          </div>
+          <div id="color-ranges-pap" style="display:flex;flex-wrap:wrap;gap:3px;min-height:20px"></div>
+          <div style="display:flex;gap:3px;margin-top:5px">
+            <input type="text" id="color-singolo-pap" placeholder="Singolo caso…" style="flex:1;font-family:'DM Mono',monospace;font-size:11px" onkeydown="if(event.key==='Enter') addColorSingolo('pap')">
+            <button class="btn btn-sm btn-ok" onclick="addColorSingolo('pap')" style="padding:3px 7px;font-size:13px">＋</button>
+          </div>
+          <div style="font-size:11px;color:var(--text3);margin-top:3px">N° casi: <span id="color-count-pap" style="font-weight:600;color:var(--purple)">0</span></div>
+        </div>
+      </div>
+    </div>
+    <div style="background:var(--bg3);border-radius:var(--r);padding:12px;margin-bottom:14px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+        <div>
+          <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.8px">Reagenti presenti nel coloratore</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:2px">Lista fissa — verificato: invariato · rabboccato: integrato · sostituito: nuovo lotto</div>
+        </div>
+        <button class="btn btn-sm" onclick="initReagentiColorPreview()">⟳ Auto</button>
+      </div>
+      <div id="color-reagenti-list"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('modal-coloratore')">Annulla</button>
+      <button class="btn btn-primary" onclick="saveColoratore()">💾 Salva</button>
+    </div>
+  </div>
+</div>
+
 <script>
 // Helper SVG — globali per essere accessibili in tutto lo script
 function svgEl(tag,attrs){
@@ -1652,7 +1852,168 @@ document.addEventListener('DOMContentLoaded',function(){
     });
   });
 
+  // chiudi modal cliccando overlay
+  document.querySelectorAll('.modal-overlay').forEach(ov=>{
+    ov.addEventListener('click',e=>{if(e.target===ov) closeModal(ov.id);});
+  });
+
 }); // fine DOMContentLoaded
+
+/* ── MODAL HELPERS (globali) ── */
+function showToast(msg){
+  const t=document.getElementById('app-toast');
+  if(!t)return;
+  t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2400);
+}
+
+function closeModal(id){
+  const el=document.getElementById(id);
+  if(el) el.classList.remove('open');
+}
+
+function openNuovoProcessatore(){
+  // reset form
+  ['proc-data','proc-ora-inizio','proc-ora-fine','proc-note','proc-caso-from','proc-caso-to','proc-caso-singolo','proc-n-cassette']
+    .forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  const sel=document.getElementById('proc-protocollo');if(sel)sel.value='standard';
+  const list=document.getElementById('proc-casi-list');if(list)list.innerHTML='';
+  const cnt=document.getElementById('proc-casi-count');if(cnt)cnt.textContent='0';
+  initReagentiProcPreview();
+  document.getElementById('modal-processatore').classList.add('open');
+}
+
+function openNuovoColoratore(){
+  ['color-data','color-note'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  ['color-cicli-ee','color-cicli-ee-cit','color-cicli-pap','color-vetri-ist','color-vetri-cit','color-vetri-pap']
+    .forEach(id=>{const el=document.getElementById(id);if(el)el.value='0';});
+  ['ist','cit','pap'].forEach(t=>{
+    ['color-range-'+t+'-from','color-range-'+t+'-to','color-singolo-'+t]
+      .forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+    const r=document.getElementById('color-ranges-'+t);if(r)r.innerHTML='';
+    const c=document.getElementById('color-count-'+t);if(c)c.textContent='0';
+  });
+  initReagentiColorPreview();
+  document.getElementById('modal-coloratore').classList.add('open');
+}
+
+/* ── PROCESSATORE: casi ── */
+let _procCasi=[];
+function addRangeCasiProc(){
+  const from=document.getElementById('proc-caso-from').value.trim();
+  const to=document.getElementById('proc-caso-to').value.trim();
+  if(!from)return;
+  const label=to?from+' → '+to:from;
+  _procCasi.push(label);
+  _renderProcCasi();
+  document.getElementById('proc-caso-from').value='';
+  document.getElementById('proc-caso-to').value='';
+}
+function addCasoSingoloProc(){
+  const v=document.getElementById('proc-caso-singolo').value.trim();
+  if(!v)return;
+  _procCasi.push(v);
+  _renderProcCasi();
+  document.getElementById('proc-caso-singolo').value='';
+}
+function _renderProcCasi(){
+  const list=document.getElementById('proc-casi-list');
+  list.innerHTML=_procCasi.map((c,i)=>
+    `<span style="display:inline-flex;align-items:center;gap:4px;background:var(--blue-bg);border:1px solid var(--blue-bd);border-radius:4px;padding:2px 7px;font-size:11px;font-family:'DM Mono',monospace;color:var(--blue)">${c}<button onclick="_removeProcCaso(${i})" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:11px;padding:0 2px">×</button></span>`
+  ).join('');
+  document.getElementById('proc-casi-count').textContent=_procCasi.length;
+}
+function _removeProcCaso(i){_procCasi.splice(i,1);_renderProcCasi();}
+
+/* ── PROCESSATORE: reagenti preview ── */
+function initReagentiProcPreview(){
+  _procCasi=[];
+  const reagenti=[
+    {nome:'Formalina 10%',lotto:'FT-2026-0312',stato:'verificato'},
+    {nome:'Alcol 96°',lotto:'AL-2025-1108',stato:'verificato'},
+    {nome:'Alcol 90°',lotto:'AL-2025-1107',stato:'rabboccato'},
+    {nome:'Alcol 80°',lotto:'AL-2025-1106',stato:'verificato'},
+    {nome:'Alcol 70°',lotto:'AL-2025-1105',stato:'verificato'},
+    {nome:'Xilolo puro',lotto:'XI-2025-0904',stato:'verificato'},
+    {nome:'Xilolo/Alcol 50%',lotto:'XI-2025-0905',stato:'verificato'},
+    {nome:'Paraffina',lotto:'PA-2026-0201',stato:'verificato'},
+  ];
+  const container=document.getElementById('proc-reagenti-list');
+  if(!container)return;
+  const opzioni=['verificato','rabboccato','sostituito'];
+  container.innerHTML=reagenti.map(r=>`
+    <div class="reagente-usato-row">
+      <span style="flex:2;font-size:12px;font-weight:500;color:var(--text)">${r.nome}</span>
+      <input type="text" value="${r.lotto}" placeholder="Lotto" style="flex:2;font-size:11px">
+      <select style="flex:1.5;font-size:11px;border:1px solid var(--border2);border-radius:var(--r-sm);padding:3px 6px;background:var(--surface)">
+        ${opzioni.map(o=>`<option value="${o}"${o===r.stato?' selected':''}>${o}</option>`).join('')}
+      </select>
+    </div>`).join('');
+}
+
+/* ── COLORATORE: range casi ── */
+const _colorCasi={ist:[],cit:[],pap:[]};
+function addColorRange(tipo){
+  const from=document.getElementById('color-range-'+tipo+'-from').value.trim();
+  const to=document.getElementById('color-range-'+tipo+'-to').value.trim();
+  if(!from)return;
+  _colorCasi[tipo].push(from+(to?' → '+to:''));
+  _renderColorCasi(tipo);
+  document.getElementById('color-range-'+tipo+'-from').value='';
+  document.getElementById('color-range-'+tipo+'-to').value='';
+}
+function addColorSingolo(tipo){
+  const v=document.getElementById('color-singolo-'+tipo).value.trim();
+  if(!v)return;
+  _colorCasi[tipo].push(v);
+  _renderColorCasi(tipo);
+  document.getElementById('color-singolo-'+tipo).value='';
+}
+const _colorMap={ist:{col:'var(--blue)',bg:'var(--blue-bg)',bd:'var(--blue-bd)'},cit:{col:'var(--teal)',bg:'var(--teal-bg)',bd:'var(--teal-bd)'},pap:{col:'var(--purple)',bg:'var(--purple-bg)',bd:'var(--purple-bd)'}};
+function _renderColorCasi(tipo){
+  const c=_colorMap[tipo];
+  const el=document.getElementById('color-ranges-'+tipo);
+  el.innerHTML=_colorCasi[tipo].map((v,i)=>
+    `<span style="display:inline-flex;align-items:center;gap:3px;background:${c.bg};border:1px solid ${c.bd};border-radius:4px;padding:2px 6px;font-size:10px;font-family:'DM Mono',monospace;color:${c.col}">${v}<button onclick="_removeColorCaso('${tipo}',${i})" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:10px;padding:0 1px">×</button></span>`
+  ).join('');
+  document.getElementById('color-count-'+tipo).textContent=_colorCasi[tipo].length;
+}
+function _removeColorCaso(tipo,i){_colorCasi[tipo].splice(i,1);_renderColorCasi(tipo);}
+
+/* ── COLORATORE: reagenti preview ── */
+function initReagentiColorPreview(){
+  ['ist','cit','pap'].forEach(t=>{_colorCasi[t]=[];_renderColorCasi(t);});
+  const reagenti=[
+    {nome:'Ematossilina di Harris',lotto:'EH-2026-0115',stato:'verificato'},
+    {nome:'Eosina Y 0.5%',lotto:'EO-2026-0201',stato:'verificato'},
+    {nome:'Alcol 96° (blu diluente)',lotto:'AL-2025-1108',stato:'rabboccato'},
+    {nome:'Alcol acido 1%',lotto:'AA-2026-0110',stato:'verificato'},
+    {nome:'Acqua Scott',lotto:'SC-2025-1205',stato:'verificato'},
+    {nome:'Xilolo puro (depaff.)',lotto:'XI-2025-0904',stato:'verificato'},
+    {nome:'DPX (vetrino cover)',lotto:'DP-2025-0801',stato:'verificato'},
+  ];
+  const container=document.getElementById('color-reagenti-list');
+  if(!container)return;
+  const opzioni=['verificato','rabboccato','sostituito'];
+  container.innerHTML=reagenti.map(r=>`
+    <div class="reagente-usato-row">
+      <span style="flex:2;font-size:12px;font-weight:500;color:var(--text)">${r.nome}</span>
+      <input type="text" value="${r.lotto}" placeholder="Lotto" style="flex:2;font-size:11px">
+      <select style="flex:1.5;font-size:11px;border:1px solid var(--border2);border-radius:var(--r-sm);padding:3px 6px;background:var(--surface)">
+        ${opzioni.map(o=>`<option value="${o}"${o===r.stato?' selected':''}>${o}</option>`).join('')}
+      </select>
+    </div>`).join('');
+}
+
+/* ── SAVE PREVIEW (toast only) ── */
+function saveProcessatore(){
+  closeModal('modal-processatore');
+  showToast('✅ Ciclo processatore salvato');
+}
+function saveColoratore(){
+  closeModal('modal-coloratore');
+  showToast('✅ Registro coloratore salvato');
+}
 </script>
 </body>
 </html>
