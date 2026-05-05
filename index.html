@@ -11,29 +11,284 @@
 <title>LupoLab — Anatomia Patologica</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/@zxing/library@0.19.1/umd/index.min.js"></script>
-<link rel="stylesheet" href="styles.css">
+<style>
+:root {
+  --accent:   #1a2f5e;
+  --accent2:  #2563eb;
+  --accent-hi:rgba(255,255,255,.15);
+  --bg:       #f0f2f7;
+  --surface:  #ffffff;
+  --border:   #e2e8f0;
+  --border2:  #cbd5e1;
+  --text:     #0f172a;
+  --text2:    #374151;
+  --text3:    #6b7280;
+  --text4:    #b0bec5;
+  --green:    #059669; --green-bg:#ecfdf5; --green-bd:#a7f3d0;
+  --red:      #dc2626; --red-bg:  #fef2f2; --red-bd:  #fca5a5;
+  --yellow:   #d97706; --yellow-bg:#fffbeb;--yellow-bd:#fcd34d;
+  --blue:     #2563eb; --blue-bg: #eff6ff; --blue-bd: #bfdbfe;
+  --orange:   #ea580c; --orange-bg:#fff7ed;--orange-bd:#fed7aa;
+  --purple:   #7c3aed; --purple-bg:#f5f3ff;--purple-bd:#ddd6fe;
+  --teal:     #0891b2; --teal-bg: #ecfeff; --teal-bd: #a5f3fc;
+  --bg2:      #ffffff;
+  --bg3:      #f7f9fc;
+  --r:6px; --r-sm:4px; --r-lg:10px;
+  --sh-sm:0 1px 3px rgba(15,23,42,.08);
+  --sh:    0 4px 12px rgba(15,23,42,.10);
+  --shadow-lg:0 10px 25px -3px rgba(0,0,0,.08),0 4px 10px -4px rgba(0,0,0,.05);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'DM Sans',sans-serif;font-size:14px;line-height:1.5;
+  color:var(--text2);background:var(--bg);min-height:100vh;
+  -webkit-font-smoothing:antialiased}
+a{text-decoration:none;color:inherit}
+button{font-family:inherit;cursor:pointer;border:none;background:none}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:99px}
+
+/* LAYOUT */
+.app{display:grid;grid-template-rows:52px 1fr;
+  grid-template-columns:48px 1fr;min-height:100vh}
+
+/* HEADER */
+.hdr{grid-column:1/-1;grid-row:1;height:52px;
+  background:var(--accent);display:flex;align-items:center;
+  padding:0 14px 0 0;position:sticky;top:0;z-index:200;
+  box-shadow:0 2px 8px rgba(15,23,42,.30)}
+.hdr-logo{width:48px;height:52px;display:flex;align-items:center;
+  justify-content:center;flex-shrink:0;
+  border-right:1px solid rgba(255,255,255,.10)}
+.hdr-logo span{font-family:'Libre Baskerville',serif;font-size:20px;
+  font-weight:700;color:#fff;letter-spacing:-.5px}
+.hdr-brand{font-family:'Libre Baskerville',serif;font-size:14px;
+  font-weight:700;color:#fff;padding:0 14px;white-space:nowrap;
+  border-right:1px solid rgba(255,255,255,.12);margin-right:10px}
+.hdr-brand span{font-size:10px;font-weight:400;opacity:.55;margin-left:4px}
+.sync-chip{display:flex;align-items:center;gap:5px;padding:3px 10px;
+  border-radius:999px;border:1px solid rgba(255,255,255,.16);
+  background:rgba(255,255,255,.07);font-family:'DM Mono',monospace;
+  font-size:10px;color:rgba(255,255,255,.70);cursor:pointer;white-space:nowrap}
+.sync-dot{width:6px;height:6px;border-radius:50%;background:var(--green);flex-shrink:0}
+.hdr-gap{flex:1}
+.hdr-btns{display:flex;align-items:center;gap:4px}
+.hbtn{padding:5px 10px;border-radius:var(--r-sm);
+  border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.09);
+  color:rgba(255,255,255,.88);font-size:11px;font-weight:500;
+  transition:background .13s;white-space:nowrap}
+.hbtn:hover{background:rgba(255,255,255,.20)}
+.hbtn.primary{background:#fff;color:var(--accent);border-color:#fff;font-weight:600}
+.hbtn.primary:hover{background:#e8f0fe}
+.hbtn.pap-l{background:rgba(234,88,12,.25);border-color:rgba(234,88,12,.40);color:#fdba74}
+.hbtn.pap-p{background:rgba(124,58,237,.25);border-color:rgba(124,58,237,.40);color:#c4b5fd}
+.hdr-sep{width:1px;height:20px;background:rgba(255,255,255,.16);margin:0 2px}
+.hdr-time{font-family:'DM Mono',monospace;font-size:11px;
+  color:rgba(255,255,255,.45);padding:0 4px}
+.fc-btn{width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.18);
+  border:1px solid rgba(255,255,255,.28);color:#fff;font-size:11px;
+  font-weight:700;display:flex;align-items:center;justify-content:center;
+  cursor:pointer;flex-shrink:0;transition:background .13s}
+.fc-btn:hover{background:rgba(255,255,255,.30)}
+
+/* RAIL */
+.rail{grid-column:1;grid-row:2;width:48px;background:var(--accent);
+  display:flex;flex-direction:column;align-items:center;
+  padding:8px 0;position:sticky;top:52px;
+  height:calc(100vh - 52px);overflow-y:auto;scrollbar-width:none}
+.rail::-webkit-scrollbar{display:none}
+.rail-item{position:relative;width:100%;height:38px;display:flex;
+  align-items:center;justify-content:center;font-size:15px;
+  color:rgba(255,255,255,.55);cursor:pointer;
+  transition:color .12s,background .12s;flex-shrink:0;user-select:none}
+.rail-item:hover{background:rgba(255,255,255,.10);color:rgba(255,255,255,.90)}
+.rail-item.active{background:var(--accent-hi);color:#fff}
+.rail-item::after{content:attr(title);position:absolute;left:calc(100% + 8px);
+  top:50%;transform:translateY(-50%);background:#0f172a;color:#fff;
+  font-family:'DM Sans',sans-serif;font-size:11px;font-weight:500;
+  padding:4px 9px;border-radius:var(--r-sm);white-space:nowrap;
+  pointer-events:none;opacity:0;transition:opacity .12s;z-index:300;
+  box-shadow:var(--sh-sm)}
+.rail-item:hover::after{opacity:1}
+.rail-badge{position:absolute;top:5px;right:5px;min-width:14px;height:14px;
+  background:var(--red);color:#fff;border-radius:999px;font-size:8px;
+  font-weight:700;display:flex;align-items:center;justify-content:center;
+  padding:0 3px;pointer-events:none}
+.rail-div{width:28px;height:1px;background:rgba(255,255,255,.12);margin:4px auto}
+.rail-bottom{flex:1}
+.rail-avatar{width:30px;height:30px;border-radius:50%;
+  background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.28);
+  color:#fff;font-size:11px;font-weight:700;display:flex;
+  align-items:center;justify-content:center;cursor:pointer;
+  transition:background .12s;margin-bottom:8px}
+.rail-avatar:hover{background:rgba(255,255,255,.30)}
+
+/* MAIN */
+.main{grid-column:2;grid-row:2;padding:22px 26px;
+  overflow-y:auto;min-height:calc(100vh - 52px)}
+.view{display:none}.view.active{display:block}
+
+/* CARD */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;box-shadow:var(--sh-sm)}
+.card-hdr{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--border);background:#f8fafc}
+.card-title{font-size:11px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--text2);flex:1}
+.card-sub{font-size:11px;color:var(--text3)}
+.card-lnk{font-size:11px;color:var(--accent2);font-weight:500;cursor:pointer;white-space:nowrap}
+.card-lnk:hover{text-decoration:underline}
+
+/* KPI */
+.kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px 13px;box-shadow:var(--sh-sm);position:relative;overflow:hidden;cursor:pointer;transition:box-shadow .13s,transform .13s}
+.kpi-card:hover{box-shadow:var(--sh);transform:translateY(-1px)}
+.kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--accent2);border-radius:var(--r) var(--r) 0 0}
+.kpi-card.k-red::before{background:var(--red)}
+.kpi-lbl{font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--text3);margin-bottom:5px}
+.kpi-val{font-family:'Libre Baskerville',serif;font-size:40px;font-weight:700;color:var(--accent);line-height:1;margin-bottom:4px}
+.kpi-val.red{color:var(--red)}.kpi-val.blue{color:var(--blue)}
+.kpi-delta{font-family:'DM Mono',monospace;font-size:10px;color:var(--text3);margin-top:4px}
+.kpi-delta.up{color:var(--green)}
+
+/* CER chips */
+.cer-chip{padding:4px 6px;border-radius:var(--r-sm);font-size:10px;font-weight:600;display:flex;justify-content:space-between;gap:4px}
+.cer-chip.red{background:var(--red-bg);color:var(--red);border:1px solid var(--red-bd)}
+.cer-chip.yellow{background:var(--yellow-bg);color:var(--yellow);border:1px solid var(--yellow-bd)}
+.cer-chip.gray{background:#f9fafb;color:#6b7280;border:1px solid #e5e7eb}
+
+/* TABELLE */
+.tbl{width:100%;border-collapse:collapse}
+.tbl thead th{text-align:left;padding:8px 10px;font-size:10px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--text3);background:#f8fafc;border-bottom:2px solid var(--border)}
+.tbl tbody tr{border-bottom:1px solid var(--border);transition:background .10s}
+.tbl tbody tr:last-child{border-bottom:none}
+.tbl tbody tr:hover{background:#f8fafc}
+.tbl tbody td{padding:8px 10px;font-size:12px;color:var(--text2);vertical-align:middle;white-space:nowrap}
+.mono{font-family:'DM Mono',monospace;font-size:11px}
+.exp-arrow{cursor:pointer;color:var(--text3);font-size:10px;padding-right:4px;transition:transform .15s;width:18px}
+.expandable:hover .exp-arrow{color:var(--accent2)}
+.exp-row{background:#f0f4ff !important}
+.exp-row.hidden{display:none}
+.exp-body{padding:10px 14px;font-size:12px;color:var(--text2);line-height:1.8}
+.note-warn{display:inline-block;background:var(--yellow-bg);color:var(--yellow);padding:2px 8px;border-radius:var(--r-sm);font-size:11px;font-weight:500;border:1px solid var(--yellow-bd)}
+.note-ok{display:inline-block;color:var(--text3);font-size:11px}
+
+/* BADGE */
+.badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:999px;font-size:10px;font-weight:600;border:1px solid transparent;white-space:nowrap}
+.bg-green{background:var(--green-bg);color:var(--green);border-color:var(--green-bd)}
+.bg-red{background:var(--red-bg);color:var(--red);border-color:var(--red-bd)}
+.bg-yellow{background:var(--yellow-bg);color:var(--yellow);border-color:var(--yellow-bd)}
+.bg-blue{background:var(--blue-bg);color:var(--blue);border-color:var(--blue-bd)}
+.bg-orange{background:var(--orange-bg);color:var(--orange);border-color:var(--orange-bd)}
+.bg-purple{background:var(--purple-bg);color:var(--purple);border-color:var(--purple-bd)}
+.bg-teal{background:var(--teal-bg);color:var(--teal);border-color:var(--teal-bd)}
+
+/* PAGE HEADER */
+.pg-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.pg-title{font-family:'Libre Baskerville',serif;font-size:22px;font-weight:700;color:var(--accent)}
+
+/* CONTATORI */
+.cnt-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:12px 14px;box-shadow:var(--sh-sm)}
+.cnt-lbl{font-size:9px;font-weight:700;letter-spacing:.11em;text-transform:uppercase;color:var(--text3);margin-bottom:4px}
+.cnt-val{font-family:'Libre Baskerville',serif;font-size:28px;font-weight:700;line-height:1}
+
+/* FILTRI CHIP */
+.filter-bar{display:flex;gap:5px;margin-bottom:12px;flex-wrap:wrap;align-items:center}
+.chip{padding:5px 13px;border-radius:999px;border:1.5px solid var(--border2);background:var(--surface);color:var(--text2);cursor:pointer;font-size:12px;font-weight:500;transition:all .12s;font-family:'DM Sans',sans-serif}
+.chip:hover{border-color:var(--accent2);color:var(--accent2)}
+.chip.active{background:var(--accent);color:#fff;border-color:var(--accent);font-weight:600}
+
+/* BOTTONI PAGINA */
+.hbtn2{padding:6px 13px;border-radius:var(--r-sm);border:1.5px solid var(--border2);background:var(--surface);color:var(--text2);font-size:12px;font-weight:500;cursor:pointer;transition:all .13s;font-family:'DM Sans',sans-serif;white-space:nowrap}
+.hbtn2:hover{border-color:var(--accent2);color:var(--accent2)}
+.hbtn2.primary{background:var(--blue);border-color:var(--blue);color:#fff;font-weight:600}
+.hbtn2.primary:hover{background:#1d4ed8;border-color:#1d4ed8}
+.hbtn2.pap-l{background:var(--orange-bg);border-color:var(--orange-bd);color:var(--orange)}
+.hbtn2.pap-p{background:var(--purple-bg);border-color:var(--purple-bd);color:var(--purple)}
+.hbtn2.ok{background:var(--green-bg);border-color:var(--green-bd);color:var(--green)}
+.hbtn2.warn{background:var(--yellow-bg);border-color:var(--yellow-bd);color:var(--yellow)}
+.hbtn2.danger{background:var(--red-bg);border-color:var(--red-bd);color:var(--red)}
+
+/* AZIONI TABELLA */
+.act-cell{width:32px;text-align:center}
+.act-btn{padding:4px 6px;border-radius:var(--r-sm);border:1px solid var(--border);background:var(--surface);cursor:pointer;font-size:11px;transition:background .12s;color:var(--text3)}
+.act-btn:hover{background:var(--bg);border-color:var(--border2)}
+
+/* SEARCH INPUT */
+.search-inp{padding:6px 10px 6px 28px;border:1.5px solid var(--border2);border-radius:var(--r-sm);font-size:12px;background:var(--surface);color:var(--text);outline:none;width:200px;font-family:'DM Sans',sans-serif}
+.search-inp:focus{border-color:var(--accent2);box-shadow:0 0 0 3px rgba(37,99,235,.10)}
+
+/* ORDINI */
+.ord-card{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r);padding:12px 14px;cursor:pointer;transition:border-color .13s,box-shadow .13s}
+.ord-card:hover{border-color:var(--accent2);box-shadow:var(--sh-sm)}
+.ord-card.active-ord{border-color:var(--accent2);box-shadow:0 0 0 3px rgba(37,99,235,.12)}
+
+/* ALLERTE */
+.alert-row{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:12px 14px;display:flex;align-items:center;gap:10px;box-shadow:var(--sh-sm)}
+.alert-prod{font-size:13px;font-weight:600;color:var(--text);margin-bottom:2px}
+.alert-meta{font-size:11px;color:var(--text3)}
+
+/* RIFIUTI BIG CARD */
+.cer-big{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;box-shadow:var(--sh-sm)}
+.cer-big.red{border-top:3px solid var(--red)}.cer-big.yellow{border-top:3px solid var(--yellow)}.cer-big.gray{border-top:3px solid var(--text3)}
+.cer-code{font-family:'DM Mono',monospace;font-size:16px;font-weight:700;color:var(--accent);margin-bottom:4px}
+.cer-desc{font-size:11px;color:var(--text3);margin-bottom:10px}
+.cer-counts{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--text2)}
+
+/* FC MENU */
+.fc-item{padding:8px 14px;font-size:12px;font-weight:500;color:var(--text2);cursor:pointer;transition:background .12s}
+.fc-item:hover{background:var(--bg)}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(15,23,42,.5);display:flex;align-items:center;justify-content:center;z-index:1000;opacity:0;pointer-events:none;transition:opacity .2s;backdrop-filter:blur(4px)}
+.modal-overlay.open{opacity:1;pointer-events:all}
+.modal{background:var(--bg2);border-radius:var(--r-lg);padding:24px;box-shadow:var(--shadow-lg);max-height:90vh;overflow-y:auto;width:480px;max-width:95vw;transform:translateY(8px);transition:transform .2s;border:1px solid var(--border)}
+.modal-overlay.open .modal{transform:translateY(0)}
+.modal-title{font-family:'Libre Baskerville',serif;font-size:20px;font-weight:700;color:var(--accent);margin-bottom:18px;letter-spacing:-.3px}
+.modal-footer{display:flex;gap:8px;justify-content:flex-end;margin-top:20px;padding-top:16px;border-top:1px solid var(--border)}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.fg{display:flex;flex-direction:column;gap:4px;margin-bottom:0}
+.fg.full{grid-column:1/-1}
+.fg label{font-size:11px;font-weight:600;color:var(--text3)}
+.fg input,.fg select,.fg textarea{padding:7px 10px;border:1.5px solid var(--border2);border-radius:var(--r-sm);font-size:13px;font-family:'DM Sans',sans-serif;color:var(--text);background:var(--surface);outline:none;transition:border-color .12s}
+.fg input:focus,.fg select:focus{border-color:var(--accent2);box-shadow:0 0 0 3px rgba(37,99,235,.10)}
+.btn{padding:8px 14px;border-radius:var(--r-sm);border:1.5px solid var(--border2);background:var(--surface);font-size:13px;font-weight:500;color:var(--text2);cursor:pointer;font-family:'DM Sans',sans-serif;transition:background .12s,border-color .12s}
+.btn:hover{background:var(--bg);border-color:var(--border2)}
+.btn-sm{padding:6px 10px;font-size:12px}
+.btn-primary{background:var(--accent2);color:#fff;border-color:var(--accent2);font-weight:600}
+.btn-primary:hover{background:#1d4ed8;border-color:#1d4ed8}
+.btn-ok{background:var(--green-bg);color:var(--green);border-color:var(--green-bd)}
+.btn-danger{background:var(--red-bg);color:var(--red);border-color:var(--red-bd)}
+.reagente-usato-row{display:flex;gap:8px;align-items:center;padding:8px 12px;border:1.5px solid var(--border);border-radius:var(--r-sm);margin-bottom:6px;background:var(--bg3);transition:border-color .12s}
+.reagente-usato-row select,.reagente-usato-row input{flex:1;padding:4px 8px;border:1px solid var(--border2);border-radius:var(--r-sm);font-size:12px;font-family:'DM Mono',monospace;background:var(--surface)}
+/* TOAST */
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(60px);background:#1a2f5e;color:#fff;padding:10px 20px;border-radius:var(--r);font-size:13px;font-weight:500;opacity:0;transition:opacity .2s,transform .2s;z-index:2000;pointer-events:none}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+@keyframes fadeIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
+
+/* RESPONSIVE */
+@media(max-width:900px){.main{padding:14px}}
+@media(max-width:700px){.app{grid-template-columns:0 1fr}.rail{display:none}}
+</style>
 </head>
 <body>
 <header>
-  <div style="display:flex;align-items:center;gap:8px">
+  <div style="display:flex;align-items:center;gap:10px">
     <button class="btn-hamburger" onclick="toggleSidebar()" aria-label="Menu navigazione">☰</button>
-    <div class="logo" onclick="showView('dashboard')">LupoLab <span class="logo-badge">AP</span></div>
+    <div class="logo" onclick="showView('dashboard')" style="cursor:pointer">LupoLab <span class="logo-badge">AP</span></div>
   </div>
   <div class="hdr-act">
     <button class="btn hdr-util" id="sync-status" onclick="forceSync()" style="font-size:11px;font-family:'DM Mono',monospace" title="Sincronizza con cloud">⬡ Locale</button>
     <button class="btn btn-ok hdr-util" onclick="forceSave()" title="Salva tutto sul cloud" style="font-size:11px">💾 Salva</button>
-    <button class="btn hdr-util" onclick="exportBackup()" title="Esporta backup JSON" style="font-size:11px">📥 Backup</button>
-    <button class="btn hdr-util" onclick="importBackup()" title="Ripristina backup JSON" style="font-size:11px">📤 Ripristina</button>
-    <button class="btn hdr-util" onclick="hardResetFromCloud()" title="Sostituisce dati locali con cloud" style="font-size:11px">🔄 Reset</button>
-    <button class="btn hdr-util btn-warn" onclick="resetProductsFromCloud()" title="Sovrascrive prodotti con Supabase" style="font-size:11px">🔁 Prod.</button>
+    <button class="btn hdr-util" onclick="exportBackup()" title="Esporta backup locale JSON" style="font-size:11px">📥 Backup</button>
+    <button class="btn hdr-util" onclick="importBackup()" title="Ripristina backup da file JSON" style="font-size:11px">📤 Ripristina</button>
+    <button class="btn hdr-util" onclick="hardResetFromCloud()" title="Sostituisce inventario locale con dati cloud" style="font-size:11px">🔄 Reset cloud</button>
+    <button class="btn hdr-util btn-warn" onclick="resetProductsFromCloud()" title="Sovrascrive prodotti locali con quelli Supabase (no merge)" style="font-size:11px">🔁 Prod. cloud</button>
     <button class="btn hdr-util" id="undo-btn" onclick="undoLastAction()" title="Nessuna azione da annullare" style="font-size:11px;opacity:.4">↩ Annulla</button>
-    <div class="hdr-sep"></div>
+    <div class="hdr-sep-mobile" style="width:1px;height:20px;background:rgba(255,255,255,.15);margin:0 4px"></div>
     <button class="btn btn-primary" onclick="openNuovoCampione()" title="Nuovo campione">＋ Campione</button>
     <button class="btn btn-pap-l hdr-util" onclick="openNuovoCampioneSpec('pap_l')">＋ Pap L</button>
     <button class="btn btn-pap-priv hdr-util" onclick="openNuovoCampioneSpec('pap_priv')">＋ Pap Priv.</button>
-    <div class="hdr-sep"></div>
+    <div style="width:1px;height:20px;background:rgba(255,255,255,.15);margin:0 4px"></div>
     <div class="hdr-ddrop" id="hdr-mag-drop">
       <button class="btn" onclick="toggleHdrDrop('hdr-mag-drop')" aria-label="Azioni magazzino">📦 Mag. ▾</button>
       <div class="hdr-ddrop-menu" id="hdr-mag-drop-menu">
@@ -43,7 +298,8 @@
         <button class="btn btn-primary" onclick="openAddModal();toggleHdrDrop('hdr-mag-drop')">＋ Prodotto</button>
       </div>
     </div>
-    <div class="hdr-ddrop hdr-mobile-overflow" id="hdr-more-drop">
+    <!-- Menu ⋯ visibile solo su smartphone (<480px) -->
+    <div class="hdr-ddrop hdr-mobile-overflow" id="hdr-more-drop" style="display:none">
       <button class="btn" onclick="toggleHdrDrop('hdr-more-drop')" aria-label="Altre azioni" style="font-size:16px;padding:8px 12px">⋯</button>
       <div class="hdr-ddrop-menu" id="hdr-more-drop-menu" style="right:0;min-width:180px">
         <button class="btn" onclick="openNuovoCampioneSpec('pap_l');toggleHdrDrop('hdr-more-drop')">＋ Pap L</button>
@@ -64,37 +320,52 @@
 
 <div class="layout">
   <nav class="sidebar">
-    <div class="nav-item active" onclick="showView('dashboard')" id="nav-dashboard" data-tip="Dashboard"><span class="nav-icon">🏠</span></div>
+    <!-- HOME -->
+    <div class="nav-item active" onclick="showView('dashboard')" id="nav-dashboard"><span class="nav-icon">🏠</span>Dashboard</div>
     <div class="nav-div"></div>
+    <!-- TRACCIABILITÀ -->
     <div class="nav-lbl">Tracciabilità</div>
-    <div class="nav-item" onclick="showView('tracciabilita')" id="nav-tracciabilita" data-tip="Campioni"><span class="nav-icon">🧬</span></div>
-    <div class="nav-item" onclick="showView('processatore')" id="nav-processatore" data-tip="Processatore"><span class="nav-icon">⚗️</span></div>
-    <div class="nav-item" onclick="showView('coloratore')" id="nav-coloratore" data-tip="Coloratore"><span class="nav-icon">🎨</span></div>
-    <div class="nav-item" onclick="showView('ihc')" id="nav-ihc" data-tip="IHC"><span class="nav-icon">🔬</span></div>
+    <div class="nav-item" onclick="showView('tracciabilita')" id="nav-tracciabilita"><span class="nav-icon">🧬</span>Campioni</div>
+    <div class="nav-item" onclick="showView('processatore')" id="nav-processatore"><span class="nav-icon">⚗️</span>Processatore</div>
+    <div class="nav-item" onclick="showView('coloratore')" id="nav-coloratore"><span class="nav-icon">🎨</span>Coloratore</div>
+    <div class="nav-item" onclick="showView('ihc')" id="nav-ihc"><span class="nav-icon">🔬</span>IHC</div>
+
     <div class="nav-div"></div>
-    <div class="nav-lbl clickable" onclick="toggleMagazzino()"><span>📦</span><span id="mag-arrow">▾</span></div>
-    <div id="mag-submenu" style="display:block">
-      <div class="nav-item" onclick="showView('inventario')" id="nav-inventario" data-tip="Inventario"><span class="nav-icon">📋</span></div>
-      <div class="nav-item" onclick="showView('movimenti')" id="nav-movimenti" data-tip="Movimenti"><span class="nav-icon">↕</span></div>
-      <div class="nav-item" onclick="showView('allerte')" id="nav-allerte" data-tip="Allerte"><span class="nav-icon">🚨</span></div>
-      <div class="nav-item" onclick="showView('ordini')" id="nav-ordini" data-tip="Ordini"><span class="nav-icon">🛒</span></div>
-      <div class="nav-item" onclick="showView('archivio')" id="nav-archivio" data-tip="Archivio Ordini"><span class="nav-icon">🗂</span></div>
-      <div class="nav-item" onclick="showView('schede')" id="nav-schede" data-tip="Schede Tecniche"><span class="nav-icon">📄</span></div>
+
+    <!-- MAGAZZINO — sezione secondaria collassabile -->
+    <div class="nav-lbl clickable" onclick="toggleMagazzino()">
+      <span>📦 Magazzino</span><span id="mag-arrow">▾</span>
     </div>
+    <div id="mag-submenu" style="display:block">
+      <div class="nav-item" onclick="showView('inventario')" id="nav-inventario"><span class="nav-icon">📋</span>Inventario</div>
+      <div class="nav-item" onclick="showView('movimenti')" id="nav-movimenti"><span class="nav-icon">↕</span>Movimenti</div>
+      <div class="nav-item" onclick="showView('allerte')" id="nav-allerte"><span class="nav-icon">🚨</span>Allerte</div>
+      <div class="nav-item" onclick="showView('ordini')" id="nav-ordini"><span class="nav-icon">🛒</span>Ordini</div>
+      <div class="nav-item" onclick="showView('archivio')" id="nav-archivio"><span class="nav-icon">🗂</span>Arch. Ordini</div>
+      <div class="nav-item" onclick="showView('schede')" id="nav-schede"><span class="nav-icon">📋</span>Schede Tecniche</div>
+    </div>
+
     <div class="nav-div"></div>
-    <div class="nav-item" onclick="showView('rifiuti')" id="nav-rifiuti" data-tip="Rifiuti"><span class="nav-icon">🗑</span></div>
-    <div class="nav-item" onclick="showView('report')" id="nav-report" data-tip="Report"><span class="nav-icon">📊</span></div>
+
+    <!-- RIFIUTI e REPORT -->
+    <div class="nav-item" onclick="showView('rifiuti')" id="nav-rifiuti"><span class="nav-icon">🗑</span>Rifiuti</div>
+    <div class="nav-item" onclick="showView('report')" id="nav-report"><span class="nav-icon">📊</span>Report</div>
+
     <div class="nav-div"></div>
-    <div class="nav-lbl clickable" onclick="toggleCategorie()"><span>Cat.</span><span id="cat-arrow">▾</span></div>
+
+    <!-- CATEGORIE MAGAZZINO -->
+    <div class="nav-lbl clickable" onclick="toggleCategorie()">
+      <span>Categorie</span><span id="cat-arrow">▾</span>
+    </div>
     <div id="cat-submenu" style="display:block">
-      <div class="nav-item" onclick="goCategory('Reagenti')" data-tip="Reagenti"><span class="nav-icon">🧪</span></div>
-      <div class="nav-item" onclick="goCategory('Vetrini')" data-tip="Vetrini"><span class="nav-icon">🪟</span></div>
-      <div class="nav-item" onclick="goCategory('Cassette')" data-tip="Cassette"><span class="nav-icon">📁</span></div>
-      <div class="nav-item" onclick="goCategory('Coloranti')" data-tip="Coloranti"><span class="nav-icon">🎨</span></div>
-      <div class="nav-item" onclick="goCategory('Consumabili')" data-tip="Consumabili"><span class="nav-icon">🧤</span></div>
-      <div class="nav-item" onclick="goCategory('Kit Colorazioni')" data-tip="Kit Color."><span class="nav-icon">🔬</span></div>
-      <div class="nav-item" onclick="goCategory('Lame')" data-tip="Lame"><span class="nav-icon">⚔</span></div>
-      <div class="nav-item" onclick="goCategory('Altro')" data-tip="Altro"><span class="nav-icon">📌</span></div>
+      <div class="nav-item" onclick="goCategory('Reagenti')"><span class="nav-icon">🧪</span>Reagenti</div>
+      <div class="nav-item" onclick="goCategory('Vetrini')"><span class="nav-icon">🪟</span>Vetrini</div>
+      <div class="nav-item" onclick="goCategory('Cassette')"><span class="nav-icon">📁</span>Cassette</div>
+      <div class="nav-item" onclick="goCategory('Coloranti')"><span class="nav-icon">🎨</span>Coloranti</div>
+      <div class="nav-item" onclick="goCategory('Consumabili')"><span class="nav-icon">🧤</span>Consumabili</div>
+      <div class="nav-item" onclick="goCategory('Kit Colorazioni')"><span class="nav-icon">🔬</span>Kit Color.</div>
+      <div class="nav-item" onclick="goCategory('Lame')"><span class="nav-icon">⚔</span>Lame</div>
+      <div class="nav-item" onclick="goCategory('Altro')"><span class="nav-icon">📌</span>Altro</div>
     </div>
   </nav>
 
@@ -102,129 +373,111 @@
 
     <!-- ══════ HOME ══════ -->
     <div class="view active" id="view-dashboard">
-      <div class="page-title">Dashboard</div>
+      <div class="page-title">Home</div>
       <div class="page-sub" id="dash-date"></div>
 
-      <!-- KPI strip -->
+      <!-- Stat cards -->
       <div class="stats-grid" id="stats-grid"></div>
+
+      <!-- WIDGET RAPIDO: Registra caso al volo -->
+      <div class="card" style="margin-bottom:14px;padding:14px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+          <div style="font-weight:700;font-size:14px;color:var(--accent)">🧬 Registra caso rapido</div>
+          <button class="btn btn-sm" onclick="showView('tracciabilita')">Tutti i casi →</button>
+        </div>
+        <div id="quick-form-grid" style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr auto;gap:8px;align-items:end">
+          <div class="fg" style="margin:0">
+            <label>ID Caso *</label>
+            <input type="text" id="quick-id" placeholder="es. 2764/26" style="font-family:DM Mono,monospace;font-weight:700">
+          </div>
+          <div class="fg" style="margin:0">
+            <label>Tipo *</label>
+            <select id="quick-tipo">
+              <option value="istologia">Istologia</option>
+              <option value="citologia">Citologia</option>
+              <option value="pap_l">Pap LupoLab</option>
+              <option value="pap_priv">Pap Privato</option>
+            </select>
+          </div>
+          <div class="fg" style="margin:0">
+            <label>Provenienza</label>
+            <input type="text" id="quick-prov" placeholder="Reparto / medico">
+          </div>
+          <div class="fg" style="margin:0">
+            <label>Descrizione breve</label>
+            <input type="text" id="quick-desc" placeholder="es. Biopsia colon">
+          </div>
+          <button class="btn btn-primary" onclick="saveQuickCaso()" style="height:36px;margin-bottom:0">＋</button>
+        </div>
+        <div id="home-tracc-oggi" style="margin-top:10px"></div>
+      </div>
+
+      <!-- COLORATORE: tabella giornaliera -->
+      <div class="card" style="margin-bottom:14px;padding:14px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <div style="font-weight:700;font-size:14px;color:var(--accent)">🎨 Coloratore</div>
+          <div style="display:flex;gap:6px">
+            <button class="btn btn-sm btn-primary" onclick="openNuovoColoratore()">＋ Nuovo</button>
+            <button class="btn btn-sm" onclick="showView('coloratore')">Storico →</button>
+          </div>
+        </div>
+        <div id="home-color-table"></div>
+        <div id="home-color-oggi" style="margin-top:8px"></div>
+      </div>
+
+      <!-- IHC widget -->
+      <div class="card" id="home-ihc-card" style="margin-bottom:14px;padding:14px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <div style="font-weight:700;font-size:14px;color:var(--accent)">🔬 IHC</div>
+          <div style="display:flex;gap:6px">
+            <button class="btn btn-sm btn-primary" onclick="openNuovaIHC()">＋ Nuova</button>
+            <button class="btn btn-sm" onclick="showView('ihc')">Tutte →</button>
+          </div>
+        </div>
+        <div id="home-ihc-content"></div>
+      </div>
+
+      <!-- PROCESSATORE + ALLERTE magazzino -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
+        <div class="card" style="padding:14px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+            <div style="font-weight:700;font-size:14px;color:var(--accent)">⚗️ Processatore</div>
+            <button class="btn btn-sm" onclick="showView('processatore')">Storico →</button>
+          </div>
+          <div id="home-proc-oggi"></div>
+        </div>
+        <div class="card" style="padding:14px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+            <div style="font-weight:700;font-size:14px;color:var(--accent)">🚨 Magazzino</div>
+            <button class="btn btn-sm" onclick="showView('allerte')">Tutte →</button>
+          </div>
+          <div id="home-allerte-list" style="padding:4px 0"></div>
+        </div>
+      </div>
 
       <!-- Alert banners -->
       <div id="alerts-wrap"></div>
 
-      <!-- Caso rapido -->
-      <div class="card" style="margin-bottom:14px">
-        <div class="card-header">
-          <span class="card-title">🧬 Registra caso rapido</span>
-          <button class="btn btn-sm" onclick="showView('tracciabilita')">Tutti i casi →</button>
+      <!-- 2-col: scadenze + ordini -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px">
+        <div class="card" style="margin:0;padding:14px">
+          <div class="card-header" style="margin-bottom:8px"><span class="card-title">⏰ In scadenza (30gg)</span></div>
+          <div id="home-scadenze-list" style="padding:4px 0"></div>
         </div>
-        <div style="padding:14px">
-          <div id="quick-form-grid" style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr auto;gap:8px;align-items:end">
-            <div class="fg" style="margin:0">
-              <label>ID Caso *</label>
-              <input type="text" id="quick-id" placeholder="es. 2764/26" style="font-family:'DM Mono',monospace;font-weight:700">
-            </div>
-            <div class="fg" style="margin:0">
-              <label>Tipo *</label>
-              <select id="quick-tipo">
-                <option value="istologia">Istologia</option>
-                <option value="citologia">Citologia</option>
-                <option value="pap_l">Pap LupoLab</option>
-                <option value="pap_priv">Pap Privato</option>
-              </select>
-            </div>
-            <div class="fg" style="margin:0">
-              <label>Provenienza</label>
-              <input type="text" id="quick-prov" placeholder="Reparto / medico">
-            </div>
-            <div class="fg" style="margin:0">
-              <label>Descrizione breve</label>
-              <input type="text" id="quick-desc" placeholder="es. Biopsia colon">
-            </div>
-            <button class="btn btn-primary" onclick="saveQuickCaso()" style="height:36px;margin-bottom:0">＋</button>
-          </div>
-          <div id="home-tracc-oggi" style="margin-top:10px"></div>
+        <div class="card" style="margin:0;padding:14px">
+          <div class="card-header" style="margin-bottom:8px"><span class="card-title">🛒 Ordini aperti</span><button class="btn btn-sm" onclick="showView('ordini')">Tutti →</button></div>
+          <div id="home-ordini-list" style="padding:4px 0"></div>
         </div>
       </div>
 
-      <!-- Coloratore + IHC -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px" id="home-panels">
-        <div class="card" style="margin:0">
-          <div class="card-header">
-            <span class="card-title">🎨 Coloratore</span>
-            <div style="display:flex;gap:6px">
-              <button class="btn btn-sm btn-primary" onclick="openNuovoColoratore()">＋ Nuovo</button>
-              <button class="btn btn-sm" onclick="showView('coloratore')">Storico →</button>
-            </div>
-          </div>
-          <div style="padding:12px">
-            <div id="home-color-table"></div>
-            <div id="home-color-oggi" style="margin-top:6px"></div>
-          </div>
+      <!-- PRODOTTI MAGAZZINO grid -->
+      <div class="card" style="padding:14px;margin-bottom:14px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <div style="font-weight:700;font-size:14px;color:var(--accent)">📦 Magazzino</div>
+          <button class="btn btn-sm" onclick="showView('inventario')">Tutte →</button>
         </div>
-        <div class="card" style="margin:0" id="home-ihc-card">
-          <div class="card-header">
-            <span class="card-title">🔬 IHC</span>
-            <div style="display:flex;gap:6px">
-              <button class="btn btn-sm btn-primary" onclick="openNuovaIHC()">＋ Nuova</button>
-              <button class="btn btn-sm" onclick="showView('ihc')">Tutte →</button>
-            </div>
-          </div>
-          <div style="padding:12px"><div id="home-ihc-content"></div></div>
-        </div>
-      </div>
-
-      <!-- Processatore + Allerte -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
-        <div class="card" style="margin:0">
-          <div class="card-header">
-            <span class="card-title">⚗️ Processatore</span>
-            <button class="btn btn-sm" onclick="showView('processatore')">Storico →</button>
-          </div>
-          <div style="padding:12px"><div id="home-proc-oggi"></div></div>
-        </div>
-        <div class="card" style="margin:0">
-          <div class="card-header">
-            <span class="card-title">🚨 Allerte magazzino</span>
-            <button class="btn btn-sm" onclick="showView('allerte')">Tutte →</button>
-          </div>
-          <div style="padding:12px"><div id="home-allerte-list"></div></div>
-        </div>
-      </div>
-
-      <!-- Scadenze + Ordini -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
-        <div class="card" style="margin:0">
-          <div class="card-header"><span class="card-title">⏰ In scadenza (30 gg)</span></div>
-          <div style="padding:12px"><div id="home-scadenze-list"></div></div>
-        </div>
-        <div class="card" style="margin:0">
-          <div class="card-header">
-            <span class="card-title">🛒 Ordini aperti</span>
-            <button class="btn btn-sm" onclick="showView('ordini')">Tutti →</button>
-          </div>
-          <div style="padding:12px"><div id="home-ordini-list"></div></div>
-        </div>
-      </div>
-
-      <!-- Magazzino prodotti -->
-      <div class="card" style="margin-bottom:14px">
-        <div class="card-header">
-          <span class="card-title">📦 Magazzino</span>
-          <button class="btn btn-sm" onclick="showView('inventario')">Inventario →</button>
-        </div>
-        <div style="padding:14px">
-          <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;align-items:center">
-            <input type="text" id="home-search" placeholder="Cerca prodotto…" oninput="renderHomeGrid()" style="flex:1;min-width:180px">
-          </div>
-          <div class="filter-bar" id="home-forn-bar" style="margin-bottom:10px">
-            <button class="f-btn active" onclick="setHomeFornFilter('all',this)">Tutti</button>
-            <button class="f-btn" onclick="setHomeFornFilter('Epredia',this)">Epredia</button>
-            <button class="f-btn" onclick="setHomeFornFilter('Bio Optica',this)">Bio Optica</button>
-            <button class="f-btn" onclick="setHomeFornFilter('Ventana',this)">Ventana</button>
-            <button class="f-btn" onclick="setHomeFornFilter('__altri',this)">Altri</button>
-          </div>
-          <div id="home-cat-grid"></div>
-        </div>
+        <input type="text" id="home-search" placeholder="Cerca prodotto..." oninput="renderHomeGrid()" style="margin-bottom:10px">
+        <div id="home-cat-grid"></div>
       </div>
 
     </div>
@@ -242,7 +495,7 @@
         <button class="f-btn" onclick="setInvFilter('Lame',this)">⚔ Lame</button>
         <button class="f-btn" onclick="setInvFilter('Altro',this)">📌 Altro</button>
       </div>
-      <div class="filter-bar" id="inv-fornitore-bar">
+      <div class="filter-bar" id="inv-fornitore-bar" style="margin-top:4px">
         <span style="font-size:11px;color:var(--text3);padding:0 6px;align-self:center">Fornitore:</span>
         <button class="f-btn active" onclick="setFornFilter('all',this)">Tutti</button>
         <button class="f-btn" onclick="setFornFilter('Epredia',this)">Epredia</button>
@@ -250,21 +503,21 @@
         <button class="f-btn" onclick="setFornFilter('Ventana',this)">Ventana</button>
         <button class="f-btn" onclick="setFornFilter('__altri',this)">Altri fornitori</button>
       </div>
-      <div class="filter-bar" id="inv-sub-bar" style="display:none">
+      <div class="filter-bar" id="inv-sub-bar" style="margin-top:4px;display:none">
         <span style="font-size:11px;color:var(--text3);padding:0 6px;align-self:center" id="inv-sub-label">Sottofiltro:</span>
       </div>
-      <div class="filter-bar" id="inv-sub2-bar" style="display:none">
+      <div class="filter-bar" id="inv-sub2-bar" style="margin-top:4px;display:none">
         <span style="font-size:11px;color:var(--text3);padding:0 6px;align-self:center">Prodotto:</span>
       </div>
       <div class="card">
         <div class="card-header">
           <span class="card-title" id="inv-count">0 prodotti</span>
-          <div style="display:flex;gap:6px;align-items:center">
+          <div class="card-act">
             <button class="btn btn-sm" onclick="openInventarioFisico()" style="background:var(--purple-bg);color:var(--purple);border-color:#c4b5fd">📋 Verifica inventario</button>
             <div class="search-wrap"><span class="s-ico">🔍</span><input type="text" id="inv-search" placeholder="Cerca…" oninput="debouncedRenderInv()"></div>
           </div>
         </div>
-        <div style="overflow-x:auto"><table>
+        <div class="table-scroll"><table>
           <thead><tr><th>Prodotto</th><th>Categoria</th><th>Lotto</th><th>Scadenza</th><th>Ini → Att</th><th>Livello</th><th>Azioni</th></tr></thead>
           <tbody id="inv-tbody"></tbody>
         </table></div>
@@ -278,7 +531,7 @@
       <div style="display:flex;gap:7px;margin-bottom:14px;flex-wrap:wrap">
         <button class="btn btn-ok" onclick="openDDTModal()">📷 Carico da DDT</button>
         <button class="btn btn-ok" onclick="openCaricaScanModal()">⬆ Carico Scan</button>
-        <button class="btn btn-warn" onclick="openScaricaModal()">⬇ Scarico</button>
+    <button class="btn btn-warn" onclick="openScaricaModal()">⬇ Scarico</button>
         <button class="btn" onclick="openManualMovModal('carico')">＋ Carico manuale</button>
         <button class="btn" onclick="openManualMovModal('scarico')">− Scarico manuale</button>
       </div>
@@ -287,7 +540,7 @@
           <span class="card-title">Storico movimenti</span>
           <button class="btn btn-sm btn-danger" onclick="clearMovimenti()">🗑 Svuota</button>
         </div>
-        <div style="overflow-x:auto"><table>
+        <div class="table-scroll"><table>
           <thead><tr><th>Data/Ora</th><th>Tipo</th><th>Prodotto</th><th>Qtà</th><th>Lotto</th><th>Note</th></tr></thead>
           <tbody id="mov-tbody"></tbody>
         </table></div>
@@ -297,18 +550,20 @@
     <!-- ══════ RIFIUTI ══════ -->
     <div class="view" id="view-rifiuti">
       <div class="page-title">Gestione Rifiuti</div>
-      <div class="page-sub">Tracciamento bidoni per codice CER: 180103*, 150110*, 150202*, 180106*</div>
-      <div style="display:flex;gap:7px;margin-bottom:16px;flex-wrap:wrap">
-        <button class="btn btn-waste" onclick="openRifiutiModal()">＋ Registra bidone pieno</button>
+      <div class="page-sub">Tracciamento bidoni prodotti, smaltiti e disponibili</div>
+
+      <div style="display:flex;gap:7px;margin-bottom:18px;flex-wrap:wrap">
+        <button class="btn btn-waste" onclick="openRifiutiModal()">+ Registra bidone pieno</button>
         <button class="btn" onclick="openVuotiModal()">🔄 Aggiorna bidoni vuoti</button>
       </div>
+
       <div class="waste-grid" id="waste-grid"></div>
+
       <div class="card">
-        <div class="card-header">
-          <span class="card-title">Log movimenti rifiuti</span>
+        <div class="card-header"><span class="card-title">📋 Log movimenti rifiuti</span>
           <button class="btn btn-sm btn-danger" onclick="clearWasteLog()">🗑 Svuota log</button>
         </div>
-        <div style="overflow-x:auto"><table>
+        <div class="table-scroll"><table>
           <thead><tr><th>Data/Ora</th><th>Tipo rifiuto</th><th>Azione</th><th>Qtà bidoni</th><th>Note</th></tr></thead>
           <tbody id="waste-log-tbody"></tbody>
         </table></div>
@@ -329,7 +584,7 @@
       </div>
       <div class="card">
         <div class="card-header"><span class="card-title" id="allerte-count">0 prodotti</span></div>
-        <div style="overflow-x:auto"><table>
+        <div class="table-scroll"><table>
           <thead><tr><th>Prodotto</th><th>Categoria</th><th>Fornitore</th><th>Lotto</th><th>Qtà / Min</th><th>Scadenza</th><th>Stato</th><th>Azione</th></tr></thead>
           <tbody id="allerte-tbody"></tbody>
         </table></div>
@@ -340,7 +595,7 @@
     <div class="view" id="view-ordini">
       <div class="page-title">Ordini</div>
       <div class="page-sub">Richieste inviate all'amministrazione</div>
-      <div style="display:flex;gap:7px;margin-bottom:10px;flex-wrap:wrap">
+      <div style="display:flex;gap:7px;margin-bottom:14px;flex-wrap:wrap">
         <button class="btn btn-primary" onclick="openOrdineModal()">＋ Nuovo Ordine</button>
         <button class="btn btn-ok" onclick="openOrdineModal('da_allerte')">🚨 Ordina da Allerte</button>
         <button class="btn" onclick="openChecklist()" style="background:var(--purple-bg);color:var(--purple);border-color:#c4b5fd">📋 Checklist Riordino</button>
@@ -350,23 +605,35 @@
         <button class="f-btn" onclick="setOrdiniFilter('bozza',this)">📝 Bozza</button>
         <button class="f-btn" onclick="setOrdiniFilter('inviato',this)">📤 Inviato</button>
         <button class="f-btn" onclick="setOrdiniFilter('approvato',this)">✅ Approvato</button>
-        <button class="f-btn" onclick="setOrdiniFilter('parziale',this)">📦 Parziale</button>
+        <button class="f-btn" onclick="setOrdiniFilter('parziale',this)">📦⏳ Parziale</button>
         <button class="f-btn" onclick="setOrdiniFilter('ricevuto',this)">📦 Ricevuto</button>
         <button class="f-btn" onclick="setOrdiniFilter('annullato',this)">❌ Annullato</button>
       </div>
       <div class="card">
         <div class="card-header"><span class="card-title" id="ordini-count">0 ordini</span></div>
-        <div style="overflow-x:auto"><table>
+        <div class="table-scroll"><table>
           <thead><tr><th>Data</th><th>N° Ordine</th><th>Prodotti</th><th>Fornitore</th><th>Stato</th><th>Note</th><th>Azioni</th></tr></thead>
           <tbody id="ordini-tbody"></tbody>
         </table></div>
       </div>
     </div>
 
+    <!-- ══════ REPORT ══════ -->
+    <div class="view" id="view-report">
+      <div class="page-title">Report Mensile</div>
+      <div class="page-sub" id="report-period"></div>
+      <div style="display:flex;gap:7px;margin-bottom:18px">
+        <button class="btn btn-primary" onclick="renderReport()">🔄 Aggiorna</button>
+        <button class="btn" onclick="window.print()">🖨 Stampa PDF</button>
+      </div>
+      <div id="report-content"></div>
+    </div>
+
+
     <!-- ══════ ARCHIVIO ORDINI ══════ -->
     <div class="view" id="view-archivio">
       <div class="page-title">Archivio Ordini</div>
-      <div class="page-sub">Storico ordini completati per fornitore e mese</div>
+      <div class="page-sub">Storico ordini per fornitore e mese</div>
       <div style="display:flex;gap:7px;margin-bottom:14px;flex-wrap:wrap;align-items:center">
         <button class="btn btn-primary" onclick="openArchivioModal()">📷 Importa da foto</button>
         <select id="arch-filter-mese" onchange="renderArchivio()" style="min-width:130px">
@@ -385,6 +652,7 @@
       <div id="archivio-list"></div>
     </div>
 
+
     <!-- ══════ SCHEDE TECNICHE ══════ -->
     <div class="view" id="view-schede">
       <div class="page-title">Schede Tecniche</div>
@@ -398,67 +666,59 @@
       <div id="schede-list"></div>
     </div>
 
-    <!-- ══════ REPORT ══════ -->
-    <div class="view" id="view-report">
-      <div class="page-title">Report Mensile</div>
-      <div class="page-sub" id="report-period"></div>
-      <div style="display:flex;gap:7px;margin-bottom:18px">
-        <button class="btn btn-primary" onclick="renderReport()">🔄 Aggiorna</button>
-        <button class="btn" onclick="window.print()">🖨 Stampa PDF</button>
-      </div>
-      <div id="report-content"></div>
-    </div>
-
 
     <!-- ══════ TRACCIABILITÀ ══════ -->
     <div class="view" id="view-tracciabilita">
-      <div class="page-title">Tracciabilità Campioni</div>
+      <div class="page-title">🧬 Tracciabilità Campioni</div>
       <div class="page-sub" id="tracc-stats"></div>
-      <div style="display:flex;gap:7px;margin-bottom:10px;flex-wrap:wrap;align-items:center">
+      <div style="display:flex;gap:7px;margin-bottom:14px;flex-wrap:wrap;align-items:center">
         <button class="btn btn-primary" onclick="openNuovoCampione()">＋ Nuovo Campione</button>
-        <button class="btn btn-pap-l" onclick="openNuovoCampioneSpec('pap_l')">＋ Pap LupoLab</button>
-        <button class="btn btn-pap-priv" onclick="openNuovoCampioneSpec('pap_priv')">＋ Pap Priv.</button>
+        <button class="btn btn-primary" onclick="openNuovoCampioneSpec('pap_l')">＋ Pap LupoLab</button>
+        <button class="btn btn-primary" onclick="openNuovoCampioneSpec('pap_priv')" style="background:var(--purple);border-color:var(--purple)">＋ Pap Priv.</button>
+        <div class="filter-bar" style="margin:0" id="tracc-filter-bar">
+          <button class="f-btn active" onclick="setTraccFilter('all',this)">Tutti</button>
+          <button class="f-btn" onclick="setTraccFilter('istologia',this)">Istologia</button>
+          <button class="f-btn" onclick="setTraccFilter('citologia',this)">Citologia</button>
+          <button class="f-btn" onclick="setTraccFilter('pap',this)">Pap</button>
+          <button class="f-btn" onclick="setTraccFilter('pap_l',this)">Pap LupoLab</button>
+          <button class="f-btn" onclick="setTraccFilter('pap_priv',this)">Pap Privato</button>
+        </div>
       </div>
-      <div class="filter-bar" id="tracc-filter-bar">
-        <button class="f-btn active" onclick="setTraccFilter('all',this)">Tutti</button>
-        <button class="f-btn" onclick="setTraccFilter('istologia',this)">Istologia</button>
-        <button class="f-btn" onclick="setTraccFilter('citologia',this)">Citologia</button>
-        <button class="f-btn" onclick="setTraccFilter('pap',this)">Pap</button>
-        <button class="f-btn" onclick="setTraccFilter('pap_l',this)">Pap LupoLab</button>
-        <button class="f-btn" onclick="setTraccFilter('pap_priv',this)">Pap Privato</button>
-      </div>
-      <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center">
-        <div class="search-wrap"><span class="s-ico">🔍</span><input type="text" id="tracc-search" placeholder="Cerca ID, provenienza…" oninput="debouncedRenderTracc()"></div>
+      <!-- Ricerca -->
+      <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+        <div class="search-wrap"><span class="s-ico">🔍</span><input type="text" id="tracc-search" placeholder="Cerca per ID, provenienza…" oninput="debouncedRenderTracc()"></div>
         <input type="date" id="tracc-from" onchange="renderTracciabilita()" style="max-width:140px" title="Da">
         <input type="date" id="tracc-to" onchange="renderTracciabilita()" style="max-width:140px" title="A">
-        <input type="text" id="tracc-search-lotto" placeholder="Cerca lotto reagente…" oninput="debouncedRenderTracc()" style="max-width:180px">
+        <input type="text" id="tracc-search-lotto" placeholder="Cerca per lotto reagente…" oninput="debouncedRenderTracc()" style="max-width:180px">
       </div>
       <div id="tracc-list"></div>
     </div>
 
+
     <!-- ══════ PROCESSATORE ══════ -->
     <div class="view" id="view-processatore">
-      <div class="page-title">Registro Processatore</div>
+      <div class="page-title">⚗️ Registro Processatore</div>
       <div class="page-sub" id="proc-stats"></div>
-      <div style="display:flex;gap:7px;margin-bottom:10px;flex-wrap:wrap;align-items:center">
+      <div style="display:flex;gap:7px;margin-bottom:14px;flex-wrap:wrap;align-items:center">
         <button class="btn btn-primary" onclick="openNuovoProcessatore()">＋ Nuovo Ciclo</button>
         <button class="btn" onclick="cercaPerLotto()" title="Tracciabilità inversa lotto">🔍 Cerca Lotto</button>
-        <div class="search-wrap" style="margin-left:auto"><span class="s-ico">🔍</span><input type="text" id="proc-search" placeholder="Cerca ID caso o lotto…" oninput="renderProcessatore()"></div>
         <input type="date" id="proc-filter-from" onchange="renderProcessatore()" style="max-width:140px" title="Da">
         <input type="date" id="proc-filter-to" onchange="renderProcessatore()" style="max-width:140px" title="A">
+        <div class="search-wrap"><span class="s-ico">🔍</span><input type="text" id="proc-search" placeholder="Cerca per ID caso o lotto…" oninput="renderProcessatore()"></div>
       </div>
       <div id="proc-list"></div>
     </div>
 
     <!-- ══════ COLORATORE ══════ -->
     <div class="view" id="view-coloratore">
-      <div class="page-title">Registro Coloratore</div>
+      <div class="page-title">🎨 Registro Coloratore</div>
       <div class="page-sub" id="color-stats"></div>
       <div style="display:flex;gap:7px;margin-bottom:14px;flex-wrap:wrap;align-items:center">
         <button class="btn btn-primary" onclick="openNuovoColoratore()">＋ Nuovo Ciclo</button>
-        <div class="search-wrap" style="margin-left:auto"><span class="s-ico">🔍</span><input type="text" id="color-search" placeholder="Cerca ID caso o lotto…" oninput="renderColoratore()"></div>
+
         <input type="date" id="color-filter-from" onchange="renderColoratore()" style="max-width:140px" title="Da">
         <input type="date" id="color-filter-to" onchange="renderColoratore()" style="max-width:140px" title="A">
+        <div class="search-wrap"><span class="s-ico">🔍</span><input type="text" id="color-search" placeholder="Cerca per ID caso o lotto…" oninput="renderColoratore()"></div>
       </div>
       <div id="color-list"></div>
     </div>
