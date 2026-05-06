@@ -94,8 +94,11 @@
 
     <!-- ══════ HOME ══════ -->
     <div class="view active" id="view-dashboard">
-      <div class="page-title">Home</div>
-      <div class="page-sub" id="dash-date"></div>
+      <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:4px;flex-wrap:wrap;gap:8px">
+        <div class="page-title" style="margin:0;font-size:32px">Buongiorno, Ferdinando</div>
+        <div id="dash-date" style="font-size:12px;color:var(--text3);font-family:'DM Mono',monospace"></div>
+      </div>
+      <div style="color:var(--text3);font-size:12px;margin-bottom:18px" id="dash-sub"></div>
 
       <!-- Stat cards -->
       <div class="stats-grid" id="stats-grid"></div>
