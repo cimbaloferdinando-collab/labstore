@@ -65,15 +65,16 @@
 
 <div class="layout">
   <nav class="sidebar">
+    <div style="font-family:'Libre Baskerville',serif;font-size:22px;font-weight:700;color:#fff;margin-bottom:12px;cursor:pointer" onclick="showView('dashboard')">L</div>
     <!-- HOME -->
-    <div class="nav-item active" onclick="showView('dashboard')" id="nav-dashboard"><span class="nav-icon">🏠</span>Dashboard</div>
+    <div class="nav-item active" onclick="showView('dashboard')" id="nav-dashboard"><span class="nav-icon">🏠</span><span class="nav-text">Dashboard</span></div>
     <div class="nav-div"></div>
     <!-- TRACCIABILITÀ -->
     <div class="nav-lbl">Tracciabilità</div>
-    <div class="nav-item" onclick="showView('tracciabilita')" id="nav-tracciabilita"><span class="nav-icon">🧬</span>Campioni</div>
-    <div class="nav-item" onclick="showView('processatore')" id="nav-processatore"><span class="nav-icon">⚗️</span>Processatore</div>
-    <div class="nav-item" onclick="showView('coloratore')" id="nav-coloratore"><span class="nav-icon">🎨</span>Coloratore</div>
-    <div class="nav-item" onclick="showView('ihc')" id="nav-ihc"><span class="nav-icon">🔬</span>IHC</div>
+    <div class="nav-item" onclick="showView('tracciabilita')" id="nav-tracciabilita"><span class="nav-icon">🧬</span><span class="nav-text">Campioni</span></div>
+    <div class="nav-item" onclick="showView('processatore')" id="nav-processatore"><span class="nav-icon">⚗️</span><span class="nav-text">Processatore</span></div>
+    <div class="nav-item" onclick="showView('coloratore')" id="nav-coloratore"><span class="nav-icon">🎨</span><span class="nav-text">Coloratore</span></div>
+    <div class="nav-item" onclick="showView('ihc')" id="nav-ihc"><span class="nav-icon">🔬</span><span class="nav-text">IHC</span></div>
 
     <div class="nav-div"></div>
 
@@ -82,19 +83,19 @@
       <span>📦 Magazzino</span><span id="mag-arrow">▾</span>
     </div>
     <div id="mag-submenu" style="display:block">
-      <div class="nav-item" onclick="showView('inventario')" id="nav-inventario"><span class="nav-icon">📋</span>Inventario</div>
-      <div class="nav-item" onclick="showView('movimenti')" id="nav-movimenti"><span class="nav-icon">↕</span>Movimenti</div>
-      <div class="nav-item" onclick="showView('allerte')" id="nav-allerte"><span class="nav-icon">🚨</span>Allerte</div>
-      <div class="nav-item" onclick="showView('ordini')" id="nav-ordini"><span class="nav-icon">🛒</span>Ordini</div>
-      <div class="nav-item" onclick="showView('archivio')" id="nav-archivio"><span class="nav-icon">🗂</span>Arch. Ordini</div>
-      <div class="nav-item" onclick="showView('schede')" id="nav-schede"><span class="nav-icon">📋</span>Schede Tecniche</div>
+      <div class="nav-item" onclick="showView('inventario')" id="nav-inventario"><span class="nav-icon">📋</span><span class="nav-text">Inventario</span></div>
+      <div class="nav-item" onclick="showView('movimenti')" id="nav-movimenti"><span class="nav-icon">↕</span><span class="nav-text">Movimenti</span></div>
+      <div class="nav-item" onclick="showView('allerte')" id="nav-allerte"><span class="nav-icon">🚨</span><span class="nav-text">Allerte</span></div>
+      <div class="nav-item" onclick="showView('ordini')" id="nav-ordini"><span class="nav-icon">🛒</span><span class="nav-text">Ordini</span></div>
+      <div class="nav-item" onclick="showView('archivio')" id="nav-archivio"><span class="nav-icon">🗂</span><span class="nav-text">Arch. Ordini</span></div>
+      <div class="nav-item" onclick="showView('schede')" id="nav-schede"><span class="nav-icon">📋</span><span class="nav-text">Schede Tecniche</span></div>
     </div>
 
     <div class="nav-div"></div>
 
     <!-- RIFIUTI e REPORT -->
-    <div class="nav-item" onclick="showView('rifiuti')" id="nav-rifiuti"><span class="nav-icon">🗑</span>Rifiuti</div>
-    <div class="nav-item" onclick="showView('report')" id="nav-report"><span class="nav-icon">📊</span>Report</div>
+    <div class="nav-item" onclick="showView('rifiuti')" id="nav-rifiuti"><span class="nav-icon">🗑</span><span class="nav-text">Rifiuti</span></div>
+    <div class="nav-item" onclick="showView('report')" id="nav-report"><span class="nav-icon">📊</span><span class="nav-text">Report</span></div>
 
     <div class="nav-div"></div>
 
@@ -103,15 +104,16 @@
       <span>Categorie</span><span id="cat-arrow">▾</span>
     </div>
     <div id="cat-submenu" style="display:block">
-      <div class="nav-item" onclick="goCategory('Reagenti')"><span class="nav-icon">🧪</span>Reagenti</div>
-      <div class="nav-item" onclick="goCategory('Vetrini')"><span class="nav-icon">🪟</span>Vetrini</div>
-      <div class="nav-item" onclick="goCategory('Cassette')"><span class="nav-icon">📁</span>Cassette</div>
-      <div class="nav-item" onclick="goCategory('Coloranti')"><span class="nav-icon">🎨</span>Coloranti</div>
-      <div class="nav-item" onclick="goCategory('Consumabili')"><span class="nav-icon">🧤</span>Consumabili</div>
-      <div class="nav-item" onclick="goCategory('Kit Colorazioni')"><span class="nav-icon">🔬</span>Kit Color.</div>
-      <div class="nav-item" onclick="goCategory('Lame')"><span class="nav-icon">⚔</span>Lame</div>
-      <div class="nav-item" onclick="goCategory('Altro')"><span class="nav-icon">📌</span>Altro</div>
+      <div class="nav-item" onclick="goCategory('Reagenti')"><span class="nav-icon">🧪</span><span class="nav-text">Reagenti</span></div>
+      <div class="nav-item" onclick="goCategory('Vetrini')"><span class="nav-icon">🪟</span><span class="nav-text">Vetrini</span></div>
+      <div class="nav-item" onclick="goCategory('Cassette')"><span class="nav-icon">📁</span><span class="nav-text">Cassette</span></div>
+      <div class="nav-item" onclick="goCategory('Coloranti')"><span class="nav-icon">🎨</span><span class="nav-text">Coloranti</span></div>
+      <div class="nav-item" onclick="goCategory('Consumabili')"><span class="nav-icon">🧤</span><span class="nav-text">Consumabili</span></div>
+      <div class="nav-item" onclick="goCategory('Kit Colorazioni')"><span class="nav-icon">🔬</span><span class="nav-text">Kit Color.</span></div>
+      <div class="nav-item" onclick="goCategory('Lame')"><span class="nav-icon">⚔</span><span class="nav-text">Lame</span></div>
+      <div class="nav-item" onclick="goCategory('Altro')"><span class="nav-icon">📌</span><span class="nav-text">Altro</span></div>
     </div>
+    <div style="margin-top:auto;width:34px;height:34px;background:rgba(255,255,255,.15);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:'DM Mono',monospace;margin-bottom:8px" title="Menu sistema">FC</div>
   </nav>
 
   <main class="main">
