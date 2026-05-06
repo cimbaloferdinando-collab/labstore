@@ -1,0 +1,1267 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LupoLab AP — V1</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+
+/* ══════════════════════════════════════════════
+   T1 — CSS FOUNDATION
+   Tokens, reset, tipografia, scrollbar, animazioni
+   ══════════════════════════════════════════════ */
+
+/* ── TOKENS ── */
+:root {
+  /* Brand */
+  --accent:       #0b1f3e;
+  --accent2:      #1d4ed8;
+  --accent3:      #1e3a6e;
+  --accent-light: rgba(11,31,62,0.07);
+
+  /* Superfici */
+  --bg:           #f4f6f9;
+  --bg2:          #ffffff;
+  --bg3:          #f0f2f6;
+  --bg4:          #e4e8f0;
+
+  /* Bordi */
+  --border:       #e8eaf0;
+  --border2:      #d0d5e0;
+
+  /* Semantici */
+  --green:        #059669;
+  --green-bg:     #ecfdf5;
+  --green-border: #a7f3d0;
+  --red:          #dc2626;
+  --red-bg:       #fef2f2;
+  --red-border:   #fca5a5;
+  --yellow:       #d97706;
+  --yellow-bg:    #fffbeb;
+  --yellow-border:#fcd34d;
+  --blue:         #2563eb;
+  --blue-bg:      #eff6ff;
+  --blue-border:  #bfdbfe;
+  --orange:       #ea580c;
+  --orange-bg:    #fff7ed;
+  --orange-border:#fed7aa;
+  --purple:       #7c3aed;
+  --purple-bg:    #f5f3ff;
+  --purple-border:#ddd6fe;
+  --teal:         #0891b2;
+  --teal-bg:      #ecfeff;
+  --teal-border:  #a5f3fc;
+  --gray:         #6b7280;
+  --gray-bg:      #f9fafb;
+  --gray-border:  #e5e7eb;
+
+  /* Testo */
+  --text:         #0b1f3e;
+  --text2:        #374151;
+  --text3:        #6b7280;
+  --text4:        #b0b8c8;
+
+  /* Geometria */
+  --r:            8px;
+  --r-sm:         5px;
+  --r-lg:         12px;
+  --r-xl:         16px;
+
+  /* Ombre */
+  --shadow-xs:  0 1px 2px rgba(11,31,62,0.06);
+  --shadow-sm:  0 1px 3px rgba(11,31,62,0.08), 0 1px 2px rgba(11,31,62,0.04);
+  --shadow:     0 4px 12px rgba(11,31,62,0.10), 0 2px 4px rgba(11,31,62,0.06);
+  --shadow-lg:  0 16px 40px rgba(11,31,62,0.14), 0 4px 8px rgba(11,31,62,0.08);
+
+  /* Transizioni */
+  --ease:       0.14s ease;
+}
+
+/* ── RESET ── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text2);
+  background: var(--bg);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+a { text-decoration: none; color: inherit; }
+button { font-family: inherit; cursor: pointer; border: none; background: none; }
+ul, ol { list-style: none; }
+img { display: block; max-width: 100%; }
+table { border-collapse: collapse; width: 100%; }
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar              { width: 5px; height: 5px; }
+::-webkit-scrollbar-track        { background: transparent; }
+::-webkit-scrollbar-thumb        { background: var(--border2); border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover  { background: var(--text3); }
+* { scrollbar-width: thin; scrollbar-color: var(--border2) transparent; }
+
+/* ── TIPOGRAFIA ── */
+.font-serif  { font-family: 'Cormorant Garamond', serif; }
+.font-mono   { font-family: 'DM Mono', monospace; }
+.mono        { font-family: 'DM Mono', monospace; font-size: 12px; }
+
+/* ── ANIMAZIONI ── */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes toastIn {
+  from { opacity: 0; transform: translateX(16px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.45; }
+}
+@keyframes scanLine {
+  0%, 100% { top: 15%; }
+  50%       { top: 80%; }
+}
+
+/* ── UTILITY ── */
+.sr-only {
+  position: absolute; width: 1px; height: 1px;
+  padding: 0; margin: -1px; overflow: hidden;
+  clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+}
+.truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hidden   { display: none !important; }
+
+/* ══════════════════════════════════════════════
+   T3 — TAB NAV + RAIL SIDEBAR
+   ══════════════════════════════════════════════ */
+
+/* ── TAB NAV ── */
+.tab-nav {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  height: 44px;
+  display: flex;
+  align-items: stretch;
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  padding: 0 16px 0 56px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  position: sticky;
+  top: 52px;
+  z-index: 190;
+  box-shadow: var(--shadow-xs);
+}
+.tab-nav::-webkit-scrollbar { display: none; }
+
+.tab-item {
+  display: flex;
+  align-items: center;
+  padding: 0 15px;
+  height: 44px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text3);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  white-space: nowrap;
+  transition: color var(--ease), border-color var(--ease);
+  user-select: none;
+  flex-shrink: 0;
+  letter-spacing: 0.01em;
+}
+.tab-item:hover { color: var(--text2); }
+.tab-item.active {
+  color: var(--accent);
+  border-bottom-color: var(--accent2);
+  font-weight: 600;
+}
+
+/* ── RAIL ── */
+.rail {
+  grid-column: 1;
+  grid-row: 3;
+  width: 48px;
+  background: var(--bg2);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 8px 0;
+  position: sticky;
+  top: 96px;
+  height: calc(100vh - 96px);
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+.rail::-webkit-scrollbar { display: none; }
+
+.rail-item {
+  position: relative;
+  width: 100%;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  color: var(--text3);
+  cursor: pointer;
+  transition: color var(--ease), background var(--ease);
+  border-left: 3px solid transparent;
+  border-radius: 0 var(--r-sm) var(--r-sm) 0;
+  flex-shrink: 0;
+  user-select: none;
+}
+.rail-item:hover {
+  background: var(--bg3);
+  color: var(--text2);
+}
+.rail-item.active {
+  background: var(--accent-light);
+  color: var(--accent2);
+  border-left-color: var(--accent2);
+}
+/* Tooltip rail */
+.rail-item::after {
+  content: attr(title);
+  position: absolute;
+  left: calc(100% + 8px);
+  top: 50%;
+  transform: translateY(-50%);
+  background: var(--accent);
+  color: #fff;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  padding: 4px 9px;
+  border-radius: var(--r-sm);
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.12s;
+  z-index: 300;
+  box-shadow: var(--shadow-sm);
+}
+.rail-item:hover::after { opacity: 1; }
+
+.rail-div {
+  width: 24px;
+  height: 1px;
+  background: var(--border);
+  margin: 5px auto;
+  flex-shrink: 0;
+}
+
+/* ── MAIN CONTENT AREA ── */
+.main {
+  grid-column: 2;
+  grid-row: 3;
+  padding: 22px 26px;
+  overflow-y: auto;
+  min-height: calc(100vh - 96px);
+}
+
+/* ══════════════════════════════════════════════
+   T4 — KPI STRIP 5-col + GREETING
+   ══════════════════════════════════════════════ */
+
+/* ── GREETING ── */
+.greeting {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+.greeting-name {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 30px;
+  font-weight: 700;
+  color: var(--accent);
+  letter-spacing: -0.3px;
+  line-height: 1.1;
+}
+.greeting-meta {
+  font-size: 11px;
+  color: var(--text3);
+  margin-top: 4px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.greeting-clock {
+  text-align: right;
+  flex-shrink: 0;
+}
+.greeting-clock-time {
+  font-family: 'DM Mono', monospace;
+  font-size: 22px;
+  font-weight: 500;
+  color: var(--accent);
+  line-height: 1;
+}
+.greeting-clock-date {
+  font-size: 11px;
+  color: var(--text3);
+  margin-top: 3px;
+}
+
+/* ── KPI GRID ── */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.kpi-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 14px 16px 13px;
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+  transition: box-shadow var(--ease), transform var(--ease);
+  position: relative;
+  overflow: hidden;
+}
+.kpi-card:hover {
+  box-shadow: var(--shadow);
+  transform: translateY(-1px);
+}
+/* top accent bar */
+.kpi-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: var(--accent2);
+  border-radius: var(--r) var(--r) 0 0;
+}
+.kpi-card.k-green::before  { background: var(--green); }
+.kpi-card.k-red::before    { background: var(--red); }
+.kpi-card.k-yellow::before { background: var(--yellow); }
+.kpi-card.k-blue::before   { background: var(--blue); }
+.kpi-card.k-teal::before   { background: var(--teal); }
+
+.kpi-lbl {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text3);
+  margin-bottom: 7px;
+}
+.kpi-val {
+  font-family: 'DM Mono', monospace;
+  font-size: 38px;
+  font-weight: 500;
+  color: var(--accent);
+  line-height: 1;
+  margin-bottom: 5px;
+}
+.kpi-val.blue   { color: var(--blue); }
+.kpi-val.green  { color: var(--green); }
+.kpi-val.red    { color: var(--red); }
+.kpi-val.yellow { color: var(--yellow); }
+.kpi-val.teal   { color: var(--teal); }
+
+.kpi-delta {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: var(--text3);
+}
+.kpi-delta.up   { color: var(--green); }
+.kpi-delta.down { color: var(--red); }
+
+/* ══════════════════════════════════════════════
+   T5 — TABELLE CICLI 7-col
+   ══════════════════════════════════════════════ */
+
+/* ── CARD GENERICA ── */
+.card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 16px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg3);
+}
+.card-title {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--text2);
+  flex: 1;
+}
+.card-sub {
+  font-size: 11px;
+  color: var(--text3);
+}
+.card-link {
+  font-size: 11px;
+  color: var(--accent2);
+  font-weight: 500;
+  cursor: pointer;
+  transition: color var(--ease);
+  white-space: nowrap;
+}
+.card-link:hover { color: var(--accent); text-decoration: underline; }
+
+/* ── TABLES GRID (affiancate 2-col) ── */
+.tables-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+/* ── TABELLA ── */
+.table-wrap { overflow-x: auto; }
+
+table { width: 100%; border-collapse: collapse; }
+
+thead th {
+  text-align: left;
+  padding: 9px 12px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--text3);
+  background: var(--bg3);
+  border-bottom: 2px solid var(--border);
+  white-space: nowrap;
+}
+thead th:first-child { padding-left: 16px; }
+thead th:last-child  { padding-right: 16px; }
+
+tbody tr {
+  border-bottom: 1px solid var(--border);
+  transition: background var(--ease);
+}
+tbody tr:last-child { border-bottom: none; }
+tbody tr:hover { background: var(--bg3); }
+
+tbody td {
+  padding: 9px 12px;
+  font-size: 12px;
+  color: var(--text2);
+  vertical-align: middle;
+  white-space: nowrap;
+}
+tbody td:first-child { padding-left: 16px; }
+tbody td:last-child  { padding-right: 16px; }
+
+/* ── BADGE ── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 9px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 600;
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+.badge-green  { background: var(--green-bg);  color: var(--green);  border-color: var(--green-border); }
+.badge-red    { background: var(--red-bg);    color: var(--red);    border-color: var(--red-border); }
+.badge-yellow { background: var(--yellow-bg); color: var(--yellow); border-color: var(--yellow-border); }
+.badge-blue   { background: var(--blue-bg);   color: var(--blue);   border-color: var(--blue-border); }
+.badge-orange { background: var(--orange-bg); color: var(--orange); border-color: var(--orange-border); }
+.badge-purple { background: var(--purple-bg); color: var(--purple); border-color: var(--purple-border); }
+.badge-teal   { background: var(--teal-bg);   color: var(--teal);   border-color: var(--teal-border); }
+.badge-gray   { background: var(--gray-bg);   color: var(--gray);   border-color: var(--gray-border); }
+
+/* ══════════════════════════════════════════════
+   T6 — BOTTOM 3-col
+   ══════════════════════════════════════════════ */
+
+/* ── BOTTOM GRID 3-col ── */
+.bottom-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+/* ── LIST ITEMS ── */
+.list-wrap {
+  padding: 0 0 4px;
+}
+.list-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
+  gap: 10px;
+  transition: background var(--ease);
+}
+.list-item:last-child { border-bottom: none; }
+.list-item:hover { background: var(--bg3); }
+.list-item-empty {
+  justify-content: center;
+  color: var(--text3);
+  font-size: 12px;
+  font-style: italic;
+}
+.list-item-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.list-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.list-meta {
+  font-size: 11px;
+  color: var(--text3);
+  font-family: 'DM Mono', monospace;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ══════════════════════════════════════════════
+   T7 — UTILITY CSS + RESPONSIVE + PRINT
+   ══════════════════════════════════════════════ */
+
+/* ── BOTTONI GENERICI ── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 14px;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--border2);
+  background: var(--bg2);
+  color: var(--text2);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--ease);
+  white-space: nowrap;
+  box-shadow: var(--shadow-sm);
+}
+.btn:hover {
+  border-color: var(--accent2);
+  color: var(--accent2);
+  background: var(--blue-bg);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow);
+}
+.btn:active  { transform: translateY(0); }
+.btn:disabled { opacity: 0.42; cursor: not-allowed; transform: none !important; }
+
+.btn-primary { background: var(--blue); border-color: var(--blue); color: #fff; font-weight: 600; }
+.btn-primary:hover { background: #1d4ed8; border-color: #1d4ed8; color: #fff; }
+.btn-ok      { background: var(--green-bg);  border-color: var(--green-border); color: var(--green); }
+.btn-ok:hover { background: #d1fae5; }
+.btn-warn    { background: var(--yellow-bg); border-color: var(--yellow-border); color: var(--yellow); }
+.btn-warn:hover { background: #fef3c7; }
+.btn-danger  { background: var(--red-bg);    border-color: var(--red-border);   color: var(--red); }
+.btn-danger:hover { background: #fee2e2; }
+.btn-sm      { padding: 5px 11px; font-size: 11px; }
+
+/* ── FORM ── */
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.fg        { display: flex; flex-direction: column; gap: 4px; }
+.fg.full   { grid-column: 1 / -1; }
+label {
+  font-size: 10px; font-weight: 700;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--text3);
+}
+input[type=text], input[type=number], input[type=date],
+input[type=time], input[type=email], select, textarea {
+  width: 100%; padding: 8px 11px;
+  border: 1.5px solid var(--border2); border-radius: var(--r-sm);
+  background: var(--bg2); color: var(--text);
+  font-family: 'DM Sans', sans-serif; font-size: 13px;
+  transition: border-color var(--ease), box-shadow var(--ease);
+  outline: none;
+}
+input:focus, select:focus, textarea:focus {
+  border-color: var(--accent2);
+  box-shadow: 0 0 0 3px rgba(29,78,216,0.10);
+}
+input::placeholder { color: var(--text4); }
+textarea { resize: vertical; min-height: 60px; }
+select { appearance: none; cursor: pointer; }
+
+/* ── TOAST ── */
+#toast-container {
+  position: fixed; bottom: 18px; right: 18px;
+  z-index: 9999;
+  display: flex; flex-direction: column; gap: 7px;
+}
+.toast {
+  padding: 11px 15px; border-radius: var(--r);
+  font-size: 13px; font-weight: 500;
+  box-shadow: var(--shadow-lg);
+  animation: toastIn 0.2s ease;
+  display: flex; align-items: center; gap: 8px;
+  min-width: 220px; border: 1px solid transparent;
+}
+.toast.success { background: var(--green-bg);  color: var(--green);  border-color: var(--green-border); }
+.toast.error   { background: var(--red-bg);    color: var(--red);    border-color: var(--red-border); }
+.toast.info    { background: var(--blue-bg);   color: var(--blue);   border-color: var(--blue-border); }
+.toast.warn    { background: var(--yellow-bg); color: var(--yellow); border-color: var(--yellow-border); }
+
+/* ── MODAL ── */
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(11,31,62,0.45);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 1000;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.18s;
+  backdrop-filter: blur(3px);
+}
+.modal-overlay.open { opacity: 1; pointer-events: all; }
+.modal {
+  background: var(--bg2); border-radius: var(--r-lg);
+  padding: 24px; box-shadow: var(--shadow-lg);
+  max-height: 90vh; overflow-y: auto;
+  width: 480px; max-width: 95vw;
+  border: 1px solid var(--border);
+  transform: translateY(8px);
+  transition: transform 0.18s;
+}
+.modal-overlay.open .modal { transform: translateY(0); }
+.modal-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 20px; font-weight: 700;
+  color: var(--accent); margin-bottom: 18px;
+}
+.modal-footer {
+  display: flex; gap: 8px; justify-content: flex-end;
+  margin-top: 18px; padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+
+/* ── PROGRESS BAR ── */
+.prog-wrap { display: flex; align-items: center; gap: 8px; }
+.prog-bar  { flex: 1; height: 5px; background: var(--bg4); border-radius: 99px; overflow: hidden; }
+.prog-fill { height: 100%; border-radius: 99px; transition: width 0.3s; }
+.prog-pct  { font-size: 11px; color: var(--text3); font-family: 'DM Mono', monospace; min-width: 32px; text-align: right; }
+
+/* ── EMPTY STATE ── */
+.empty {
+  text-align: center; padding: 32px 16px;
+  color: var(--text3); font-size: 13px;
+}
+.empty-icon { font-size: 28px; margin-bottom: 8px; }
+
+/* ── PREVIEW BADGE ── */
+.preview-watermark {
+  display: inline-flex; align-items: center; gap: 8px;
+  margin-bottom: 16px; padding: 4px 12px;
+  background: rgba(29,78,216,0.07);
+  border: 1px solid rgba(29,78,216,0.18);
+  border-radius: 999px;
+}
+.preview-watermark-label {
+  font-size: 9px; font-weight: 700;
+  letter-spacing: 0.11em; text-transform: uppercase;
+  color: var(--accent2);
+}
+.preview-watermark-sub { font-size: 9px; color: var(--text3); }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 1100px) {
+  .tables-grid  { grid-template-columns: 1fr; }
+  .bottom-grid  { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 900px) {
+  .kpi-grid     { grid-template-columns: repeat(3, 1fr); }
+  .bottom-grid  { grid-template-columns: 1fr; }
+  .main         { padding: 14px; }
+  .tab-nav      { padding-left: 16px; }
+}
+@media (max-width: 600px) {
+  .kpi-grid     { grid-template-columns: 1fr 1fr; }
+  .kpi-val      { font-size: 28px; }
+  .app-shell    { grid-template-columns: 0 1fr; }
+  .rail         { display: none; }
+  .tab-nav      { padding-left: 12px; }
+  .greeting-name { font-size: 22px; }
+}
+
+/* ── PRINT ── */
+@media print {
+  .app-header, .tab-nav, .rail, .btn, .btn-hdr { display: none !important; }
+  .main { padding: 0; }
+  body  { background: #fff; }
+  .card { box-shadow: none; border: 1px solid #ccc; }
+}
+
+/* ── VISTE ── */
+.view         { display: none; }
+.view.active  { display: block; }
+
+/* ══════════════════════════════════════════════
+   T2 — LAYOUT SHELL + HEADER
+   ══════════════════════════════════════════════ */
+
+/* ── APP SHELL GRID ── */
+.app-shell {
+  display: grid;
+  grid-template-rows: 52px 44px 1fr;
+  grid-template-columns: 48px 1fr;
+  min-height: 100vh;
+}
+
+/* ── HEADER ── */
+.app-header {
+  grid-column: 1 / -1;
+  grid-row: 1;
+  height: 52px;
+  background: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px 0 0;
+  position: sticky;
+  top: 0;
+  z-index: 200;
+  box-shadow: 0 2px 8px rgba(11,31,62,0.30);
+}
+
+/* Logo */
+.logo {
+  width: 48px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  cursor: pointer;
+  border-right: 1px solid rgba(255,255,255,0.08);
+}
+.logo-mark {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: -0.5px;
+  line-height: 1;
+  user-select: none;
+}
+
+/* Centro header */
+.hdr-center {
+  flex: 1;
+  padding: 0 12px;
+}
+
+/* Azioni header */
+.hdr-act {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Chip sync */
+.sync-chip {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 11px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.16);
+  background: rgba(255,255,255,0.07);
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: rgba(255,255,255,0.72);
+  cursor: pointer;
+  transition: background var(--ease);
+  user-select: none;
+}
+.sync-chip:hover { background: rgba(255,255,255,0.14); }
+.sync-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--green);
+  flex-shrink: 0;
+  box-shadow: 0 0 0 2px rgba(5,150,105,0.25);
+}
+.sync-dot.offline { background: var(--yellow); box-shadow: 0 0 0 2px rgba(217,119,6,0.25); }
+
+/* Separatore header */
+.hdr-sep {
+  width: 1px; height: 20px;
+  background: rgba(255,255,255,0.16);
+  flex-shrink: 0;
+  margin: 0 2px;
+}
+
+/* Orario header */
+.hdr-time {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: rgba(255,255,255,0.48);
+  letter-spacing: 0.04em;
+  padding: 0 2px;
+}
+
+/* Bottoni header */
+.btn-hdr {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 12px;
+  border-radius: var(--r-sm);
+  border: 1px solid rgba(255,255,255,0.18);
+  background: rgba(255,255,255,0.09);
+  color: rgba(255,255,255,0.88);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background var(--ease);
+  white-space: nowrap;
+}
+.btn-hdr:hover { background: rgba(255,255,255,0.18); color: #fff; }
+.btn-hdr.primary {
+  background: #fff;
+  color: var(--accent);
+  border-color: #fff;
+  font-weight: 600;
+}
+.btn-hdr.primary:hover { background: #e8f0fe; }
+
+  </style>
+</head>
+<body>
+
+  <div class="app-shell">
+
+    <!-- ── HEADER ── -->
+    <header class="app-header">
+      <div class="logo" title="LupoLab AP">
+        <span class="logo-mark">L</span>
+      </div>
+      <div class="hdr-center"></div>
+      <div class="hdr-act">
+        <div class="sync-chip">
+          <span class="sync-dot"></span>
+          sync · <span id="sync-time">29 apr 12:04</span>
+        </div>
+        <div class="hdr-sep"></div>
+        <span class="hdr-time" id="live-time">--:--</span>
+        <div class="hdr-sep"></div>
+        <button class="btn-hdr">📷 Scan</button>
+        <button class="btn-hdr">🔬 IHC</button>
+        <button class="btn-hdr primary">＋ Nuovo caso</button>
+      </div>
+    </header>
+
+    <!-- ── TAB NAV ── -->
+    <nav class="tab-nav" id="tab-nav">
+      <div class="tab-item active" data-tab="home">Home</div>
+      <div class="tab-item" data-tab="tracciabilita">Tracciabilità</div>
+      <div class="tab-item" data-tab="processatore">Processatore</div>
+      <div class="tab-item" data-tab="coloratore">Coloratore</div>
+      <div class="tab-item" data-tab="ihc">IHC</div>
+      <div class="tab-item" data-tab="magazzino">Magazzino</div>
+      <div class="tab-item" data-tab="ordini">Ordini</div>
+      <div class="tab-item" data-tab="rifiuti">Rifiuti</div>
+      <div class="tab-item" data-tab="report">Report</div>
+    </nav>
+
+    <!-- ── RAIL ── -->
+    <aside class="rail" id="rail">
+      <div class="rail-item active" title="Home" data-tab="home">🏠</div>
+      <div class="rail-div"></div>
+      <div class="rail-item" title="Tracciabilità" data-tab="tracciabilita">🧬</div>
+      <div class="rail-item" title="Processatore"  data-tab="processatore">⚗️</div>
+      <div class="rail-item" title="Coloratore"    data-tab="coloratore">🎨</div>
+      <div class="rail-item" title="IHC"           data-tab="ihc">🔬</div>
+      <div class="rail-div"></div>
+      <div class="rail-item" title="Magazzino"     data-tab="magazzino">📦</div>
+      <div class="rail-item" title="Ordini"        data-tab="ordini">🛒</div>
+      <div class="rail-div"></div>
+      <div class="rail-item" title="Rifiuti"       data-tab="rifiuti">🗑️</div>
+      <div class="rail-item" title="Report"        data-tab="report">📊</div>
+    </aside>
+
+    <!-- ── MAIN ── -->
+    <main class="main" id="main-content">
+
+      <!-- GREETING -->
+      <div class="greeting">
+        <div>
+          <div class="greeting-name">Buongiorno, Ferdinando</div>
+          <div class="greeting-meta">mar 29 apr 2026 · 14 casi oggi · 3 IHC pendenti · 7 allerte magazzino</div>
+        </div>
+        <div class="greeting-clock">
+          <div class="greeting-clock-time" id="clock-main">--:--</div>
+          <div class="greeting-clock-date">mar 29 apr 2026</div>
+        </div>
+      </div>
+
+      <!-- KPI STRIP 5-col -->
+      <div class="kpi-grid">
+        <div class="kpi-card k-blue">
+          <div class="kpi-lbl">Campioni oggi</div>
+          <div class="kpi-val blue">14</div>
+          <div class="kpi-delta up">↑ +2 vs ieri</div>
+        </div>
+        <div class="kpi-card k-teal">
+          <div class="kpi-lbl">IHC pendenti</div>
+          <div class="kpi-val teal">3</div>
+          <div class="kpi-delta">2 urgenti oggi</div>
+        </div>
+        <div class="kpi-card k-green">
+          <div class="kpi-lbl">Cicli oggi</div>
+          <div class="kpi-val green">4</div>
+          <div class="kpi-delta">2 proc · 2 col</div>
+        </div>
+        <div class="kpi-card k-green">
+          <div class="kpi-lbl">Confermati</div>
+          <div class="kpi-val green">4</div>
+          <div class="kpi-delta">3 processati</div>
+        </div>
+        <div class="kpi-card k-red">
+          <div class="kpi-lbl">Allerte mag.</div>
+          <div class="kpi-val red">7</div>
+          <div class="kpi-delta down">2 scadenze</div>
+        </div>
+      </div>
+
+      <!-- TABELLE CICLI 7-col affiancate -->
+      <div class="tables-grid">
+
+        <!-- PROCESSATORE — 7 col: ID · Data · Tipo · Programma · Cassette · Pezzi · Stato -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Processatore</span>
+            <span class="card-sub">Ultimi 5 cicli</span>
+            <span class="card-link">apri storico →</span>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Data</th>
+                  <th>Tipo</th>
+                  <th>Programma</th>
+                  <th>Cassette</th>
+                  <th>Pezzi</th>
+                  <th>Stato</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="mono">P-0412</td>
+                  <td class="mono">29/04</td>
+                  <td>Ist. standard</td>
+                  <td class="mono">STD-8H</td>
+                  <td>20</td>
+                  <td>18</td>
+                  <td><span class="badge badge-green">Completato</span></td>
+                </tr>
+                <tr>
+                  <td class="mono">P-0411</td>
+                  <td class="mono">29/04</td>
+                  <td>Ist. rapido</td>
+                  <td class="mono">RAP-4H</td>
+                  <td>6</td>
+                  <td>6</td>
+                  <td><span class="badge badge-green">Completato</span></td>
+                </tr>
+                <tr>
+                  <td class="mono">P-0410</td>
+                  <td class="mono">28/04</td>
+                  <td>Ist. standard</td>
+                  <td class="mono">STD-8H</td>
+                  <td>24</td>
+                  <td>22</td>
+                  <td><span class="badge badge-green">Completato</span></td>
+                </tr>
+                <tr>
+                  <td class="mono">P-0409</td>
+                  <td class="mono">28/04</td>
+                  <td>Ist. notturno</td>
+                  <td class="mono">NOT-12H</td>
+                  <td>14</td>
+                  <td>14</td>
+                  <td><span class="badge badge-yellow">In corso</span></td>
+                </tr>
+                <tr>
+                  <td class="mono">P-0408</td>
+                  <td class="mono">27/04</td>
+                  <td>Ist. standard</td>
+                  <td class="mono">STD-8H</td>
+                  <td>10</td>
+                  <td>10</td>
+                  <td><span class="badge badge-green">Completato</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- COLORATORE — 7 col: ID · Data · Tipo · Ist. · Nad. · Tot. · Stato -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Coloratore</span>
+            <span class="card-sub">Ultimi 5 cicli</span>
+            <span class="card-link">apri storico →</span>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Data</th>
+                  <th>Tipo</th>
+                  <th>Ist.</th>
+                  <th>Nad.</th>
+                  <th>Tot.</th>
+                  <th>Stato</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="mono">C-0387</td>
+                  <td class="mono">29/04</td>
+                  <td>EE standard</td>
+                  <td>18</td>
+                  <td>0</td>
+                  <td>18</td>
+                  <td><span class="badge badge-green">Completato</span></td>
+                </tr>
+                <tr>
+                  <td class="mono">C-0386</td>
+                  <td class="mono">29/04</td>
+                  <td>PAS</td>
+                  <td>4</td>
+                  <td>2</td>
+                  <td>6</td>
+                  <td><span class="badge badge-green">Completato</span></td>
+                </tr>
+                <tr>
+                  <td class="mono">C-0385</td>
+                  <td class="mono">28/04</td>
+                  <td>EE standard</td>
+                  <td>22</td>
+                  <td>0</td>
+                  <td>22</td>
+                  <td><span class="badge badge-green">Completato</span></td>
+                </tr>
+                <tr>
+                  <td class="mono">C-0384</td>
+                  <td class="mono">28/04</td>
+                  <td>Giemsa</td>
+                  <td>6</td>
+                  <td>0</td>
+                  <td>6</td>
+                  <td><span class="badge badge-yellow">In corso</span></td>
+                </tr>
+                <tr>
+                  <td class="mono">C-0383</td>
+                  <td class="mono">27/04</td>
+                  <td>EE standard</td>
+                  <td>14</td>
+                  <td>3</td>
+                  <td>17</td>
+                  <td><span class="badge badge-green">Completato</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div><!-- /tables-grid -->
+
+      <!-- BOTTOM 3-col -->
+      <div class="bottom-grid">
+
+        <!-- IHC DA COMPLETARE -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">IHC da completare</span>
+            <span class="badge badge-yellow">3 pendenti</span>
+          </div>
+          <div class="list-wrap">
+            <div class="list-item">
+              <div class="list-item-main">
+                <span class="list-label">CD20 · Biopsia linfonodo</span>
+                <span class="list-meta">CP-2026-0412</span>
+              </div>
+              <span class="badge badge-red">Urgente</span>
+            </div>
+            <div class="list-item">
+              <div class="list-item-main">
+                <span class="list-label">Ki-67 · Carcinoma mammario</span>
+                <span class="list-meta">CP-2026-0407</span>
+              </div>
+              <span class="badge badge-yellow">Oggi</span>
+            </div>
+            <div class="list-item">
+              <div class="list-item-main">
+                <span class="list-label">p53 · Adenocarcinoma colon</span>
+                <span class="list-meta">CP-2026-0401</span>
+              </div>
+              <span class="badge badge-blue">Programmato</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ORDINI APERTI -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Ordini aperti</span>
+            <span class="badge badge-blue">2 attivi</span>
+          </div>
+          <div class="list-wrap">
+            <div class="list-item">
+              <div class="list-item-main">
+                <span class="list-label">Bio Optica — vetrini SuperFrost+</span>
+                <span class="list-meta">3/BIO/2026 · inviato 24 apr</span>
+              </div>
+              <span class="badge badge-yellow">In attesa</span>
+            </div>
+            <div class="list-item">
+              <div class="list-item-main">
+                <span class="list-label">Epredia — cassette bioptiche</span>
+                <span class="list-meta">4/EPR/2026 · inviato 26 apr</span>
+              </div>
+              <span class="badge badge-yellow">In attesa</span>
+            </div>
+            <div class="list-item list-item-empty">
+              Nessun altro ordine attivo
+            </div>
+          </div>
+        </div>
+
+        <!-- ALLERTE MAGAZZINO -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Allerte magazzino</span>
+            <span class="badge badge-red">7 allerte</span>
+          </div>
+          <div class="list-wrap">
+            <div class="list-item">
+              <div class="list-item-main">
+                <span class="list-label">Xilolo puro — scorta critica</span>
+                <span class="list-meta">2 L rimasti · min 5 L</span>
+              </div>
+              <span class="badge badge-red">Critico</span>
+            </div>
+            <div class="list-item">
+              <div class="list-item-main">
+                <span class="list-label">Anticorpo CD3 — scadenza</span>
+                <span class="list-meta">Scade 30 apr 2026</span>
+              </div>
+              <span class="badge badge-yellow">Avviso</span>
+            </div>
+            <div class="list-item">
+              <div class="list-item-main">
+                <span class="list-label">Alcol 96° — scorta bassa</span>
+                <span class="list-meta">3 L rimasti · min 8 L</span>
+              </div>
+              <span class="badge badge-yellow">Avviso</span>
+            </div>
+            <div class="list-item">
+              <div class="list-item-main">
+                <span class="list-label">+ 4 altri prodotti</span>
+                <span class="list-meta">vedi magazzino →</span>
+              </div>
+              <span class="badge badge-gray">Info</span>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /bottom-grid -->
+
+    </main>
+
+  </div><!-- /app-shell -->
+
+  <!-- TOAST CONTAINER -->
+  <div id="toast-container"></div>
+
+  <script>
+  // FIX [UI/UX]: live clock — aggiorna ogni 30s
+  function updateClock() {
+    const now = new Date();
+    const hhmm = now.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+    const el = document.getElementById('live-time');
+    const el2 = document.getElementById('clock-main');
+    if (el)  el.textContent  = hhmm;
+    if (el2) el2.textContent = hhmm;
+  }
+  updateClock();
+  setInterval(updateClock, 30000);
+
+  // FIX [UI/UX]: tab nav + rail sincronizzati via data-tab
+  function activateTab(tab) {
+    document.querySelectorAll('.tab-item').forEach(t => {
+      t.classList.toggle('active', t.dataset.tab === tab);
+    });
+    document.querySelectorAll('.rail-item').forEach(r => {
+      r.classList.toggle('active', r.dataset.tab === tab);
+    });
+    document.querySelectorAll('.view').forEach(v => {
+      v.classList.toggle('active', v.dataset.view === tab);
+    });
+  }
+
+  document.querySelectorAll('.tab-item').forEach(t => {
+    t.addEventListener('click', () => activateTab(t.dataset.tab));
+  });
+  document.querySelectorAll('.rail-item').forEach(r => {
+    r.addEventListener('click', () => activateTab(r.dataset.tab));
+  });
+
+  // FIX [UI/UX]: toast helper
+  function showToast(msg, type = 'info', duration = 3000) {
+    const icons = { success: '✓', error: '✕', info: 'ℹ', warn: '⚠' };
+    const c = document.getElementById('toast-container');
+    if (!c) return;
+    const t = document.createElement('div');
+    t.className = `toast ${type}`;
+    t.innerHTML = `<span>${icons[type] || 'ℹ'}</span><span>${msg}</span>`;
+    c.appendChild(t);
+    setTimeout(() => t.remove(), duration);
+  }
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,1334 @@
+<!DOCTYPE html>
+<!-- LabStore v4 - 20260320-1931 -->
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#4a3080">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LupoLab — Anatomia Patologica</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Cormorant+Garamond:wght@600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/@zxing/library@0.19.1/umd/index.min.js"></script>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header>
+  <div style="display:flex;align-items:center;gap:10px">
+    <button class="btn-hamburger" onclick="toggleSidebar()" aria-label="Menu navigazione">☰</button>
+    <div class="logo" onclick="showView('dashboard')" style="cursor:pointer">LupoLab <span class="logo-badge">AP</span></div>
+  </div>
+  <div class="hdr-act">
+    <button class="btn hdr-util" id="sync-status" onclick="forceSync()" style="font-size:11px;font-family:'DM Mono',monospace" title="Sincronizza con cloud">⬡ Locale</button>
+    <button class="btn btn-ok hdr-util" onclick="forceSave()" title="Salva tutto sul cloud" style="font-size:11px">💾 Salva</button>
+    <button class="btn hdr-util" onclick="exportBackup()" title="Esporta backup locale JSON" style="font-size:11px">📥 Backup</button>
+    <button class="btn hdr-util" onclick="importBackup()" title="Ripristina backup da file JSON" style="font-size:11px">📤 Ripristina</button>
+    <button class="btn hdr-util" onclick="hardResetFromCloud()" title="Sostituisce inventario locale con dati cloud" style="font-size:11px">🔄 Reset cloud</button>
+    <button class="btn hdr-util btn-warn" onclick="resetProductsFromCloud()" title="Sovrascrive prodotti locali con quelli Supabase (no merge)" style="font-size:11px">🔁 Prod. cloud</button>
+    <button class="btn hdr-util" id="undo-btn" onclick="undoLastAction()" title="Nessuna azione da annullare" style="font-size:11px;opacity:.4">↩ Annulla</button>
+    <div class="hdr-sep-mobile" style="width:1px;height:20px;background:rgba(255,255,255,.15);margin:0 4px"></div>
+    <button class="btn btn-primary" onclick="openNuovoCampione()" title="Nuovo campione">＋ Campione</button>
+    <button class="btn btn-pap-l hdr-util" onclick="openNuovoCampioneSpec('pap_l')">＋ Pap L</button>
+    <button class="btn btn-pap-priv hdr-util" onclick="openNuovoCampioneSpec('pap_priv')">＋ Pap Priv.</button>
+    <div style="width:1px;height:20px;background:rgba(255,255,255,.15);margin:0 4px"></div>
+    <div class="hdr-ddrop" id="hdr-mag-drop">
+      <button class="btn" onclick="toggleHdrDrop('hdr-mag-drop')" aria-label="Azioni magazzino">📦 Mag. ▾</button>
+      <div class="hdr-ddrop-menu" id="hdr-mag-drop-menu">
+        <button class="btn btn-ok" onclick="openCaricaScanModal();toggleHdrDrop('hdr-mag-drop')">⬆ Carico scan</button>
+        <button class="btn btn-warn" onclick="openScaricaModal();toggleHdrDrop('hdr-mag-drop')">⬇ Scarico</button>
+        <button class="btn" onclick="openDDTModal();toggleHdrDrop('hdr-mag-drop')">📷 DDT</button>
+        <button class="btn btn-primary" onclick="openAddModal();toggleHdrDrop('hdr-mag-drop')">＋ Prodotto</button>
+      </div>
+    </div>
+    <!-- Menu ⋯ visibile solo su smartphone (<480px) -->
+    <div class="hdr-ddrop hdr-mobile-overflow" id="hdr-more-drop" style="display:none">
+      <button class="btn" onclick="toggleHdrDrop('hdr-more-drop')" aria-label="Altre azioni" style="font-size:16px;padding:8px 12px">⋯</button>
+      <div class="hdr-ddrop-menu" id="hdr-more-drop-menu" style="right:0;min-width:180px">
+        <button class="btn" onclick="openNuovoCampioneSpec('pap_l');toggleHdrDrop('hdr-more-drop')">＋ Pap L</button>
+        <button class="btn" onclick="openNuovoCampioneSpec('pap_priv');toggleHdrDrop('hdr-more-drop')">＋ Pap Priv.</button>
+        <div style="height:1px;background:rgba(255,255,255,.15);margin:4px 0"></div>
+        <button class="btn btn-ok" onclick="forceSync();toggleHdrDrop('hdr-more-drop')" style="font-family:'DM Mono',monospace;font-size:11px">⬡ Sync</button>
+        <button class="btn btn-ok" onclick="forceSave();toggleHdrDrop('hdr-more-drop')">💾 Salva</button>
+        <button class="btn" onclick="exportBackup();toggleHdrDrop('hdr-more-drop')">📥 Backup</button>
+        <button class="btn" onclick="importBackup();toggleHdrDrop('hdr-more-drop')">📤 Ripristina</button>
+        <button class="btn" onclick="resetProductsFromCloud();toggleHdrDrop('hdr-more-drop')">🔁 Prod. cloud</button>
+        <button class="btn" id="undo-btn-mobile" onclick="undoLastAction();toggleHdrDrop('hdr-more-drop')" style="opacity:.4">↩ Annulla</button>
+      </div>
+    </div>
+  </div>
+</header>
+<div id="sync-banner">⟳ Sincronizzazione dati in corso…</div>
+<div id="sidebar-backdrop" onclick="toggleSidebar()"></div>
+
+<div class="layout">
+  <nav class="sidebar">
+    <!-- HOME -->
+    <div class="nav-item active" onclick="showView('dashboard')" id="nav-dashboard"><span class="nav-icon">🏠</span>Dashboard</div>
+    <div class="nav-div"></div>
+    <!-- TRACCIABILITÀ -->
+    <div class="nav-lbl">Tracciabilità</div>
+    <div class="nav-item" onclick="showView('tracciabilita')" id="nav-tracciabilita"><span class="nav-icon">🧬</span>Campioni</div>
+    <div class="nav-item" onclick="showView('processatore')" id="nav-processatore"><span class="nav-icon">⚗️</span>Processatore</div>
+    <div class="nav-item" onclick="showView('coloratore')" id="nav-coloratore"><span class="nav-icon">🎨</span>Coloratore</div>
+    <div class="nav-item" onclick="showView('ihc')" id="nav-ihc"><span class="nav-icon">🔬</span>IHC</div>
+
+    <div class="nav-div"></div>
+
+    <!-- MAGAZZINO — sezione secondaria collassabile -->
+    <div class="nav-lbl clickable" onclick="toggleMagazzino()">
+      <span>📦 Magazzino</span><span id="mag-arrow">▾</span>
+    </div>
+    <div id="mag-submenu" style="display:block">
+      <div class="nav-item" onclick="showView('inventario')" id="nav-inventario"><span class="nav-icon">📋</span>Inventario</div>
+      <div class="nav-item" onclick="showView('movimenti')" id="nav-movimenti"><span class="nav-icon">↕</span>Movimenti</div>
+      <div class="nav-item" onclick="showView('allerte')" id="nav-allerte"><span class="nav-icon">🚨</span>Allerte</div>
+      <div class="nav-item" onclick="showView('ordini')" id="nav-ordini"><span class="nav-icon">🛒</span>Ordini</div>
+      <div class="nav-item" onclick="showView('archivio')" id="nav-archivio"><span class="nav-icon">🗂</span>Arch. Ordini</div>
+      <div class="nav-item" onclick="showView('schede')" id="nav-schede"><span class="nav-icon">📋</span>Schede Tecniche</div>
+    </div>
+
+    <div class="nav-div"></div>
+
+    <!-- RIFIUTI e REPORT -->
+    <div class="nav-item" onclick="showView('rifiuti')" id="nav-rifiuti"><span class="nav-icon">🗑</span>Rifiuti</div>
+    <div class="nav-item" onclick="showView('report')" id="nav-report"><span class="nav-icon">📊</span>Report</div>
+
+    <div class="nav-div"></div>
+
+    <!-- CATEGORIE MAGAZZINO -->
+    <div class="nav-lbl clickable" onclick="toggleCategorie()">
+      <span>Categorie</span><span id="cat-arrow">▾</span>
+    </div>
+    <div id="cat-submenu" style="display:block">
+      <div class="nav-item" onclick="goCategory('Reagenti')"><span class="nav-icon">🧪</span>Reagenti</div>
+      <div class="nav-item" onclick="goCategory('Vetrini')"><span class="nav-icon">🪟</span>Vetrini</div>
+      <div class="nav-item" onclick="goCategory('Cassette')"><span class="nav-icon">📁</span>Cassette</div>
+      <div class="nav-item" onclick="goCategory('Coloranti')"><span class="nav-icon">🎨</span>Coloranti</div>
+      <div class="nav-item" onclick="goCategory('Consumabili')"><span class="nav-icon">🧤</span>Consumabili</div>
+      <div class="nav-item" onclick="goCategory('Kit Colorazioni')"><span class="nav-icon">🔬</span>Kit Color.</div>
+      <div class="nav-item" onclick="goCategory('Lame')"><span class="nav-icon">⚔</span>Lame</div>
+      <div class="nav-item" onclick="goCategory('Altro')"><span class="nav-icon">📌</span>Altro</div>
+    </div>
+  </nav>
+
+  <main class="main">
+
+    <!-- ══════ HOME ══════ -->
+    <div class="view active" id="view-dashboard">
+      <div class="page-title">Home</div>
+      <div class="page-sub" id="dash-date"></div>
+
+      <!-- Stat cards -->
+      <div class="stats-grid" id="stats-grid"></div>
+
+      <!-- WIDGET RAPIDO: Registra caso al volo -->
+      <div class="card" style="margin-bottom:14px;padding:14px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+          <div style="font-weight:700;font-size:14px;color:var(--accent)">🧬 Registra caso rapido</div>
+          <button class="btn btn-sm" onclick="showView('tracciabilita')">Tutti i casi →</button>
+        </div>
+        <div id="quick-form-grid" style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr auto;gap:8px;align-items:end">
+          <div class="fg" style="margin:0">
+            <label>ID Caso *</label>
+            <input type="text" id="quick-id" placeholder="es. 2764/26" style="font-family:DM Mono,monospace;font-weight:700">
+          </div>
+          <div class="fg" style="margin:0">
+            <label>Tipo *</label>
+            <select id="quick-tipo">
+              <option value="istologia">Istologia</option>
+              <option value="citologia">Citologia</option>
+              <option value="pap_l">Pap LupoLab</option>
+              <option value="pap_priv">Pap Privato</option>
+            </select>
+          </div>
+          <div class="fg" style="margin:0">
+            <label>Provenienza</label>
+            <input type="text" id="quick-prov" placeholder="Reparto / medico">
+          </div>
+          <div class="fg" style="margin:0">
+            <label>Descrizione breve</label>
+            <input type="text" id="quick-desc" placeholder="es. Biopsia colon">
+          </div>
+          <button class="btn btn-primary" onclick="saveQuickCaso()" style="height:36px;margin-bottom:0">＋</button>
+        </div>
+        <div id="home-tracc-oggi" style="margin-top:10px"></div>
+      </div>
+
+      <!-- COLORATORE: tabella giornaliera -->
+      <div class="card" style="margin-bottom:14px;padding:14px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <div style="font-weight:700;font-size:14px;color:var(--accent)">🎨 Coloratore</div>
+          <div style="display:flex;gap:6px">
+            <button class="btn btn-sm btn-primary" onclick="openNuovoColoratore()">＋ Nuovo</button>
+            <button class="btn btn-sm" onclick="showView('coloratore')">Storico →</button>
+          </div>
+        </div>
+        <div id="home-color-table"></div>
+        <div id="home-color-oggi" style="margin-top:8px"></div>
+      </div>
+
+      <!-- IHC widget -->
+      <div class="card" id="home-ihc-card" style="margin-bottom:14px;padding:14px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <div style="font-weight:700;font-size:14px;color:var(--accent)">🔬 IHC</div>
+          <div style="display:flex;gap:6px">
+            <button class="btn btn-sm btn-primary" onclick="openNuovaIHC()">＋ Nuova</button>
+            <button class="btn btn-sm" onclick="showView('ihc')">Tutte →</button>
+          </div>
+        </div>
+        <div id="home-ihc-content"></div>
+      </div>
+
+      <!-- PROCESSATORE + ALLERTE magazzino -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
+        <div class="card" style="padding:14px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+            <div style="font-weight:700;font-size:14px;color:var(--accent)">⚗️ Processatore</div>
+            <button class="btn btn-sm" onclick="showView('processatore')">Storico →</button>
+          </div>
+          <div id="home-proc-oggi"></div>
+        </div>
+        <div class="card" style="padding:14px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+            <div style="font-weight:700;font-size:14px;color:var(--accent)">🚨 Magazzino</div>
+            <button class="btn btn-sm" onclick="showView('allerte')">Tutte →</button>
+          </div>
+          <div id="home-allerte-list" style="padding:4px 0"></div>
+        </div>
+      </div>
+
+      <!-- Alert banners -->
+      <div id="alerts-wrap"></div>
+
+      <!-- 2-col: scadenze + ordini -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px">
+        <div class="card" style="margin:0;padding:14px">
+          <div class="card-header" style="margin-bottom:8px"><span class="card-title">⏰ In scadenza (30gg)</span></div>
+          <div id="home-scadenze-list" style="padding:4px 0"></div>
+        </div>
+        <div class="card" style="margin:0;padding:14px">
+          <div class="card-header" style="margin-bottom:8px"><span class="card-title">🛒 Ordini aperti</span><button class="btn btn-sm" onclick="showView('ordini')">Tutti →</button></div>
+          <div id="home-ordini-list" style="padding:4px 0"></div>
+        </div>
+      </div>
+
+      <!-- PRODOTTI MAGAZZINO grid -->
+      <div class="card" style="padding:14px;margin-bottom:14px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <div style="font-weight:700;font-size:14px;color:var(--accent)">📦 Magazzino</div>
+          <button class="btn btn-sm" onclick="showView('inventario')">Tutte →</button>
+        </div>
+        <input type="text" id="home-search" placeholder="Cerca prodotto..." oninput="renderHomeGrid()" style="margin-bottom:10px">
+        <div id="home-cat-grid"></div>
+      </div>
+
+    </div>
+    <div class="view" id="view-inventario">
+      <div class="page-title">Inventario</div>
+      <div class="page-sub">Tutti i consumabili del laboratorio</div>
+      <div class="filter-bar" id="inv-filter-bar">
+        <button class="f-btn active" onclick="setInvFilter('all',this)">Tutti</button>
+        <button class="f-btn" onclick="setInvFilter('Reagenti',this)">🧪 Reagenti</button>
+        <button class="f-btn" onclick="setInvFilter('Vetrini',this)">🪟 Vetrini</button>
+        <button class="f-btn" onclick="setInvFilter('Cassette',this)">📁 Cassette</button>
+        <button class="f-btn" onclick="setInvFilter('Coloranti',this)">🎨 Coloranti</button>
+        <button class="f-btn" onclick="setInvFilter('Consumabili',this)">🧤 Consumabili</button>
+        <button class="f-btn" onclick="setInvFilter('Kit Colorazioni',this)">🔬 Kit Color.</button>
+        <button class="f-btn" onclick="setInvFilter('Lame',this)">⚔ Lame</button>
+        <button class="f-btn" onclick="setInvFilter('Altro',this)">📌 Altro</button>
+      </div>
+      <div class="filter-bar" id="inv-fornitore-bar" style="margin-top:4px">
+        <span style="font-size:11px;color:var(--text3);padding:0 6px;align-self:center">Fornitore:</span>
+        <button class="f-btn active" onclick="setFornFilter('all',this)">Tutti</button>
+        <button class="f-btn" onclick="setFornFilter('Epredia',this)">Epredia</button>
+        <button class="f-btn" onclick="setFornFilter('Bio Optica',this)">Bio Optica</button>
+        <button class="f-btn" onclick="setFornFilter('Ventana',this)">Ventana</button>
+        <button class="f-btn" onclick="setFornFilter('__altri',this)">Altri fornitori</button>
+      </div>
+      <div class="filter-bar" id="inv-sub-bar" style="margin-top:4px;display:none">
+        <span style="font-size:11px;color:var(--text3);padding:0 6px;align-self:center" id="inv-sub-label">Sottofiltro:</span>
+      </div>
+      <div class="filter-bar" id="inv-sub2-bar" style="margin-top:4px;display:none">
+        <span style="font-size:11px;color:var(--text3);padding:0 6px;align-self:center">Prodotto:</span>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title" id="inv-count">0 prodotti</span>
+          <div class="card-act">
+            <button class="btn btn-sm" onclick="openInventarioFisico()" style="background:var(--purple-bg);color:var(--purple);border-color:#c4b5fd">📋 Verifica inventario</button>
+            <div class="search-wrap"><span class="s-ico">🔍</span><input type="text" id="inv-search" placeholder="Cerca…" oninput="debouncedRenderInv()"></div>
+          </div>
+        </div>
+        <div class="table-scroll"><table>
+          <thead><tr><th>Prodotto</th><th>Categoria</th><th>Lotto</th><th>Scadenza</th><th>Ini → Att</th><th>Livello</th><th>Azioni</th></tr></thead>
+          <tbody id="inv-tbody"></tbody>
+        </table></div>
+      </div>
+    </div>
+
+    <!-- ══════ MOVIMENTI ══════ -->
+    <div class="view" id="view-movimenti">
+      <div class="page-title">Movimenti</div>
+      <div class="page-sub">Storico carichi e scarichi consumabili</div>
+      <div style="display:flex;gap:7px;margin-bottom:14px;flex-wrap:wrap">
+        <button class="btn btn-ok" onclick="openDDTModal()">📷 Carico da DDT</button>
+        <button class="btn btn-ok" onclick="openCaricaScanModal()">⬆ Carico Scan</button>
+    <button class="btn btn-warn" onclick="openScaricaModal()">⬇ Scarico</button>
+        <button class="btn" onclick="openManualMovModal('carico')">＋ Carico manuale</button>
+        <button class="btn" onclick="openManualMovModal('scarico')">− Scarico manuale</button>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Storico movimenti</span>
+          <button class="btn btn-sm btn-danger" onclick="clearMovimenti()">🗑 Svuota</button>
+        </div>
+        <div class="table-scroll"><table>
+          <thead><tr><th>Data/Ora</th><th>Tipo</th><th>Prodotto</th><th>Qtà</th><th>Lotto</th><th>Note</th></tr></thead>
+          <tbody id="mov-tbody"></tbody>
+        </table></div>
+      </div>
+    </div>
+
+    <!-- ══════ RIFIUTI ══════ -->
+    <div class="view" id="view-rifiuti">
+      <div class="page-title">Gestione Rifiuti</div>
+      <div class="page-sub">Tracciamento bidoni prodotti, smaltiti e disponibili</div>
+
+      <div style="display:flex;gap:7px;margin-bottom:18px;flex-wrap:wrap">
+        <button class="btn btn-waste" onclick="openRifiutiModal()">+ Registra bidone pieno</button>
+        <button class="btn" onclick="openVuotiModal()">🔄 Aggiorna bidoni vuoti</button>
+      </div>
+
+      <div class="waste-grid" id="waste-grid"></div>
+
+      <div class="card">
+        <div class="card-header"><span class="card-title">📋 Log movimenti rifiuti</span>
+          <button class="btn btn-sm btn-danger" onclick="clearWasteLog()">🗑 Svuota log</button>
+        </div>
+        <div class="table-scroll"><table>
+          <thead><tr><th>Data/Ora</th><th>Tipo rifiuto</th><th>Azione</th><th>Qtà bidoni</th><th>Note</th></tr></thead>
+          <tbody id="waste-log-tbody"></tbody>
+        </table></div>
+      </div>
+    </div>
+
+
+    <!-- ══════ ALLERTE ══════ -->
+    <div class="view" id="view-allerte">
+      <div class="page-title">Allerte</div>
+      <div class="page-sub">Prodotti con scorta insufficiente o in scadenza</div>
+      <div class="filter-bar" id="allerte-filter-bar">
+        <button class="f-btn active" onclick="setAllerteFilter('all',this)">Tutti</button>
+        <button class="f-btn" onclick="setAllerteFilter('esauriti',this)">🔴 Esauriti</button>
+        <button class="f-btn" onclick="setAllerteFilter('critici',this)">🟡 Scorta bassa</button>
+        <button class="f-btn" onclick="setAllerteFilter('scaduti',this)">💀 Scaduti</button>
+        <button class="f-btn" onclick="setAllerteFilter('inscadenza',this)">⏰ In scadenza (30gg)</button>
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="card-title" id="allerte-count">0 prodotti</span></div>
+        <div class="table-scroll"><table>
+          <thead><tr><th>Prodotto</th><th>Categoria</th><th>Fornitore</th><th>Lotto</th><th>Qtà / Min</th><th>Scadenza</th><th>Stato</th><th>Azione</th></tr></thead>
+          <tbody id="allerte-tbody"></tbody>
+        </table></div>
+      </div>
+    </div>
+
+    <!-- ══════ ORDINI ══════ -->
+    <div class="view" id="view-ordini">
+      <div class="page-title">Ordini</div>
+      <div class="page-sub">Richieste inviate all'amministrazione</div>
+      <div style="display:flex;gap:7px;margin-bottom:14px;flex-wrap:wrap">
+        <button class="btn btn-primary" onclick="openOrdineModal()">＋ Nuovo Ordine</button>
+        <button class="btn btn-ok" onclick="openOrdineModal('da_allerte')">🚨 Ordina da Allerte</button>
+        <button class="btn" onclick="openChecklist()" style="background:var(--purple-bg);color:var(--purple);border-color:#c4b5fd">📋 Checklist Riordino</button>
+      </div>
+      <div class="filter-bar" id="ordini-filter-bar">
+        <button class="f-btn active" onclick="setOrdiniFilter('all',this)">Tutti</button>
+        <button class="f-btn" onclick="setOrdiniFilter('bozza',this)">📝 Bozza</button>
+        <button class="f-btn" onclick="setOrdiniFilter('inviato',this)">📤 Inviato</button>
+        <button class="f-btn" onclick="setOrdiniFilter('approvato',this)">✅ Approvato</button>
+        <button class="f-btn" onclick="setOrdiniFilter('parziale',this)">📦⏳ Parziale</button>
+        <button class="f-btn" onclick="setOrdiniFilter('ricevuto',this)">📦 Ricevuto</button>
+        <button class="f-btn" onclick="setOrdiniFilter('annullato',this)">❌ Annullato</button>
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="card-title" id="ordini-count">0 ordini</span></div>
+        <div class="table-scroll"><table>
+          <thead><tr><th>Data</th><th>N° Ordine</th><th>Prodotti</th><th>Fornitore</th><th>Stato</th><th>Note</th><th>Azioni</th></tr></thead>
+          <tbody id="ordini-tbody"></tbody>
+        </table></div>
+      </div>
+    </div>
+
+    <!-- ══════ REPORT ══════ -->
+    <div class="view" id="view-report">
+      <div class="page-title">Report Mensile</div>
+      <div class="page-sub" id="report-period"></div>
+      <div style="display:flex;gap:7px;margin-bottom:18px">
+        <button class="btn btn-primary" onclick="renderReport()">🔄 Aggiorna</button>
+        <button class="btn" onclick="window.print()">🖨 Stampa PDF</button>
+      </div>
+      <div id="report-content"></div>
+    </div>
+
+
+    <!-- ══════ ARCHIVIO ORDINI ══════ -->
+    <div class="view" id="view-archivio">
+      <div class="page-title">Archivio Ordini</div>
+      <div class="page-sub">Storico ordini per fornitore e mese</div>
+      <div style="display:flex;gap:7px;margin-bottom:14px;flex-wrap:wrap;align-items:center">
+        <button class="btn btn-primary" onclick="openArchivioModal()">📷 Importa da foto</button>
+        <select id="arch-filter-mese" onchange="renderArchivio()" style="min-width:130px">
+          <option value="">Tutti i mesi</option>
+        </select>
+        <select id="arch-filter-forn" onchange="renderArchivio()" style="min-width:130px">
+          <option value="">Tutti i fornitori</option>
+        </select>
+        <select id="arch-filter-stato" onchange="renderArchivio()" style="min-width:130px">
+          <option value="">Tutti gli stati</option>
+          <option value="ricevuto">Ricevuto</option>
+          <option value="parziale">Parziale</option>
+          <option value="in attesa">In attesa</option>
+        </select>
+      </div>
+      <div id="archivio-list"></div>
+    </div>
+
+
+    <!-- ══════ SCHEDE TECNICHE ══════ -->
+    <div class="view" id="view-schede">
+      <div class="page-title">Schede Tecniche</div>
+      <div class="page-sub">Archivio schede tecniche per fornitore — scansiona il QR del produttore</div>
+      <div style="display:flex;gap:7px;margin-bottom:14px;flex-wrap:wrap;align-items:center">
+        <button class="btn btn-primary" onclick="openSchedaScanModal()">📷 Scansiona QR Scheda</button>
+        <select id="schede-filter-forn" onchange="renderSchede()" style="min-width:140px">
+          <option value="">Tutti i fornitori</option>
+        </select>
+      </div>
+      <div id="schede-list"></div>
+    </div>
+
+
+    <!-- ══════ TRACCIABILITÀ ══════ -->
+    <div class="view" id="view-tracciabilita">
+      <div class="page-title">🧬 Tracciabilità Campioni</div>
+      <div class="page-sub" id="tracc-stats"></div>
+      <div style="display:flex;gap:7px;margin-bottom:14px;flex-wrap:wrap;align-items:center">
+        <button class="btn btn-primary" onclick="openNuovoCampione()">＋ Nuovo Campione</button>
+        <button class="btn btn-primary" onclick="openNuovoCampioneSpec('pap_l')">＋ Pap LupoLab</button>
+        <button class="btn btn-primary" onclick="openNuovoCampioneSpec('pap_priv')" style="background:var(--purple);border-color:var(--purple)">＋ Pap Priv.</button>
+        <div class="filter-bar" style="margin:0" id="tracc-filter-bar">
+          <button class="f-btn active" onclick="setTraccFilter('all',this)">Tutti</button>
+          <button class="f-btn" onclick="setTraccFilter('istologia',this)">Istologia</button>
+          <button class="f-btn" onclick="setTraccFilter('citologia',this)">Citologia</button>
+          <button class="f-btn" onclick="setTraccFilter('pap',this)">Pap</button>
+          <button class="f-btn" onclick="setTraccFilter('pap_l',this)">Pap LupoLab</button>
+          <button class="f-btn" onclick="setTraccFilter('pap_priv',this)">Pap Privato</button>
+        </div>
+      </div>
+      <!-- Ricerca -->
+      <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+        <div class="search-wrap"><span class="s-ico">🔍</span><input type="text" id="tracc-search" placeholder="Cerca per ID, provenienza…" oninput="debouncedRenderTracc()"></div>
+        <input type="date" id="tracc-from" onchange="renderTracciabilita()" style="max-width:140px" title="Da">
+        <input type="date" id="tracc-to" onchange="renderTracciabilita()" style="max-width:140px" title="A">
+        <input type="text" id="tracc-search-lotto" placeholder="Cerca per lotto reagente…" oninput="debouncedRenderTracc()" style="max-width:180px">
+      </div>
+      <div id="tracc-list"></div>
+    </div>
+
+
+    <!-- ══════ PROCESSATORE ══════ -->
+    <div class="view" id="view-processatore">
+      <div class="page-title">⚗️ Registro Processatore</div>
+      <div class="page-sub" id="proc-stats"></div>
+      <div style="display:flex;gap:7px;margin-bottom:14px;flex-wrap:wrap;align-items:center">
+        <button class="btn btn-primary" onclick="openNuovoProcessatore()">＋ Nuovo Ciclo</button>
+        <button class="btn" onclick="cercaPerLotto()" title="Tracciabilità inversa lotto">🔍 Cerca Lotto</button>
+        <input type="date" id="proc-filter-from" onchange="renderProcessatore()" style="max-width:140px" title="Da">
+        <input type="date" id="proc-filter-to" onchange="renderProcessatore()" style="max-width:140px" title="A">
+        <div class="search-wrap"><span class="s-ico">🔍</span><input type="text" id="proc-search" placeholder="Cerca per ID caso o lotto…" oninput="renderProcessatore()"></div>
+      </div>
+      <div id="proc-list"></div>
+    </div>
+
+    <!-- ══════ COLORATORE ══════ -->
+    <div class="view" id="view-coloratore">
+      <div class="page-title">🎨 Registro Coloratore</div>
+      <div class="page-sub" id="color-stats"></div>
+      <div style="display:flex;gap:7px;margin-bottom:14px;flex-wrap:wrap;align-items:center">
+        <button class="btn btn-primary" onclick="openNuovoColoratore()">＋ Nuovo Ciclo</button>
+
+        <input type="date" id="color-filter-from" onchange="renderColoratore()" style="max-width:140px" title="Da">
+        <input type="date" id="color-filter-to" onchange="renderColoratore()" style="max-width:140px" title="A">
+        <div class="search-wrap"><span class="s-ico">🔍</span><input type="text" id="color-search" placeholder="Cerca per ID caso o lotto…" oninput="renderColoratore()"></div>
+      </div>
+      <div id="color-list"></div>
+    </div>
+
+    <!-- ══════ IHC ══════ -->
+    <div class="view" id="view-ihc">
+      <div class="page-title">🔬 Richieste IHC</div>
+      <div class="page-sub">Immunoistochimica richiesta dai patologi</div>
+      <div style="display:flex;gap:7px;margin-bottom:14px;flex-wrap:wrap;align-items:center">
+        <button class="btn btn-primary" onclick="openNuovaIHC()">＋ Nuova richiesta</button>
+        <div class="search-wrap"><span class="s-ico">🔍</span><input type="text" id="ihc-search" placeholder="Cerca per campione, patologo, anticorpo…" oninput="renderIHC()"></div>
+      </div>
+      <div class="filter-bar" id="ihc-filter-bar">
+        <button class="f-btn active" onclick="setIHCFilter('all',this)">Tutte</button>
+        <button class="f-btn" onclick="setIHCFilter('da_fare',this)">🔴 Da fare</button>
+        <button class="f-btn" onclick="setIHCFilter('in_lavorazione',this)">🟡 In lavorazione</button>
+        <button class="f-btn" onclick="setIHCFilter('completata',this)">🟢 Completate</button>
+      </div>
+      <div id="ihc-list"></div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ══════════════════════════════
+     MODAL: IHC
+══════════════════════════════ -->
+<div class="modal-overlay" id="modal-ihc">
+  <div class="modal" style="width:500px">
+    <div class="modal-title" id="ihc-modal-title">Nuova richiesta IHC</div>
+    <input type="hidden" id="ihc-edit-id">
+    <div class="form-grid">
+      <div class="fg" style="margin:0">
+        <label>ID Campione *</label>
+        <input type="text" id="ihc-campione" placeholder="es. 2764/26" style="font-family:DM Mono,monospace;font-weight:700">
+      </div>
+      <div class="fg" style="margin:0">
+        <label>Patologo *</label>
+        <input type="text" id="ihc-patologo" placeholder="es. Dr. Rossi">
+      </div>
+      <div class="fg full" style="margin:0;grid-column:1/-1">
+        <label>Anticorpo / Colorazione speciale *</label>
+        <textarea id="ihc-anticorpo" placeholder="es. CK7, p63, Ki67 — oppure PAS, Grocott…" style="min-height:70px"></textarea>
+      </div>
+      <div class="fg" style="margin:0">
+        <label>Priorità</label>
+        <select id="ihc-priorita">
+          <option value="normale">Normale</option>
+          <option value="urgente">🔴 Urgente</option>
+          <option value="differibile">Differibile</option>
+        </select>
+      </div>
+      <div class="fg" style="margin:0">
+        <label>Stato</label>
+        <select id="ihc-stato">
+          <option value="da_fare">Da fare</option>
+          <option value="in_lavorazione">In lavorazione</option>
+          <option value="completata">Completata</option>
+        </select>
+      </div>
+      <div class="fg" style="margin:0">
+        <label>Data richiesta</label>
+        <input type="date" id="ihc-data">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-danger btn-sm" id="ihc-delete-btn" onclick="deleteIHC()" style="margin-right:auto;display:none">🗑 Elimina</button>
+      <button class="btn" onclick="closeModal('modal-ihc')">Annulla</button>
+      <button class="btn btn-primary" onclick="saveIHC()">💾 Salva</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════
+     MODAL: DDT
+══════════════════════════════ -->
+<div class="modal-overlay" id="modal-ddt">
+  <div class="modal" style="width:580px">
+    <div class="modal-title">📷 Carica DDT — Lettura AI</div>
+    <div class="tabs">
+      <div class="tab active" id="tab-foto" onclick="ddtTab('foto')">📁 Carica immagine</div>
+      <div class="tab" id="tab-cam" onclick="ddtTab('camera')">📷 Fotocamera</div>
+    </div>
+    <div id="ddt-tab-foto">
+      <div class="ddt-drop" id="ddt-drop" onclick="document.getElementById('ddt-file').click()"
+        ondragover="event.preventDefault();this.classList.add('drag')"
+        ondragleave="this.classList.remove('drag')" ondrop="handleDDTDrop(event)">
+        <div class="ddt-ico">📄</div>
+        <p>Clicca o trascina la foto del DDT<br><small style="color:var(--text3)">JPG, PNG — max 10MB</small></p>
+      </div>
+      <input type="file" id="ddt-file" accept="image/*" style="display:none" onchange="handleDDTFile(this)">
+      <img id="ddt-preview" src="" alt="">
+    </div>
+    <div id="ddt-tab-cam" style="display:none">
+      <video id="ddt-video" style="width:100%;border-radius:8px;display:block;max-height:260px;object-fit:cover;background:#000" autoplay playsinline></video>
+      <div style="display:flex;gap:7px;margin-top:9px">
+        <button class="btn btn-primary" onclick="snapDDT()" style="flex:1">📸 Scatta e Analizza</button>
+        <button class="btn btn-danger btn-sm" onclick="stopDDTCam()">✕</button>
+      </div>
+      <canvas id="ddt-canvas" style="display:none"></canvas>
+    </div>
+    <div id="ddt-proc" style="display:none;text-align:center;padding:18px">
+      <div class="spinner" style="width:30px;height:30px;border-width:3px"></div>
+      <p style="color:var(--text2);margin-top:9px;font-size:13px">Claude sta analizzando il DDT…</p>
+    </div>
+    <div id="ddt-results" style="display:none">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:9px">
+        <span id="ddt-rlabel" style="font-size:13px;color:var(--text2)">Prodotti rilevati</span>
+        <button class="btn btn-sm" onclick="addDDTRow()">＋ Riga</button>
+      </div>
+      <div id="ddt-rows"></div>
+      <div style="background:var(--bg3);border-radius:var(--r);padding:9px;margin-top:9px;font-size:12px;color:var(--text3)">💡 Verifica e modifica i dati prima di confermare</div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeDDTModal()">Annulla</button>
+      <button class="btn btn-ok" id="ddt-confirm-btn" style="display:none" onclick="confirmDDT()">✓ Conferma Carico</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════
+     MODAL: BARCODE SCANNER
+══════════════════════════════ -->
+<div class="modal-overlay" id="modal-scarica">
+  <div class="modal" style="width:480px">
+    <div class="modal-title">⬇ Scarico</div>
+    <!-- Tab bar -->
+    <div class="filter-bar" style="margin-bottom:14px">
+      <button class="f-btn active" id="sc-tab-manuale" onclick="scaricaTab('manuale')">✍ Manuale per lotto</button>
+      <button class="f-btn" id="sc-tab-foto" onclick="scaricaTab('foto')">📷 Foto / Barcode</button>
+    </div>
+
+    <!-- TAB MANUALE -->
+    <div id="sc-panel-manuale">
+      <div class="fg" style="margin-bottom:10px">
+        <label>Prodotto</label>
+        <select id="sc-prod" onchange="scaricaSelProd()">
+          <option value="">Seleziona prodotto…</option>
+        </select>
+      </div>
+      <div id="sc-lotti-wrap" style="display:none;margin-bottom:10px">
+        <label style="font-size:11px;color:var(--text3);font-weight:600;text-transform:uppercase;display:block;margin-bottom:5px">Lotto</label>
+        <div id="sc-lotti-list"></div>
+      </div>
+      <div id="sc-man-qty-wrap" style="display:none;margin-top:8px">
+        <div style="display:flex;gap:9px;align-items:center">
+          <div class="fg" style="flex:0 0 90px;margin:0">
+            <label>Quantità</label>
+            <input type="number" id="sc-man-qty" value="1" min="1">
+          </div>
+          <div class="fg" style="flex:1;margin:0">
+            <label>Note</label>
+            <input type="text" id="sc-man-note" placeholder="Opzionale">
+          </div>
+        </div>
+      </div>
+      <div id="sc-man-info" style="margin-top:10px"></div>
+    </div>
+
+    <!-- TAB FOTO -->
+    <div id="sc-panel-foto" style="display:none">
+      <p style="color:var(--text2);font-size:13px;margin-bottom:8px">Scansiona il barcode o fotografa l'etichetta con il numero lotto.</p>
+      <div id="barcode-video-wrap">
+        <video id="barcode-video" autoplay playsinline muted></video>
+        <div class="scan-line"></div>
+      </div>
+      <div class="scan-result-box"><span class="sr-label">Codice</span><span class="sr-val" id="scan-code-val">In attesa…</span></div>
+      <div id="bc-match" style="margin-top:9px;display:none">
+        <div style="background:rgba(74,222,128,.08);border:1px solid rgba(74,222,128,.25);border-radius:var(--r);padding:11px">
+          <div style="font-weight:600;color:var(--green);margin-bottom:5px">✓ Prodotto trovato</div>
+          <div id="bc-match-info" style="font-size:13px;color:var(--text2)"></div>
+        </div>
+        <div style="margin-top:9px;display:flex;align-items:center;gap:9px">
+          <label style="font-size:11px;color:var(--text3);font-weight:600;flex-shrink:0">Qtà</label>
+          <input type="number" id="bc-qty" value="1" min="1" style="width:75px">
+          <input type="text" id="bc-note" placeholder="Note" style="flex:1">
+        </div>
+      </div>
+      <div id="bc-nomatch" style="margin-top:9px;display:none">
+        <div style="background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.25);border-radius:var(--r);padding:11px;font-size:13px;color:var(--red)">⚠ Prodotto non trovato in magazzino.</div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn" onclick="closeScaricaModal()">Chiudi</button>
+      <button class="btn btn-warn" id="bc-add-btn" style="display:none" onclick="addFromBarcode()">＋ Aggiungi</button>
+      <button class="btn btn-danger" id="bc-scarico-btn" style="display:none" onclick="confirmBarcodeScario()">⬇ Conferma Scarico Foto</button>
+      <button class="btn btn-danger" id="sc-man-confirm-btn" style="display:none" onclick="confirmScaricaManuale()">⬇ Conferma Scarico</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════
+     MODAL: ARCHIVIO ORDINE DA FOTO
+══════════════════════════════ -->
+<div class="modal-overlay" id="modal-archivio">
+  <div class="modal" style="width:560px;max-height:90vh;overflow-y:auto">
+    <div class="modal-title">📷 Importa Ordine da Foto</div>
+    <p style="color:var(--text2);font-size:13px;margin-bottom:12px">Fotografa o carica la stampa dell'ordine — l'AI estrarrà automaticamente tutti i dati.</p>
+    <div style="display:flex;gap:8px;margin-bottom:12px">
+      <button class="btn btn-sm" id="arch-tab-file" onclick="archTab('file')" style="flex:1">📁 Carica file</button>
+      <button class="btn btn-sm" id="arch-tab-cam" onclick="archTab('cam')" style="flex:1">📷 Fotocamera</button>
+    </div>
+    <div id="arch-panel-file">
+      <input type="file" id="arch-file" accept="image/*" onchange="archFileSelected(this)" style="display:none">
+      <div onclick="document.getElementById('arch-file').click()" style="border:2px dashed var(--border2);border-radius:var(--r);padding:28px;text-align:center;cursor:pointer;color:var(--text3)">
+        <div style="font-size:28px;margin-bottom:6px">📄</div>
+        <div>Clicca per selezionare immagine</div>
+        <div style="font-size:11px;margin-top:4px">JPG, PNG, PDF scannerizzato</div>
+      </div>
+    </div>
+    <div id="arch-panel-cam" style="display:none">
+      <video id="arch-video" autoplay playsinline muted style="width:100%;border-radius:var(--r);background:#000;max-height:240px;object-fit:cover"></video>
+      <button class="btn btn-primary" style="width:100%;margin-top:8px" onclick="archSnap()">📸 Scatta</button>
+      <canvas id="arch-canvas" style="display:none"></canvas>
+    </div>
+    <div id="arch-preview-wrap" style="display:none;margin-top:10px">
+      <img id="arch-preview" style="width:100%;border-radius:var(--r);max-height:200px;object-fit:contain;border:1px solid var(--border)">
+    </div>
+    <div id="arch-ai-status" style="display:none;margin-top:10px;text-align:center;color:var(--text2);font-size:13px">
+      <span>🤖 Analisi in corso…</span>
+    </div>
+    <div id="arch-form" style="display:none;margin-top:14px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+        <div class="fg" style="margin:0"><label>N° Ordine</label><input type="text" id="arch-numero"></div>
+        <div class="fg" style="margin:0"><label>Data</label><input type="date" id="arch-data"></div>
+        <div class="fg" style="margin:0"><label>Fornitore</label><input type="text" id="arch-fornitore"></div>
+        <div class="fg" style="margin:0"><label>Stato</label>
+          <select id="arch-stato">
+            <option value="ricevuto">Ricevuto</option>
+            <option value="parziale">Parziale</option>
+            <option value="in attesa">In attesa</option>
+          </select>
+        </div>
+        <div class="fg" style="margin:0"><label>Importo totale (€)</label><input type="number" id="arch-importo" step="0.01"></div>
+        <div class="fg" style="margin:0"><label>Note</label><input type="text" id="arch-note-ord"></div>
+      </div>
+      <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;margin-bottom:6px">Prodotti</div>
+      <div id="arch-righe-wrap"></div>
+      <button class="btn btn-sm" onclick="archAddRiga()" style="margin-top:6px">＋ Aggiungi riga</button>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('modal-archivio');archStopCam()">Annulla</button>
+      <button class="btn btn-primary" id="arch-save-btn" style="display:none" onclick="saveArchivioOrdine()">💾 Salva in archivio</button>
+    </div>
+  </div>
+</div>
+
+
+
+
+<!-- ══════════════════════════════
+     MODAL: PROCESSATORE
+══════════════════════════════ -->
+<div class="modal-overlay" id="modal-processatore">
+  <div class="modal" style="width:600px;max-height:92vh;overflow-y:auto">
+    <div class="modal-title" id="proc-modal-title">Nuovo Ciclo Processatore</div>
+    <input type="hidden" id="proc-edit-id">
+
+    <div style="background:var(--bg3);border-radius:var(--r);padding:12px;margin-bottom:14px">
+      <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px">Informazioni ciclo</div>
+      <div class="form-grid">
+        <div class="fg" style="margin:0"><label>Data ciclo *</label><input type="date" id="proc-data"></div>
+        <div class="fg" style="margin:0"><label>Ora inizio</label><input type="time" id="proc-ora-inizio"></div>
+        <div class="fg" style="margin:0"><label>Ora fine</label><input type="time" id="proc-ora-fine"></div>
+        <div class="fg" style="margin:0"><label>Protocollo</label>
+          <select id="proc-protocollo">
+            <option value="standard">Standard notturno</option>
+            <option value="rapido">Rapido</option>
+            <option value="biopsie">Biopsie</option>
+            <option value="altro">Altro</option>
+          </select>
+        </div>
+        <div class="fg full" style="margin:0"><label>Note</label><input type="text" id="proc-note" placeholder="Note sul ciclo…"></div>
+      </div>
+    </div>
+
+    <!-- CASI PROCESSATI -->
+    <div style="background:var(--bg3);border-radius:var(--r);padding:12px;margin-bottom:14px">
+      <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">Casi processati</div>
+      <div style="display:flex;gap:8px;margin-bottom:8px">
+        <input type="text" id="proc-caso-from" placeholder="Da (es. 2764/26)" style="flex:1;font-family:DM Mono,monospace">
+        <span style="align-self:center;color:var(--text3)">→</span>
+        <input type="text" id="proc-caso-to" placeholder="A (es. 2800/26)" style="flex:1;font-family:DM Mono,monospace">
+        <button class="btn btn-sm btn-primary" onclick="addRangeCasiProc()">＋ Range</button>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:8px">
+        <input type="text" id="proc-caso-singolo" placeholder="Oppure aggiungi singolo ID…" style="flex:1;font-family:DM Mono,monospace" onkeydown="if(event.key==='Enter') addCasoSingoloProc()">
+        <button class="btn btn-sm btn-ok" onclick="addCasoSingoloProc()">＋</button>
+      </div>
+      <div id="proc-casi-list" style="display:flex;flex-wrap:wrap;gap:5px;min-height:32px;padding:6px;background:var(--bg2);border:1px solid var(--border);border-radius:6px"></div>
+      <div style="font-size:11px;color:var(--text3);margin-top:4px">N° casi: <span id="proc-casi-count" style="font-weight:600;color:var(--accent)">0</span> &nbsp;·&nbsp; <label style="display:inline;font-size:11px;color:var(--text3)">N° cassette: <input type="number" id="proc-n-cassette" min="0" step="1" placeholder="auto" style="width:65px;font-size:12px;padding:2px 6px;display:inline;vertical-align:middle;font-family:DM Mono,monospace"></label></div>
+    </div>
+
+    <!-- REAGENTI PROCESSATORE -->
+    <div style="background:var(--bg3);border-radius:var(--r);padding:12px;margin-bottom:14px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.8px">Reagenti processatore</div>
+        <button class="btn btn-sm" onclick="initReagentiProcFissi(null)" title="Ricarica dall'ultimo ciclo">⟳ Ricarica</button>
+      </div>
+      <div style="font-size:11px;color:var(--text3);margin-bottom:8px">Lista fissa — verificato: lotto invariato · rabboccato: integrato · sostituito: nuovo lotto</div>
+      <div id="proc-reagenti-list"></div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-danger btn-sm" id="proc-delete-btn" onclick="deleteProcCicloModal()" style="margin-right:auto;display:none">🗑 Elimina</button>
+      <button class="btn" onclick="closeModal('modal-processatore')">Annulla</button>
+      <button class="btn btn-primary" onclick="saveProcessatore()">💾 Salva</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════
+     MODAL: COLORATORE (registro giornaliero)
+══════════════════════════════ -->
+<div class="modal-overlay" id="modal-coloratore">
+  <div class="modal" style="width:600px;max-height:92vh;overflow-y:auto">
+    <div class="modal-title" id="color-modal-title">Registro Coloratore</div>
+    <input type="hidden" id="color-edit-id">
+
+    <!-- INFO GIORNATA -->
+    <div style="background:var(--bg3);border-radius:var(--r);padding:12px;margin-bottom:14px">
+      <div class="form-grid">
+        <div class="fg" style="margin:0"><label>Data *</label><input type="date" id="color-data"></div>
+        <div class="fg" style="margin:0"><label>Note</label><input type="text" id="color-note" placeholder="Note…"></div>
+      </div>
+    </div>
+
+    <!-- N° CICLI PER TIPO -->
+    <div style="background:var(--bg3);border-radius:var(--r);padding:12px;margin-bottom:14px">
+      <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px">N° cicli effettuati</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+        <div style="text-align:center;background:var(--bg2);border-radius:8px;padding:12px;border:1px solid var(--border)">
+          <div style="font-size:11px;color:var(--blue);font-weight:600;margin-bottom:6px">EE — Istologia</div>
+          <input type="number" id="color-cicli-ee" min="0" value="0" style="width:70px;text-align:center;font-family:DM Mono,monospace;font-size:22px;font-weight:700;border:none;background:transparent;color:var(--blue)">
+          <div style="font-size:10px;color:var(--text3)">cicli</div>
+        </div>
+        <div style="text-align:center;background:var(--bg2);border-radius:8px;padding:12px;border:1px solid var(--border)">
+          <div style="font-size:11px;color:var(--teal);font-weight:600;margin-bottom:6px">EE — Citologia</div>
+          <input type="number" id="color-cicli-ee-cit" min="0" value="0" style="width:70px;text-align:center;font-family:DM Mono,monospace;font-size:22px;font-weight:700;border:none;background:transparent;color:var(--teal)">
+          <div style="font-size:10px;color:var(--text3)">cicli</div>
+        </div>
+        <div style="text-align:center;background:var(--bg2);border-radius:8px;padding:12px;border:1px solid var(--border)">
+          <div style="font-size:11px;color:var(--purple);font-weight:600;margin-bottom:6px">PAP LupoLab</div>
+          <input type="number" id="color-cicli-pap" min="0" value="0" style="width:70px;text-align:center;font-family:DM Mono,monospace;font-size:22px;font-weight:700;border:none;background:transparent;color:var(--purple)">
+          <div style="font-size:10px;color:var(--text3)">cicli</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RANGE CASI PER TIPO -->
+    <div style="background:var(--bg3);border-radius:var(--r);padding:12px;margin-bottom:14px">
+      <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px">Range ID casi lavorati + vetri</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+        <div style="background:var(--bg2);border-radius:8px;padding:10px;border:1px solid var(--border)">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+            <div style="font-size:11px;color:var(--blue);font-weight:600">Istologia</div>
+            <div style="display:flex;align-items:center;gap:4px">
+              <span style="font-size:10px;color:var(--text3);white-space:nowrap">Vetri</span>
+              <input type="number" id="color-vetri-ist" min="0" value="0" placeholder="0" style="width:52px;font-family:DM Mono,monospace;font-size:12px;font-weight:700;color:var(--blue);text-align:center">
+            </div>
+          </div>
+          <div style="display:flex;gap:3px;margin-bottom:5px">
+            <input type="text" id="color-range-ist-from" placeholder="Da es. 2764/26" style="flex:1;font-family:DM Mono,monospace;font-size:11px">
+            <span style="align-self:center;color:var(--text3);font-size:10px">→</span>
+            <input type="text" id="color-range-ist-to" placeholder="A" style="flex:1;font-family:DM Mono,monospace;font-size:11px">
+            <button class="btn btn-sm btn-primary" onclick="addColorRange('ist')" style="padding:3px 7px;font-size:13px">＋</button>
+          </div>
+          <div id="color-ranges-ist" style="display:flex;flex-wrap:wrap;gap:3px;min-height:20px"></div>
+          <div style="display:flex;gap:3px;margin-top:5px">
+            <input type="text" id="color-singolo-ist" placeholder="Singolo caso…" style="flex:1;font-family:DM Mono,monospace;font-size:11px" onkeydown="if(event.key==='Enter') addColorSingolo('ist')">
+            <button class="btn btn-sm btn-ok" onclick="addColorSingolo('ist')" style="padding:3px 7px;font-size:13px">＋</button>
+          </div>
+          <div style="font-size:11px;color:var(--text3);margin-top:3px">N° casi: <span id="color-count-ist" style="font-weight:600;color:var(--blue)">0</span></div>
+        </div>
+        <div style="background:var(--bg2);border-radius:8px;padding:10px;border:1px solid var(--border)">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+            <div style="font-size:11px;color:var(--teal);font-weight:600">Citologia</div>
+            <div style="display:flex;align-items:center;gap:4px">
+              <span style="font-size:10px;color:var(--text3);white-space:nowrap">Vetri</span>
+              <input type="number" id="color-vetri-cit" min="0" value="0" placeholder="0" style="width:52px;font-family:DM Mono,monospace;font-size:12px;font-weight:700;color:var(--teal);text-align:center">
+            </div>
+          </div>
+          <div style="display:flex;gap:3px;margin-bottom:5px">
+            <input type="text" id="color-range-cit-from" placeholder="Da es. 2764/26" style="flex:1;font-family:DM Mono,monospace;font-size:11px">
+            <span style="align-self:center;color:var(--text3);font-size:10px">→</span>
+            <input type="text" id="color-range-cit-to" placeholder="A" style="flex:1;font-family:DM Mono,monospace;font-size:11px">
+            <button class="btn btn-sm btn-primary" onclick="addColorRange('cit')" style="padding:3px 7px;font-size:13px">＋</button>
+          </div>
+          <div id="color-ranges-cit" style="display:flex;flex-wrap:wrap;gap:3px;min-height:20px"></div>
+          <div style="display:flex;gap:3px;margin-top:5px">
+            <input type="text" id="color-singolo-cit" placeholder="Singolo caso…" style="flex:1;font-family:DM Mono,monospace;font-size:11px" onkeydown="if(event.key==='Enter') addColorSingolo('cit')">
+            <button class="btn btn-sm btn-ok" onclick="addColorSingolo('cit')" style="padding:3px 7px;font-size:13px">＋</button>
+          </div>
+          <div style="font-size:11px;color:var(--text3);margin-top:3px">N° casi: <span id="color-count-cit" style="font-weight:600;color:var(--teal)">0</span></div>
+        </div>
+        <div style="background:var(--bg2);border-radius:8px;padding:10px;border:1px solid var(--border)">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+            <div style="font-size:11px;color:var(--purple);font-weight:600">Pap LupoLab</div>
+            <div style="display:flex;align-items:center;gap:4px">
+              <span style="font-size:10px;color:var(--text3);white-space:nowrap">Vetri</span>
+              <input type="number" id="color-vetri-pap" min="0" value="0" placeholder="0" style="width:52px;font-family:DM Mono,monospace;font-size:12px;font-weight:700;color:var(--purple);text-align:center">
+            </div>
+          </div>
+          <div style="display:flex;gap:3px;margin-bottom:5px">
+            <input type="text" id="color-range-pap-from" placeholder="Da es. 100/26L" style="flex:1;font-family:DM Mono,monospace;font-size:11px">
+            <span style="align-self:center;color:var(--text3);font-size:10px">→</span>
+            <input type="text" id="color-range-pap-to" placeholder="A" style="flex:1;font-family:DM Mono,monospace;font-size:11px">
+            <button class="btn btn-sm btn-primary" onclick="addColorRange('pap')" style="padding:3px 7px;font-size:13px">＋</button>
+          </div>
+          <div id="color-ranges-pap" style="display:flex;flex-wrap:wrap;gap:3px;min-height:20px"></div>
+          <div style="display:flex;gap:3px;margin-top:5px">
+            <input type="text" id="color-singolo-pap" placeholder="Singolo caso…" style="flex:1;font-family:DM Mono,monospace;font-size:11px" onkeydown="if(event.key==='Enter') addColorSingolo('pap')">
+            <button class="btn btn-sm btn-ok" onclick="addColorSingolo('pap')" style="padding:3px 7px;font-size:13px">＋</button>
+          </div>
+          <div style="font-size:11px;color:var(--text3);margin-top:3px">N° casi: <span id="color-count-pap" style="font-weight:600;color:var(--purple)">0</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- REAGENTI ATTIVI NEL COLORATORE QUEL GIORNO -->
+    <div style="background:var(--bg3);border-radius:var(--r);padding:12px;margin-bottom:14px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+        <div>
+          <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.8px">Reagenti presenti nel coloratore</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:2px">Lista fissa — verificato: invariato · rabboccato: integrato · sostituito: nuovo lotto</div>
+        </div>
+        <button class="btn btn-sm" onclick="initReagentiColorFissi(null)" title="Ricarica dall'ultimo registro">⟳ Ricarica</button>
+      </div>
+      <div id="color-reagenti-list"></div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-danger btn-sm" id="color-delete-btn" onclick="deleteColorCicloModal()" style="margin-right:auto;display:none">🗑 Elimina</button>
+      <button class="btn" onclick="closeModal('modal-coloratore')">Annulla</button>
+      <button class="btn btn-primary" onclick="saveColoratore()">💾 Salva</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════
+     MODAL: CAMPIONE
+══════════════════════════════ -->
+<div class="modal-overlay" id="modal-campione">
+  <div class="modal" style="width:580px;max-height:92vh;overflow-y:auto">
+    <div class="modal-title" id="campione-modal-title">Nuovo Campione</div>
+    <input type="hidden" id="camp-id-interno">
+
+    <!-- SEZIONE ANAGRAFICA -->
+    <div style="background:var(--bg3);border-radius:var(--r);padding:12px;margin-bottom:14px">
+      <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px">Accettazione</div>
+      <div class="form-grid">
+        <div class="fg" style="margin:0">
+          <label>ID Campione *</label>
+          <input type="text" id="camp-id" placeholder="es. 2764/26" style="font-family:DM Mono,monospace;font-size:15px;font-weight:700">
+        </div>
+        <div class="fg" style="margin:0">
+          <label>Tipo *</label>
+          <select id="camp-tipo">
+            <option value="">Seleziona…</option>
+            <option value="istologia">Istologia</option>
+            <option value="citologia">Citologia</option>
+            <option value="pap">Pap test</option>
+            <option value="pap_l">Pap LupoLab</option>
+            <option value="pap_priv">Pap Privato</option>
+          </select>
+        </div>
+        <div class="fg" style="margin:0">
+          <label>Sottotipo citologia</label>
+          <input type="text" id="camp-sottotipo" placeholder="Urinaria, Tiroidea, Pleurica… (campo libero)">
+        </div>
+        <div class="fg" style="margin:0">
+          <label>Data accettazione *</label>
+          <input type="date" id="camp-data">
+        </div>
+        <div class="fg full" style="margin:0">
+          <label>Provenienza / Cliente</label>
+          <input type="text" id="camp-provenienza" placeholder="Reparto, medico richiedente… (lista in arrivo)">
+        </div>
+        <div class="fg full" style="margin:0">
+          <label>Descrizione accettazione</label>
+          <textarea id="camp-desc-acc" rows="2" placeholder="Breve descrizione dei campioni arrivati…"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- PEZZI E FRAMMENTI -->
+    <div style="background:var(--bg3);border-radius:var(--r);padding:12px;margin-bottom:14px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.8px">Pezzi e Frammenti</div>
+        <button class="btn btn-sm btn-primary" onclick="addPezzo()">＋ Pezzo</button>
+      </div>
+      <div id="pezzi-container"></div>
+    </div>
+
+    <!-- COLORAZIONI -->
+    <div style="background:var(--bg3);border-radius:var(--r);padding:12px;margin-bottom:14px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.8px">Colorazioni</div>
+        <button class="btn btn-sm btn-primary" onclick="addColorazione()">＋ Colorazione</button>
+      </div>
+      <div id="colorazioni-container"></div>
+    </div>
+
+    <!-- NOTE GENERALI -->
+    <div class="fg full" style="margin-bottom:14px">
+      <label>Note generali</label>
+      <textarea id="camp-note" rows="2" placeholder="Note aggiuntive…"></textarea>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('modal-campione')">Annulla</button>
+      <button class="btn btn-primary" onclick="saveCampione()">💾 Salva</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: DETTAGLIO CAMPIONE -->
+<div class="modal-overlay" id="modal-campione-detail">
+  <div class="modal" style="width:620px;max-height:92vh;overflow-y:auto">
+    <div class="modal-title" id="detail-title">Campione</div>
+    <div id="detail-content"></div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('modal-campione-detail')">Chiudi</button>
+      <button class="btn btn-primary" onclick="editCampioneDetail()">✎ Modifica</button>
+      <button class="btn btn-danger" onclick="deleteCampioneDetail()">✕ Elimina</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════
+     MODAL: CARICO DA SCAN
+══════════════════════════════ -->
+<div class="modal-overlay" id="modal-carico-scan">
+  <div class="modal" style="width:500px;max-height:90vh;overflow-y:auto">
+    <div class="modal-title">📷 Carico da Scan</div>
+    <p style="color:var(--text2);font-size:13px;margin-bottom:10px">Scansiona il barcode o QR del prodotto. Il sistema rileva automaticamente nome, lotto e scadenza.</p>
+    <div id="cs-video-wrap">
+      <video id="cs-video" autoplay playsinline muted style="width:100%;border-radius:var(--r);background:#000;max-height:220px;object-fit:cover"></video>
+      <div class="scan-line"></div>
+    </div>
+    <div style="margin-top:8px;display:flex;gap:8px">
+      <input type="text" id="cs-manual-code" placeholder="Oppure inserisci codice manualmente…" style="flex:1;font-family:DM Mono,monospace;font-size:13px" onkeydown="if(event.key==='Enter') processCaricaScan(this.value.trim())">
+      <button class="btn btn-primary" onclick="processCaricaScan(document.getElementById('cs-manual-code').value.trim())">Cerca</button>
+    </div>
+    <div class="scan-result-box" style="margin-top:8px"><span class="sr-label">Codice</span><span class="sr-val" id="cs-code-val">In attesa…</span></div>
+
+    <!-- Risultato: prodotto trovato con stesso lotto -->
+    <div id="cs-found" style="display:none;margin-top:10px">
+      <div style="background:rgba(26,122,74,.08);border:1px solid rgba(26,122,74,.25);border-radius:var(--r);padding:11px;margin-bottom:10px">
+        <div style="font-weight:600;color:var(--green);margin-bottom:5px">✓ Prodotto trovato in magazzino</div>
+        <div id="cs-found-info" style="font-size:13px;color:var(--text2)"></div>
+      </div>
+      <div style="display:flex;gap:9px;align-items:center">
+        <div class="fg" style="flex:0 0 90px;margin:0"><label>Quantità</label><input type="number" id="cs-qty" value="1" min="1"></div>
+        <div class="fg" style="flex:1;margin:0"><label>Note</label><input type="text" id="cs-note" placeholder="Es. Da DDT 123"></div>
+      </div>
+    </div>
+
+    <!-- Risultato: nuovo prodotto (lotto diverso o non esiste) -->
+    <div id="cs-new" style="display:none;margin-top:10px">
+      <div style="background:rgba(176,125,16,.08);border:1px solid rgba(176,125,16,.25);border-radius:var(--r);padding:10px;margin-bottom:10px;font-size:13px;color:var(--yellow)">
+        ⚠ Prodotto non trovato o lotto diverso — verifica i dati e salva come nuovo
+      </div>
+      <div class="form-grid">
+        <div class="fg full"><label>Nome Prodotto *</label><input type="text" id="cs-nome" placeholder="Nome prodotto"></div>
+        <div class="fg"><label>Categoria *</label>
+          <select id="cs-cat"><option value="">Seleziona…</option>
+            <option>Reagenti</option><option>Vetrini</option><option>Cassette</option>
+            <option>Coloranti</option><option>Consumabili</option><option>Kit Colorazioni</option><option>Lame</option><option>Altro</option>
+          </select></div>
+        <div class="fg"><label>Fornitore</label><input type="text" id="cs-fornitore" placeholder="Fornitore"></div>
+        <div class="fg"><label>Lotto</label><input type="text" id="cs-lotto" placeholder="Numero lotto"></div>
+        <div class="fg"><label>Scadenza</label><input type="date" id="cs-scadenza"></div>
+        <div class="fg"><label>Quantità *</label><input type="number" id="cs-qty-new" value="1" min="1"></div>
+        <div class="fg"><label>Unità</label><input type="text" id="cs-unita" placeholder="pz, L, ml…" value="pz"></div>
+        <div class="fg"><label>Codici</label><input type="text" id="cs-codici" placeholder="Codici scansionabili"></div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn" onclick="closeCaricaScanModal()">Chiudi</button>
+      <button class="btn btn-ok" id="cs-confirm-found" style="display:none" onclick="confirmCaricaScanFound()">⬆ Aggiorna quantità</button>
+      <button class="btn btn-primary" id="cs-confirm-new" style="display:none" onclick="confirmCaricaScanNew()">＋ Salva nuovo prodotto</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════
+     MODAL: SCANSIONE QR SCHEDA TECNICA
+══════════════════════════════ -->
+<div class="modal-overlay" id="modal-scheda-scan">
+  <div class="modal" style="width:460px">
+    <div class="modal-title">📋 Scansiona QR Scheda Tecnica</div>
+    <p style="color:var(--text2);font-size:13px;margin-bottom:10px">Scansiona il QR che rimanda al sito del produttore.</p>
+    <div id="ss-video-wrap">
+      <video id="ss-video" autoplay playsinline muted style="width:100%;border-radius:var(--r);background:#000;max-height:220px;object-fit:cover"></video>
+      <div class="scan-line"></div>
+    </div>
+    <div style="margin-top:8px;display:flex;gap:8px">
+      <input type="text" id="ss-manual-url" placeholder="Oppure incolla URL manualmente…" style="flex:1;font-size:12px" onkeydown="if(event.key==='Enter') processSchedaUrl(this.value.trim())">
+      <button class="btn btn-primary" onclick="processSchedaUrl(document.getElementById('ss-manual-url').value.trim())">Salva</button>
+    </div>
+    <div class="scan-result-box" style="margin-top:8px"><span class="sr-label">URL</span><span class="sr-val" id="ss-url-val" style="font-size:11px;word-break:break-all">In attesa…</span></div>
+    <div id="ss-form" style="display:none;margin-top:12px">
+      <div class="form-grid">
+        <div class="fg"><label>Fornitore</label><input type="text" id="ss-fornitore" placeholder="es. Bio Optica, Roche…"></div>
+        <div class="fg"><label>Nome prodotto</label><input type="text" id="ss-prodotto" placeholder="es. Eosina G (opzionale)"></div>
+        <div class="fg full"><label>Collega a prodotto in magazzino</label>
+          <select id="ss-link-prod"><option value="">Nessun collegamento</option></select>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeSchedaScanModal()">Chiudi</button>
+      <button class="btn btn-primary" id="ss-save-btn" style="display:none" onclick="saveSchedaTecnica()">💾 Salva scheda</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════
+     MODAL: PRODOTTO
+══════════════════════════════ -->
+<div class="modal-overlay" id="modal-product">
+  <div class="modal">
+    <div class="modal-title" id="prod-modal-title">Nuovo Prodotto</div>
+    <input type="hidden" id="f-id">
+    <div class="form-grid">
+      <div class="fg full"><label>Nome Prodotto *</label><input type="text" id="f-nome" placeholder="es. Xilene, Ematossilina Mayer…"></div>
+      <div class="fg"><label>Categoria *</label>
+        <select id="f-cat"><option value="">Seleziona…</option>
+          <option>Reagenti</option><option>Vetrini</option><option>Cassette</option>
+          <option>Coloranti</option><option>Consumabili</option><option>Kit Colorazioni</option><option>Lame</option><option>Altro</option>
+        </select></div>
+      <div class="fg"><label>Fornitore</label><input type="text" id="f-fornitore" placeholder="es. Dako, Leica…"></div>
+      <div class="fg full"><label>Codici scansionabili</label><input type="text" id="f-barcode" placeholder="Barcode, QR, GS1 — separati da virgola se più di uno"></div>
+      <div class="fg"><label>Numero Lotto</label><input type="text" id="f-lotto" placeholder="es. LOT2024001"></div>
+      <div class="fg"><label>Data Scadenza</label><input type="date" id="f-scadenza"></div>
+      <div class="fg"><label>Quantità Attuale *</label><input type="number" id="f-qty" placeholder="0" min="0"></div>
+      <div class="fg"><label>Unità di Misura</label><input type="text" id="f-unita" placeholder="pz, L, ml, conf…"></div>
+      <div class="fg"><label>Pezzi per confezione</label><input type="number" id="f-pezzi-conf" placeholder="0 = N/A" min="0" title="Se il prodotto arriva in confezioni (es. 4 bidoni/scatola), inserisci il numero. Lascia 0 se non applicabile."></div>
+      <div class="fg"><label>Scorta Minima</label><input type="number" id="f-min" placeholder="0" min="0"></div>
+      <div class="fg"><label>Posizione in Lab</label><input type="text" id="f-pos" placeholder="es. Frigo A, Scaffale 2…"></div>
+      <!-- FEATURE 6: Lotti multipli -->
+      <div class="fg full" style="margin-top:8px">
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <label>Lotti aggiuntivi</label>
+          <button class="btn btn-sm" type="button" onclick="addLottoRow()">＋ Lotto</button>
+        </div>
+        <div id="f-lotti-list" style="margin-top:6px"></div>
+        <div style="font-size:11px;color:var(--text3);margin-top:4px">Aggiungi altri lotti se hai più confezioni dello stesso prodotto con lotti/scadenze diversi</div>
+      </div>
+      <div class="fg full"><label>Note</label><textarea id="f-note" rows="2" placeholder="Informazioni aggiuntive…"></textarea></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeProductModal()">Annulla</button>
+      <button class="btn btn-primary" onclick="saveProduct()">Salva</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════
+     MODAL: MOVIMENTO MANUALE
+══════════════════════════════ -->
+<div class="modal-overlay" id="modal-mov">
+  <div class="modal" style="width:420px">
+    <div class="modal-title" id="mov-modal-title">Carico Manuale</div>
+    <div class="form-grid">
+      <div class="fg full"><label>Prodotto *</label><select id="m-prod"><option value="">Seleziona…</option></select></div>
+      <div class="fg"><label>Quantità *</label><input type="number" id="m-qty" placeholder="0" min="1"></div>
+      <div class="fg"><label>Lotto</label><input type="text" id="m-lotto" placeholder="Numero lotto"></div>
+      <div class="fg full"><label>Note</label><input type="text" id="m-note" placeholder="Note opzionali"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('modal-mov')">Annulla</button>
+      <button class="btn btn-primary" onclick="confirmManualMov()">Conferma</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════
+     MODAL: BIDONE PIENO (RIFIUTI)
+══════════════════════════════ -->
+<div class="modal-overlay" id="modal-rifiuti">
+  <div class="modal" style="width:420px">
+    <div class="modal-title">🗑 Registra Bidone Pieno</div>
+    <div class="form-grid">
+      <div class="fg full"><label>Tipo di Rifiuto *</label>
+        <select id="r-tipo">
+          <option value="">Seleziona…</option>
+          <option value="cer_180103">☣ 180103* — Rifiuti infetti (materiale biologico, lame, taglienti)</option>
+          <option value="cer_150110">🧴 150110* — Imballaggi contaminati (bottiglie xilene, formalina…)</option>
+          <option value="cer_150202">🧤 150202* — Assorbenti/DPI contaminati (camici, guanti, stracci)</option>
+          <option value="cer_180106">💧 180106* — Liquidi chimici (xilene esausto, formalina, alcoli)</option>
+        </select></div>
+      <div class="fg"><label>Numero bidoni pieni *</label><input type="number" id="r-qty" value="1" min="1"></div>
+      <div class="fg"><label>Data smaltimento (se già smaltiti)</label><input type="date" id="r-data-smalt"></div>
+      <div class="fg full"><label>Note / Codice CER</label><input type="text" id="r-note" placeholder="es. CER 180103, smaltito da…"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('modal-rifiuti')">Annulla</button>
+      <button class="btn btn-waste" onclick="saveRifiuto()">Registra</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════
+     MODAL: BIDONI VUOTI
+══════════════════════════════ -->
+<div class="modal-overlay" id="modal-vuoti">
+  <div class="modal" style="width:440px">
+    <div class="modal-title">🔄 Aggiorna Contenitori Vuoti</div>
+    <p style="color:var(--text2);font-size:13px;margin-bottom:16px">Inserisci quanti contenitori vuoti hai attualmente disponibili per ciascuna categoria.</p>
+    <div style="display:flex;flex-direction:column;gap:12px">
+
+      <div style="background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r);padding:13px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+          <span style="font-size:18px">📦</span>
+          <div>
+            <div style="font-weight:600;font-size:13px">Scatole cartone — CER 180103*</div>
+            <div style="font-size:11px;color:var(--text3)">Dedicate · lame, materiale biologico, taglienti</div>
+          </div>
+        </div>
+        <input type="number" id="v-cer_180103" placeholder="0" min="0" style="width:100%">
+      </div>
+
+      <div style="background:var(--bg3);border:2px solid rgba(251,146,60,.35);border-radius:var(--r);padding:13px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+          <span style="font-size:18px">🗑</span>
+          <div>
+            <div style="font-weight:600;font-size:13px">Bidoni plastica condivisi — CER 150110* + 150202*</div>
+            <div style="font-size:11px;color:var(--text3)">Pool unico · usato da entrambi i codici CER</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;font-size:11px;color:var(--text3)">
+          <span>150110* — imballaggi contaminati</span><span style="margin-left:auto">150202* — DPI/assorbenti</span>
+        </div>
+        <input type="number" id="v-pool-comune" placeholder="0" min="0" style="width:100%">
+      </div>
+
+      <div style="background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r);padding:13px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+          <span style="font-size:18px">🧪</span>
+          <div>
+            <div style="font-weight:600;font-size:13px">Taniche / fusti — CER 180106*</div>
+            <div style="font-size:11px;color:var(--text3)">Dedicati · xilene esausto, formalina, alcoli</div>
+          </div>
+        </div>
+        <input type="number" id="v-cer_180106" placeholder="0" min="0" style="width:100%">
+      </div>
+
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('modal-vuoti')">Annulla</button>
+      <button class="btn btn-primary" onclick="saveVuoti()">Salva</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════
+     MODAL: NUOVO ORDINE
+══════════════════════════════ -->
+<div class="modal-overlay" id="modal-ordine">
+  <div class="modal" style="width:680px">
+    <div class="modal-title" id="ordine-modal-title">Nuovo Ordine</div>
+    <div class="form-grid" style="margin-bottom:14px">
+      <div class="fg"><label>Numero Ordine / Rif.</label><input type="text" id="o-num" placeholder="es. ORD-2025-001"></div>
+      <div class="fg"><label>Fornitore principale</label><input type="text" id="o-fornitore" placeholder="es. Dako, Carlo Erba…"></div>
+      <div class="fg"><label>Data invio</label><input type="date" id="o-data"></div>
+      <div class="fg"><label>Urgenza</label>
+        <select id="o-urgenza"><option value="normale">Normale</option><option value="urgente">🔴 Urgente</option><option value="bassa">Bassa priorità</option></select>
+      </div>
+      <div class="fg full"><label>Note per l'amministrazione</label><textarea id="o-note" rows="2" placeholder="Motivazione, riferimento budget, note…"></textarea></div>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+      <label style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.7px;font-weight:600">Prodotti da ordinare</label>
+      <button class="btn btn-sm" onclick="addOrdineRow()">＋ Aggiungi prodotto</button>
+    </div>
+    <div id="ordine-rows" style="max-height:260px;overflow-y:auto"></div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('modal-ordine')">Annulla</button>
+      <button class="btn" onclick="saveOrdine('bozza')">💾 Salva bozza</button>
+      <button class="btn btn-primary" onclick="saveOrdine('inviato')">📤 Segna come Inviato</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: VERIFICA INVENTARIO FISICO -->
+<div class="modal-overlay" id="modal-inventario-fisico">
+  <div class="modal" style="width:680px;max-height:90vh;display:flex;flex-direction:column">
+    <div class="modal-title" style="display:flex;justify-content:space-between;align-items:center">
+      <span>📋 Verifica Inventario Fisico</span>
+      <span id="inv-fisico-progress" style="font-size:13px;font-weight:400;color:var(--text3)">0 / 0 verificati</span>
+    </div>
+    <div id="inv-fisico-body" style="overflow-y:auto;flex:1;padding:0 4px"></div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('modal-inventario-fisico')">Annulla</button>
+      <button class="btn btn-ok" onclick="applicaRettificheInventario()">✅ Applica correzioni</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: DETTAGLIO ORDINE -->
+<div class="modal-overlay" id="modal-ordine-detail">
+  <div class="modal" style="width:600px">
+    <div class="modal-title" id="od-title">Dettaglio Ordine</div>
+    <div id="od-content"></div>
+    <div class="modal-footer" id="od-footer"></div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════
+     MODAL: SCHEDA PRODOTTO
+══════════════════════════════ -->
+<div class="modal-overlay" id="modal-prodotto-scheda">
+  <div class="modal" style="width:700px;max-height:90vh">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px">
+      <div>
+        <div class="modal-title" id="scheda-title" style="margin-bottom:4px"></div>
+        <div id="scheda-meta" style="font-size:12px;color:var(--text3)"></div>
+      </div>
+      <div style="display:flex;gap:6px;flex-shrink:0">
+        <button class="btn btn-sm" id="scheda-edit-btn">✎ Modifica</button>
+        <button class="btn btn-sm" onclick="closeModal('modal-prodotto-scheda')">✕</button>
+      </div>
+    </div>
+
+    <!-- KPI row -->
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px" id="scheda-kpi"></div>
+
+    <!-- Tabs -->
+    <div class="tabs" id="scheda-tabs">
+      <div class="tab active" onclick="schedaTab('movimenti',this)">↕ Movimenti</div>
+      <div class="tab" onclick="schedaTab('lotti',this)">🏷 Lotti</div>
+      <div class="tab" onclick="schedaTab('ordini',this)">🛒 Ordini</div>
+      <div class="tab" onclick="schedaTab('grafico',this)">📈 Andamento</div>
+    </div>
+    <div id="scheda-tab-content" style="min-height:180px"></div>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+
+<script defer src="app.js"></script>
+
+<!-- ══════════════════════════════
+     MODAL: UNISCI PRODOTTI
+══════════════════════════════ -->
+<div class="modal-overlay" id="modal-merge-product">
+  <div class="modal" style="width:500px;max-height:88vh;overflow-y:auto">
+    <div class="modal-title" id="merge-modal-title">Unisci prodotto</div>
+    <input type="hidden" id="merge-source-id">
+    <div id="merge-source-info" style="font-size:13px;color:var(--text2);background:var(--bg3);border-radius:var(--r);padding:10px;margin-bottom:12px;border-left:3px solid var(--red)"></div>
+    <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px">Seleziona il prodotto di destinazione</div>
+    <input type="text" id="merge-search" placeholder="Cerca per nome o fornitore…" style="width:100%;margin-bottom:8px" oninput="renderMergeList()">
+    <div id="merge-product-list" style="max-height:260px;overflow-y:auto;border:1px solid var(--border);border-radius:var(--r)"></div>
+    <div id="merge-preview" style="display:none;margin-top:10px;padding:10px;background:var(--bg3);border-radius:var(--r);border:1px solid var(--border)"></div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('modal-merge-product')">Annulla</button>
+      <button class="btn btn-primary" id="merge-confirm-btn" onclick="executeMerge()" disabled>🔗 Unisci</button>
+    </div>
+  </div>
+</div>
+</body>
+</html>
