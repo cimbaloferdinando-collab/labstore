@@ -458,10 +458,19 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
       </div>
 
     </div>
+    <!-- ══════ INVENTARIO ══════ -->
     <div class="view" id="view-inventario">
-      <div class="page-title">Inventario</div>
-      <div class="page-sub">Tutti i consumabili del laboratorio</div>
-      <div class="filter-bar" id="inv-filter-bar">
+      <div class="pg-hdr">
+        <div class="pg-title">Inventario</div>
+        <div style="display:flex;gap:6px">
+          <button class="hbtn2 ok" onclick="openCaricaScanModal()">⬆ Carico</button>
+          <button class="hbtn2 warn" onclick="openScaricaModal()">⬇ Scarico</button>
+          <button class="hbtn2" onclick="openDDTModal()">📷 DDT</button>
+          <button class="hbtn2 primary" onclick="openAddModal()">＋ Prodotto</button>
+        </div>
+      </div>
+      <div style="font-size:10px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--text3);margin-bottom:5px">Categoria</div>
+      <div class="filter-bar" id="inv-filter-bar" style="margin-bottom:10px">
         <button class="f-btn active" onclick="setInvFilter('all',this)">Tutti</button>
         <button class="f-btn" onclick="setInvFilter('Reagenti',this)">🧪 Reagenti</button>
         <button class="f-btn" onclick="setInvFilter('Vetrini',this)">🪟 Vetrini</button>
@@ -472,7 +481,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
         <button class="f-btn" onclick="setInvFilter('Lame',this)">⚔ Lame</button>
         <button class="f-btn" onclick="setInvFilter('Altro',this)">📌 Altro</button>
       </div>
-      <div class="filter-bar" id="inv-fornitore-bar" style="margin-top:4px">
+      <div class="filter-bar" id="inv-fornitore-bar" style="margin-bottom:10px">
         <span style="font-size:11px;color:var(--text3);padding:0 6px;align-self:center">Fornitore:</span>
         <button class="f-btn active" onclick="setFornFilter('all',this)">Tutti</button>
         <button class="f-btn" onclick="setFornFilter('Epredia',this)">Epredia</button>
@@ -480,79 +489,83 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
         <button class="f-btn" onclick="setFornFilter('Ventana',this)">Ventana</button>
         <button class="f-btn" onclick="setFornFilter('__altri',this)">Altri fornitori</button>
       </div>
-      <div class="filter-bar" id="inv-sub-bar" style="margin-top:4px;display:none">
+      <div class="filter-bar" id="inv-sub-bar" style="margin-bottom:10px;display:none">
         <span style="font-size:11px;color:var(--text3);padding:0 6px;align-self:center" id="inv-sub-label">Sottofiltro:</span>
       </div>
-      <div class="filter-bar" id="inv-sub2-bar" style="margin-top:4px;display:none">
+      <div class="filter-bar" id="inv-sub2-bar" style="margin-bottom:10px;display:none">
         <span style="font-size:11px;color:var(--text3);padding:0 6px;align-self:center">Prodotto:</span>
       </div>
       <div class="card">
-        <div class="card-header">
+        <div class="card-hdr">
           <span class="card-title" id="inv-count">0 prodotti</span>
-          <div class="card-act">
-            <button class="btn btn-sm" onclick="openInventarioFisico()" style="background:var(--purple-bg);color:var(--purple);border-color:#c4b5fd">📋 Verifica inventario</button>
-            <div class="search-wrap"><span class="s-ico">🔍</span><input type="text" id="inv-search" placeholder="Cerca…" oninput="debouncedRenderInv()"></div>
-          </div>
+          <button class="hbtn2" onclick="openInventarioFisico()" style="background:var(--purple-bg);color:var(--purple);border-color:#c4b5fd">📋 Verifica inventario</button>
+          <input type="text" id="inv-search" class="search-inp" placeholder="Cerca…" oninput="debouncedRenderInv()" style="padding-left:10px">
         </div>
-        <div class="table-scroll"><table>
-          <thead><tr><th>Prodotto</th><th>Categoria</th><th>Lotto</th><th>Scadenza</th><th>Ini → Att</th><th>Livello</th><th>Azioni</th></tr></thead>
-          <tbody id="inv-tbody"></tbody>
-        </table></div>
+        <div style="overflow-x:auto">
+          <table class="tbl">
+            <thead><tr><th>Prodotto</th><th>Categoria</th><th>Lotto</th><th>Scadenza</th><th>Ini → Att</th><th>Livello</th><th>Azioni</th></tr></thead>
+            <tbody id="inv-tbody"></tbody>
+          </table>
+        </div>
       </div>
     </div>
 
     <!-- ══════ MOVIMENTI ══════ -->
     <div class="view" id="view-movimenti">
-      <div class="page-title">Movimenti</div>
-      <div class="page-sub">Storico carichi e scarichi consumabili</div>
-      <div style="display:flex;gap:7px;margin-bottom:14px;flex-wrap:wrap">
-        <button class="btn btn-ok" onclick="openDDTModal()">📷 Carico da DDT</button>
-        <button class="btn btn-ok" onclick="openCaricaScanModal()">⬆ Carico Scan</button>
-    <button class="btn btn-warn" onclick="openScaricaModal()">⬇ Scarico</button>
-        <button class="btn" onclick="openManualMovModal('carico')">＋ Carico manuale</button>
-        <button class="btn" onclick="openManualMovModal('scarico')">− Scarico manuale</button>
+      <div class="pg-hdr">
+        <div class="pg-title">Movimenti</div>
+        <div style="display:flex;gap:6px">
+          <button class="hbtn2 ok" onclick="openDDTModal()">📷 DDT</button>
+          <button class="hbtn2 ok" onclick="openCaricaScanModal()">⬆ Carico scan</button>
+          <button class="hbtn2 warn" onclick="openScaricaModal()">⬇ Scarico</button>
+          <button class="hbtn2" onclick="openManualMovModal('carico')">＋ Carico manuale</button>
+          <button class="hbtn2" onclick="openManualMovModal('scarico')">− Scarico manuale</button>
+        </div>
       </div>
       <div class="card">
-        <div class="card-header">
+        <div class="card-hdr">
           <span class="card-title">Storico movimenti</span>
-          <button class="btn btn-sm btn-danger" onclick="clearMovimenti()">🗑 Svuota</button>
+          <button class="hbtn2 danger" onclick="clearMovimenti()">🗑 Svuota</button>
         </div>
-        <div class="table-scroll"><table>
-          <thead><tr><th>Data/Ora</th><th>Tipo</th><th>Prodotto</th><th>Qtà</th><th>Lotto</th><th>Note</th></tr></thead>
-          <tbody id="mov-tbody"></tbody>
-        </table></div>
+        <div style="overflow-x:auto">
+          <table class="tbl">
+            <thead><tr><th>Data/Ora</th><th>Tipo</th><th>Prodotto</th><th>Qtà</th><th>Lotto</th><th>Note</th></tr></thead>
+            <tbody id="mov-tbody"></tbody>
+          </table>
+        </div>
       </div>
     </div>
 
     <!-- ══════ RIFIUTI ══════ -->
     <div class="view" id="view-rifiuti">
-      <div class="page-title">Gestione Rifiuti</div>
-      <div class="page-sub">Tracciamento bidoni prodotti, smaltiti e disponibili</div>
-
-      <div style="display:flex;gap:7px;margin-bottom:18px;flex-wrap:wrap">
-        <button class="btn btn-waste" onclick="openRifiutiModal()">+ Registra bidone pieno</button>
-        <button class="btn" onclick="openVuotiModal()">🔄 Aggiorna bidoni vuoti</button>
-      </div>
-
-      <div class="waste-grid" id="waste-grid"></div>
-
-      <div class="card">
-        <div class="card-header"><span class="card-title">📋 Log movimenti rifiuti</span>
-          <button class="btn btn-sm btn-danger" onclick="clearWasteLog()">🗑 Svuota log</button>
+      <div class="pg-hdr">
+        <div class="pg-title">Rifiuti</div>
+        <div style="display:flex;gap:6px">
+          <button class="hbtn2 primary" onclick="openRifiutiModal()">＋ Registra bidone pieno</button>
+          <button class="hbtn2" onclick="openVuotiModal()">🔄 Aggiorna vuoti</button>
         </div>
-        <div class="table-scroll"><table>
-          <thead><tr><th>Data/Ora</th><th>Tipo rifiuto</th><th>Azione</th><th>Qtà bidoni</th><th>Note</th></tr></thead>
-          <tbody id="waste-log-tbody"></tbody>
-        </table></div>
+      </div>
+      <div id="waste-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px"></div>
+      <div class="card">
+        <div class="card-hdr">
+          <span class="card-title">📋 Log movimenti rifiuti</span>
+          <button class="hbtn2 danger" onclick="clearWasteLog()">🗑 Svuota log</button>
+        </div>
+        <div style="overflow-x:auto">
+          <table class="tbl">
+            <thead><tr><th>Data/Ora</th><th>Tipo rifiuto</th><th>Azione</th><th>Qtà bidoni</th><th>Note</th></tr></thead>
+            <tbody id="waste-log-tbody"></tbody>
+          </table>
+        </div>
       </div>
     </div>
 
-
     <!-- ══════ ALLERTE ══════ -->
     <div class="view" id="view-allerte">
-      <div class="page-title">Allerte</div>
-      <div class="page-sub">Prodotti con scorta insufficiente o in scadenza</div>
-      <div class="filter-bar" id="allerte-filter-bar">
+      <div class="pg-hdr">
+        <div class="pg-title">Allerte</div>
+      </div>
+      <div class="filter-bar" id="allerte-filter-bar" style="margin-bottom:14px">
         <button class="f-btn active" onclick="setAllerteFilter('all',this)">Tutti</button>
         <button class="f-btn" onclick="setAllerteFilter('esauriti',this)">🔴 Esauriti</button>
         <button class="f-btn" onclick="setAllerteFilter('critici',this)">🟡 Scorta bassa</button>
@@ -560,24 +573,27 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
         <button class="f-btn" onclick="setAllerteFilter('inscadenza',this)">⏰ In scadenza (30gg)</button>
       </div>
       <div class="card">
-        <div class="card-header"><span class="card-title" id="allerte-count">0 prodotti</span></div>
-        <div class="table-scroll"><table>
-          <thead><tr><th>Prodotto</th><th>Categoria</th><th>Fornitore</th><th>Lotto</th><th>Qtà / Min</th><th>Scadenza</th><th>Stato</th><th>Azione</th></tr></thead>
-          <tbody id="allerte-tbody"></tbody>
-        </table></div>
+        <div class="card-hdr"><span class="card-title" id="allerte-count">0 prodotti</span></div>
+        <div style="overflow-x:auto">
+          <table class="tbl">
+            <thead><tr><th>Prodotto</th><th>Categoria</th><th>Fornitore</th><th>Lotto</th><th>Qtà / Min</th><th>Scadenza</th><th>Stato</th><th>Azione</th></tr></thead>
+            <tbody id="allerte-tbody"></tbody>
+          </table>
+        </div>
       </div>
     </div>
 
     <!-- ══════ ORDINI ══════ -->
     <div class="view" id="view-ordini">
-      <div class="page-title">Ordini</div>
-      <div class="page-sub">Richieste inviate all'amministrazione</div>
-      <div style="display:flex;gap:7px;margin-bottom:14px;flex-wrap:wrap">
-        <button class="btn btn-primary" onclick="openOrdineModal()">＋ Nuovo Ordine</button>
-        <button class="btn btn-ok" onclick="openOrdineModal('da_allerte')">🚨 Ordina da Allerte</button>
-        <button class="btn" onclick="openChecklist()" style="background:var(--purple-bg);color:var(--purple);border-color:#c4b5fd">📋 Checklist Riordino</button>
+      <div class="pg-hdr">
+        <div class="pg-title">Ordini</div>
+        <div style="display:flex;gap:6px">
+          <button class="hbtn2 primary" onclick="openOrdineModal()">＋ Nuovo ordine</button>
+          <button class="hbtn2 ok" onclick="openOrdineModal('da_allerte')">🚨 Da allerte</button>
+          <button class="hbtn2" onclick="openChecklist()" style="background:var(--purple-bg);color:var(--purple);border-color:#c4b5fd">📋 Checklist</button>
+        </div>
       </div>
-      <div class="filter-bar" id="ordini-filter-bar">
+      <div class="filter-bar" id="ordini-filter-bar" style="margin-bottom:14px">
         <button class="f-btn active" onclick="setOrdiniFilter('all',this)">Tutti</button>
         <button class="f-btn" onclick="setOrdiniFilter('bozza',this)">📝 Bozza</button>
         <button class="f-btn" onclick="setOrdiniFilter('inviato',this)">📤 Inviato</button>
@@ -587,39 +603,43 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
         <button class="f-btn" onclick="setOrdiniFilter('annullato',this)">❌ Annullato</button>
       </div>
       <div class="card">
-        <div class="card-header"><span class="card-title" id="ordini-count">0 ordini</span></div>
-        <div class="table-scroll"><table>
-          <thead><tr><th>Data</th><th>N° Ordine</th><th>Prodotti</th><th>Fornitore</th><th>Stato</th><th>Note</th><th>Azioni</th></tr></thead>
-          <tbody id="ordini-tbody"></tbody>
-        </table></div>
+        <div class="card-hdr"><span class="card-title" id="ordini-count">0 ordini</span></div>
+        <div style="overflow-x:auto">
+          <table class="tbl">
+            <thead><tr><th>Data</th><th>N° Ordine</th><th>Prodotti</th><th>Fornitore</th><th>Stato</th><th>Note</th><th>Azioni</th></tr></thead>
+            <tbody id="ordini-tbody"></tbody>
+          </table>
+        </div>
       </div>
     </div>
 
     <!-- ══════ REPORT ══════ -->
     <div class="view" id="view-report">
-      <div class="page-title">Report Mensile</div>
-      <div class="page-sub" id="report-period"></div>
-      <div style="display:flex;gap:7px;margin-bottom:18px">
-        <button class="btn btn-primary" onclick="renderReport()">🔄 Aggiorna</button>
-        <button class="btn" onclick="window.print()">🖨 Stampa PDF</button>
+      <div class="pg-hdr">
+        <div class="pg-title">Report Mensile</div>
+        <div style="display:flex;gap:6px">
+          <button class="hbtn2 primary" onclick="renderReport()">🔄 Aggiorna</button>
+          <button class="hbtn2" onclick="window.print()">🖨 Stampa PDF</button>
+        </div>
       </div>
+      <div style="font-size:12px;color:var(--text3);margin-bottom:18px" id="report-period"></div>
       <div id="report-content"></div>
     </div>
 
-
     <!-- ══════ ARCHIVIO ORDINI ══════ -->
     <div class="view" id="view-archivio">
-      <div class="page-title">Archivio Ordini</div>
-      <div class="page-sub">Storico ordini per fornitore e mese</div>
-      <div style="display:flex;gap:7px;margin-bottom:14px;flex-wrap:wrap;align-items:center">
-        <button class="btn btn-primary" onclick="openArchivioModal()">📷 Importa da foto</button>
-        <select id="arch-filter-mese" onchange="renderArchivio()" style="min-width:130px">
+      <div class="pg-hdr">
+        <div class="pg-title">Archivio Ordini</div>
+        <button class="hbtn2 primary" onclick="openArchivioModal()">📷 Importa da foto</button>
+      </div>
+      <div class="filter-bar" style="margin-bottom:14px">
+        <select id="arch-filter-mese" onchange="renderArchivio()" style="padding:6px 10px;border:1.5px solid var(--border2);border-radius:var(--r-sm);font-size:12px;min-width:130px">
           <option value="">Tutti i mesi</option>
         </select>
-        <select id="arch-filter-forn" onchange="renderArchivio()" style="min-width:130px">
+        <select id="arch-filter-forn" onchange="renderArchivio()" style="padding:6px 10px;border:1.5px solid var(--border2);border-radius:var(--r-sm);font-size:12px;min-width:130px">
           <option value="">Tutti i fornitori</option>
         </select>
-        <select id="arch-filter-stato" onchange="renderArchivio()" style="min-width:130px">
+        <select id="arch-filter-stato" onchange="renderArchivio()" style="padding:6px 10px;border:1.5px solid var(--border2);border-radius:var(--r-sm);font-size:12px;min-width:130px">
           <option value="">Tutti gli stati</option>
           <option value="ricevuto">Ricevuto</option>
           <option value="parziale">Parziale</option>
@@ -629,16 +649,16 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
       <div id="archivio-list"></div>
     </div>
 
-
     <!-- ══════ SCHEDE TECNICHE ══════ -->
     <div class="view" id="view-schede">
-      <div class="page-title">Schede Tecniche</div>
-      <div class="page-sub">Archivio schede tecniche per fornitore — scansiona il QR del produttore</div>
-      <div style="display:flex;gap:7px;margin-bottom:14px;flex-wrap:wrap;align-items:center">
-        <button class="btn btn-primary" onclick="openSchedaScanModal()">📷 Scansiona QR Scheda</button>
-        <select id="schede-filter-forn" onchange="renderSchede()" style="min-width:140px">
-          <option value="">Tutti i fornitori</option>
-        </select>
+      <div class="pg-hdr">
+        <div class="pg-title">Schede Tecniche</div>
+        <div style="display:flex;gap:6px">
+          <button class="hbtn2 primary" onclick="openSchedaScanModal()">📷 Scansiona QR Scheda</button>
+          <select id="schede-filter-forn" onchange="renderSchede()" style="padding:6px 10px;border:1.5px solid var(--border2);border-radius:var(--r-sm);font-size:12px;min-width:140px">
+            <option value="">Tutti i fornitori</option>
+          </select>
+        </div>
       </div>
       <div id="schede-list"></div>
     </div>
