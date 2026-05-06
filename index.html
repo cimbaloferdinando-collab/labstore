@@ -17,47 +17,21 @@
 </head>
 <body>
 <header>
-  <div style="display:flex;align-items:center;gap:10px">
-    <button class="btn-hamburger" onclick="toggleSidebar()" aria-label="Menu navigazione">☰</button>
-    <div class="logo" onclick="showView('dashboard')" style="cursor:pointer">LupoLab <span class="logo-badge">AP</span></div>
-  </div>
+  <div class="logo" onclick="showView('dashboard')" style="cursor:pointer">LupoLab <span class="logo-badge">AP</span> <span style="font-size:10px;opacity:.5;margin-left:4px;font-family:'DM Mono',monospace">v5</span></div>
   <div class="hdr-act">
-    <button class="btn hdr-util" id="sync-status" onclick="forceSync()" style="font-size:11px;font-family:'DM Mono',monospace" title="Sincronizza con cloud">⬡ Locale</button>
-    <button class="btn btn-ok hdr-util" onclick="forceSave()" title="Salva tutto sul cloud" style="font-size:11px">💾 Salva</button>
-    <button class="btn hdr-util" onclick="exportBackup()" title="Esporta backup locale JSON" style="font-size:11px">📥 Backup</button>
-    <button class="btn hdr-util" onclick="importBackup()" title="Ripristina backup da file JSON" style="font-size:11px">📤 Ripristina</button>
-    <button class="btn hdr-util" onclick="hardResetFromCloud()" title="Sostituisce inventario locale con dati cloud" style="font-size:11px">🔄 Reset cloud</button>
-    <button class="btn hdr-util btn-warn" onclick="resetProductsFromCloud()" title="Sovrascrive prodotti locali con quelli Supabase (no merge)" style="font-size:11px">🔁 Prod. cloud</button>
-    <button class="btn hdr-util" id="undo-btn" onclick="undoLastAction()" title="Nessuna azione da annullare" style="font-size:11px;opacity:.4">↩ Annulla</button>
-    <div class="hdr-sep-mobile" style="width:1px;height:20px;background:rgba(255,255,255,.15);margin:0 4px"></div>
+    <button class="btn" id="sync-status" onclick="forceSync()" style="font-size:11px;font-family:'DM Mono',monospace" title="Sincronizza con cloud">⬡ Locale</button>
+    <div class="hdr-sep"></div>
+    <button class="btn" onclick="openCaricaScanModal()" title="Scansione barcode">📷 Scan</button>
+    <button class="btn" onclick="document.getElementById('home-search')?.focus()" title="Cerca">🔍 Cerca</button>
+    <div class="hdr-sep"></div>
     <button class="btn btn-primary" onclick="openNuovoCampione()" title="Nuovo campione">＋ Campione</button>
-    <button class="btn btn-pap-l hdr-util" onclick="openNuovoCampioneSpec('pap_l')">＋ Pap L</button>
-    <button class="btn btn-pap-priv hdr-util" onclick="openNuovoCampioneSpec('pap_priv')">＋ Pap Priv.</button>
-    <div style="width:1px;height:20px;background:rgba(255,255,255,.15);margin:0 4px"></div>
-    <div class="hdr-ddrop" id="hdr-mag-drop">
-      <button class="btn" onclick="toggleHdrDrop('hdr-mag-drop')" aria-label="Azioni magazzino">📦 Mag. ▾</button>
-      <div class="hdr-ddrop-menu" id="hdr-mag-drop-menu">
-        <button class="btn btn-ok" onclick="openCaricaScanModal();toggleHdrDrop('hdr-mag-drop')">⬆ Carico scan</button>
-        <button class="btn btn-warn" onclick="openScaricaModal();toggleHdrDrop('hdr-mag-drop')">⬇ Scarico</button>
-        <button class="btn" onclick="openDDTModal();toggleHdrDrop('hdr-mag-drop')">📷 DDT</button>
-        <button class="btn btn-primary" onclick="openAddModal();toggleHdrDrop('hdr-mag-drop')">＋ Prodotto</button>
-      </div>
-    </div>
-    <!-- Menu ⋯ visibile solo su smartphone (<480px) -->
-    <div class="hdr-ddrop hdr-mobile-overflow" id="hdr-more-drop" style="display:none">
-      <button class="btn" onclick="toggleHdrDrop('hdr-more-drop')" aria-label="Altre azioni" style="font-size:16px;padding:8px 12px">⋯</button>
-      <div class="hdr-ddrop-menu" id="hdr-more-drop-menu" style="right:0;min-width:180px">
-        <button class="btn" onclick="openNuovoCampioneSpec('pap_l');toggleHdrDrop('hdr-more-drop')">＋ Pap L</button>
-        <button class="btn" onclick="openNuovoCampioneSpec('pap_priv');toggleHdrDrop('hdr-more-drop')">＋ Pap Priv.</button>
-        <div style="height:1px;background:rgba(255,255,255,.15);margin:4px 0"></div>
-        <button class="btn btn-ok" onclick="forceSync();toggleHdrDrop('hdr-more-drop')" style="font-family:'DM Mono',monospace;font-size:11px">⬡ Sync</button>
-        <button class="btn btn-ok" onclick="forceSave();toggleHdrDrop('hdr-more-drop')">💾 Salva</button>
-        <button class="btn" onclick="exportBackup();toggleHdrDrop('hdr-more-drop')">📥 Backup</button>
-        <button class="btn" onclick="importBackup();toggleHdrDrop('hdr-more-drop')">📤 Ripristina</button>
-        <button class="btn" onclick="resetProductsFromCloud();toggleHdrDrop('hdr-more-drop')">🔁 Prod. cloud</button>
-        <button class="btn" id="undo-btn-mobile" onclick="undoLastAction();toggleHdrDrop('hdr-more-drop')" style="opacity:.4">↩ Annulla</button>
-      </div>
-    </div>
+    <button class="btn" onclick="openNuovoCampioneSpec('pap_l')" style="background:rgba(234,88,12,.2);color:#fdba74;border-color:rgba(234,88,12,.3)">＋ Pap L</button>
+    <button class="btn" onclick="openNuovoCampioneSpec('pap_priv')" style="background:rgba(124,58,237,.2);color:#c4b5fd;border-color:rgba(124,58,237,.3)">＋ Pap Priv.</button>
+    <div class="hdr-sep"></div>
+    <button class="btn btn-ok" onclick="openCaricaScanModal()" title="Carico da scan">⬆ Carico</button>
+    <button class="btn btn-warn" onclick="openScaricaModal()" title="Scarico manuale">⬇ Scarico</button>
+    <button class="btn" onclick="openDDTModal()" title="Importa da foto">📷 DDT</button>
+    <button class="btn btn-primary" onclick="openAddModal()" title="Aggiungi prodotto">＋ Prodotto</button>
   </div>
 </header>
 <div id="sync-banner">⟳ Sincronizzazione dati in corso…</div>
