@@ -16,7 +16,7 @@
 <style>
 :root{
   --bg:#f0f2f7;--bg2:#ffffff;--bg3:#f7f9fc;--bg4:#eef1f8;
-  --border:#e2e8f0;--border2:#cbd5e1;--border-faint:#f0f2f7;
+  --border:#e2e8f0;--border2:#cbd5e1;
   --accent:#1a2f5e;--accent2:#2563eb;--accent3:#1e40af;--accent-light:#eff6ff;
   --green:#059669;--green-bg:#ecfdf5;
   --yellow:#d97706;--yellow-bg:#fffbeb;
@@ -37,7 +37,7 @@ header{background:var(--accent);padding:0 20px;display:flex;align-items:center;j
 .logo{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:700;color:#fff;display:flex;align-items:center;gap:10px;letter-spacing:-.3px}
 .logo-badge{background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);font-family:'DM Mono',monospace;font-size:9px;padding:3px 7px;border-radius:4px;letter-spacing:1.5px;font-weight:600;border:1px solid rgba(255,255,255,.2)}
 .hdr-act{display:flex;gap:5px;align-items:center;flex-wrap:wrap}
-.btn{padding:9px 14px;border-radius:var(--r-sm);border:1px solid var(--border2);background:var(--bg2);color:var(--text2);cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;transition:all .15s;display:inline-flex;align-items:center;gap:5px;white-space:nowrap;box-shadow:var(--shadow-sm)}
+.btn{padding:6px 14px;border-radius:var(--r-sm);border:1px solid var(--border2);background:var(--bg2);color:var(--text2);cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;transition:all .15s;display:inline-flex;align-items:center;gap:5px;white-space:nowrap;box-shadow:var(--shadow-sm)}
 .btn:hover{border-color:var(--accent2);color:var(--accent);background:var(--accent-light);transform:translateY(-1px);box-shadow:var(--shadow)}
 .btn:active{transform:translateY(0)}
 .btn-primary{background:var(--accent2);color:#fff;border-color:var(--accent2);font-weight:600;box-shadow:0 2px 4px rgba(37,99,235,.3)}
@@ -49,11 +49,7 @@ header{background:var(--accent);padding:0 20px;display:flex;align-items:center;j
 .btn-danger{background:var(--red-bg);color:var(--red);border-color:#fca5a5}
 .btn-danger:hover{background:#fee2e2}
 .btn-waste{background:var(--orange-bg);color:var(--orange);border-color:#fdba74}
-.btn-pap-l{background:rgba(234,88,12,.2);color:#fdba74;border-color:rgba(234,88,12,.3)}
-.btn-pap-l:hover{background:rgba(234,88,12,.3);color:#fff}
-.btn-pap-priv{background:rgba(124,58,237,.2);color:#c4b5fd;border-color:rgba(124,58,237,.3)}
-.btn-pap-priv:hover{background:rgba(124,58,237,.3);color:#fff}
-.btn-sm{padding:7px 11px;font-size:12px}
+.btn-sm{padding:4px 10px;font-size:12px}
 .btn:disabled{opacity:.45;cursor:not-allowed;transform:none!important}
 header .btn{background:rgba(255,255,255,.1);color:rgba(255,255,255,.9);border-color:rgba(255,255,255,.2)}
 header .btn:hover{background:rgba(255,255,255,.2);color:#fff}
@@ -62,7 +58,8 @@ header .btn-primary:hover{background:#f0f9ff;color:var(--accent2)}
 header .btn-ok{background:rgba(5,150,105,.2);color:#6ee7b7;border-color:rgba(5,150,105,.3)}
 header .btn-warn{background:rgba(217,119,6,.2);color:#fcd34d;border-color:rgba(217,119,6,.3)}
 .layout{display:flex;min-height:calc(100vh - 56px)}
-.sidebar{width:260px;background:var(--bg2);border-right:1px solid var(--border);padding:8px 0 20px;flex-shrink:0;overflow-y:auto;box-shadow:2px 0 8px rgba(0,0,0,.04)}
+.sidebar{width:220px;background:var(--bg2);border-right:1px solid var(--border);padding:8px 0 20px;flex-shrink:0;position:sticky;top:56px;height:calc(100vh - 56px);overflow-y:auto;box-shadow:2px 0 8px rgba(0,0,0,.04)}
+.main{flex:1;padding:24px;overflow-y:auto;max-width:1400px}
 .nav-lbl{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:1.5px;padding:12px 16px 4px;display:flex;align-items:center;justify-content:space-between;padding-right:14px}
 .nav-lbl.clickable{cursor:pointer}
 .nav-lbl.clickable:hover{color:var(--text2)}
@@ -100,7 +97,7 @@ tbody td{padding:10px 14px;vertical-align:middle}
 .fg{display:flex;flex-direction:column;gap:4px;margin-bottom:0}
 .fg.full{grid-column:1/-1}
 label{font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px}
-input[type=text],input[type=number],input[type=date],input[type=time],input[type=email],select,textarea{padding:10px 12px;border:1.5px solid var(--border2);border-radius:var(--r-sm);background:var(--bg2);color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;transition:border-color .15s,box-shadow .15s;width:100%;outline:none}
+input[type=text],input[type=number],input[type=date],input[type=time],input[type=email],select,textarea{padding:8px 12px;border:1.5px solid var(--border2);border-radius:var(--r-sm);background:var(--bg2);color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;transition:border-color .15s,box-shadow .15s;width:100%;outline:none}
 input:focus,select:focus,textarea:focus{border-color:var(--accent2);box-shadow:0 0 0 3px rgba(37,99,235,.1)}
 input::placeholder{color:var(--text4)}
 textarea{resize:vertical;min-height:60px}
@@ -154,7 +151,7 @@ textarea{resize:vertical;min-height:60px}
 .fase-dot.pending{background:var(--bg4);color:var(--text3);border:2px solid var(--border2)}
 .pezzo-row{display:flex;gap:8px;align-items:center;padding:8px 12px;background:var(--bg4);border-radius:var(--r-sm);margin-bottom:4px;border:1px solid var(--border)}
 .pezzo-label{font-family:'DM Mono',monospace;font-weight:700;font-size:15px;min-width:28px;color:var(--accent2)}
-.frammento-chip{display:inline-flex;align-items:center;justify-content:center;width:40px;height:38px;background:var(--bg2);border:1.5px solid var(--border2);border-radius:var(--r-sm);font-family:'DM Mono',monospace;font-size:11px;font-weight:600;cursor:pointer;transition:all .12s}
+.frammento-chip{display:inline-flex;align-items:center;justify-content:center;width:34px;height:28px;background:var(--bg2);border:1.5px solid var(--border2);border-radius:var(--r-sm);font-family:'DM Mono',monospace;font-size:11px;font-weight:600;cursor:pointer;transition:all .12s}
 .frammento-chip:hover{border-color:var(--accent2);color:var(--accent2)}
 .frammento-chip.done{background:var(--green-bg);border-color:#a7f3d0;color:var(--green)}
 .reagente-usato-row{display:flex;gap:8px;align-items:center;padding:8px 12px;border:1.5px solid var(--border);border-radius:var(--r-sm);margin-bottom:6px;background:var(--bg3);transition:border-color .12s}
@@ -192,72 +189,8 @@ textarea{resize:vertical;min-height:60px}
 .logo:hover{opacity:.85}
 .view{display:none}
 .view.active{display:block}
-#sync-banner{background:var(--blue-bg);color:var(--blue);border-bottom:1px solid #bfdbfe;padding:7px 20px;font-size:12px;font-weight:500;display:none;align-items:center;gap:8px}
-#sync-banner.show{display:flex}
-/* FIX [UI/UX]: header dropdown magazzino */
-.hdr-ddrop{position:relative}
-.hdr-ddrop-menu{display:none;position:absolute;top:calc(100% + 6px);right:0;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--shadow-lg);padding:5px;min-width:170px;z-index:300;flex-direction:column;gap:3px}
-.hdr-ddrop-menu.open{display:flex}
-.hdr-ddrop-menu .btn{justify-content:flex-start;width:100%;background:var(--bg2);color:var(--text);border-color:transparent;box-shadow:none}
-.hdr-ddrop-menu .btn:hover{background:var(--accent-light);color:var(--accent2);border-color:transparent}
-/* FIX [UI/UX]: hamburger sempre visibile + sidebar drawer overlay anche desktop (Zona 1) */
-.btn-hamburger{display:flex;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#fff;width:40px;height:40px;border-radius:var(--r-sm);cursor:pointer;font-size:18px;align-items:center;justify-content:center;flex-shrink:0;padding:0;line-height:1;transition:background .15s}
-.btn-hamburger:hover{background:rgba(255,255,255,.18)}
-.drawer-head{display:flex;align-items:center;justify-content:space-between;padding:14px 18px 10px;border-bottom:1px solid var(--border);margin-bottom:6px}
-.drawer-title{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:700;color:var(--accent);letter-spacing:-.3px}
-.drawer-close{width:32px;height:32px;border:1px solid var(--border);background:var(--bg2);border-radius:var(--r-sm);font-size:18px;line-height:1;cursor:pointer;color:var(--text2);display:flex;align-items:center;justify-content:center;padding:0;transition:all .12s}
-.drawer-close:hover{background:var(--bg4);color:var(--text);border-color:var(--border2)}
-#sidebar-backdrop{display:none;position:fixed;inset:0;background:rgba(15,23,42,.45);z-index:149;touch-action:none;backdrop-filter:blur(2px)}
-#sidebar-backdrop.show{display:block}
-/* FIX [UI/UX]: sidebar è sempre drawer overlay — chiusa di default, apre con hamburger */
-.sidebar{position:fixed!important;top:56px;left:0;bottom:0;z-index:150;width:260px;transform:translateX(-100%);transition:transform .25s ease;box-shadow:var(--shadow-lg);height:calc(100vh - 56px)}
-.sidebar.open{transform:translateX(0)}
-.layout{display:block;min-height:calc(100vh - 56px)}
-.main{flex:none;padding:24px;overflow-y:auto;max-width:1400px;margin:0 auto}
-@media(max-width:900px){
-  .stats-grid{grid-template-columns:repeat(2,1fr)}
-  .waste-grid{grid-template-columns:1fr}
-  .prod-grid{grid-template-columns:repeat(auto-fill,minmax(160px,1fr))}
-  #home-panels{grid-template-columns:1fr!important}
-  .form-grid{grid-template-columns:1fr}
-  .main{padding:14px}
-  #quick-form-grid{grid-template-columns:1fr 1fr!important}
-  #quick-form-grid>button{grid-column:1/-1}
-}
+@media(max-width:900px){.sidebar{display:none}.stats-grid{grid-template-columns:repeat(2,1fr)}.waste-grid{grid-template-columns:1fr}.prod-grid{grid-template-columns:repeat(auto-fill,minmax(160px,1fr))}#home-panels{grid-template-columns:1fr!important}.form-grid{grid-template-columns:1fr}.main{padding:14px}}
 @media print{header,.sidebar,.btn,.filter-bar,.hdr-act{display:none!important}.main{padding:0}.layout{display:block}body{background:#fff;color:#000}}
-
-/* ── Dashboard Analytics v5 (6 widget) ── */
-.dash-analytics{margin-bottom:14px}
-.dash-an-title{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:700;color:var(--accent);margin:0 0 10px 0;letter-spacing:-.2px;display:flex;align-items:center;gap:8px}
-.dash-an-title::before{content:'';width:3px;height:18px;background:var(--accent2);border-radius:2px}
-.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:12px}
-.kpi-tile{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:12px 14px;box-shadow:var(--shadow-sm);position:relative;overflow:hidden}
-.kpi-tile::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--accent2)}
-.kpi-tile.kpi-green::before{background:var(--green)}
-.kpi-tile.kpi-orange::before{background:var(--orange)}
-.kpi-tile.kpi-red::before{background:var(--red)}
-.kpi-lbl{font-size:10px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--text3);margin-bottom:4px}
-.kpi-val{font-family:'DM Mono',monospace;font-size:24px;font-weight:600;color:var(--text);line-height:1.1}
-.kpi-sub{font-size:11px;color:var(--text3);margin-top:3px}
-.chart-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:10px}
-.chart-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow-sm)}
-.chart-card-hdr{display:flex;align-items:center;gap:8px;padding:9px 12px;border-bottom:1px solid var(--border);background:var(--bg3)}
-.chart-card-title{font-size:10px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--text2);flex:1}
-.chart-card-sub{font-size:11px;color:var(--text3)}
-.chart-card-body{padding:10px 12px}
-.chart-card-body svg{width:100%;height:auto;display:block}
-.chart-legend{display:flex;flex-wrap:wrap;gap:8px;font-size:10px;color:var(--text2);margin-top:6px;padding:0 12px 10px}
-.dash-prev-table{width:100%;border-collapse:collapse}
-.dash-prev-table th{text-align:left;padding:6px 8px;font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--text3);background:var(--bg3);border-bottom:1px solid var(--border)}
-.dash-prev-table td{padding:6px 8px;font-size:11px;color:var(--text2);border-bottom:1px solid var(--border-faint)}
-.dash-prev-table tr:last-child td{border-bottom:none}
-.dash-prev-table .mono{font-family:'DM Mono',monospace;color:var(--text)}
-.dash-prev-table .pill{display:inline-block;padding:1px 7px;border-radius:999px;font-size:9px;font-weight:600}
-.pill-red{background:var(--red-bg);color:var(--red);border:1px solid #fca5a5}
-.pill-orange{background:var(--orange-bg);color:var(--orange);border:1px solid #fdba74}
-.pill-yellow{background:var(--yellow-bg);color:var(--yellow);border:1px solid #fcd34d}
-@media (max-width:1100px){.kpi-row{grid-template-columns:repeat(2,1fr)}.chart-row{grid-template-columns:repeat(2,1fr)}}
-@media (max-width:680px){.chart-row{grid-template-columns:1fr}}
 </style>
   <script>
     // Rimuovi service worker e pulisci cache per forzare aggiornamento
@@ -271,46 +204,25 @@ textarea{resize:vertical;min-height:60px}
 </head>
 <body>
 <header>
-  <div style="display:flex;align-items:center;gap:10px">
-    <button class="btn-hamburger" onclick="toggleSidebar()" aria-label="Menu navigazione">☰</button>
-    <div class="logo" onclick="showView('dashboard')" style="cursor:pointer">LupoLab <span class="logo-badge">AP</span></div>
-  </div>
+  <div class="logo" onclick="showView('dashboard')" style="cursor:pointer">LupoLab <span class="logo-badge">AP</span></div>
   <div class="hdr-act">
     <button class="btn" id="sync-status" onclick="forceSync()" style="font-size:11px;font-family:'DM Mono',monospace" title="Sincronizza con cloud">⬡ Locale</button>
-    <button class="btn btn-primary" onclick="openNuovoCampione()" title="Nuovo campione">＋ Campione</button>
-    <button class="btn btn-pap-l" onclick="openNuovoCampioneSpec('pap_l')">＋ Pap L</button>
-    <button class="btn btn-pap-priv" onclick="openNuovoCampioneSpec('pap_priv')">＋ Pap Priv.</button>
+    <button class="btn btn-ok" onclick="forceSave()" title="Salva tutto sul cloud" style="font-size:11px">💾 Salva</button>
+    <button class="btn" id="undo-btn" onclick="undoLastAction()" title="Nessuna azione da annullare" style="font-size:11px;opacity:.4">↩ Annulla</button>
     <div style="width:1px;height:20px;background:rgba(255,255,255,.15);margin:0 4px"></div>
-    <div class="hdr-ddrop" id="hdr-mag-drop">
-      <button class="btn" onclick="toggleHdrDrop('hdr-mag-drop')" aria-label="Azioni magazzino">📦 Mag. ▾</button>
-      <div class="hdr-ddrop-menu" id="hdr-mag-drop-menu">
-        <button class="btn btn-ok" onclick="openCaricaScanModal();toggleHdrDrop('hdr-mag-drop')">⬆ Carico scan</button>
-        <button class="btn btn-warn" onclick="openScaricaModal();toggleHdrDrop('hdr-mag-drop')">⬇ Scarico</button>
-        <button class="btn" onclick="openDDTModal();toggleHdrDrop('hdr-mag-drop')">📷 DDT</button>
-        <button class="btn btn-primary" onclick="openAddModal();toggleHdrDrop('hdr-mag-drop')">＋ Prodotto</button>
-      </div>
-    </div>
-    <!-- FIX [UI/UX]: kebab ⋮ — azioni rare (Zona 1) -->
-    <div class="hdr-ddrop" id="hdr-more-drop">
-      <button class="btn" onclick="toggleHdrDrop('hdr-more-drop')" aria-label="Altre azioni" title="Altre azioni">⋮</button>
-      <div class="hdr-ddrop-menu" id="hdr-more-drop-menu">
-        <button class="btn btn-ok" onclick="forceSave();toggleHdrDrop('hdr-more-drop')" title="Salva tutto sul cloud">💾 Salva forzato</button>
-        <button class="btn" id="undo-btn" onclick="undoLastAction();toggleHdrDrop('hdr-more-drop')" title="Annulla ultima azione" style="opacity:.55">↩ Annulla</button>
-        <button class="btn" onclick="exportBackup();toggleHdrDrop('hdr-more-drop')" title="Esporta backup locale JSON">📥 Backup</button>
-      </div>
-    </div>
+    <button class="btn btn-primary" onclick="openNuovoCampione()" title="Nuovo campione">＋ Campione</button>
+    <button class="btn" onclick="openNuovoCampioneSpec('pap_l')" style="background:rgba(234,88,12,.2);color:#fdba74;border-color:rgba(234,88,12,.3)">＋ Pap L</button>
+    <button class="btn" onclick="openNuovoCampioneSpec('pap_priv')" style="background:rgba(124,58,237,.2);color:#c4b5fd;border-color:rgba(124,58,237,.3)">＋ Pap Priv.</button>
+    <div style="width:1px;height:20px;background:rgba(255,255,255,.15);margin:0 4px"></div>
+    <button class="btn btn-ok" onclick="openCaricaScanModal()" title="Carico da scan">⬆ Carico</button>
+    <button class="btn btn-warn" onclick="openScaricaModal()" title="Scarico manuale">⬇ Scarico</button>
+    <button class="btn" onclick="openDDTModal()" title="Importa da foto">📷 DDT</button>
+    <button class="btn btn-primary" onclick="openAddModal()" title="Aggiungi prodotto">＋ Prodotto</button>
   </div>
 </header>
-<div id="sync-banner">⟳ Sincronizzazione dati in corso…</div>
-<div id="sidebar-backdrop" onclick="toggleSidebar()"></div>
 
 <div class="layout">
   <nav class="sidebar">
-    <!-- FIX [UI/UX]: drawer header (Zona 1) -->
-    <div class="drawer-head">
-      <span class="drawer-title">Navigazione</span>
-      <button class="drawer-close" onclick="toggleSidebar()" aria-label="Chiudi">×</button>
-    </div>
     <!-- HOME -->
     <div class="nav-item active" onclick="showView('dashboard')" id="nav-dashboard"><span class="nav-icon">🏠</span>Dashboard</div>
     <div class="nav-div"></div>
@@ -319,7 +231,6 @@ textarea{resize:vertical;min-height:60px}
     <div class="nav-item" onclick="showView('tracciabilita')" id="nav-tracciabilita"><span class="nav-icon">🧬</span>Campioni</div>
     <div class="nav-item" onclick="showView('processatore')" id="nav-processatore"><span class="nav-icon">⚗️</span>Processatore</div>
     <div class="nav-item" onclick="showView('coloratore')" id="nav-coloratore"><span class="nav-icon">🎨</span>Coloratore</div>
-    <div class="nav-item" onclick="showView('ihc')" id="nav-ihc"><span class="nav-icon">🔬</span>IHC</div>
 
     <div class="nav-div"></div>
 
@@ -368,10 +279,8 @@ textarea{resize:vertical;min-height:60px}
       <div class="page-title">Home</div>
       <div class="page-sub" id="dash-date"></div>
 
-      <!-- Stat cards (4 riquadri) — in cima -->
-      <div class="stats-grid" id="stats-grid" style="margin-bottom:14px"></div>
-
-
+      <!-- Stat cards -->
+      <div class="stats-grid" id="stats-grid"></div>
 
       <!-- WIDGET RAPIDO: Registra caso al volo -->
       <div class="card" style="margin-bottom:14px;padding:14px">
@@ -379,7 +288,7 @@ textarea{resize:vertical;min-height:60px}
           <div style="font-weight:700;font-size:14px;color:var(--accent)">🧬 Registra caso rapido</div>
           <button class="btn btn-sm" onclick="showView('tracciabilita')">Tutti i casi →</button>
         </div>
-        <div id="quick-form-grid" style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr auto;gap:8px;align-items:end">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr auto;gap:8px;align-items:end">
           <div class="fg" style="margin:0">
             <label>ID Caso *</label>
             <input type="text" id="quick-id" placeholder="es. 2764/26" style="font-family:DM Mono,monospace;font-weight:700">
@@ -406,42 +315,39 @@ textarea{resize:vertical;min-height:60px}
         <div id="home-tracc-oggi" style="margin-top:10px"></div>
       </div>
 
-      <!-- ULTIMI 5 CICLI: Processatore + Coloratore -->
-      <!-- FIX [UI/UX]: cleanup home — rimosso Coloratore tabella, Processatore oggi, Allerte mag, Alert banners, grid Magazzino -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px" id="home-cicli-row">
-        <div class="card" style="padding:14px">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-            <div style="font-weight:700;font-size:14px;color:var(--accent)">⚗️ Ultimi cicli processatore</div>
-            <div style="display:flex;gap:6px">
-              <button class="btn btn-sm btn-primary" onclick="openNuovoProcessatore()">＋ Nuovo</button>
-              <button class="btn btn-sm" onclick="showView('processatore')">Tutti →</button>
-            </div>
+      <!-- COLORATORE: tabella giornaliera -->
+      <div class="card" style="margin-bottom:14px;padding:14px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <div style="font-weight:700;font-size:14px;color:var(--accent)">🎨 Coloratore</div>
+          <div style="display:flex;gap:6px">
+            <button class="btn btn-sm btn-primary" onclick="openNuovoColoratore()">＋ Nuovo</button>
+            <button class="btn btn-sm" onclick="showView('coloratore')">Storico →</button>
           </div>
-          <div id="home-proc-recenti"></div>
+        </div>
+        <div id="home-color-table"></div>
+        <div id="home-color-oggi" style="margin-top:8px"></div>
+      </div>
+
+      <!-- PROCESSATORE + ALLERTE magazzino -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
+        <div class="card" style="padding:14px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+            <div style="font-weight:700;font-size:14px;color:var(--accent)">⚗️ Processatore</div>
+            <button class="btn btn-sm" onclick="showView('processatore')">Storico →</button>
+          </div>
+          <div id="home-proc-oggi"></div>
         </div>
         <div class="card" style="padding:14px">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-            <div style="font-weight:700;font-size:14px;color:var(--accent)">🎨 Ultimi cicli coloratore</div>
-            <div style="display:flex;gap:6px">
-              <button class="btn btn-sm btn-primary" onclick="openNuovoColoratore()">＋ Nuovo</button>
-              <button class="btn btn-sm" onclick="showView('coloratore')">Tutti →</button>
-            </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+            <div style="font-weight:700;font-size:14px;color:var(--accent)">🚨 Magazzino</div>
+            <button class="btn btn-sm" onclick="showView('allerte')">Tutte →</button>
           </div>
-          <div id="home-color-recenti"></div>
+          <div id="home-allerte-list" style="padding:4px 0"></div>
         </div>
       </div>
 
-      <!-- IHC widget -->
-      <div class="card" id="home-ihc-card" style="margin-bottom:14px;padding:14px">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-          <div style="font-weight:700;font-size:14px;color:var(--accent)">🔬 IHC</div>
-          <div style="display:flex;gap:6px">
-            <button class="btn btn-sm btn-primary" onclick="openNuovaIHC()">＋ Nuova</button>
-            <button class="btn btn-sm" onclick="showView('ihc')">Tutte →</button>
-          </div>
-        </div>
-        <div id="home-ihc-content"></div>
-      </div>
+      <!-- Alert banners -->
+      <div id="alerts-wrap"></div>
 
       <!-- 2-col: scadenze + ordini -->
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px">
@@ -455,43 +361,15 @@ textarea{resize:vertical;min-height:60px}
         </div>
       </div>
 
-      <!-- ══ DASHBOARD ANALYTICS v5 ══ -->
-      <section class="dash-analytics" id="dash-analytics">
-        <h2 class="dash-an-title">Analytics &amp; Insights</h2>
-        <div class="kpi-row" id="dash-kpi-row"></div>
-        <div class="chart-row">
-          <div class="chart-card">
-            <div class="chart-card-hdr"><div class="chart-card-title">Andamento campioni</div><div class="chart-card-sub" id="line-sub">ultimi 8 mesi</div></div>
-            <div class="chart-card-body"><svg id="dash-chart-line" viewBox="0 0 280 120" preserveAspectRatio="xMidYMid meet"></svg></div>
-            <div class="chart-legend" id="dash-line-legend"></div>
-          </div>
-          <div class="chart-card">
-            <div class="chart-card-hdr"><div class="chart-card-title">Mix tipologie</div><div class="chart-card-sub" id="donut-sub">mese corrente</div></div>
-            <div class="chart-card-body" style="display:flex;gap:12px;align-items:center"><svg id="dash-chart-donut" viewBox="0 0 110 110" style="width:110px;flex-shrink:0"></svg><div id="dash-donut-legend" style="flex:1;display:flex;flex-direction:column;gap:6px;font-size:11px"></div></div>
-          </div>
-          <div class="chart-card">
-            <div class="chart-card-hdr"><div class="chart-card-title">Confronto mese</div><div class="chart-card-sub" id="bar-sub">mese vs prec.</div></div>
-            <div class="chart-card-body"><svg id="dash-chart-bar" viewBox="0 0 280 120" preserveAspectRatio="xMidYMid meet"></svg></div>
-          </div>
+      <!-- PRODOTTI MAGAZZINO grid -->
+      <div class="card" style="padding:14px;margin-bottom:14px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <div style="font-weight:700;font-size:14px;color:var(--accent)">📦 Magazzino</div>
+          <button class="btn btn-sm" onclick="showView('inventario')">Tutte →</button>
         </div>
-        <div class="chart-row">
-          <div class="chart-card">
-            <div class="chart-card-hdr"><div class="chart-card-title">Top prodotti consumati</div><div class="chart-card-sub">ultimi 90 gg</div></div>
-            <div class="chart-card-body"><svg id="dash-chart-hbar" viewBox="0 0 280 175" preserveAspectRatio="xMidYMid meet"></svg></div>
-          </div>
-          <div class="chart-card">
-            <div class="chart-card-hdr"><div class="chart-card-title">Previsione esaurimento</div><div class="chart-card-sub">su giacenza attuale</div></div>
-            <div class="chart-card-body" style="padding:0"><div id="dash-prev-table"></div></div>
-          </div>
-          <div class="chart-card">
-            <div class="chart-card-hdr"><div class="chart-card-title">Ordini per fornitore</div><div class="chart-card-sub">ultimi 6 mesi</div></div>
-            <div class="chart-card-body"><svg id="dash-chart-vbar" viewBox="0 0 280 120" preserveAspectRatio="xMidYMid meet"></svg></div>
-            <div class="chart-legend" id="dash-vbar-legend"></div>
-          </div>
-        </div>
-      </section>
-
-      <!-- (stats-grid spostata in cima) -->
+        <input type="text" id="home-search" placeholder="Cerca prodotto..." oninput="renderHomeGrid()" style="margin-bottom:10px">
+        <div id="home-cat-grid"></div>
+      </div>
 
     </div>
     <div class="view" id="view-inventario">
@@ -527,7 +405,6 @@ textarea{resize:vertical;min-height:60px}
         <div class="card-header">
           <span class="card-title" id="inv-count">0 prodotti</span>
           <div class="card-act">
-            <button class="btn btn-sm" onclick="openInventarioFisico()" style="background:var(--purple-bg);color:var(--purple);border-color:#c4b5fd">📋 Verifica inventario</button>
             <div class="search-wrap"><span class="s-ico">🔍</span><input type="text" id="inv-search" placeholder="Cerca…" oninput="debouncedRenderInv()"></div>
           </div>
         </div>
@@ -625,13 +502,7 @@ textarea{resize:vertical;min-height:60px}
       </div>
       <div class="card">
         <div class="card-header"><span class="card-title" id="ordini-count">0 ordini</span></div>
-        <!-- FIX [ORDINI]: layout lista (sx) + pannello dettaglio (dx) con hero % ricezione -->
-        <div id="ordini-split" style="display:grid;grid-template-columns:minmax(280px,360px) 1fr;gap:14px;align-items:start">
-          <div id="ordini-list-col" style="border-right:1px solid var(--border-faint);padding-right:14px;max-height:70vh;overflow-y:auto"></div>
-          <div id="ordini-detail-col"></div>
-        </div>
-        <!-- Tabella legacy nascosta (fallback se renderOrdini non popola lo split) -->
-        <table style="display:none">
+        <table>
           <thead><tr><th>Data</th><th>N° Ordine</th><th>Prodotti</th><th>Fornitore</th><th>Stato</th><th>Note</th><th>Azioni</th></tr></thead>
           <tbody id="ordini-tbody"></tbody>
         </table>
@@ -743,73 +614,7 @@ textarea{resize:vertical;min-height:60px}
       <div id="color-list"></div>
     </div>
 
-    <!-- ══════ IHC ══════ -->
-    <div class="view" id="view-ihc">
-      <div class="page-title">🔬 Richieste IHC</div>
-      <div class="page-sub">Immunoistochimica richiesta dai patologi</div>
-      <div style="display:flex;gap:7px;margin-bottom:14px;flex-wrap:wrap;align-items:center">
-        <button class="btn btn-primary" onclick="openNuovaIHC()">＋ Nuova richiesta</button>
-        <div class="search-wrap"><span class="s-ico">🔍</span><input type="text" id="ihc-search" placeholder="Cerca per campione, patologo, anticorpo…" oninput="renderIHC()"></div>
-      </div>
-      <div class="filter-bar" id="ihc-filter-bar">
-        <button class="f-btn active" onclick="setIHCFilter('all',this)">Tutte</button>
-        <button class="f-btn" onclick="setIHCFilter('da_fare',this)">🔴 Da fare</button>
-        <button class="f-btn" onclick="setIHCFilter('in_lavorazione',this)">🟡 In lavorazione</button>
-        <button class="f-btn" onclick="setIHCFilter('completata',this)">🟢 Completate</button>
-      </div>
-      <div id="ihc-list"></div>
-    </div>
-
   </main>
-</div>
-
-<!-- ══════════════════════════════
-     MODAL: IHC
-══════════════════════════════ -->
-<div class="modal-overlay" id="modal-ihc">
-  <div class="modal" style="width:500px">
-    <div class="modal-title" id="ihc-modal-title">Nuova richiesta IHC</div>
-    <input type="hidden" id="ihc-edit-id">
-    <div class="form-grid">
-      <div class="fg" style="margin:0">
-        <label>ID Campione *</label>
-        <input type="text" id="ihc-campione" placeholder="es. 2764/26" style="font-family:DM Mono,monospace;font-weight:700">
-      </div>
-      <div class="fg" style="margin:0">
-        <label>Patologo *</label>
-        <input type="text" id="ihc-patologo" placeholder="es. Dr. Rossi">
-      </div>
-      <div class="fg full" style="margin:0;grid-column:1/-1">
-        <label>Anticorpo / Colorazione speciale *</label>
-        <textarea id="ihc-anticorpo" placeholder="es. CK7, p63, Ki67 — oppure PAS, Grocott…" style="min-height:70px"></textarea>
-      </div>
-      <div class="fg" style="margin:0">
-        <label>Priorità</label>
-        <select id="ihc-priorita">
-          <option value="normale">Normale</option>
-          <option value="urgente">🔴 Urgente</option>
-          <option value="differibile">Differibile</option>
-        </select>
-      </div>
-      <div class="fg" style="margin:0">
-        <label>Stato</label>
-        <select id="ihc-stato">
-          <option value="da_fare">Da fare</option>
-          <option value="in_lavorazione">In lavorazione</option>
-          <option value="completata">Completata</option>
-        </select>
-      </div>
-      <div class="fg" style="margin:0">
-        <label>Data richiesta</label>
-        <input type="date" id="ihc-data">
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-danger btn-sm" id="ihc-delete-btn" onclick="deleteIHC()" style="margin-right:auto;display:none">🗑 Elimina</button>
-      <button class="btn" onclick="closeModal('modal-ihc')">Annulla</button>
-      <button class="btn btn-primary" onclick="saveIHC()">💾 Salva</button>
-    </div>
-  </div>
 </div>
 
 <!-- ══════════════════════════════
@@ -1031,7 +836,7 @@ textarea{resize:vertical;min-height:60px}
         <button class="btn btn-sm btn-ok" onclick="addCasoSingoloProc()">＋</button>
       </div>
       <div id="proc-casi-list" style="display:flex;flex-wrap:wrap;gap:5px;min-height:32px;padding:6px;background:var(--bg2);border:1px solid var(--border);border-radius:6px"></div>
-      <div style="font-size:11px;color:var(--text3);margin-top:4px">N° casi: <span id="proc-casi-count" style="font-weight:600;color:var(--accent)">0</span> &nbsp;·&nbsp; <label style="display:inline;font-size:11px;color:var(--text3)">N° cassette: <input type="number" id="proc-n-cassette" min="0" step="1" placeholder="auto" style="width:65px;font-size:12px;padding:2px 6px;display:inline;vertical-align:middle;font-family:DM Mono,monospace"></label></div>
+      <div style="font-size:11px;color:var(--text3);margin-top:4px">N° casi: <span id="proc-casi-count" style="font-weight:600;color:var(--accent)">0</span></div>
     </div>
 
     <!-- REAGENTI PROCESSATORE -->
@@ -1048,7 +853,6 @@ textarea{resize:vertical;min-height:60px}
     </div>
 
     <div class="modal-footer">
-      <button class="btn btn-danger btn-sm" id="proc-delete-btn" onclick="deleteProcCicloModal()" style="margin-right:auto;display:none">🗑 Elimina</button>
       <button class="btn" onclick="closeModal('modal-processatore')">Annulla</button>
       <button class="btn btn-primary" onclick="saveProcessatore()">💾 Salva</button>
     </div>
@@ -1095,34 +899,22 @@ textarea{resize:vertical;min-height:60px}
 
     <!-- RANGE CASI PER TIPO -->
     <div style="background:var(--bg3);border-radius:var(--r);padding:12px;margin-bottom:14px">
-      <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px">Range ID casi lavorati + vetri</div>
+      <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px">Range ID casi lavorati</div>
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
         <div style="background:var(--bg2);border-radius:8px;padding:10px;border:1px solid var(--border)">
           <div style="font-size:11px;color:var(--blue);font-weight:600;margin-bottom:6px">Istologia</div>
           <input type="text" id="color-range-ist-from" placeholder="Da es. 2764/26" style="width:100%;margin-bottom:5px;font-family:DM Mono,monospace;font-size:12px">
-          <input type="text" id="color-range-ist-to" placeholder="A es. 2800/26" style="width:100%;margin-bottom:5px;font-family:DM Mono,monospace;font-size:12px">
-          <div style="display:flex;align-items:center;gap:6px;margin-top:4px">
-            <span style="font-size:10px;color:var(--text3);white-space:nowrap">N° vetri</span>
-            <input type="number" id="color-vetri-ist" min="0" value="0" placeholder="0" style="width:70px;font-family:DM Mono,monospace;font-size:13px;font-weight:700;color:var(--blue);text-align:center">
-          </div>
+          <input type="text" id="color-range-ist-to" placeholder="A es. 2800/26" style="width:100%;font-family:DM Mono,monospace;font-size:12px">
         </div>
         <div style="background:var(--bg2);border-radius:8px;padding:10px;border:1px solid var(--border)">
           <div style="font-size:11px;color:var(--teal);font-weight:600;margin-bottom:6px">Citologia</div>
           <input type="text" id="color-range-cit-from" placeholder="Da es. 2764/26" style="width:100%;margin-bottom:5px;font-family:DM Mono,monospace;font-size:12px">
-          <input type="text" id="color-range-cit-to" placeholder="A es. 2800/26" style="width:100%;margin-bottom:5px;font-family:DM Mono,monospace;font-size:12px">
-          <div style="display:flex;align-items:center;gap:6px;margin-top:4px">
-            <span style="font-size:10px;color:var(--text3);white-space:nowrap">N° vetri</span>
-            <input type="number" id="color-vetri-cit" min="0" value="0" placeholder="0" style="width:70px;font-family:DM Mono,monospace;font-size:13px;font-weight:700;color:var(--teal);text-align:center">
-          </div>
+          <input type="text" id="color-range-cit-to" placeholder="A es. 2800/26" style="width:100%;font-family:DM Mono,monospace;font-size:12px">
         </div>
         <div style="background:var(--bg2);border-radius:8px;padding:10px;border:1px solid var(--border)">
           <div style="font-size:11px;color:var(--purple);font-weight:600;margin-bottom:6px">Pap LupoLab</div>
           <input type="text" id="color-range-pap-from" placeholder="Da es. 100/26L" style="width:100%;margin-bottom:5px;font-family:DM Mono,monospace;font-size:12px">
-          <input type="text" id="color-range-pap-to" placeholder="A es. 150/26L" style="width:100%;margin-bottom:5px;font-family:DM Mono,monospace;font-size:12px">
-          <div style="display:flex;align-items:center;gap:6px;margin-top:4px">
-            <span style="font-size:10px;color:var(--text3);white-space:nowrap">N° vetri</span>
-            <input type="number" id="color-vetri-pap" min="0" value="0" placeholder="0" style="width:70px;font-family:DM Mono,monospace;font-size:13px;font-weight:700;color:var(--purple);text-align:center">
-          </div>
+          <input type="text" id="color-range-pap-to" placeholder="A es. 150/26L" style="width:100%;font-family:DM Mono,monospace;font-size:12px">
         </div>
       </div>
     </div>
@@ -1144,7 +936,6 @@ textarea{resize:vertical;min-height:60px}
     </div>
 
     <div class="modal-footer">
-      <button class="btn btn-danger btn-sm" id="color-delete-btn" onclick="deleteColorCicloModal()" style="margin-right:auto;display:none">🗑 Elimina</button>
       <button class="btn" onclick="closeModal('modal-coloratore')">Annulla</button>
       <button class="btn btn-primary" onclick="saveColoratore()">💾 Salva</button>
     </div>
@@ -1498,21 +1289,6 @@ textarea{resize:vertical;min-height:60px}
   </div>
 </div>
 
-<!-- MODAL: VERIFICA INVENTARIO FISICO -->
-<div class="modal-overlay" id="modal-inventario-fisico">
-  <div class="modal" style="width:680px;max-height:90vh;display:flex;flex-direction:column">
-    <div class="modal-title" style="display:flex;justify-content:space-between;align-items:center">
-      <span>📋 Verifica Inventario Fisico</span>
-      <span id="inv-fisico-progress" style="font-size:13px;font-weight:400;color:var(--text3)">0 / 0 verificati</span>
-    </div>
-    <div id="inv-fisico-body" style="overflow-y:auto;flex:1;padding:0 4px"></div>
-    <div class="modal-footer">
-      <button class="btn" onclick="closeModal('modal-inventario-fisico')">Annulla</button>
-      <button class="btn btn-ok" onclick="applicaRettificheInventario()">✅ Applica correzioni</button>
-    </div>
-  </div>
-</div>
-
 <!-- MODAL: DETTAGLIO ORDINE -->
 <div class="modal-overlay" id="modal-ordine-detail">
   <div class="modal" style="width:600px">
@@ -1571,12 +1347,11 @@ const LS_PROC='ls_processatore';
 const LS_COLOR_REG='ls_coloratore';
 const LS_CAMP='ls_campioni';
 const LS_ARCH='ls_archivio_ordini';
-const LS_IHC='ls_ihc';
 
 // ── UNDO SYSTEM — Stack di snapshot per annullare fino a 10 azioni ──
 const UNDO_MAX = 10;
 const _undoStack = [];
-const _UNDO_KEYS = [LS_P, LS_M, LS_W, LS_WL, LS_ORD, LS_SCHEDE, LS_PROC, LS_COLOR_REG, LS_CAMP, LS_ARCH, LS_IHC];
+const _UNDO_KEYS = [LS_P, LS_M, LS_W, LS_WL, LS_ORD, LS_SCHEDE, LS_PROC, LS_COLOR_REG, LS_CAMP, LS_ARCH];
 function _takeSnapshot(label){
   const snap = { label, ts: Date.now(), data: {} };
   _UNDO_KEYS.forEach(k => { try{ snap.data[k] = localStorage.getItem(k)||'[]'; }catch(e){} });
@@ -1612,17 +1387,15 @@ function _refreshCurrentView(){
   if(currentView==='tracciabilita' && typeof renderTracciabilita==='function') renderTracciabilita();
   if(currentView==='processatore' && typeof renderProcessatore==='function') renderProcessatore();
   if(currentView==='coloratore' && typeof renderColoratore==='function') renderColoratore();
-  if(currentView==='ihc' && typeof renderIHC==='function') renderIHC();
   if(currentView==='archivio' && typeof renderArchivio==='function') renderArchivio();
   if(currentView==='schede' && typeof renderSchede==='function') renderSchede();
 }
 
 // ── SALVA MANUALE — Force push di tutto su Supabase ──
-// FIX [INFRASTRUTTURA]: aggiunto ihc_requests + modalità silent per auto-sync
-async function forceSave(silent=false){
-  if(!SUPA_OK){ if(!silent) toast('Supabase non configurato','error'); return; }
-  if(!IS_ONLINE){ if(!silent) toast('Sei offline — impossibile salvare sul cloud','error'); return; }
-  if(!silent) updateSyncStatus('sync');
+async function forceSave(){
+  if(!SUPA_OK){ toast('Supabase non configurato','error'); return; }
+  if(!IS_ONLINE){ toast('Sei offline — impossibile salvare sul cloud','error'); return; }
+  updateSyncStatus('sync');
   try{
     const prods=JSON.parse(localStorage.getItem(LS_P)||'[]');
     const movs=JSON.parse(localStorage.getItem(LS_M)||'[]');
@@ -1634,7 +1407,7 @@ async function forceSave(silent=false){
     const schede=JSON.parse(localStorage.getItem(LS_SCHEDE)||'[]');
     const proc=JSON.parse(localStorage.getItem(LS_PROC)||'[]');
     const color=JSON.parse(localStorage.getItem(LS_COLOR_REG)||'[]');
-    const ihc=JSON.parse(localStorage.getItem(LS_IHC)||'[]');
+    // Push tutto
     if(prods.length) await supaFetch('products','POST',prods,'?on_conflict=id');
     if(movs.length) await supaFetch('movements','POST',movs,'?on_conflict=id');
     await supaFetch('waste_state','DELETE',null,'?id=eq.waste_state');
@@ -1645,42 +1418,12 @@ async function forceSave(silent=false){
     if(camp.length) await supaFetch('campioni','POST',camp,'?on_conflict=id');
     if(proc.length) await supaFetch('processatore','POST',proc,'?on_conflict=id');
     if(color.length) await supaFetch('coloratore_log','POST',color,'?on_conflict=id');
+    // Schede: sync su Supabase (tabella schede_tecniche)
     if(schede.length) await supaFetch('schede_tecniche','POST',schede,'?on_conflict=id');
-    if(ihc.length) await supaFetch('ihc_requests','POST',ihc,'?on_conflict=id');
     saveQueue([]);
-    if(!silent){ updateSyncStatus('ok'); toast('💾 Tutto salvato sul cloud','success'); }
-    else if(_supaErrors.size===0) updateSyncStatus('ok');
-  }catch(e){ if(!silent){ updateSyncStatus('err'); toast('Errore salvataggio: '+e.message,'error'); } }
-}
-
-// FIX [INFRASTRUTTURA]: export backup completo JSON scaricabile
-function exportBackup(){
-  try{
-    const backup={
-      timestamp: new Date().toISOString(),
-      version: '1.0',
-      data:{
-        products:       JSON.parse(localStorage.getItem(LS_P)||'[]'),
-        movements:      JSON.parse(localStorage.getItem(LS_M)||'[]'),
-        waste_state:    JSON.parse(localStorage.getItem(LS_W)||'{}'),
-        waste_log:      JSON.parse(localStorage.getItem(LS_WL)||'[]'),
-        ordini:         JSON.parse(localStorage.getItem(LS_ORD)||'[]'),
-        archivio_ordini:JSON.parse(localStorage.getItem(LS_ARCH)||'[]'),
-        campioni:       JSON.parse(localStorage.getItem(LS_CAMP)||'[]'),
-        processatore:   JSON.parse(localStorage.getItem(LS_PROC)||'[]'),
-        coloratore:     JSON.parse(localStorage.getItem(LS_COLOR_REG)||'[]'),
-        schede:         JSON.parse(localStorage.getItem(LS_SCHEDE)||'[]'),
-        ihc:            JSON.parse(localStorage.getItem(LS_IHC)||'[]'),
-      }
-    };
-    const blob=new Blob([JSON.stringify(backup,null,2)],{type:'application/json'});
-    const url=URL.createObjectURL(blob);
-    const a=document.createElement('a');
-    a.href=url; a.download='lupolab-backup-'+new Date().toISOString().slice(0,10)+'.json';
-    document.body.appendChild(a); a.click(); document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    toast('📥 Backup esportato','success');
-  }catch(e){ toast('Errore backup: '+e.message,'error'); }
+    updateSyncStatus('ok');
+    toast('💾 Tutto salvato sul cloud','success');
+  }catch(e){ updateSyncStatus('err'); toast('Errore salvataggio: '+e.message,'error'); }
 }
 
 // Rileva cambio connessione
@@ -1737,7 +1480,7 @@ async function forceSync(){
   updateSyncStatus('sync');
   try{
     // FIX [INFRASTRUTTURA]: Scarica tutto dal cloud + processatore/coloratore/schede
-    const [prods,movs,wRows,wlog,ordini,arch,camp_cloud,proc_cloud,color_cloud,schede_cloud,ihc_cloud]=await Promise.all([
+    const [prods,movs,wRows,wlog,ordini,arch,camp_cloud,proc_cloud,color_cloud,schede_cloud]=await Promise.all([
       supaFetch('products','GET',null,'?order=nome'),
       supaFetch('movements','GET',null,'?order=ts.desc&limit=500'),
       supaFetch('waste_state','GET',null,'?id=eq.waste_state'),
@@ -1747,8 +1490,7 @@ async function forceSync(){
       supaFetch('campioni','GET',null,'?order=data.desc&limit=1000'),
       supaFetch('processatore','GET',null,'?order=data.desc&limit=500'),
       supaFetch('coloratore_log','GET',null,'?order=data.desc&limit=500'),
-      supaFetch('schede_tecniche','GET',null,'?order=data.desc&limit=200'),
-      supaFetch('ihc_requests','GET',null,'?order=data_richiesta.desc&limit=500')
+      supaFetch('schede_tecniche','GET',null,'?order=data.desc&limit=200')
     ]);
     // Merge last-write-wins per ogni tabella con array di record
     const mergedP = _mergeArrays(JSON.parse(localStorage.getItem(LS_P)||'[]'), prods);
@@ -1760,7 +1502,6 @@ async function forceSync(){
     const mergedColor = _mergeArrays(JSON.parse(localStorage.getItem(LS_COLOR_REG)||'[]'), color_cloud);
     const mergedSchede = _mergeArrays(JSON.parse(localStorage.getItem(LS_SCHEDE)||'[]'), schede_cloud);
     const mergedWlog = _mergeArrays(JSON.parse(localStorage.getItem(LS_WL)||'[]'), wlog);
-    const mergedIhc = _mergeArrays(JSON.parse(localStorage.getItem(LS_IHC)||'[]'), ihc_cloud);
     // Salva merge in locale
     _setCache(LS_P, mergedP);
     _setCache(LS_M, mergedM);
@@ -1771,7 +1512,6 @@ async function forceSync(){
     _setCache(LS_COLOR_REG, mergedColor);
     _setCache(LS_SCHEDE, mergedSchede);
     _setCache(LS_WL, mergedWlog);
-    _setCache(LS_IHC, mergedIhc);
     // Waste state: oggetto singolo, cloud vince se più recente
     if(wRows&&wRows.length){
       const localW=JSON.parse(localStorage.getItem(LS_W)||'{}');
@@ -1790,7 +1530,6 @@ async function forceSync(){
     if(mergedColor.length) await supaFetch('coloratore_log','POST',mergedColor,'?on_conflict=id');
     if(mergedSchede.length) await supaFetch('schede_tecniche','POST',mergedSchede,'?on_conflict=id');
     if(mergedWlog.length) await supaFetch('waste_log','POST',mergedWlog,'?on_conflict=id');
-    if(mergedIhc.length) await supaFetch('ihc_requests','POST',mergedIhc,'?on_conflict=id');
     _invalidateAll();
     updateSyncStatus('ok');
     _refreshCurrentView();
@@ -1812,7 +1551,6 @@ async function flushQueue(){
     const proc=JSON.parse(localStorage.getItem(LS_PROC)||'[]');
     const color=JSON.parse(localStorage.getItem(LS_COLOR_REG)||'[]');
     const schede=JSON.parse(localStorage.getItem(LS_SCHEDE)||'[]');
-    const ihc=JSON.parse(localStorage.getItem(LS_IHC)||'[]');
     // Push tutto su Supabase
     if(prods.length) await supaFetch('products','POST',prods,'?on_conflict=id');
     if(movs.length) await supaFetch('movements','POST',movs,'?on_conflict=id');
@@ -1825,79 +1563,21 @@ async function flushQueue(){
     if(proc.length) await supaFetch('processatore','POST',proc,'?on_conflict=id');
     if(color.length) await supaFetch('coloratore_log','POST',color,'?on_conflict=id');
     if(schede.length) await supaFetch('schede_tecniche','POST',schede,'?on_conflict=id');
-    if(ihc.length) await supaFetch('ihc_requests','POST',ihc,'?on_conflict=id');
     saveQueue([]);
     updateSyncStatus('ok');
     toast('✅ '+q.length+' modifica/he sincronizzata/e','success');
   }catch(e){ updateSyncStatus('err'); }
 }
 
-// FIX [SICUREZZA]: traccia tabelle con POST falliti — cattura errore reale
-const _supaErrors=new Set();
-const _supaErrMsg=new Map();
-function _updateSyncWarning(){
-  const el=document.getElementById('sync-status'); if(!el) return;
-  if(_supaErrors.size>0){
-    el.textContent='⚠ Schema'; el.style.color='var(--red)';
-    const details=[..._supaErrors].map(t=>t+': '+(_supaErrMsg.get(t)||'?')).join('\n');
-    el.title='⚠ POST falliti:\n'+details;
-    // Mostra primo errore come toast per visibilità su tablet
-    const first=[..._supaErrors][0];
-    toast('⚠ Sync '+first+': '+(_supaErrMsg.get(first)||'errore POST'),'error');
-  }
-}
-// FIX [INFRASTRUTTURA]: campi da NON inviare a Supabase per tabella (es. base64 immagini)
-const _SUPA_STRIP={
-  ordini:['ddtImages','scanOrdine'],
-  archivio_ordini:['ddtImages','scanOrdine'],
-};
-// FIX [INFRASTRUTTURA]: valori default per campi NOT NULL che JS non imposta sempre
-const _SUPA_DEFAULTS={
-  coloratore_log:{protocollo:''},
-  processatore:{protocollo:'standard',ora_inizio:'',ora_fine:'',note:'',casi_da:'',casi_a:'',n_cassette:0},
-  campioni:{tipo:'',num:''},
-};
-function _applyDefaults(table, arr){
-  const defs=_SUPA_DEFAULTS[table]; if(!defs||!arr?.length) return arr;
-  return arr.map(item=>{
-    const n={...item};
-    Object.entries(defs).forEach(([k,v])=>{ if(n[k]===null||n[k]===undefined) n[k]=v; });
-    return n;
-  });
-}
-// Normalizza array prima del POST — tutti gli oggetti devono avere le stesse chiavi
-function _normalizeArr(arr){
-  if(!arr||arr.length<2) return arr;
-  const allKeys=new Set();
-  arr.forEach(item=>{ if(item&&typeof item==='object') Object.keys(item).forEach(k=>allKeys.add(k)); });
-  return arr.map(item=>{ const n={}; allKeys.forEach(k=>n[k]=item[k]!==undefined?item[k]:null); return n; });
-}
 async function supaFetch(table,method='GET',body=null,query=''){
   if(!SUPA_OK) return null;
   if(!IS_ONLINE && method!=='GET') return null; // offline: non tentare write
   try{
-    // FIX [INFRASTRUTTURA]: resolution=merge-duplicates obbligatorio per upsert
-    const prefer=method==='POST'?'return=representation,resolution=merge-duplicates':'return=representation';
-    let payload=body;
-    if(method==='POST'&&Array.isArray(body)){
-      const strip=_SUPA_STRIP[table]||[];
-      const cleaned=strip.length?body.map(item=>{const c={...item};strip.forEach(k=>delete c[k]);return c;}):body;
-      payload=_normalizeArr(_applyDefaults(table,cleaned));
-    }
     const res=await fetch(SUPA_URL+'/rest/v1/'+table+query,{
-      method, body:payload?JSON.stringify(payload):undefined,
-      headers:{'Content-Type':'application/json','apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,'Prefer':prefer}
+      method, body:body?JSON.stringify(body):undefined,
+      headers:{'Content-Type':'application/json','apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,'Prefer':'return=representation'}
     });
-    if(!res.ok){
-      if(method==='POST'){
-        const errBody=await res.text().catch(()=>'');
-        _supaErrors.add(table);
-        _supaErrMsg.set(table,'HTTP '+res.status+': '+errBody.slice(0,120));
-        setTimeout(_updateSyncWarning,100);
-      }
-      return null;
-    }
-    if(method==='POST'){ _supaErrors.delete(table); _supaErrMsg.delete(table); }
+    if(!res.ok) return null;
     const t=await res.text(); return t?JSON.parse(t):true;
   }catch(e){ return null; }
 }
@@ -1965,6 +1645,7 @@ function setVuoti(W, key, val){
   else { W[key].vuoti=Math.max(0,val); }
 }
 async function saveW(obj){
+  obj._ts = new Date().toISOString(); // timestamp per merge last-write-wins
   localStorage.setItem(LS_W,JSON.stringify(obj));
   if(!SUPA_OK) return;
   if(!IS_ONLINE){ enqueue({type:'waste'}); return; }
@@ -1977,8 +1658,7 @@ async function saveWL(arr){
   _setCache(LS_WL,_stampMod(arr));
   if(!SUPA_OK||!arr.length) return;
   if(!IS_ONLINE){ enqueue({type:'waste'}); return; }
-  // Upsert solo nuovi movimenti (no delete-all)
-  if(arr.length) await supaFetch('waste_log','POST',arr.slice(0,5),'?on_conflict=id');
+  if(arr.length) await supaFetch('waste_log','POST',arr,'?on_conflict=id');
 }
 
 const genId=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
@@ -1996,9 +1676,8 @@ const debouncedRenderTracc = debounce((...a)=>typeof renderTracciabilita!=='unde
 async function initialSync(){
   if(!SUPA_OK){ updateSyncStatus('off'); return; }
   updateSyncStatus('sync');
-  document.getElementById('sync-banner')?.classList.add('show');
   try{
-    const [prods,movs,wRows,wlog,ordini,arch,camp_cloud,proc_cloud,color_cloud,schede_cloud,ihc_cloud]=await Promise.all([
+    const [prods,movs,wRows,wlog,ordini,arch,camp_cloud,proc_cloud,color_cloud,schede_cloud]=await Promise.all([
       supaFetch('products','GET',null,'?order=nome'),
       supaFetch('movements','GET',null,'?order=ts.desc&limit=500'),
       supaFetch('waste_state','GET',null,'?id=eq.waste_state'),
@@ -2008,15 +1687,13 @@ async function initialSync(){
       supaFetch('campioni','GET',null,'?order=data.desc&limit=1000'),
       supaFetch('processatore','GET',null,'?order=data.desc&limit=500'),
       supaFetch('coloratore_log','GET',null,'?order=data.desc&limit=500'),
-      supaFetch('schede_tecniche','GET',null,'?order=data.desc&limit=200'),
-      supaFetch('ihc_requests','GET',null,'?order=data_richiesta.desc&limit=500')
+      supaFetch('schede_tecniche','GET',null,'?order=data.desc&limit=200')
     ]);
     // Merge per ogni tabella: ultimo modificato vince
     const tables = [
       [LS_P, prods], [LS_M, movs], [LS_ORD, ordini],
       [LS_ARCH, arch], [LS_CAMP, camp_cloud], [LS_PROC, proc_cloud],
-      [LS_COLOR_REG, color_cloud], [LS_SCHEDE, schede_cloud], [LS_WL, wlog],
-      [LS_IHC, ihc_cloud]
+      [LS_COLOR_REG, color_cloud], [LS_SCHEDE, schede_cloud], [LS_WL, wlog]
     ];
     tables.forEach(([key, cloud]) => {
       const local = JSON.parse(localStorage.getItem(key)||'[]');
@@ -2036,9 +1713,8 @@ async function initialSync(){
     if(wRows&&wRows.length&&isDefault) localStorage.setItem(LS_W, JSON.stringify(wRows[0].data));
     _invalidateAll();
     updateSyncStatus('ok');
-    document.getElementById('sync-banner')?.classList.remove('show');
     _refreshCurrentView();
-  }catch(e){ updateSyncStatus('err'); document.getElementById('sync-banner')?.classList.remove('show'); }
+  }catch(e){ updateSyncStatus('err'); }
 }
 
 // Al rientro nella tab: sync solo se online (push locale → cloud, non cloud → locale)
@@ -2156,15 +1832,8 @@ function matchAlias(prodNome, label){
   const n=(prodNome||'').toLowerCase();
   const aliases=PRODUCT_ALIASES[label];
   if(aliases) return aliases.some(kw=>n.includes(kw));
+  // Fallback: cerca il label stesso nel nome
   return n.includes(label.toLowerCase());
-}
-// FIX [MAGAZZINO]: raggruppa prodotti per alias semantico — evita allerte duplicate per varianti dello stesso reagente
-function _aliasGroup(nome){
-  const n=(nome||'').toLowerCase().trim();
-  for(const [label,aliases] of Object.entries(PRODUCT_ALIASES)){
-    if(aliases.some(a=>n.includes(a)||a.includes(n))) return label;
-  }
-  return nome;
 }
 const WASTE_CONFIG={
   cer_180103:{label:'CER 180103*',sub:'Rifiuti infetti — lame, materiale biologico, taglienti',icon:'☣',cls:'wc-yellow',color:'var(--yellow)',cer:'180103*',tipo:'Solido',pericoloso:true,
@@ -2223,7 +1892,7 @@ function toast(msg,type='info',duration=3200){
   const icons={success:'✓',error:'✕',info:'ℹ',warn:'⚠'};
   const t=document.createElement('div');
   t.className=`toast ${type}`;
-  t.innerHTML=`<span style="font-size:14px;flex-shrink:0">${icons[type]||'ℹ'}</span><span>${esc(msg)}</span>`; // FIX [SICUREZZA]: esc() su msg toast
+  t.innerHTML=`<span style="font-size:14px;flex-shrink:0">${icons[type]||'ℹ'}</span><span>${msg}</span>`;
   el.appendChild(t);
   setTimeout(()=>{ t.style.cssText='opacity:0;transform:translateX(20px);transition:all .2s'; setTimeout(()=>t.remove(),200); },duration);
 }
@@ -2260,10 +1929,6 @@ function showView(v){
   if(v==='tracciabilita') renderTracciabilita();
   if(v==='processatore') renderProcessatore();
   if(v==='coloratore') renderColoratore();
-  if(v==='ihc') renderIHC();
-  // Chiudi sidebar drawer su mobile dopo navigazione
-  const sb=document.querySelector('.sidebar');
-  if(sb?.classList.contains('open')) toggleSidebar();
 }
 function goCategory(cat){
   invFilter=cat; subFilter='all';
@@ -2350,25 +2015,24 @@ function renderHomeColoratore(){
     <thead><tr>
       <th>Data</th>
       <th style="color:var(--blue);text-align:center">EE</th>
-      <th style="color:var(--blue)">Range / Vetri</th>
+      <th style="color:var(--blue)">Range</th>
       <th style="color:var(--teal);text-align:center">Cit.</th>
-      <th style="color:var(--teal)">Range / Vetri</th>
+      <th style="color:var(--teal)">Range</th>
       <th style="color:var(--purple);text-align:center">PAP</th>
-      <th style="color:var(--purple)">Range / Vetri</th>
+      <th style="color:var(--purple)">Range</th>
       <th>Reagenti</th>
     </tr></thead>
     <tbody>${arr.map((reg,i)=>{
       const prev=arr[i+1]||null;
       const stato=statoReag(reg,prev);
-      const rngV=(r,v,c)=>r?.from?`<span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text3)">${rng(r)}</span>${v?`<span style="margin-left:5px;font-family:'DM Mono',monospace;font-size:11px;font-weight:600;color:${c}">${v}v</span>`:''}`:v?`<span style="font-family:'DM Mono',monospace;font-size:11px;font-weight:600;color:${c}">${v}v</span>`:'—';
       return `<tr style="cursor:pointer" onclick="openNuovoColoratore(loadColoratore().find(x=>x.id==='${reg.id}'))">
         <td style="font-weight:600;white-space:nowrap">${fmtDate(reg.data)}</td>
         <td style="text-align:center;font-family:'DM Mono',monospace;font-weight:700;color:var(--blue)">${reg.cicli_ee||0}</td>
-        <td>${rngV(reg.range_ist,reg.vetri_ist,'var(--blue)')}</td>
+        <td style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text3)">${rng(reg.range_ist)}</td>
         <td style="text-align:center;font-family:'DM Mono',monospace;font-weight:700;color:var(--teal)">${reg.cicli_ee_cit||0}</td>
-        <td>${rngV(reg.range_cit,reg.vetri_cit,'var(--teal)')}</td>
+        <td style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text3)">${rng(reg.range_cit)}</td>
         <td style="text-align:center;font-family:'DM Mono',monospace;font-weight:700;color:var(--purple)">${reg.cicli_pap||0}</td>
-        <td>${rngV(reg.range_pap,reg.vetri_pap,'var(--purple)')}</td>
+        <td style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text3)">${rng(reg.range_pap)}</td>
         <td><span class="badge ${stato.cls}" style="font-size:10px">${stato.label}</span></td>
       </tr>`;
     }).join('')}</tbody>
@@ -2411,12 +2075,6 @@ function renderDashboard(){
   const procOggi = procArr.find(x=>x.data===oggi);
   const procMese = procArr.filter(x=>x.data&&x.data.slice(0,7)===oggi.slice(0,7));
   const totCasiProcMese = procMese.reduce((s,x)=>s+(x.casi||[]).length,0);
-
-  // ── Dati IHC ──
-  const ihcArr = loadIHC();
-  const ihcDaFare = ihcArr.filter(x=>x.stato==='da_fare').length;
-  const ihcInLav = ihcArr.filter(x=>x.stato==='in_lavorazione').length;
-  const ihcUrgenti = ihcArr.filter(x=>x.stato!=='completata'&&x.priorita==='urgente').length;
 
   // ── Dati coloratore ──
   const colorArr = loadColoratore();
@@ -2536,148 +2194,43 @@ function renderDashboard(){
       '<div style="font-family:DM Mono,monospace;font-size:20px;font-weight:700;color:'+r[1]+'">'+r[2]+'</div>'+
       '<div style="font-size:10px;color:var(--text3)">'+r[3]+' mese</div></div>').join('')+'</div>';
 
-  // FIX [TRACCIABILITÀ]: Ultimi 5 cicli processatore — riga compatta + dettaglio espandibile
-  const procRecEl=document.getElementById('home-proc-recenti');
-  if(procRecEl){
-    const procSorted=[...procArr].sort((a,b)=>(b.data||'').localeCompare(a.data||'')).slice(0,5);
-    const protoLbl={standard:'Standard',rapido:'Rapido',biopsie:'Biopsie',altro:'Altro'};
-    if(!procSorted.length){
-      procRecEl.innerHTML='<div class="home-empty" style="cursor:pointer" onclick="openNuovoProcessatore()">Nessun ciclo registrato — clicca per crearne uno</div>';
-    } else {
-      procRecEl.innerHTML=procSorted.map(c=>{
-        const nCasi=(c.casi||[]).length;
-        const nCass=c.n_cassette||(c.casi||[]).reduce((s,x)=>s+(x.cassette||0),0);
-        const range=(c.casi_da&&c.casi_a)?(esc(String(c.casi_da))+' → '+esc(String(c.casi_a))):'—';
-        const reagBadge=(c.reagenti&&c.reagenti.length)?'<span style="font-size:10px;color:var(--green)">●</span>':'';
-        const detail='<div style="padding:8px 10px;background:var(--bg3);border-radius:6px;margin-top:4px;font-size:12px;color:var(--text2);line-height:1.5">'+
-          '<div><strong>Protocollo:</strong> '+esc(protoLbl[c.protocollo]||c.protocollo||'—')+'</div>'+
-          (c.ora_inizio||c.ora_fine?'<div><strong>Orario:</strong> '+esc(c.ora_inizio||'—')+' → '+esc(c.ora_fine||'—')+'</div>':'')+
-          '<div><strong>Range casi:</strong> '+range+' &middot; <strong>'+nCasi+'</strong> casi &middot; <strong>'+nCass+'</strong> cassette</div>'+
-          (c.note?'<div><strong>Note:</strong> '+esc(c.note)+'</div>':'')+
-          '<div style="margin-top:6px"><button class="btn btn-sm" onclick="event.stopPropagation();openNuovoProcessatore(loadProc().find(x=>x.id===\''+c.id+'\'))">✎ Modifica</button></div>'+
-          '</div>';
-        return '<div class="home-cycle-row" data-cid="'+c.id+'" style="border-bottom:1px solid var(--border-faint);padding:8px 0">'+
-          '<div onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display===\'none\'?\'block\':\'none\'" style="display:flex;align-items:center;gap:10px;cursor:pointer">'+
-            '<span style="font-family:DM Mono,monospace;font-size:11px;color:var(--text3);min-width:70px">'+fmtDate(c.data)+'</span>'+
-            '<span style="font-family:Cormorant Garamond,serif;font-size:22px;font-weight:700;color:var(--green);min-width:32px;text-align:right">'+nCasi+'</span>'+
-            '<span style="font-size:11px;color:var(--text3);flex:1">'+esc(protoLbl[c.protocollo]||c.protocollo||'—')+' &middot; '+nCass+' cass.</span>'+
-            reagBadge+
-            '<span style="font-size:10px;color:var(--text3)">▾</span>'+
-          '</div>'+
-          '<div style="display:none">'+detail+'</div>'+
-        '</div>';
-      }).join('');
-    }
-  }
-
-  // FIX [TRACCIABILITÀ]: Ultimi 5 cicli coloratore — riga compatta + dettaglio espandibile
-  const colorRecEl=document.getElementById('home-color-recenti');
-  if(colorRecEl){
-    const colorSorted=[...colorArr].sort((a,b)=>(b.data||'').localeCompare(a.data||'')).slice(0,5);
-    if(!colorSorted.length){
-      colorRecEl.innerHTML='<div class="home-empty" style="cursor:pointer" onclick="openNuovoColoratore()">Nessun registro — clicca per crearne uno</div>';
-    } else {
-      colorRecEl.innerHTML=colorSorted.map(r=>{
-        const ee=r.cicli_ee||0, ct=r.cicli_ee_cit||0, pp=r.cicli_pap||0;
-        const tot=ee+ct+pp;
-        const rngFmt=(rng)=>rng&&(rng.from||rng.to)?(esc(rng.from||'')+'→'+esc(rng.to||'')):'—';
-        const detail='<div style="padding:8px 10px;background:var(--bg3);border-radius:6px;margin-top:4px;font-size:12px;color:var(--text2);line-height:1.6">'+
-          '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:6px">'+
-            '<div><span style="color:var(--blue);font-weight:600">EE Ist:</span> '+ee+' cicli &middot; '+rngFmt(r.range_ist)+(r.vetri_ist?' &middot; '+esc(String(r.vetri_ist))+' vetri':'')+'</div>'+
-            '<div><span style="color:var(--teal);font-weight:600">EE Cit:</span> '+ct+' cicli &middot; '+rngFmt(r.range_cit)+(r.vetri_cit?' &middot; '+esc(String(r.vetri_cit))+' vetri':'')+'</div>'+
-            '<div><span style="color:var(--purple);font-weight:600">PAP:</span> '+pp+' cicli &middot; '+rngFmt(r.range_pap)+(r.vetri_pap?' &middot; '+esc(String(r.vetri_pap))+' vetri':'')+'</div>'+
-          '</div>'+
-          (r.note?'<div><strong>Note:</strong> '+esc(r.note)+'</div>':'')+
-          '<div style="margin-top:6px"><button class="btn btn-sm" onclick="event.stopPropagation();openNuovoColoratore(loadColoratore().find(x=>x.id===\''+r.id+'\'))">✎ Modifica</button></div>'+
-          '</div>';
-        return '<div class="home-cycle-row" data-cid="'+r.id+'" style="border-bottom:1px solid var(--border-faint);padding:8px 0">'+
-          '<div onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display===\'none\'?\'block\':\'none\'" style="display:flex;align-items:center;gap:10px;cursor:pointer">'+
-            '<span style="font-family:DM Mono,monospace;font-size:11px;color:var(--text3);min-width:70px">'+fmtDate(r.data)+'</span>'+
-            '<span style="font-family:Cormorant Garamond,serif;font-size:22px;font-weight:700;color:var(--accent2);min-width:32px;text-align:right">'+tot+'</span>'+
-            '<span style="font-size:11px;color:var(--text3);flex:1"><span style="color:var(--blue)">'+ee+'</span>·<span style="color:var(--teal)">'+ct+'</span>·<span style="color:var(--purple)">'+pp+'</span> &middot; '+(ee+ct+pp)+' tot</span>'+
-            '<span style="font-size:10px;color:var(--text3)">▾</span>'+
-          '</div>'+
-          '<div style="display:none">'+detail+'</div>'+
-        '</div>';
-      }).join('');
-    }
-  }
-
   // Alert banners
   const alerts=[];
   if(critici>0) alerts.push(`<div class="alert yellow"><span style="font-size:15px">⚠</span><div><div class="alert-title">${critici} prodotto/i a scorta bassa</div><div class="alert-msg">${prods.filter(p=>p.min>0&&p.qty<=p.min&&p.qty>0).map(p=>p.nome+' ('+p.qty+' rimasti)').join(', ')}</div></div></div>`);
   if(inScad>0) alerts.push(`<div class="alert yellow"><span style="font-size:15px">📅</span><div><div class="alert-title">${inScad} in scadenza entro 30 giorni</div><div class="alert-msg">${prods.filter(p=>{const d=daysUntil(p.scadenza);return d>=0&&d<=30}).map(p=>p.nome+' ('+fmtDate(p.scadenza)+')').join(', ')}</div></div></div>`);
   const noVuoti=Object.keys(WASTE_CONFIG).filter(k=>(W[k]?.pieni||0)>0&&getVuotiDisp(W,k)===0).map(k=>WASTE_CONFIG[k].label);
   if(noVuoti.length) alerts.push(`<div class="alert yellow"><span style="font-size:15px">🗑</span><div><div class="alert-title">Contenitori vuoti esauriti</div><div class="alert-msg">${noVuoti.join(', ')}</div></div></div>`);
-  { const _aw=document.getElementById('alerts-wrap'); if(_aw) _aw.innerHTML=alerts.join(''); } // FIX [UI/UX]: guard \u2014 alerts-wrap rimosso da home
+  document.getElementById('alerts-wrap').innerHTML=alerts.join('');
 
   // Panel 1: allerte
-  // FIX [MAGAZZINO]: allerte dashboard raggruppate per alias — niente duplicati per varianti
-  const _hgrp={};
-  prods.forEach(p=>{ const g=_aliasGroup(p.nome); if(!_hgrp[g]) _hgrp[g]={label:g,qty:0,min:0,prods:[]}; _hgrp[g].qty+=p.qty||0; _hgrp[g].min=Math.max(_hgrp[g].min,p.min||0); _hgrp[g].prods.push(p); });
-  const allerteGruppi=Object.values(_hgrp).filter(g=>g.min>0&&g.qty<=g.min);
-  const allerteScad=prods.filter(p=>{const d=daysUntil(p.scadenza);return d>=0&&d<=30;});
-  const allerteAll=[...allerteGruppi.map(g=>({type:'grp',g})),...allerteScad.map(p=>({type:'prod',p}))];
-  const seen2=new Set(); const allerteDedup=allerteAll.filter(r=>{const k=r.type==='grp'?'g:'+r.g.label:'p:'+r.p.id;if(seen2.has(k))return false;seen2.add(k);return true;});
+  const allerteProds=prods.filter(p=>(p.min>0&&p.qty<=p.min&&p.qty>0)||(()=>{const d=daysUntil(p.scadenza);return d>=0&&d<=30})());
   const allerteEl=document.getElementById('home-allerte-list');
-  if(allerteEl){
-  if(!allerteDedup.length){ allerteEl.innerHTML='<div class="home-empty">✅ Nessuna allerta</div>'; }
-  else allerteEl.innerHTML=allerteDedup.slice(0,6).map(r=>{
-    if(r.type==='grp'){ const g=r.g; const fp=g.prods[0]; const label=g.prods.length>1?esc(g.label):esc(fp.nome); const s='<span class="badge bg-yellow" style="font-size:10px">Scorta bassa</span>'; return `<div class="home-list-item" onclick="showView('allerte')"><span style="font-weight:500">${label}</span>${s}</div>`; }
-    const p=r.p; const d=daysUntil(p.scadenza); const s=`<span class="badge bg-yellow" style="font-size:10px">${d===0?'Oggi':d+'gg'}</span>`;
-    return `<div class="home-list-item" onclick="openSchedaProdotto('${p.id}')"><span style="font-weight:500">${esc(p.nome)}</span>${s}</div>`;
-  }).join('')+(allerteDedup.length>6?`<div class="home-empty" style="cursor:pointer" onclick="showView('allerte')">+${allerteDedup.length-6} altri →</div>`:'');
-  } // FIX [UI/UX]: guard home-allerte-list rimosso
+  if(!allerteProds.length){ allerteEl.innerHTML='<div class="home-empty">✅ Nessuna allerta</div>'; }
+  else allerteEl.innerHTML=allerteProds.slice(0,6).map(p=>{
+    const d=daysUntil(p.scadenza); const s=d>=0&&d<=30?`<span class="badge bg-yellow" style="font-size:10px">${d===0?'Oggi':d+'gg'}</span>`:'<span class="badge bg-yellow" style="font-size:10px">Scorta bassa</span>';
+    return `<div class="home-list-item" onclick="openSchedaProdotto('${p.id}')"><span style="font-weight:500">${p.nome}</span>${s}</div>`;
+  }).join('')+(allerteProds.length>6?`<div class="home-empty" style="cursor:pointer" onclick="showView('allerte')">+${allerteProds.length-6} altri →</div>`:'');
 
   // Panel 2: in scadenza
   const scadEl=document.getElementById('home-scadenze-list');
   const scadProds=prods.filter(p=>p.scadenza&&daysUntil(p.scadenza)>=0&&daysUntil(p.scadenza)<=30).sort((a,b)=>daysUntil(a.scadenza)-daysUntil(b.scadenza));
-  if(scadEl){
   if(!scadProds.length){ scadEl.innerHTML='<div class="home-empty">✅ Nessuna scadenza imminente</div>'; }
   else scadEl.innerHTML=scadProds.slice(0,6).map(p=>{
     const d=daysUntil(p.scadenza);
     return `<div class="home-list-item" onclick="openSchedaProdotto('${p.id}')"><span style="font-weight:500">${p.nome}</span><span style="color:var(--yellow);font-family:'DM Mono',monospace;font-size:11px">${d===0?'oggi':d+'gg'}</span></div>`;
   }).join('')+(scadProds.length>6?`<div class="home-empty">+${scadProds.length-6} altri</div>`:'');
-  } // FIX [UI/UX]: guard
 
   // Panel 3: ordini aperti
   const ordEl=document.getElementById('home-ordini-list');
   const ordOpen=ords.filter(o=>o.stato!=='ricevuto'&&o.stato!=='annullato').slice(0,6);
   const statoIco={bozza:'📝',inviato:'📤',approvato:'✅'};
-  if(ordEl){
   if(!ordOpen.length){ ordEl.innerHTML='<div class="home-empty">Nessun ordine in corso</div>'; }
-  else ordEl.innerHTML=ordOpen.map(o=>`<div class="home-list-item" onclick="showView('ordini')"><span style="font-weight:500">${esc(o.num||'—')}<small style="color:var(--text3);margin-left:5px">${o.righe?.length||0} prodotti</small></span><span>${statoIco[o.stato]||''} <span style="font-size:11px;color:var(--text2)">${esc(o.stato)}</span></span></div>`).join('');
-  } // FIX [SICUREZZA]: esc() + guard
+  else ordEl.innerHTML=ordOpen.map(o=>`<div class="home-list-item" onclick="showView('ordini')"><span style="font-weight:500">${o.num||'—'}<small style="color:var(--text3);margin-left:5px">${o.righe?.length||0} prodotti</small></span><span>${statoIco[o.stato]||''} <span style="font-size:11px;color:var(--text2)">${o.stato}</span></span></div>`).join('');
 
   // Product grid
   renderHomeGrid();
   renderHomeColoratore();
   renderHomeCampioniOggi();
-  // IHC widget
-  const ihcEl=document.getElementById('home-ihc-content');
-  if(ihcEl){
-    const _ihcN=s=>{const m=(s||'').match(/^(\d+)/);return m?parseInt(m[1]):0;};
-    const pending=ihcArr.filter(x=>x.stato!=='completata').sort((a,b)=>{
-      if(a.priorita==='urgente'&&b.priorita!=='urgente') return -1;
-      if(b.priorita==='urgente'&&a.priorita!=='urgente') return 1;
-      return _ihcN(b.campione_id)-_ihcN(a.campione_id);
-    });
-    if(!pending.length){
-      ihcEl.innerHTML='<div style="color:var(--green);font-size:13px;font-weight:600">✅ Nessuna richiesta in sospeso</div>';
-    } else {
-      const prioBadge={urgente:'<span class="badge bg-red" style="font-size:10px">🔴 Urgente</span>',normale:'',differibile:'<span class="badge" style="background:var(--bg4);color:var(--text3);border-color:var(--border2);font-size:10px">Diff.</span>'};
-      const statoBadge={da_fare:'<span class="badge bg-red" style="font-size:10px">Da fare</span>',in_lavorazione:'<span class="badge bg-yellow" style="font-size:10px">In lav.</span>'};
-      ihcEl.innerHTML=`<div style="font-size:12px;color:var(--text3);margin-bottom:8px">${ihcDaFare} da fare · ${ihcInLav} in lavorazione${ihcUrgenti?` · <span style="color:var(--red);font-weight:700">${ihcUrgenti} urgenti</span>`:''}</div>`+
-        pending.slice(0,5).map(r=>`<div class="home-list-item" onclick="openNuovaIHC(loadIHC().find(x=>x.id==='${r.id}'))" style="flex-direction:column;align-items:flex-start;gap:4px;${r.priorita==='urgente'?'color:var(--red)':''}">
-          <div style="display:flex;width:100%;justify-content:space-between;align-items:center">
-            <span><strong style="font-family:DM Mono,monospace">${esc(r.campione_id||'—')}</strong> <span style="color:var(--text3)">${esc(r.patologo||'')}</span></span>
-            <span style="display:flex;align-items:center;gap:4px">${prioBadge[r.priorita]||''}${statoBadge[r.stato]||''}</span>
-          </div>
-          ${_ihcChips(r)}
-        </div>`).join('')+
-        (pending.length>5?`<div class="home-empty">+${pending.length-5} altre richieste</div>`:'');
-    }
-  }
   // Processatore ultimo
   const procEl = document.getElementById('home-proc-oggi');
   if(procEl){
@@ -2685,260 +2238,8 @@ function renderDashboard(){
     if(!lastProc){ procEl.innerHTML='<div style="color:var(--text3);font-size:13px">Nessun ciclo registrato</div>'; }
     else{
       const protoLabel={standard:'Standard notturno',rapido:'Rapido',biopsie:'Biopsie',altro:'Altro'};
-      procEl.innerHTML=`<div style="font-size:13px"><div style="font-weight:600">${fmtDate(lastProc.data)} — ${esc(protoLabel[lastProc.protocollo]||lastProc.protocollo)}</div><div style="font-size:12px;color:var(--text3);margin-top:3px">${lastProc.casi?.length||0} casi · ${lastProc.reagenti?.length||0} reagenti tracciati</div></div>`; // FIX [SICUREZZA]: esc() su protocollo
+      procEl.innerHTML=`<div style="font-size:13px"><div style="font-weight:600">${fmtDate(lastProc.data)} — ${protoLabel[lastProc.protocollo]||lastProc.protocollo}</div><div style="font-size:12px;color:var(--text3);margin-top:3px">${lastProc.casi?.length||0} casi · ${lastProc.reagenti?.length||0} reagenti tracciati</div></div>`;
     }
-  }
-
-  // FIX [PM]: Analytics & Insights — 6 widget con dati reali
-  try{ renderDashAnalytics(); }catch(e){ console.warn('renderDashAnalytics:',e); }
-}
-
-// FIX [PM]: Funzione unica per popolare la sezione Analytics & Insights v5
-function renderDashAnalytics(){
-  const root=document.getElementById('dash-analytics');
-  if(!root) return;
-  const campioni=loadCampioni(), prods=loadP(), movs=loadM(), ords=loadOrd();
-  const today=new Date(); today.setHours(0,0,0,0);
-  const isoDay=d=>d.toISOString().slice(0,10);
-  const ymOf=s=>(s||'').slice(0,7);
-  const monthLbl=['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'];
-
-  // Helper: ultimi N mesi (YYYY-MM) in ordine cronologico
-  const lastMonths=(n)=>{
-    const arr=[]; const d=new Date(today.getFullYear(),today.getMonth(),1);
-    for(let i=0;i<n;i++){ arr.unshift(d.toISOString().slice(0,7)); d.setMonth(d.getMonth()-1); }
-    return arr;
-  };
-  const fmtMese=ym=>{ const[y,m]=ym.split('-'); return monthLbl[parseInt(m)-1]+' '+y.slice(2); };
-
-  // ── KPI ROW ──
-  const ymCur=isoDay(today).slice(0,7);
-  const dPrev=new Date(today.getFullYear(),today.getMonth()-1,1);
-  const ymPrev=dPrev.toISOString().slice(0,7);
-  const campCur=campioni.filter(c=>ymOf(c.data)===ymCur).length;
-  const campPrevTot=campioni.filter(c=>ymOf(c.data)===ymPrev).length;
-  const istCur=campioni.filter(c=>ymOf(c.data)===ymCur&&c.tipo==='istologia').length;
-  const citCur=campioni.filter(c=>ymOf(c.data)===ymCur&&(c.tipo==='citologia'||c.tipo==='pap'||c.tipo==='pap_priv'||c.tipo==='pap_l')).length;
-  const trend=campPrevTot>0?Math.round((campCur-campPrevTot)/campPrevTot*100):(campCur>0?100:0);
-  const ordAperti=ords.filter(o=>o.stato!=='ricevuto'&&o.stato!=='annullato').length;
-  const allerteCount=prods.filter(p=>(p.min>0&&p.qty<=p.min)||daysUntil(p.scadenza)<0||(daysUntil(p.scadenza)>=0&&daysUntil(p.scadenza)<=30)).length;
-  const trendCol=trend>=0?'var(--green)':'var(--red)';
-  const trendIco=trend>=0?'▲':'▼';
-  const kpis=[
-    {label:'Campioni mese',val:campCur,sub:trendIco+' '+Math.abs(trend)+'% vs prec.',col:trendCol},
-    {label:'Istologia',val:istCur,sub:campCur>0?Math.round(istCur/campCur*100)+'% del totale':'—',col:'var(--blue)'},
-    {label:'Citologia + PAP',val:citCur,sub:campCur>0?Math.round(citCur/campCur*100)+'% del totale':'—',col:'var(--teal)'},
-    {label:'Ordini aperti',val:ordAperti,sub:'in lavorazione',col:'var(--accent2)'},
-    {label:'Allerte attive',val:allerteCount,sub:'scorta + scadenza',col:allerteCount>0?'var(--red)':'var(--green)'}
-  ];
-  const kpiRow=document.getElementById('dash-kpi-row');
-  if(kpiRow){
-    kpiRow.innerHTML=kpis.map(k=>
-      '<div class="kpi-card">'+
-        '<div class="kpi-lbl">'+esc(k.label)+'</div>'+
-        '<div class="kpi-val" style="color:'+k.col+'">'+k.val+'</div>'+
-        '<div class="kpi-sub" style="color:'+k.col+'">'+esc(k.sub)+'</div>'+
-      '</div>'
-    ).join('');
-  }
-
-  // ── 1. LINE CHART — Andamento campioni ultimi 8 mesi (ist vs cit) ──
-  const months8=lastMonths(8);
-  const istSerie=months8.map(ym=>campioni.filter(c=>ymOf(c.data)===ym&&c.tipo==='istologia').length);
-  const citSerie=months8.map(ym=>campioni.filter(c=>ymOf(c.data)===ym&&(c.tipo==='citologia'||c.tipo==='pap'||c.tipo==='pap_priv'||c.tipo==='pap_l')).length);
-  const lineSvg=document.getElementById('dash-chart-line');
-  if(lineSvg){
-    const W=280,H=120,pad={l:24,r:8,t:10,b:22};
-    const max=Math.max(1,...istSerie,...citSerie);
-    const xStep=(W-pad.l-pad.r)/(months8.length-1||1);
-    const yScale=v=>H-pad.b-(v/max)*(H-pad.t-pad.b);
-    const path=(arr)=>arr.map((v,i)=>(i?'L':'M')+(pad.l+i*xStep).toFixed(1)+' '+yScale(v).toFixed(1)).join(' ');
-    const grid=[0,.25,.5,.75,1].map(t=>{ const y=pad.t+t*(H-pad.t-pad.b); return '<line x1="'+pad.l+'" x2="'+(W-pad.r)+'" y1="'+y+'" y2="'+y+'" stroke="var(--border-faint)" stroke-width=".5"/>'; }).join('');
-    const xLabels=months8.map((ym,i)=>'<text x="'+(pad.l+i*xStep).toFixed(1)+'" y="'+(H-6)+'" text-anchor="middle" font-size="8" fill="var(--text3)" font-family="DM Mono,monospace">'+fmtMese(ym).slice(0,3)+'</text>').join('');
-    const yLabels=[0,.5,1].map(t=>{ const v=Math.round(max*(1-t)); const y=pad.t+t*(H-pad.t-pad.b); return '<text x="'+(pad.l-4)+'" y="'+(y+3)+'" text-anchor="end" font-size="8" fill="var(--text3)" font-family="DM Mono,monospace">'+v+'</text>'; }).join('');
-    const dotsIst=istSerie.map((v,i)=>'<circle cx="'+(pad.l+i*xStep).toFixed(1)+'" cy="'+yScale(v).toFixed(1)+'" r="2.5" fill="var(--blue)"/>').join('');
-    const dotsCit=citSerie.map((v,i)=>'<circle cx="'+(pad.l+i*xStep).toFixed(1)+'" cy="'+yScale(v).toFixed(1)+'" r="2.5" fill="var(--teal)"/>').join('');
-    lineSvg.innerHTML=grid+yLabels+xLabels+
-      '<path d="'+path(istSerie)+'" fill="none" stroke="var(--blue)" stroke-width="1.8"/>'+
-      '<path d="'+path(citSerie)+'" fill="none" stroke="var(--teal)" stroke-width="1.8"/>'+
-      dotsIst+dotsCit;
-  }
-  const lineLeg=document.getElementById('dash-line-legend');
-  if(lineLeg) lineLeg.innerHTML=
-    '<span class="leg-item"><span class="leg-dot" style="background:var(--blue)"></span>Istologia</span>'+
-    '<span class="leg-item"><span class="leg-dot" style="background:var(--teal)"></span>Citologia + PAP</span>';
-
-  // ── 2. DONUT — Mix tipologie mese corrente ──
-  const mixCur={
-    'Istologia':campioni.filter(c=>ymOf(c.data)===ymCur&&c.tipo==='istologia').length,
-    'Citologia':campioni.filter(c=>ymOf(c.data)===ymCur&&c.tipo==='citologia').length,
-    'PAP':campioni.filter(c=>ymOf(c.data)===ymCur&&(c.tipo==='pap'||c.tipo==='pap_priv')).length,
-    'PAP LupoLab':campioni.filter(c=>ymOf(c.data)===ymCur&&c.tipo==='pap_l').length
-  };
-  const mixCols={'Istologia':'var(--blue)','Citologia':'var(--teal)','PAP':'#a855f7','PAP LupoLab':'var(--orange)'};
-  const mixTot=Object.values(mixCur).reduce((s,v)=>s+v,0);
-  const donutSvg=document.getElementById('dash-chart-donut');
-  if(donutSvg){
-    const cx=55,cy=55,r=38,inner=24;
-    if(mixTot===0){
-      donutSvg.innerHTML='<circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="none" stroke="var(--border-faint)" stroke-width="'+(r-inner)+'"/><text x="'+cx+'" y="'+(cy+4)+'" text-anchor="middle" font-size="11" fill="var(--text3)" font-family="DM Mono,monospace">—</text>';
-    } else {
-      let acc=0;
-      const arcs=Object.entries(mixCur).filter(([_,v])=>v>0).map(([lbl,v])=>{
-        const frac=v/mixTot; const a0=acc*Math.PI*2-Math.PI/2; acc+=frac; const a1=acc*Math.PI*2-Math.PI/2;
-        const large=frac>.5?1:0;
-        const x0=cx+r*Math.cos(a0), y0=cy+r*Math.sin(a0);
-        const x1=cx+r*Math.cos(a1), y1=cy+r*Math.sin(a1);
-        const xi1=cx+inner*Math.cos(a1), yi1=cy+inner*Math.sin(a1);
-        const xi0=cx+inner*Math.cos(a0), yi0=cy+inner*Math.sin(a0);
-        return '<path d="M '+x0.toFixed(2)+' '+y0.toFixed(2)+' A '+r+' '+r+' 0 '+large+' 1 '+x1.toFixed(2)+' '+y1.toFixed(2)+' L '+xi1.toFixed(2)+' '+yi1.toFixed(2)+' A '+inner+' '+inner+' 0 '+large+' 0 '+xi0.toFixed(2)+' '+yi0.toFixed(2)+' Z" fill="'+mixCols[lbl]+'"/>';
-      }).join('');
-      donutSvg.innerHTML=arcs+
-        '<text x="'+cx+'" y="'+(cy-2)+'" text-anchor="middle" font-size="16" font-weight="700" fill="var(--text)" font-family="Cormorant Garamond,serif">'+mixTot+'</text>'+
-        '<text x="'+cx+'" y="'+(cy+10)+'" text-anchor="middle" font-size="7" fill="var(--text3)" font-family="DM Mono,monospace" letter-spacing=".5">CAMPIONI</text>';
-    }
-  }
-  const donutLeg=document.getElementById('dash-donut-legend');
-  if(donutLeg){
-    donutLeg.innerHTML=Object.entries(mixCur).map(([lbl,v])=>{
-      const pct=mixTot>0?Math.round(v/mixTot*100):0;
-      return '<div style="display:flex;align-items:center;gap:6px"><span style="width:8px;height:8px;border-radius:2px;background:'+mixCols[lbl]+';flex-shrink:0"></span><span style="flex:1;color:var(--text2)">'+esc(lbl)+'</span><span style="font-family:DM Mono,monospace;color:var(--text3);font-size:10px">'+v+' · '+pct+'%</span></div>';
-    }).join('');
-  }
-
-  // ── 3. BAR — Confronto mese vs precedente per tipologia ──
-  const barSvg=document.getElementById('dash-chart-bar');
-  if(barSvg){
-    const W=280,H=120,pad={l:28,r:8,t:10,b:22};
-    const cats=[
-      {lbl:'Ist.',cur:istCur,prev:campioni.filter(c=>ymOf(c.data)===ymPrev&&c.tipo==='istologia').length,col:'var(--blue)'},
-      {lbl:'Cit.',cur:campioni.filter(c=>ymOf(c.data)===ymCur&&c.tipo==='citologia').length,prev:campioni.filter(c=>ymOf(c.data)===ymPrev&&c.tipo==='citologia').length,col:'var(--teal)'},
-      {lbl:'PAP',cur:campioni.filter(c=>ymOf(c.data)===ymCur&&(c.tipo==='pap'||c.tipo==='pap_priv')).length,prev:campioni.filter(c=>ymOf(c.data)===ymPrev&&(c.tipo==='pap'||c.tipo==='pap_priv')).length,col:'#a855f7'},
-      {lbl:'PAP L.',cur:campioni.filter(c=>ymOf(c.data)===ymCur&&c.tipo==='pap_l').length,prev:campioni.filter(c=>ymOf(c.data)===ymPrev&&c.tipo==='pap_l').length,col:'var(--orange)'}
-    ];
-    const max=Math.max(1,...cats.flatMap(c=>[c.cur,c.prev]));
-    const groupW=(W-pad.l-pad.r)/cats.length;
-    const bw=Math.min(18,groupW*.32);
-    const yScale=v=>H-pad.b-(v/max)*(H-pad.t-pad.b);
-    const grid=[0,.5,1].map(t=>{ const y=pad.t+t*(H-pad.t-pad.b); return '<line x1="'+pad.l+'" x2="'+(W-pad.r)+'" y1="'+y+'" y2="'+y+'" stroke="var(--border-faint)" stroke-width=".5"/>'; }).join('');
-    const yLabels=[0,.5,1].map(t=>{ const v=Math.round(max*(1-t)); const y=pad.t+t*(H-pad.t-pad.b); return '<text x="'+(pad.l-4)+'" y="'+(y+3)+'" text-anchor="end" font-size="8" fill="var(--text3)" font-family="DM Mono,monospace">'+v+'</text>'; }).join('');
-    const bars=cats.map((c,i)=>{
-      const cx=pad.l+groupW*i+groupW/2;
-      const yPrev=yScale(c.prev), yCur=yScale(c.cur);
-      const hPrev=H-pad.b-yPrev, hCur=H-pad.b-yCur;
-      return '<rect x="'+(cx-bw-1)+'" y="'+yPrev+'" width="'+bw+'" height="'+hPrev+'" fill="var(--border2)" rx="2"/>'+
-             '<rect x="'+(cx+1)+'" y="'+yCur+'" width="'+bw+'" height="'+hCur+'" fill="'+c.col+'" rx="2"/>'+
-             '<text x="'+cx+'" y="'+(H-6)+'" text-anchor="middle" font-size="9" fill="var(--text3)" font-family="DM Sans,sans-serif">'+c.lbl+'</text>'+
-             (c.cur>0?'<text x="'+(cx+1+bw/2)+'" y="'+(yCur-3)+'" text-anchor="middle" font-size="8" fill="'+c.col+'" font-family="DM Mono,monospace" font-weight="700">'+c.cur+'</text>':'');
-    }).join('');
-    barSvg.innerHTML=grid+yLabels+bars;
-  }
-  const barSub=document.getElementById('bar-sub');
-  if(barSub) barSub.textContent=fmtMese(ymCur)+' vs '+fmtMese(ymPrev);
-
-  // ── 4. HBAR — Top prodotti consumati ultimi 90gg ──
-  const limit90=new Date(today); limit90.setDate(limit90.getDate()-90);
-  const consumi={};
-  movs.forEach(m=>{
-    if(m.tipo!=='scarico') return;
-    const ts=new Date(m.ts); if(ts<limit90) return;
-    const k=_aliasGroup(m.prod||'');
-    consumi[k]=(consumi[k]||0)+(m.qty||0);
-  });
-  const top=Object.entries(consumi).sort((a,b)=>b[1]-a[1]).slice(0,7);
-  const hbarSvg=document.getElementById('dash-chart-hbar');
-  if(hbarSvg){
-    const W=280,H=175,pad={l:90,r:30,t:6,b:6};
-    if(!top.length){
-      hbarSvg.innerHTML='<text x="'+(W/2)+'" y="'+(H/2)+'" text-anchor="middle" font-size="11" fill="var(--text3)" font-family="DM Mono,monospace">Nessun consumo registrato</text>';
-    } else {
-      const max=top[0][1];
-      const rowH=(H-pad.t-pad.b)/top.length;
-      const bh=Math.min(14,rowH-4);
-      const colors=['var(--blue)','var(--teal)','#a855f7','var(--orange)','var(--accent2)','var(--green)','var(--yellow)'];
-      hbarSvg.innerHTML=top.map(([nome,qty],i)=>{
-        const y=pad.t+i*rowH+(rowH-bh)/2;
-        const w=(qty/max)*(W-pad.l-pad.r);
-        const lblShort=nome.length>16?nome.slice(0,15)+'…':nome;
-        return '<text x="'+(pad.l-4)+'" y="'+(y+bh/2+3)+'" text-anchor="end" font-size="9" fill="var(--text2)" font-family="DM Sans,sans-serif">'+esc(lblShort)+'</text>'+
-               '<rect x="'+pad.l+'" y="'+y+'" width="'+w.toFixed(1)+'" height="'+bh+'" fill="'+colors[i%colors.length]+'" rx="2"/>'+
-               '<text x="'+(pad.l+w+3)+'" y="'+(y+bh/2+3)+'" font-size="9" fill="var(--text)" font-family="DM Mono,monospace" font-weight="700">'+qty+'</text>';
-      }).join('');
-    }
-  }
-
-  // ── 5. PREVISIONE ESAURIMENTO — top 6 prodotti per giorni residui ──
-  const prevTbl=document.getElementById('dash-prev-table');
-  if(prevTbl){
-    const consumiDay={};
-    movs.forEach(m=>{
-      if(m.tipo!=='scarico') return;
-      const ts=new Date(m.ts); if(ts<limit90) return;
-      const k=m.prodId||m.prod;
-      consumiDay[k]=(consumiDay[k]||0)+(m.qty||0);
-    });
-    const forecast=prods.map(p=>{
-      const tot=consumiDay[p.id]||consumiDay[p.nome]||0;
-      const perDay=tot/90;
-      const giorni=perDay>0?Math.floor((p.qty||0)/perDay):null;
-      return {p,giorni,perDay};
-    }).filter(f=>f.giorni!==null&&f.giorni<180).sort((a,b)=>a.giorni-b.giorni).slice(0,6);
-    if(!forecast.length){
-      prevTbl.innerHTML='<div style="padding:16px;text-align:center;color:var(--text3);font-size:12px">Nessun consumo registrato negli ultimi 90 giorni</div>';
-    } else {
-      prevTbl.innerHTML='<div style="display:flex;flex-direction:column">'+forecast.map(f=>{
-        const col=f.giorni<=14?'var(--red)':f.giorni<=30?'var(--yellow)':'var(--green)';
-        const lbl=f.giorni===0?'oggi':f.giorni+' gg';
-        const nameS=f.p.nome.length>22?f.p.nome.slice(0,21)+'…':f.p.nome;
-        return '<div onclick="openSchedaProdotto(\''+f.p.id+'\')" style="display:flex;align-items:center;gap:8px;padding:7px 10px;border-bottom:1px solid var(--border-faint);cursor:pointer;font-size:12px">'+
-          '<span style="flex:1;color:var(--text);font-weight:500">'+esc(nameS)+'</span>'+
-          '<span style="font-family:DM Mono,monospace;font-size:10px;color:var(--text3)">'+(f.p.qty||0)+' pz</span>'+
-          '<span style="font-family:DM Mono,monospace;font-size:11px;font-weight:700;color:'+col+';min-width:48px;text-align:right">'+lbl+'</span>'+
-        '</div>';
-      }).join('')+'</div>';
-    }
-  }
-
-  // ── 6. VBAR — Ordini per fornitore ultimi 6 mesi ──
-  const months6=lastMonths(6);
-  const fornSet={};
-  ords.forEach(o=>{
-    const ym=ymOf(o.data||o.dataCreazione||'');
-    if(!months6.includes(ym)) return;
-    const f=o.fornitore||'Altro';
-    if(!fornSet[f]) fornSet[f]=Array(6).fill(0);
-    fornSet[f][months6.indexOf(ym)]++;
-  });
-  const fornNames=Object.keys(fornSet).slice(0,4);
-  const fornCols=['var(--blue)','var(--teal)','var(--orange)','#a855f7'];
-  const vbarSvg=document.getElementById('dash-chart-vbar');
-  if(vbarSvg){
-    const W=280,H=120,pad={l:24,r:8,t:10,b:22};
-    if(!fornNames.length){
-      vbarSvg.innerHTML='<text x="'+(W/2)+'" y="'+(H/2)+'" text-anchor="middle" font-size="11" fill="var(--text3)" font-family="DM Mono,monospace">Nessun ordine</text>';
-    } else {
-      const max=Math.max(1,...months6.map((_,i)=>fornNames.reduce((s,f)=>s+fornSet[f][i],0)));
-      const groupW=(W-pad.l-pad.r)/months6.length;
-      const bw=Math.min(20,groupW*.7);
-      const yScale=v=>H-pad.b-(v/max)*(H-pad.t-pad.b);
-      const grid=[0,.5,1].map(t=>{ const y=pad.t+t*(H-pad.t-pad.b); return '<line x1="'+pad.l+'" x2="'+(W-pad.r)+'" y1="'+y+'" y2="'+y+'" stroke="var(--border-faint)" stroke-width=".5"/>'; }).join('');
-      const yLabels=[0,.5,1].map(t=>{ const v=Math.round(max*(1-t)); const y=pad.t+t*(H-pad.t-pad.b); return '<text x="'+(pad.l-4)+'" y="'+(y+3)+'" text-anchor="end" font-size="8" fill="var(--text3)" font-family="DM Mono,monospace">'+v+'</text>'; }).join('');
-      const stacks=months6.map((ym,i)=>{
-        const cx=pad.l+groupW*i+groupW/2-bw/2;
-        let acc=0;
-        const segs=fornNames.map((f,fi)=>{
-          const v=fornSet[f][i]; if(v===0) return '';
-          const yTop=yScale(acc+v), yBot=yScale(acc); acc+=v;
-          return '<rect x="'+cx+'" y="'+yTop+'" width="'+bw+'" height="'+(yBot-yTop)+'" fill="'+fornCols[fi%fornCols.length]+'"/>';
-        }).join('');
-        return segs+'<text x="'+(cx+bw/2)+'" y="'+(H-6)+'" text-anchor="middle" font-size="8" fill="var(--text3)" font-family="DM Mono,monospace">'+fmtMese(ym).slice(0,3)+'</text>';
-      }).join('');
-      vbarSvg.innerHTML=grid+yLabels+stacks;
-    }
-  }
-  const vbarLeg=document.getElementById('dash-vbar-legend');
-  if(vbarLeg){
-    vbarLeg.innerHTML=fornNames.map((f,i)=>'<span class="leg-item"><span class="leg-dot" style="background:'+fornCols[i%fornCols.length]+'"></span>'+esc(f)+'</span>').join('');
   }
 }
 
@@ -2956,7 +2257,6 @@ function renderHomeGrid(){
 
   const catOrder=['Reagenti','IHC','Vetrini','Cassette','Coloranti','Consumabili','Lame','Altro'];
   const container=document.getElementById('home-cat-grid');
-  if(!container) return;
   if(!prods.length){ container.innerHTML='<div class="empty"><div class="e-ico">🔍</div><p>Nessun prodotto trovato</p></div>'; return; }
 
   container.innerHTML=catOrder.filter(cat=>bycat[cat]).map(cat=>{
@@ -3652,7 +2952,7 @@ function scaricaSelProd(){
   prods.forEach(p=>{
     const div=document.createElement('div');
     div.style.cssText='display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid var(--border);border-radius:6px;margin-bottom:5px;cursor:pointer;transition:all .12s';
-    div.innerHTML=`<span style="font-family:'DM Mono',monospace;font-weight:600">${esc(p.lotto||'—')}</span><span style="color:var(--text3);font-size:12px">${p.scadenza?'Scad: '+fmtDate(p.scadenza):''}</span><span style="margin-left:auto;font-family:'DM Mono',monospace;color:var(--green);font-weight:700">${p.qty} ${esc(p.unita||'')}</span>`; // FIX [SICUREZZA]: esc() su lotto/unità
+    div.innerHTML=`<span style="font-family:'DM Mono',monospace;font-weight:600">${p.lotto||'—'}</span><span style="color:var(--text3);font-size:12px">${p.scadenza?'Scad: '+fmtDate(p.scadenza):''}</span><span style="margin-left:auto;font-family:'DM Mono',monospace;color:var(--green);font-weight:700">${p.qty} ${p.unita||''}</span>`;
     div.onclick=function(){
       document.querySelectorAll('#sc-lotti-list div').forEach(d=>{ d.style.background=''; d.style.borderColor='var(--border)'; });
       div.style.background='rgba(26,90,154,.08)'; div.style.borderColor='var(--accent2)';
@@ -3660,7 +2960,7 @@ function scaricaSelProd(){
       document.getElementById('sc-man-qty-wrap').style.display='';
       document.getElementById('sc-man-confirm-btn').style.display='';
       document.getElementById('sc-man-qty').max=p.qty;
-      document.getElementById('sc-man-info').innerHTML=`<div style="font-size:12px;color:var(--text3)">Disponibili: <strong style="color:var(--green)">${p.qty}</strong> ${esc(p.unita||'')}</div>`;
+      document.getElementById('sc-man-info').innerHTML=`<div style="font-size:12px;color:var(--text3)">Disponibili: <strong style="color:var(--green)">${p.qty}</strong> ${p.unita||''}</div>`;
     };
     wrap.appendChild(div);
   });
@@ -3699,7 +2999,7 @@ async function startBarcodeScanner(){
       <input type="text" id="manual-bc" placeholder="Barcode…" style="text-align:center;font-family:DM Mono,monospace;font-size:15px;letter-spacing:2px" onkeydown="if(event.key==='Enter') handleScannedCode(this.value.trim())">
       <button class="btn btn-primary" style="margin-top:9px;width:100%" onclick="handleScannedCode(document.getElementById('manual-bc').value.trim())">Cerca</button>
     </div>`;
-    document.querySelector('.scan-line')?.remove(); // FIX [QA]: scan-line è class non ID
+    document.getElementById('scan-line')?.remove();
   }
 }
 function handleScannedCode(code){
@@ -3711,7 +3011,7 @@ function handleScannedCode(code){
     ||prods.find(p=>p.lotto&&code.includes(p.lotto)&&p.lotto.length>=4)
     ||prods.find(p=>p.nome.toLowerCase()===code.toLowerCase());
   if(matchedProd){
-    document.getElementById('bc-match-info').innerHTML=`<strong>${esc(matchedProd.nome)}</strong><br>Qtà: <strong>${matchedProd.qty} ${esc(matchedProd.unita||'')}</strong>${matchedProd.lotto?' · Lotto: '+esc(matchedProd.lotto):''}${matchedProd.scadenza?' · Scad: '+fmtDate(matchedProd.scadenza):''}`; // FIX [SICUREZZA]: esc() su dati prodotto
+    document.getElementById('bc-match-info').innerHTML=`<strong>${matchedProd.nome}</strong><br>Qtà: <strong>${matchedProd.qty} ${matchedProd.unita||''}</strong>${matchedProd.lotto?' · Lotto: '+matchedProd.lotto:''}${matchedProd.scadenza?' · Scad: '+fmtDate(matchedProd.scadenza):''}`;
     document.getElementById('bc-match').style.display='block';
     document.getElementById('bc-nomatch').style.display='none';
     document.getElementById('bc-scarico-btn').style.display='';
@@ -3912,14 +3212,7 @@ function confirmCaricaScanNew(){
 // ══════════════════════════════════════════
 // FIX [INFRASTRUTTURA]: LS_SCHEDE dichiarata in cima al file
 const loadSchede=()=>_getCache(LS_SCHEDE,'[]');
-// FIX [INFRASTRUTTURA]: saveSchede ora sincronizza su Supabase e gestisce offline
-async function saveSchede(arr){
-  _setCache(LS_SCHEDE,arr);
-  if(!SUPA_OK) return;
-  if(!IS_ONLINE){ enqueue({type:'schede'}); return; }
-  try{ if(arr.length) await supaFetch('schede_tecniche','POST',arr,'?on_conflict=id'); }
-  catch(e){ enqueue({type:'schede'}); }
-}
+function saveSchede(arr){ _setCache(LS_SCHEDE,arr); }
 
 let ssScanReader=null, ssCurrentUrl=null;
 
@@ -3972,7 +3265,7 @@ function prefillSchedaFornitore(url){
     if(url.includes(domain)){ document.getElementById('ss-fornitore').value=name; break; }
   }
 }
-async function saveSchedaTecnica(){
+function saveSchedaTecnica(){
   if(!ssCurrentUrl){ toast('Nessun URL da salvare','error'); return; }
   const scheda={
     id:genId(),
@@ -3980,11 +3273,9 @@ async function saveSchedaTecnica(){
     fornitore:document.getElementById('ss-fornitore').value.trim()||'Altro',
     prodotto:document.getElementById('ss-prodotto').value.trim(),
     prodId:document.getElementById('ss-link-prod').value,
-    data:new Date().toISOString(),
-    creato:new Date().toISOString(),
-    modificato:new Date().toISOString()
+    data:new Date().toISOString()
   };
-  const schede=loadSchede(); schede.unshift(scheda); await saveSchede(schede);
+  const schede=loadSchede(); schede.unshift(scheda); saveSchede(schede);
   closeSchedaScanModal();
   if(currentView==='schede') renderSchede();
   toast('Scheda tecnica salvata','success');
@@ -4046,7 +3337,7 @@ async function saveProc(arr, deletedId){
 }
 
 // Reagenti tipici processatore dal magazzino
-const PROC_REAGENTI_DEFAULT = ['alcool 95','alcoolpath 95','alcol 95','alcool 100','alcoolpath 100','alcol 100','xilene','xylene','alcol 70','formalina','formalin','formaldeid','formol','nbt'];
+const PROC_REAGENTI_DEFAULT = ['alcool 95','alcoolpath 95','alcol 95','alcool 100','alcoolpath 100','alcol 100','xilene','xylene','alcol 70'];
 
 let procCasiList = [];
 
@@ -4062,14 +3353,11 @@ function openNuovoProcessatore(preset){
   document.getElementById('proc-caso-from').value=preset?.casi_da||'';
   document.getElementById('proc-caso-to').value=preset?.casi_a||'';
   document.getElementById('proc-caso-singolo').value='';
-  const ncEl=document.getElementById('proc-n-cassette'); if(ncEl) ncEl.value=preset?.n_cassette||'';
   renderProcCasiList();
   // Reagenti
   const rl = document.getElementById('proc-reagenti-list');
   rl.innerHTML='';
   (preset?.reagenti||[]).forEach(r=>addReagenteProc(r));
-  const procDelBtn=document.getElementById('proc-delete-btn');
-  if(procDelBtn) procDelBtn.style.display=preset?'':'none';
   document.getElementById('modal-processatore').classList.add('open');
 }
 
@@ -4169,7 +3457,7 @@ async function saveProcessatore(){
     casi: [...procCasiList],
     casi_da: document.getElementById('proc-caso-from').value.trim(),
     casi_a: document.getElementById('proc-caso-to').value.trim(),
-    n_cassette: parseInt(document.getElementById('proc-n-cassette')?.value)||procCasiList.length,
+    n_cassette: procCasiList.length,
     reagenti: getReagentiList('proc-reagenti-list'),
     creato: editId ? undefined : new Date().toISOString(),
     modificato: new Date().toISOString()
@@ -4252,17 +3540,6 @@ async function deleteProcCiclo(id){
   await saveProc(loadProc().filter(x=>x.id!==id), id);
   renderProcessatore(); toast('Ciclo eliminato','info');
 }
-async function deleteProcCicloModal(){
-  const id=document.getElementById('proc-edit-id').value;
-  if(!id) return;
-  if(!confirm('Eliminare questo ciclo processatore?')) return;
-  _takeSnapshot('Elimina ciclo processatore');
-  await saveProc(loadProc().filter(x=>x.id!==id), id);
-  closeModal('modal-processatore');
-  renderProcessatore();
-  renderDashboard();
-  toast('Ciclo eliminato','info');
-}
 
 // ══════════════════════════════════════════
 // COLORATORE — Registro giornaliero
@@ -4287,23 +3564,18 @@ function openNuovoColoratore(preset){
   document.getElementById('color-cicli-ee').value = preset?.cicli_ee||0;
   document.getElementById('color-cicli-ee-cit').value = preset?.cicli_ee_cit||0;
   document.getElementById('color-cicli-pap').value = preset?.cicli_pap||0;
-  // Range casi + vetri
+  // Range casi
   document.getElementById('color-range-ist-from').value = preset?.range_ist?.from||'';
   document.getElementById('color-range-ist-to').value   = preset?.range_ist?.to||'';
   document.getElementById('color-range-cit-from').value = preset?.range_cit?.from||'';
   document.getElementById('color-range-cit-to').value   = preset?.range_cit?.to||'';
   document.getElementById('color-range-pap-from').value = preset?.range_pap?.from||'';
   document.getElementById('color-range-pap-to').value   = preset?.range_pap?.to||'';
-  document.getElementById('color-vetri-ist').value = preset?.vetri_ist||0;
-  document.getElementById('color-vetri-cit').value = preset?.vetri_cit||0;
-  document.getElementById('color-vetri-pap').value = preset?.vetri_pap||0;
   // Reagenti
   const rl = document.getElementById('color-reagenti-list');
   rl.innerHTML='';
   if(preset?.reagenti?.length){ preset.reagenti.forEach(r=>addReagenteColor(r)); }
   else { precompileReagentiColoratore(); }
-  const colorDelBtn=document.getElementById('color-delete-btn');
-  if(colorDelBtn) colorDelBtn.style.display=preset?'':'none';
   document.getElementById('modal-coloratore').classList.add('open');
 }
 
@@ -4356,9 +3628,6 @@ async function saveColoratore(){
     range_ist: { from: document.getElementById('color-range-ist-from').value.trim(), to: document.getElementById('color-range-ist-to').value.trim() },
     range_cit: { from: document.getElementById('color-range-cit-from').value.trim(), to: document.getElementById('color-range-cit-to').value.trim() },
     range_pap: { from: document.getElementById('color-range-pap-from').value.trim(), to: document.getElementById('color-range-pap-to').value.trim() },
-    vetri_ist: parseInt(document.getElementById('color-vetri-ist').value)||0,
-    vetri_cit: parseInt(document.getElementById('color-vetri-cit').value)||0,
-    vetri_pap: parseInt(document.getElementById('color-vetri-pap').value)||0,
     reagenti: getReagentiList('color-reagenti-list'),
     modificato: new Date().toISOString()
   };
@@ -4401,22 +3670,17 @@ function renderColoratore(){
     return hasNew ? {label:'🔄 Cambiato',cls:'bg-red'} : {label:'➕ Rabboccato',cls:'bg-yellow'};
   };
   const rng=r=>r?.from?(r.from+(r.to&&r.to!==r.from?' → '+String(r.to).split('/')[0]:'')):'—';
-  const rngVetri=(r,v,c)=>{
-    const r_str=rng(r);
-    const v_str=v?`<span style="margin-left:5px;font-weight:700;color:${c}">${v}v</span>`:'';
-    return r_str==='—'&&!v?'—':`${r_str==='—'?'':r_str}${v_str}`;
-  };
 
   el.innerHTML=`<div style="overflow-x:auto">
   <table>
     <thead><tr>
       <th>Data</th>
       <th style="color:var(--blue);text-align:center">EE Ist.</th>
-      <th style="color:var(--blue)">Range / Vetri Ist.</th>
+      <th style="color:var(--blue)">Range Ist.</th>
       <th style="color:var(--teal);text-align:center">EE Cit.</th>
-      <th style="color:var(--teal)">Range / Vetri Cit.</th>
+      <th style="color:var(--teal)">Range Cit.</th>
       <th style="color:var(--purple);text-align:center">PAP</th>
-      <th style="color:var(--purple)">Range / Vetri PAP</th>
+      <th style="color:var(--purple)">Range PAP</th>
       <th>Reagenti</th>
       <th style="width:70px"></th>
     </tr></thead>
@@ -4427,11 +3691,11 @@ function renderColoratore(){
         return `<tr>
           <td style="font-weight:600;white-space:nowrap">${fmtDate(reg.data)}</td>
           <td style="text-align:center;font-family:'DM Mono',monospace;font-weight:700;color:var(--blue)">${reg.cicli_ee||0}</td>
-          <td style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text3)">${rngVetri(reg.range_ist,reg.vetri_ist,'var(--blue)')}</td>
+          <td style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text3)">${rng(reg.range_ist)}</td>
           <td style="text-align:center;font-family:'DM Mono',monospace;font-weight:700;color:var(--teal)">${reg.cicli_ee_cit||0}</td>
-          <td style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text3)">${rngVetri(reg.range_cit,reg.vetri_cit,'var(--teal)')}</td>
+          <td style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text3)">${rng(reg.range_cit)}</td>
           <td style="text-align:center;font-family:'DM Mono',monospace;font-weight:700;color:var(--purple)">${reg.cicli_pap||0}</td>
-          <td style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text3)">${rngVetri(reg.range_pap,reg.vetri_pap,'var(--purple)')}</td>
+          <td style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text3)">${rng(reg.range_pap)}</td>
           <td><span class="badge ${stato.cls}" style="font-size:11px">${stato.label}</span></td>
           <td style="white-space:nowrap">
             <button class="btn btn-sm" onclick="openNuovoColoratore(loadColoratore().find(x=>x.id==='${reg.id}'))">✎</button>
@@ -4449,170 +3713,7 @@ async function deleteColorCiclo(id){
   await saveColoratoreReg(loadColoratore().filter(x=>x.id!==id), id);
   renderColoratore(); toast('Registro eliminato','info');
 }
-async function deleteColorCicloModal(){
-  const id=document.getElementById('color-edit-id').value;
-  if(!id) return;
-  if(!confirm('Eliminare questo registro coloratore?')) return;
-  _takeSnapshot('Elimina registro coloratore');
-  await saveColoratoreReg(loadColoratore().filter(x=>x.id!==id), id);
-  closeModal('modal-coloratore');
-  renderColoratore();
-  renderDashboard();
-  toast('Registro eliminato','info');
-}
 // ══════════════════════════════════════════
-// ══════════════════════════════════════════
-// IHC — Richieste Immunoistochimica
-// ══════════════════════════════════════════
-const loadIHC=()=>_getCache(LS_IHC,'[]');
-async function saveIHCArr(arr, deletedId){
-  _setCache(LS_IHC, _stampMod(arr));
-  if(!IS_ONLINE){ enqueue({type:'ihc'}); return; }
-  try{
-    if(deletedId) await supaFetch('ihc_requests','DELETE',null,'?id=eq.'+deletedId);
-    if(arr.length) await supaFetch('ihc_requests','POST',arr,'?on_conflict=id');
-  }catch(e){ enqueue({type:'ihc'}); }
-}
-
-// FIX [UI/UX]: chip anticorpi tappabili con stato completato
-function _ihcChips(r){
-  const items=(r.anticorpo||'').split(/[,\n]+/).map(s=>s.trim()).filter(Boolean);
-  if(!items.length) return `<div style="font-size:13px;color:var(--text3);margin-top:4px">—</div>`;
-  const done=Array.isArray(r.anticorpi_done)?r.anticorpi_done:[];
-  const chips=items.map(it=>{
-    const isDone=done.includes(it);
-    const onclick=`event.stopPropagation();toggleIHCAnticorpo(${JSON.stringify(r.id)},${JSON.stringify(it)})`.replace(/"/g,'&quot;');
-    return `<span onclick="${onclick}" style="display:inline-block;padding:5px 11px;border-radius:20px;cursor:pointer;font-size:12px;font-weight:600;margin:2px;border:1px solid;user-select:none;-webkit-user-select:none;${isDone?'background:#dcfce7;border-color:#86efac;color:#166534;text-decoration:line-through;':'background:var(--bg3);border-color:var(--border2);color:var(--text2);'}">${esc(it)}</span>`;
-  }).join('');
-  const nDone=done.filter(d=>items.includes(d)).length;
-  const manca=items.filter(it=>!done.includes(it)).map(it=>esc(it));
-  const progressLine=nDone===items.length
-    ? `<div style="font-size:11px;color:var(--green);margin-top:5px;font-weight:600">✅ Tutti completati</div>`
-    : `<div style="font-size:11px;color:var(--text3);margin-top:5px">${nDone}/${items.length} completati · manca: <strong style="color:var(--red)">${manca.join(', ')}</strong></div>`;
-  return `<div style="margin-top:6px;line-height:1.8">${chips}</div>${progressLine}`;
-}
-
-async function toggleIHCAnticorpo(id, item){
-  const arr=loadIHC();
-  const i=arr.findIndex(x=>x.id===id);
-  if(i<0) return;
-  const r=arr[i];
-  const done=Array.isArray(r.anticorpi_done)?[...r.anticorpi_done]:[];
-  const idx=done.indexOf(item);
-  if(idx>=0) done.splice(idx,1); else done.push(item);
-  arr[i]={...r, anticorpi_done:done, modificato:new Date().toISOString()};
-  await saveIHCArr(arr);
-  renderIHC();
-  renderDashboard();
-}
-
-let _ihcFilter='all';
-function setIHCFilter(f,btn){
-  _ihcFilter=f;
-  document.querySelectorAll('#ihc-filter-bar .f-btn').forEach(b=>b.classList.remove('active'));
-  if(btn) btn.classList.add('active');
-  renderIHC();
-}
-
-function renderIHC(){
-  const el=document.getElementById('ihc-list'); if(!el) return;
-  const q=(document.getElementById('ihc-search')?.value||'').toLowerCase();
-  let arr=loadIHC();
-  if(_ihcFilter!=='all') arr=arr.filter(x=>x.stato===_ihcFilter);
-  if(q) arr=arr.filter(x=>
-    (x.campione_id||'').toLowerCase().includes(q)||
-    (x.patologo||'').toLowerCase().includes(q)||
-    (x.anticorpo||'').toLowerCase().includes(q)
-  );
-  // Urgenti in cima, poi per ID campione crescente
-  const _ihcIdNum=s=>{const m=(s||'').match(/^(\d+)/);return m?parseInt(m[1]):0;};
-  arr.sort((a,b)=>{
-    if(a.priorita==='urgente'&&b.priorita!=='urgente') return -1;
-    if(b.priorita==='urgente'&&a.priorita!=='urgente') return 1;
-    return _ihcIdNum(a.campione_id)-_ihcIdNum(b.campione_id);
-  });
-  if(!arr.length){
-    el.innerHTML='<div class="empty"><div class="e-ico">🔬</div><p>Nessuna richiesta IHC</p></div>';
-    return;
-  }
-  const prioBadge={urgente:'<span class="badge bg-red">🔴 Urgente</span>',normale:'<span class="badge bg-blue">Normale</span>',differibile:'<span class="badge" style="background:var(--bg4);color:var(--text3);border-color:var(--border2)">Differibile</span>'};
-  const statoBadge={da_fare:'<span class="badge bg-red">Da fare</span>',in_lavorazione:'<span class="badge bg-yellow">In lavorazione</span>',completata:'<span class="badge bg-green">Completata</span>'};
-  el.innerHTML=arr.map(r=>`
-    <div class="campione-card" onclick="openNuovaIHC(loadIHC().find(x=>x.id==='${r.id}'))" style="${r.priorita==='urgente'?'border-color:#fca5a5;background:#fff8f8':''}">
-      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px">
-        <div style="flex:1;min-width:0">
-          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:5px">
-            <span class="campione-id" style="font-size:16px">${esc(r.campione_id||'—')}</span>
-            ${prioBadge[r.priorita]||prioBadge.normale}
-            ${statoBadge[r.stato]||statoBadge.da_fare}
-          </div>
-          <div style="font-size:13px;color:var(--text2);margin-bottom:4px"><strong>Patologo:</strong> ${esc(r.patologo||'—')}</div>
-          ${_ihcChips(r)}
-        </div>
-        <div style="font-size:11px;color:var(--text3);white-space:nowrap;text-align:right;flex-shrink:0">
-          ${r.data_richiesta?fmtDate(r.data_richiesta):''}
-        </div>
-      </div>
-    </div>`).join('');
-}
-
-function openNuovaIHC(preset){
-  document.getElementById('ihc-edit-id').value=preset?.id||'';
-  document.getElementById('ihc-modal-title').textContent=preset?'Modifica richiesta IHC':'Nuova richiesta IHC';
-  document.getElementById('ihc-campione').value=preset?.campione_id||'';
-  document.getElementById('ihc-patologo').value=preset?.patologo||'';
-  document.getElementById('ihc-anticorpo').value=preset?.anticorpo||'';
-  document.getElementById('ihc-priorita').value=preset?.priorita||'normale';
-  document.getElementById('ihc-stato').value=preset?.stato||'da_fare';
-  document.getElementById('ihc-data').value=preset?.data_richiesta||new Date().toISOString().slice(0,10);
-  const delBtn=document.getElementById('ihc-delete-btn');
-  if(delBtn) delBtn.style.display=preset?'':'none';
-  document.getElementById('modal-ihc').classList.add('open');
-}
-
-async function saveIHC(){
-  const campione_id=document.getElementById('ihc-campione').value.trim();
-  const patologo=document.getElementById('ihc-patologo').value.trim();
-  const anticorpo=document.getElementById('ihc-anticorpo').value.trim();
-  if(!campione_id||!anticorpo){ toast('Campione e anticorpo obbligatori','error'); return; }
-  _takeSnapshot('Salva IHC '+campione_id);
-  const editId=document.getElementById('ihc-edit-id').value;
-  const arr=loadIHC();
-  const existing=editId?arr.find(x=>x.id===editId):null;
-  const rec={
-    id: editId||genId(),
-    campione_id,
-    patologo,
-    anticorpo,
-    anticorpi_done: existing?.anticorpi_done||[],
-    priorita: document.getElementById('ihc-priorita').value,
-    stato: document.getElementById('ihc-stato').value,
-    data_richiesta: document.getElementById('ihc-data').value,
-    modificato: new Date().toISOString()
-  };
-  if(!editId) rec.creato=new Date().toISOString();
-  if(editId){ const i=arr.findIndex(x=>x.id===editId); if(i>=0) arr[i]=rec; else arr.unshift(rec); }
-  else arr.unshift(rec);
-  await saveIHCArr(arr);
-  closeModal('modal-ihc');
-  renderIHC();
-  renderDashboard();
-  toast('IHC salvata','success');
-}
-
-async function deleteIHC(){
-  const editId=document.getElementById('ihc-edit-id').value;
-  if(!editId) return;
-  if(!confirm('Eliminare questa richiesta IHC?')) return;
-  _takeSnapshot('Elimina IHC');
-  const arr=loadIHC().filter(x=>x.id!==editId);
-  await saveIHCArr(arr, editId);
-  closeModal('modal-ihc');
-  renderIHC();
-  renderDashboard();
-  toast('IHC eliminata','info');
-}
-
 // TRACCIABILITÀ CAMPIONI
 // ══════════════════════════════════════════
 // FIX [INFRASTRUTTURA]: LS_CAMP dichiarata in cima al file
@@ -5405,77 +4506,44 @@ function setAllerteFilter(f, btn){
 }
 function renderAllerte(){
   if(!document.getElementById('allerte-tbody')) return;
-  const prods = loadP();
-  // FIX [MAGAZZINO]: raggruppa per alias — 1 allerta per tipo prodotto
-  const _grp={};
-  prods.forEach(p=>{
-    const g=_aliasGroup(p.nome);
-    if(!_grp[g]) _grp[g]={label:g,qty:0,min:0,prods:[],unita:p.unita||''};
-    _grp[g].qty += p.qty||0;
-    _grp[g].min = Math.max(_grp[g].min, p.min||0);
-    _grp[g].prods.push(p);
-  });
-  const gruppi=Object.values(_grp);
-  const grpEsauriti = g => g.qty<=0;
-  const grpCritici  = g => g.min>0 && g.qty>0 && g.qty<=g.min;
-  const scaduti     = p => daysUntil(p.scadenza)<0;
-  const inscadenza  = p => { const d=daysUntil(p.scadenza); return d>=0&&d<=30; };
-  const f=allerteFilter;
-  let rows=[];
-  if(f==='esauriti'||f==='all')    rows=[...rows,...gruppi.filter(grpEsauriti).map(g=>({type:'grp',g}))];
-  if(f==='critici'||f==='all')     rows=[...rows,...gruppi.filter(grpCritici).map(g=>({type:'grp',g}))];
-  if(f==='scaduti'||f==='all')     rows=[...rows,...prods.filter(scaduti).map(p=>({type:'prod',p}))];
-  if(f==='inscadenza'||f==='all')  rows=[...rows,...prods.filter(inscadenza).map(p=>({type:'prod',p}))];
-  // Deduplicazione
-  const seen=new Set();
-  rows=rows.filter(r=>{ const k=r.type==='grp'?'g:'+r.g.label:'p:'+r.p.id; if(seen.has(k)) return false; seen.add(k); return true; });
-  document.getElementById('allerte-count').textContent = rows.length+' allerta/e';
-  const tb=document.getElementById('allerte-tbody');
-  if(!rows.length){
-    tb.innerHTML=`<tr><td colspan="8"><div class="empty"><div class="e-ico">✅</div><p>Nessuna allerta attiva</p></div></td></tr>`;
+  let prods = loadP();
+  const esauriti   = p => p.qty <= 0;
+  const critici    = p => p.min > 0 && p.qty > 0 && p.qty <= p.min;
+  const scaduti    = p => daysUntil(p.scadenza) < 0;
+  const inscadenza = p => { const d=daysUntil(p.scadenza); return d>=0 && d<=30; };
+
+  let filtered;
+  if(allerteFilter==='esauriti')    filtered = prods.filter(esauriti);
+  else if(allerteFilter==='critici') filtered = prods.filter(critici);
+  else if(allerteFilter==='scaduti') filtered = prods.filter(scaduti);
+  else if(allerteFilter==='inscadenza') filtered = prods.filter(inscadenza);
+  else filtered = prods.filter(p => esauriti(p)||critici(p)||scaduti(p)||inscadenza(p));
+
+  document.getElementById('allerte-count').textContent = filtered.length + ' prodotto/i';
+  const tb = document.getElementById('allerte-tbody');
+  if(!filtered.length){
+    tb.innerHTML = `<tr><td colspan="8"><div class="empty"><div class="e-ico">✅</div><p>Nessuna allerta attiva</p></div></td></tr>`;
     return;
   }
-  tb.innerHTML=rows.map(row=>{
-    if(row.type==='grp'){
-      const g=row.g; const fp=g.prods[0];
-      const stati=[];
-      if(g.qty<=0) stati.push('<span class="badge bg-red">Esaurito</span>');
-      else if(g.min>0&&g.qty<=g.min) stati.push('<span class="badge bg-yellow">Scorta bassa</span>');
-      const variantiHtml=g.prods.length>1
-        ?`<div style="font-size:10px;color:var(--text3);margin-top:2px">${g.prods.map(p=>`${esc(p.nome)}: ${p.qty}${p.unita||''}`).join(' · ')}</div>`:'';
-      const label=g.prods.length>1?esc(g.label):esc(fp.nome);
-      const qColor=g.qty<=0?'red':g.min>0&&g.qty<=g.min?'yellow':'green';
-      return `<tr>
-        <td><strong>${label}</strong>${variantiHtml}${fp.pos?`<br><small style="color:var(--text3)">📍${esc(fp.pos)}</small>`:''}</td>
-        <td><span class="cat-badge">${CAT_ICON[fp.cat]||'📌'} ${fp.cat}</span></td>
-        <td style="color:var(--text2);font-size:12px">${g.prods.length>1?'Vari':esc(fp.fornitore||'—')}</td>
-        <td class="mono">${fp.lotto||'—'}</td>
-        <td><span style="color:var(--${qColor})">${g.qty}</span> <small style="color:var(--text3)">${fp.unita||''}</small>${g.min?`<br><small style="color:var(--text3)">min: ${g.min}</small>`:''}</td>
-        <td>—</td>
-        <td>${stati.join(' ')}</td>
-        <td><div style="display:flex;gap:4px">
-          <button class="btn btn-sm btn-ok" onclick="precompileOrdine('${fp.id}')">🛒 Ordina</button>
-          <button class="btn btn-sm" onclick="openEditModal('${fp.id}')">✎</button>
-        </div></td>
-      </tr>`;
-    } else {
-      const p=row.p; const stati=[];
-      if(daysUntil(p.scadenza)<0) stati.push('<span class="badge bg-red">Scaduto</span>');
-      else if(daysUntil(p.scadenza)<=30) stati.push('<span class="badge bg-yellow">In scadenza</span>');
-      return `<tr>
-        <td><strong>${esc(p.nome)}</strong>${p.pos?`<br><small style="color:var(--text3)">📍${esc(p.pos)}</small>`:''}</td>
-        <td><span class="cat-badge">${CAT_ICON[p.cat]||'📌'} ${p.cat}</span></td>
-        <td style="color:var(--text2);font-size:12px">${esc(p.fornitore||'—')}</td>
-        <td class="mono">${p.lotto||'—'}</td>
-        <td><span style="color:var(--${qStat(p)})">${p.qty}</span> <small style="color:var(--text3)">${p.unita||''}</small>${p.min?`<br><small style="color:var(--text3)">min: ${p.min}</small>`:''}</td>
-        <td>${scBadge(p.scadenza)}</td>
-        <td>${stati.join(' ')}</td>
-        <td><div style="display:flex;gap:4px">
-          <button class="btn btn-sm btn-ok" onclick="precompileOrdine('${p.id}')">🛒 Ordina</button>
-          <button class="btn btn-sm" onclick="openEditModal('${p.id}')">✎</button>
-        </div></td>
-      </tr>`;
-    }
+  tb.innerHTML = filtered.map(p => {
+    const stati = [];
+    if(p.qty<=0) stati.push('<span class="badge bg-red">Esaurito</span>');
+    else if(p.min>0&&p.qty<=p.min) stati.push('<span class="badge bg-yellow">Scorta bassa</span>');
+    if(daysUntil(p.scadenza)<0) stati.push('<span class="badge bg-red">Scaduto</span>');
+    else if(daysUntil(p.scadenza)<=30) stati.push('<span class="badge bg-yellow">In scadenza</span>');
+    return `<tr>
+      <td><strong>${p.nome}</strong>${p.pos?`<br><small style="color:var(--text3)">📍${p.pos}</small>`:''}</td>
+      <td><span class="cat-badge">${CAT_ICON[p.cat]||'📌'} ${p.cat}</span></td>
+      <td style="color:var(--text2);font-size:12px">${p.fornitore||'—'}</td>
+      <td class="mono">${p.lotto||'—'}</td>
+      <td><span style="color:var(--${qStat(p)})">${p.qty}</span> <small style="color:var(--text3)">${p.unita||''}</small>${p.min?`<br><small style="color:var(--text3)">min: ${p.min}</small>`:''}</td>
+      <td>${scBadge(p.scadenza)}</td>
+      <td>${stati.join(' ')}</td>
+      <td><div style="display:flex;gap:4px">
+        <button class="btn btn-sm btn-ok" onclick="precompileOrdine('${p.id}')">🛒 Ordina</button>
+        <button class="btn btn-sm" onclick="openEditModal('${p.id}')">✎</button>
+      </div></td>
+    </tr>`;
   }).join('');
 }
 
@@ -5509,161 +4577,47 @@ function setOrdiniFilter(f,btn){
 function renderOrdini(){
   let ords = loadOrd();
   if(ordiniFilter!=='all') ords = ords.filter(o=>o.stato===ordiniFilter);
-  // Sort: bozze e parziali in alto, poi per data DESC
-  ords.sort((a,b)=>{
-    const sw={parziale:0,inviato:1,approvato:2,bozza:3,ricevuto:4,annullato:5};
-    const da=sw[a.stato]??9, db=sw[b.stato]??9;
-    if(da!==db) return da-db;
-    return (b.data||'').localeCompare(a.data||'');
-  });
   document.getElementById('ordini-count').textContent = ords.length + ' ordine/i';
-
-  const splitEl = document.getElementById('ordini-split');
-  const listEl = document.getElementById('ordini-list-col');
-  const detailEl = document.getElementById('ordini-detail-col');
-  // Fallback: se lo split non c'è (modal/altre view), usa la tabella legacy
-  if(!splitEl || !listEl || !detailEl){
-    const tb = document.getElementById('ordini-tbody');
-    if(tb){
-      if(!ords.length){ tb.innerHTML='<tr><td colspan="7"><div class="empty"><div class="e-ico">🛒</div><p>Nessun ordine</p></div></td></tr>'; return; }
-      tb.innerHTML = ords.map(o=>`<tr><td>${fmtDate(o.data)||'—'}</td><td>${esc(o.num||'—')}</td><td>${(o.righe||[]).length} righe</td><td>${esc(o.fornitore||'—')}</td><td>${esc(o.stato)}</td><td>${esc(o.note||'')}</td><td><button class="btn btn-sm" onclick="viewOrdine('${o.id}')">👁</button></td></tr>`).join('');
-    }
-    return;
-  }
-
+  const tb = document.getElementById('ordini-tbody');
   if(!ords.length){
-    listEl.innerHTML='<div class="empty" style="padding:30px 10px"><div class="e-ico">🛒</div><p>Nessun ordine</p></div>';
-    detailEl.innerHTML='<div class="empty" style="padding:60px 20px;color:var(--text3)">Seleziona un ordine per vedere il dettaglio</div>';
+    tb.innerHTML=`<tr><td colspan="7"><div class="empty"><div class="e-ico">🛒</div><p>Nessun ordine registrato</p></div></td></tr>`;
     return;
   }
-
-  const statoCfg = {
-    bozza:    {ico:'📝',cls:'',           lbl:'Bozza'},
-    inviato:  {ico:'📤',cls:'bg-blue',    lbl:'Inviato'},
-    approvato:{ico:'✅',cls:'bg-green',   lbl:'Approvato'},
-    parziale: {ico:'📦⏳',cls:'bg-yellow', lbl:'Parziale'},
-    ricevuto: {ico:'📦',cls:'bg-green',   lbl:'Ricevuto'},
-    annullato:{ico:'❌',cls:'bg-red',     lbl:'Annullato'}
+  const statoMap = {
+    bozza:     '<span class="badge" style="background:rgba(255,255,255,.07);color:var(--text2);border-color:var(--border2)">📝 Bozza</span>',
+    inviato:   '<span class="badge bg-blue">📤 Inviato</span>',
+    approvato: '<span class="badge bg-green">✅ Approvato</span>',
+    parziale:  '<span class="badge bg-yellow">📦⏳ Parziale</span>',
+    ricevuto:  '<span class="badge" style="background:rgba(45,212,191,.1);color:var(--teal);border-color:rgba(45,212,191,.3)">📦 Ricevuto</span>',
+    annullato: '<span class="badge bg-red">❌ Annullato</span>'
   };
-
-  // ── LISTA SX ──
-  // Memoria selezione corrente (default = primo)
-  if(!window._ordiniSelectedId || !ords.find(o=>o.id===window._ordiniSelectedId)){
-    window._ordiniSelectedId = ords[0].id;
-  }
-  listEl.innerHTML = ords.map(o=>{
-    const totO=(o.righe||[]).reduce((s,r)=>s+r.qty,0);
-    const totR=(o.righe||[]).reduce((s,r)=>s+(r.qtyRicevuta||0),0);
-    const pct=totO>0?Math.round(totR/totO*100):0;
-    const cfg=statoCfg[o.stato]||{ico:'',cls:'',lbl:o.stato};
-    const sel = o.id===window._ordiniSelectedId;
-    const barColor = pct===0?'var(--border2)':(pct<100?'var(--yellow)':'var(--green)');
-    return '<div class="ord-row" data-oid="'+esc(o.id)+'" onclick="selectOrdineDetail(\''+esc(o.id)+'\')" style="padding:10px 12px;border-radius:8px;cursor:pointer;margin-bottom:6px;border:1px solid '+(sel?'var(--accent2)':'var(--border-faint)')+';background:'+(sel?'rgba(37,99,235,.05)':'transparent')+';transition:all .15s">'+
-      '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px">'+
-        '<strong style="font-size:13px">'+esc(o.num||'—')+'</strong>'+
-        '<span class="badge '+cfg.cls+'" style="font-size:10px">'+cfg.ico+' '+cfg.lbl+'</span>'+
-      '</div>'+
-      '<div style="font-size:11px;color:var(--text3);margin-bottom:6px">'+esc(o.fornitore||'—')+' &middot; '+fmtDate(o.data)+' &middot; '+(o.righe||[]).length+' righe</div>'+
-      (totO>0?'<div class="prog-wrap"><div class="prog-bar"><div class="prog-fill" style="width:'+pct+'%;background:'+barColor+'"></div></div><span class="prog-pct">'+pct+'%</span></div>':'')+
-    '</div>';
+  const urgMap = { urgente:'<span style="color:var(--red);font-size:11px">🔴 Urgente</span> ', normale:'', bassa:'<span style="color:var(--text3);font-size:11px">↓ </span>' };
+  tb.innerHTML = ords.map(o => {
+    const nProd = o.righe ? o.righe.length : 0;
+    const prodList = o.righe ? o.righe.map(r=>r.nome).join(', ') : '—';
+    // Progresso ricezione per stato parziale
+    const totOrd = (o.righe||[]).reduce((s,r)=>s+r.qty,0);
+    const totRic = (o.righe||[]).reduce((s,r)=>s+(r.qtyRicevuta||0),0);
+    const pctRic = totOrd>0 ? Math.round(totRic/totOrd*100) : 0;
+    const progBar = o.stato==='parziale' ? `<div style="margin-top:3px"><div class="prog-wrap"><div class="prog-bar"><div class="prog-fill" style="width:${pctRic}%;background:var(--yellow)"></div></div><span class="prog-pct">${pctRic}%</span></div></div>` : '';
+    return `<tr>
+      <td class="mono" style="font-size:12px">${fmtDate(o.data)||'—'}</td>
+      <td><strong>${o.num||'—'}</strong>${urgMap[o.urgenza]||''}</td>
+      <td title="${prodList}"><div style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${nProd} prodotto/i<br><small style="color:var(--text3)">${prodList}</small></div></td>
+      <td style="color:var(--text2);font-size:12px">${o.fornitore||'—'}</td>
+      <td>${statoMap[o.stato]||o.stato}${progBar}</td>
+      <td style="color:var(--text2);font-size:12px;max-width:150px">${o.note||'—'}</td>
+      <td>
+        <div style="display:flex;gap:4px;flex-wrap:wrap">
+          <button class="btn btn-sm" onclick="viewOrdine('${o.id}')">👁</button>
+          ${o.stato==='bozza'?`<button class="btn btn-sm btn-primary" onclick="updateOrdineStato('${o.id}','inviato')">📤</button>`:''}
+          ${o.stato==='inviato'?`<button class="btn btn-sm btn-ok" onclick="updateOrdineStato('${o.id}','approvato')">✅</button>`:''}
+          ${o.stato==='inviato'||o.stato==='approvato'||o.stato==='parziale'?`<button class="btn btn-sm btn-warn" onclick="riceviParziale('${o.id}')">📦 Ricevi</button>`:''}
+          ${o.stato!=='ricevuto'&&o.stato!=='annullato'?`<button class="btn btn-sm btn-danger" onclick="updateOrdineStato('${o.id}','annullato')">✕</button>`:''}
+        </div>
+      </td>
+    </tr>`;
   }).join('');
-
-  renderOrdineDetail(window._ordiniSelectedId);
-}
-
-// FIX [ORDINI]: seleziona ordine nella lista e renderizza dettaglio a dx
-function selectOrdineDetail(id){
-  window._ordiniSelectedId = id;
-  // Aggiorna highlight senza re-render completo
-  document.querySelectorAll('#ordini-list-col .ord-row').forEach(r=>{
-    const sel = r.dataset.oid===id;
-    r.style.borderColor = sel?'var(--accent2)':'var(--border-faint)';
-    r.style.background = sel?'rgba(37,99,235,.05)':'transparent';
-  });
-  renderOrdineDetail(id);
-}
-
-// FIX [ORDINI]: pannello dettaglio con hero % + righe + chip DDT
-function renderOrdineDetail(id){
-  const detailEl = document.getElementById('ordini-detail-col');
-  if(!detailEl) return;
-  const o = loadOrd().find(x=>x.id===id);
-  if(!o){ detailEl.innerHTML='<div class="empty" style="padding:60px 20px;color:var(--text3)">Ordine non trovato</div>'; return; }
-
-  const totO=(o.righe||[]).reduce((s,r)=>s+r.qty,0);
-  const totR=(o.righe||[]).reduce((s,r)=>s+(r.qtyRicevuta||0),0);
-  const pct=totO>0?Math.round(totR/totO*100):0;
-  const heroColor = pct===0?'var(--text3)':(pct<100?'var(--yellow)':'var(--green)');
-  const statoCfg = {
-    bozza:{ico:'📝',cls:'',lbl:'Bozza'},inviato:{ico:'📤',cls:'bg-blue',lbl:'Inviato'},
-    approvato:{ico:'✅',cls:'bg-green',lbl:'Approvato'},parziale:{ico:'📦⏳',cls:'bg-yellow',lbl:'Parziale'},
-    ricevuto:{ico:'📦',cls:'bg-green',lbl:'Ricevuto'},annullato:{ico:'❌',cls:'bg-red',lbl:'Annullato'}
-  };
-  const cfg=statoCfg[o.stato]||{ico:'',cls:'',lbl:o.stato};
-
-  // Chip DDT (uno per ogni ricezione registrata)
-  const ddtChips = (o.ricezioni||[]).map(rc=>{
-    return '<span class="badge" style="background:rgba(45,212,191,.1);color:var(--teal);border-color:rgba(45,212,191,.3);font-size:11px">📄 DDT '+esc(rc.ddtNum||'—')+(rc.ddtData?' &middot; '+fmtDate(rc.ddtData):'')+'</span>';
-  }).join(' ');
-  // Fallback se l'ordine ha solo ddtNum singolo (vecchio formato)
-  const ddtSingleChip = (!ddtChips && o.ddtNum) ? '<span class="badge" style="background:rgba(45,212,191,.1);color:var(--teal);border-color:rgba(45,212,191,.3);font-size:11px">📄 DDT '+esc(o.ddtNum)+(o.ddtData?' &middot; '+fmtDate(o.ddtData):'')+'</span>' : '';
-
-  // Righe prodotti con mini-progress
-  const righeHtml = (o.righe||[]).map(r=>{
-    const rPct = r.qty>0 ? Math.round((r.qtyRicevuta||0)/r.qty*100) : 0;
-    const rColor = rPct===0?'var(--border2)':(rPct<100?'var(--yellow)':'var(--green)');
-    return '<div style="padding:10px 0;border-bottom:1px solid var(--border-faint)">'+
-      '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:4px">'+
-        '<div style="flex:1;min-width:0">'+
-          '<div style="font-weight:600;font-size:13px">'+esc(r.nome||'—')+'</div>'+
-          (r.fornitore?'<div style="font-size:11px;color:var(--text3)">'+esc(r.fornitore)+'</div>':'')+
-        '</div>'+
-        '<div style="font-family:DM Mono,monospace;font-size:12px;color:var(--text2);white-space:nowrap">'+
-          (r.qtyRicevuta||0)+' / '+r.qty+(r.unita?' '+esc(r.unita):'')+
-        '</div>'+
-      '</div>'+
-      '<div class="prog-wrap"><div class="prog-bar"><div class="prog-fill" style="width:'+rPct+'%;background:'+rColor+'"></div></div><span class="prog-pct">'+rPct+'%</span></div>'+
-      (r.note?'<div style="font-size:11px;color:var(--text3);margin-top:4px;font-style:italic">'+esc(r.note)+'</div>':'')+
-    '</div>';
-  }).join('');
-
-  // Azioni in base allo stato
-  const actions = [];
-  if(o.stato==='bozza') actions.push('<button class="btn btn-primary" onclick="updateOrdineStato(\''+esc(o.id)+'\',\'inviato\')">📤 Invia</button>');
-  if(o.stato==='inviato') actions.push('<button class="btn btn-ok" onclick="updateOrdineStato(\''+esc(o.id)+'\',\'approvato\')">✅ Approva</button>');
-  if(['inviato','approvato','parziale'].includes(o.stato)) actions.push('<button class="btn btn-warn" onclick="riceviParziale(\''+esc(o.id)+'\')">📦 Ricevi merce</button>');
-  actions.push('<button class="btn btn-sm" onclick="viewOrdine(\''+esc(o.id)+'\')">👁 Apri</button>');
-  if(o.stato!=='ricevuto'&&o.stato!=='annullato') actions.push('<button class="btn btn-sm btn-danger" onclick="updateOrdineStato(\''+esc(o.id)+'\',\'annullato\')">✕ Annulla</button>');
-
-  detailEl.innerHTML =
-    '<div style="padding:6px 4px">'+
-      // Header
-      '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:14px">'+
-        '<div>'+
-          '<div style="font-family:Cormorant Garamond,serif;font-size:24px;font-weight:700;color:var(--accent);line-height:1.1">'+esc(o.num||'—')+'</div>'+
-          '<div style="font-size:12px;color:var(--text3);margin-top:2px">'+esc(o.fornitore||'—')+' &middot; '+fmtDate(o.data)+'</div>'+
-        '</div>'+
-        '<span class="badge '+cfg.cls+'" style="font-size:11px">'+cfg.ico+' '+cfg.lbl+'</span>'+
-      '</div>'+
-      // Hero metric % + chip DDT
-      '<div style="display:flex;align-items:center;gap:18px;padding:14px;background:var(--bg3);border-radius:10px;margin-bottom:14px">'+
-        '<div style="font-family:Cormorant Garamond,serif;font-size:48px;font-weight:700;color:'+heroColor+';line-height:1">'+pct+'<span style="font-size:24px;color:var(--text3)">%</span></div>'+
-        '<div style="flex:1">'+
-          '<div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:2px">Ricezione</div>'+
-          '<div style="font-family:DM Mono,monospace;font-size:14px;color:var(--text2)">'+totR+' / '+totO+' unità</div>'+
-          ((ddtChips||ddtSingleChip)?'<div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:4px">'+(ddtChips||ddtSingleChip)+'</div>':'')+
-        '</div>'+
-      '</div>'+
-      // Note
-      (o.note?'<div style="padding:8px 12px;background:rgba(217,119,6,.06);border-left:3px solid var(--yellow);border-radius:4px;margin-bottom:12px;font-size:12px;color:var(--text2)">'+esc(o.note)+'</div>':'')+
-      // Righe
-      '<div style="margin-bottom:14px">'+
-        '<div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px">Prodotti ('+(o.righe||[]).length+')</div>'+
-        (righeHtml||'<div style="color:var(--text3);font-size:13px;padding:10px 0">Nessun prodotto</div>')+
-      '</div>'+
-      // Azioni
-      '<div style="display:flex;gap:6px;flex-wrap:wrap">'+actions.join('')+'</div>'+
-    '</div>';
 }
 
 // ── MODAL ORDINE ──
@@ -5914,27 +4868,6 @@ function viewOrdine(id){
 buildProdDatalist();
 renderDashboard();
 initialSync();
-// FIX [INFRASTRUTTURA]: auto-sync silenzioso ogni 3 minuti — previene perdita dati se browser svuota localStorage
-setInterval(()=>{ if(IS_ONLINE&&SUPA_OK) forceSave(true); }, 3*60*1000);
-
-// FIX [UI/UX]: header dropdown magazzino
-function toggleHdrDrop(id){
-  const menu=document.getElementById(id+'-menu');
-  if(!menu) return;
-  menu.classList.toggle('open');
-}
-document.addEventListener('click',e=>{
-  if(!e.target.closest('.hdr-ddrop')) document.querySelectorAll('.hdr-ddrop-menu.open').forEach(m=>m.classList.remove('open'));
-});
-
-// FIX [UI/UX]: sidebar drawer per tablet
-function toggleSidebar(){
-  const sb=document.querySelector('.sidebar');
-  const bd=document.getElementById('sidebar-backdrop');
-  if(!sb||!bd) return;
-  const open=sb.classList.toggle('open');
-  bd.classList.toggle('show', open);
-}
 
 // ══════════════════════════════════════════
 // FEATURE 2: SCAN BARCODE REAGENTI per processatore/coloratore
@@ -5967,38 +4900,23 @@ async function scanReagente(target){
 function riceviParziale(id){
   const ords = loadOrd();
   const o = ords.find(x=>x.id===id); if(!o) return;
-  const prods = loadP();
   const info = o.righe.map((r,i)=>{
     const ricevuta = r.qtyRicevuta||0;
     const restante = r.qty - ricevuta;
+    // Mostra storico ricezioni per questa riga
     const storico = (r.ricezioni||[]).map(rc=>
       `<span style="font-size:10px;background:var(--green-bg);color:var(--green);border-radius:3px;padding:1px 5px;border:1px solid #a7f3d0">+${rc.qty} ${rc.ddt||''} ${rc.data?new Date(rc.data).toLocaleDateString('it-IT'):''}</span>`
     ).join(' ');
-    const found = prods.find(x=>x.nome.toLowerCase()===r.nome.toLowerCase());
-    const matchBadge = restante>0
-      ? (found
-          ? `<span style="font-size:10px;color:var(--green);font-weight:600">✅ ${esc(found.nome)}</span>`
-          : `<span style="font-size:10px;color:var(--yellow);font-weight:600">⚠️ Non trovato in magazzino — verrà creato</span>`)
-      : '';
-    return `<div style="padding:10px 0;border-bottom:1px solid var(--border);font-size:13px">
-      <div style="margin-bottom:5px">
-        <strong>${esc(r.nome)}</strong>
-        <div style="font-size:11px;color:var(--text3)">Ordinati: ${r.qty} ${r.unita||'pz'} · Ricevuti: ${ricevuta} · Restano: ${Math.max(0,restante)}</div>
-        ${storico?'<div style="margin-top:3px;display:flex;flex-wrap:wrap;gap:3px">'+storico+'</div>':''}
-        ${matchBadge?'<div style="margin-top:3px">'+matchBadge+'</div>':''}
-      </div>
-      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
-        <div style="display:flex;align-items:center;gap:4px">
-          <label style="font-size:10px;margin:0;color:var(--text3)">Arrivo:</label>
-          <input type="number" class="recv-parz-qty" data-idx="${i}" value="${Math.max(0,restante)}" min="0" style="width:65px;text-align:center" ${restante<=0?'disabled':''}>
+    return `<div style="padding:8px 0;border-bottom:1px solid var(--border);font-size:13px">
+      <div style="display:flex;align-items:center;gap:8px">
+        <div style="flex:1">
+          <strong>${r.nome}</strong>
+          <div style="font-size:11px;color:var(--text3)">Ordinati: ${r.qty} ${r.unita||'pz'} · Ricevuti: ${ricevuta} · Restano: ${Math.max(0,restante)}</div>
+          ${storico?'<div style="margin-top:3px;display:flex;flex-wrap:wrap;gap:3px">'+storico+'</div>':''}
         </div>
-        <div style="display:flex;align-items:center;gap:4px">
-          <label style="font-size:10px;margin:0;color:var(--text3)">Lotto:</label>
-          <input type="text" class="recv-parz-lotto" data-idx="${i}" placeholder="opzionale" style="width:110px" ${restante<=0?'disabled':''}>
-        </div>
-        <div style="display:flex;align-items:center;gap:4px">
-          <label style="font-size:10px;margin:0;color:var(--text3)">Scadenza:</label>
-          <input type="date" class="recv-parz-scad" data-idx="${i}" style="width:130px" ${restante<=0?'disabled':''}>
+        <div style="display:flex;align-items:center;gap:5px">
+          <label style="font-size:10px;margin:0">Arrivo:</label>
+          <input type="number" class="recv-parz-qty" data-idx="${i}" value="${Math.max(0,restante)}" min="0" max="${restante}" style="width:70px;text-align:center" ${restante<=0?'disabled':''}>
         </div>
       </div>
     </div>`;
@@ -6031,11 +4949,6 @@ function confirmRicezioneParziale(id){
   const scanFile = document.getElementById('recv-parz-scan')?.files?.[0];
   const prods = loadP();
   const movs = loadM();
-  // Indici per lotto e scadenza per riga
-  const lottoByIdx = {};
-  document.querySelectorAll('.recv-parz-lotto').forEach(inp=>{ lottoByIdx[parseInt(inp.dataset.idx)] = inp.value.trim(); });
-  const scadByIdx = {};
-  document.querySelectorAll('.recv-parz-scad').forEach(inp=>{ scadByIdx[parseInt(inp.dataset.idx)] = inp.value; });
   if(!o.ddtList) o.ddtList = [];
   const now = new Date().toISOString();
   const ddtEntry = { data: now, rif: ddt, righe: [] };
@@ -6046,33 +4959,15 @@ function confirmRicezioneParziale(id){
     if(qtyArrivo <= 0) return;
     haRicevuto = true;
     const r = o.righe[idx];
-    const lotto = lottoByIdx[idx]||'';
-    const scad = scadByIdx[idx]||'';
     r.qtyRicevuta = (r.qtyRicevuta||0) + qtyArrivo;
+    // Storico ricezioni per riga — associa al DDT
     if(!r.ricezioni) r.ricezioni = [];
-    r.ricezioni.push({ qty: qtyArrivo, ddt: ddt, data: now, lotto, scadenza: scad });
-    ddtEntry.righe.push({nome:r.nome, qty:qtyArrivo, lotto, scadenza: scad});
-    // Carico magazzino — replica logica "Carica" da scan
-    let p = prods.find(x=>x.nome.toLowerCase()===r.nome.toLowerCase());
-    if(p){
-      // Prodotto trovato: aggiorna qty, lotto, scadenza
-      p.qty += qtyArrivo;
-      if(p.qty_init===undefined) p.qty_init = qtyArrivo;
-      if(lotto) p.lotto = lotto;
-      if(scad) p.scadenza = scad;
-    } else {
-      // Prodotto non trovato: crea nuovo
-      const cat = smartCategorize(r.nome, o.fornitore||'', '');
-      p = {
-        id: genId(), nome: r.nome, cat,
-        fornitore: o.fornitore||'',
-        barcode: '', lotto, scadenza: scad,
-        qty: qtyArrivo, qty_init: qtyArrivo,
-        unita: r.unita||'pz', min: 0, pos: '', note: ''
-      };
-      prods.push(p);
-    }
-    movs.unshift({id:genId(),ts:now,tipo:'carico',prod:r.nome,prodId:p.id,qty:qtyArrivo,lotto,note:'Ricezione '+o.num+(ddt?' — DDT '+ddt:'')});
+    r.ricezioni.push({ qty: qtyArrivo, ddt: ddt, data: now });
+    ddtEntry.righe.push({nome:r.nome, qty:qtyArrivo});
+    // Carica in magazzino
+    const p = prods.find(x=>x.nome.toLowerCase()===r.nome.toLowerCase());
+    if(p) p.qty += qtyArrivo;
+    movs.unshift({id:genId(),ts:now,tipo:'carico',prod:r.nome,prodId:p?.id||'',qty:qtyArrivo,lotto:'',note:'Ricezione '+o.num+(ddt?' — '+ddt:'')});
   });
   if(!haRicevuto){ toast('Nessuna quantità inserita','error'); return; }
   const tuttoRicevuto = o.righe.every(r => (r.qtyRicevuta||0) >= r.qty);
@@ -6204,106 +5099,6 @@ function generaOrdiniDaChecklist(){
   closeModal('modal-ordine-detail');
   showView('ordini');
   toast('🛒 '+creati.length+' ordine/i creati: '+creati.join(', '),'success');
-}
-
-// ══════════════════════════════════════════
-// FEATURE 6B: VERIFICA INVENTARIO FISICO
-// ══════════════════════════════════════════
-function openInventarioFisico(){
-  const prods = loadP().slice().sort((a,b)=>(a.cat||'').localeCompare(b.cat||'')||(a.nome||'').localeCompare(b.nome||''));
-  const byCat={};
-  prods.forEach(p=>{ if(!byCat[p.cat]) byCat[p.cat]=[]; byCat[p.cat].push(p); });
-  let html='';
-  for(const [cat,items] of Object.entries(byCat)){
-    html+=`<div style="margin-bottom:12px">
-      <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;padding:8px 0 4px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--bg)">${CAT_ICON[cat]||'📌'} ${esc(cat)}</div>`;
-    items.forEach(p=>{
-      const qColor=p.qty<=0?'var(--red)':p.min>0&&p.qty<=p.min?'var(--yellow)':'var(--accent2)';
-      html+=`<div class="inv-fisico-row" data-id="${p.id}" style="display:flex;align-items:center;gap:10px;padding:9px 4px;border-bottom:1px solid var(--border2);flex-wrap:wrap;transition:background .2s">
-        <input type="checkbox" class="if-check" data-id="${p.id}" onchange="_updateInvFisicoProgress()" style="width:20px;height:20px;flex-shrink:0;accent-color:var(--green);cursor:pointer">
-        <div style="flex:1;min-width:130px">
-          <div style="font-size:13px;font-weight:500">${esc(p.nome)}</div>
-          <div style="font-size:10px;color:var(--text3);margin-top:1px">${p.fornitore?esc(p.fornitore)+' · ':''} ${p.pos?'📍'+esc(p.pos):''}</div>
-          <div style="display:flex;gap:5px;margin-top:5px;flex-wrap:wrap">
-            <input type="text" class="if-lotto" data-id="${p.id}" value="${esc(p.lotto||'')}" placeholder="Lotto" style="width:95px;font-size:11px;padding:3px 6px">
-            <input type="date" class="if-scad" data-id="${p.id}" value="${p.scadenza||''}" style="width:128px;font-size:11px;padding:3px 6px">
-          </div>
-        </div>
-        <div style="text-align:center;min-width:60px">
-          <div style="font-size:10px;color:var(--text3);margin-bottom:2px">Sistema</div>
-          <div style="font-family:'DM Mono',monospace;font-size:18px;font-weight:700;color:${qColor}">${p.qty}</div>
-          <div style="font-size:10px;color:var(--text3)">${esc(p.unita||'pz')}</div>
-        </div>
-        <div style="text-align:center;min-width:80px">
-          <div style="font-size:10px;color:var(--text3);margin-bottom:2px">Rilevata</div>
-          <input type="number" class="if-qty" data-id="${p.id}" data-sys="${p.qty}" value="${p.qty}" step="0.1" min="0" style="width:72px;text-align:center;font-size:16px;font-weight:700;font-family:'DM Mono',monospace" oninput="_updateInvFisicoRow(this)">
-          <div style="font-size:10px;color:var(--text3)">${esc(p.unita||'pz')}</div>
-        </div>
-        <div class="if-delta" data-id="${p.id}" style="min-width:44px;text-align:center;font-size:12px;font-weight:700"></div>
-      </div>`;
-    });
-    html+=`</div>`;
-  }
-  document.getElementById('inv-fisico-body').innerHTML=html;
-  _updateInvFisicoProgress();
-  document.getElementById('modal-inventario-fisico').classList.add('open');
-}
-
-function _updateInvFisicoRow(inp){
-  const id=inp.dataset.id;
-  const sys=parseFloat(inp.dataset.sys)||0;
-  const ril=parseFloat(inp.value)||0;
-  const delta=+(ril-sys).toFixed(4);
-  const row=document.querySelector(`.inv-fisico-row[data-id="${id}"]`);
-  const deltaEl=document.querySelector(`.if-delta[data-id="${id}"]`);
-  const lottoEl=document.querySelector(`.if-lotto[data-id="${id}"]`);
-  const scadEl=document.querySelector(`.if-scad[data-id="${id}"]`);
-  if(Math.abs(delta)<0.001){
-    deltaEl.textContent='';
-    row.style.background='';
-    if(lottoEl) lottoEl.style.borderColor='';
-    if(scadEl) scadEl.style.borderColor='';
-  } else {
-    deltaEl.innerHTML=`<span style="color:${delta>0?'var(--green)':'var(--red)'}">${delta>0?'+':''}${delta}</span>`;
-    row.style.background=delta>0?'rgba(5,150,105,.07)':'rgba(220,38,38,.07)';
-    // Evidenzia lotto/scadenza per ricordare di verificarli
-    const borderColor=delta>0?'var(--green)':'var(--red)';
-    if(lottoEl) lottoEl.style.borderColor=borderColor;
-    if(scadEl) scadEl.style.borderColor=borderColor;
-  }
-}
-
-function _updateInvFisicoProgress(){
-  const total=document.querySelectorAll('.if-check').length;
-  const done=document.querySelectorAll('.if-check:checked').length;
-  const el=document.getElementById('inv-fisico-progress');
-  if(el) el.textContent=done+' / '+total+' verificati';
-}
-
-function applicaRettificheInventario(){
-  _takeSnapshot('Verifica inventario fisico');
-  const prods=loadP(); const movs=loadM();
-  const now=new Date().toISOString(); let n=0;
-  document.querySelectorAll('.if-qty').forEach(inp=>{
-    const sys=parseFloat(inp.dataset.sys)||0;
-    const ril=parseFloat(inp.value)||0;
-    if(Math.abs(ril-sys)<0.001) return;
-    const p=prods.find(x=>x.id===inp.dataset.id); if(!p) return;
-    const delta=ril-sys;
-    const lotto=document.querySelector(`.if-lotto[data-id="${p.id}"]`)?.value.trim()||'';
-    const scad=document.querySelector(`.if-scad[data-id="${p.id}"]`)?.value||'';
-    p.qty=ril;
-    if(lotto) p.lotto=lotto;
-    if(scad) p.scadenza=scad;
-    movs.unshift({id:genId(),ts:now,tipo:delta>0?'carico':'scarico',prod:p.nome,prodId:p.id,qty:Math.abs(delta),lotto,note:'Rettifica inventario fisico'});
-    n++;
-  });
-  if(!n){ toast('Nessuna correzione da applicare','error'); return; }
-  saveP(prods); saveM(movs);
-  closeModal('modal-inventario-fisico');
-  if(currentView==='inventario') renderInv();
-  if(currentView==='dashboard') renderDashboard();
-  toast(`✅ ${n} rettifica/he applicate`,'success');
 }
 
 // ══════════════════════════════════════════
@@ -6472,10 +5267,11 @@ function cercaPerLotto(lotto){
 // Sostituisci saveSchede con versione che synca su Supabase
 const _origSaveSchede = saveSchede;
 saveSchede = function(arr){
-  _setCache(LS_SCHEDE, _stampMod(arr));
+  const stamped = _stampMod(arr);
+  _setCache(LS_SCHEDE, stamped);
   if(!SUPA_OK) return;
   if(!IS_ONLINE){ enqueue({type:'schede'}); return; }
-  supaFetch('schede_tecniche','POST',arr,'?on_conflict=id');
+  supaFetch('schede_tecniche','POST',stamped,'?on_conflict=id');
 };
 
 // ══════════════════════════════════════════
