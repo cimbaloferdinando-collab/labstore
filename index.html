@@ -942,6 +942,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
         <div class="pg-title">Inventario</div>
         <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
           <span style="font-size:11px;color:var(--text3)" id="inv-count">—</span>
+          <button class="hbtn2 warn" onclick="openDuplicatiModal()" title="Trova prodotti duplicati">⚠ Duplicati</button>
           <button class="hbtn2 ok" onclick="apriCaricoScan()">⬆ Carico</button>
           <button class="hbtn2 warn" onclick="openModalScarica()">⬇ Scarico</button>
           <button class="hbtn2" onclick="openDDTModal()">📷 DDT</button>
@@ -1968,6 +1969,24 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
   </div>
 </div>
 
+
+<!-- ══════════════════════════════
+     MODAL: DUPLICATI INVENTARIO
+     ══════════════════════════════ -->
+<div class="modal-overlay" id="modal-duplicati">
+  <div class="modal" style="width:720px;max-height:92vh;overflow-y:auto">
+    <div class="modal-title">⚠ Prodotti duplicati</div>
+    <div style="font-size:12px;color:var(--text3);margin-bottom:14px">
+      Stesso <b>nome</b> + <b>fornitore</b> registrato più volte. Verifica se sono lotti diversi (legittimi) o veri doppioni da eliminare.
+    </div>
+    <div id="dup-list-content">
+      <div class="empty-state"><div class="ico">✓</div><div>Nessun duplicato trovato</div></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('modal-duplicati')">Chiudi</button>
+    </div>
+  </div>
+</div>
 
 <!-- ══════════════════════════════
      MODAL: IHC
@@ -6577,6 +6596,82 @@ if (typeof viewSchedaDoc !== 'function') window.viewSchedaDoc = function(id, kin
     else w.document.write(`<img src="${url}" style="max-width:100%;height:auto">`);
   }
 };
+
+// ─── DUPLICATI INVENTARIO ─────
+window.openDuplicatiModal = function(){
+  if (typeof loadP !== 'function') { toast('Funzione non disponibile', 'err'); return; }
+  renderDuplicatiList();
+  if (typeof openModal === 'function') openModal('modal-duplicati');
+  else document.getElementById('modal-duplicati').classList.add('open');
+};
+
+function renderDuplicatiList(){
+  const container = document.getElementById('dup-list-content');
+  if (!container) return;
+  const prods = loadP();
+  // Raggruppa per chiave normalizzata: nome lowercase trim + fornitore lowercase trim
+  const norm = s => (s||'').toString().toLowerCase().trim().replace(/\s+/g,' ');
+  const groups = {};
+  prods.forEach(p => {
+    const key = norm(p.nome) + '||' + norm(p.fornitore);
+    (groups[key] = groups[key] || []).push(p);
+  });
+  // Filtra solo i gruppi con >= 2 elementi
+  const dups = Object.values(groups).filter(g => g.length > 1);
+  if (!dups.length){
+    container.innerHTML = '<div class="empty-state"><div class="ico">✓</div><div>Nessun duplicato trovato</div></div>';
+    return;
+  }
+  // Ordina i gruppi per numero di duplicati desc
+  dups.sort((a,b) => b.length - a.length);
+  container.innerHTML = dups.map((group, gi) => {
+    const sample = group[0];
+    // Distinguo lotti diversi vs lotti uguali (= veri doppioni)
+    const lotsCount = {};
+    group.forEach(p => { const l = (p.lotto||'(senza lotto)').trim(); lotsCount[l] = (lotsCount[l]||0)+1; });
+    const trueDupLots = Object.entries(lotsCount).filter(([l,c]) => c > 1).map(([l,c]) => `${l} (×${c})`);
+
+    return `<div style="border:1px solid var(--border);border-radius:var(--r);margin-bottom:10px;overflow:hidden">
+      <div style="background:var(--yellow-bg);padding:10px 14px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--yellow-bd)">
+        <span style="font-weight:700;color:var(--text)">${esc(sample.nome||'—')}</span>
+        <span style="font-size:11px;color:var(--text3)">${esc(sample.fornitore||'(senza fornitore)')}</span>
+        <span class="badge bg-yellow" style="margin-left:auto">${group.length} record</span>
+        ${trueDupLots.length ? `<span class="badge bg-red" title="Stesso lotto registrato più volte: ${trueDupLots.join(', ')}">⚠ Stesso lotto</span>` : ''}
+      </div>
+      <table class="tbl">
+        <thead><tr><th>Lotto</th><th>Scadenza</th><th>Giac.</th><th>Categoria</th><th style="text-align:right">Azioni</th></tr></thead>
+        <tbody>
+        ${group.map(p => `<tr>
+          <td class="mono">${esc(p.lotto||'—')}</td>
+          <td class="mono">${p.scadenza ? new Date(p.scadenza).toLocaleDateString('it-IT',{month:'2-digit',year:'2-digit'}) : '—'}</td>
+          <td class="mono">${p.qty != null ? p.qty : (p.giacenza||0)}</td>
+          <td>${esc(p.cat||'—')}</td>
+          <td style="text-align:right;white-space:nowrap">
+            <button class="btn btn-sm" onclick="openEditModal('${p.id}');closeModal('modal-duplicati')" title="Modifica">✎</button>
+            <button class="btn btn-sm btn-danger" onclick="deleteDuplicatoProduct('${p.id}')" title="Elimina questo record">🗑</button>
+          </td>
+        </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>`;
+  }).join('');
+}
+
+window.deleteDuplicatoProduct = function(id){
+  if (typeof loadP !== 'function') return;
+  const p = loadP().find(x => x.id === id);
+  if (!p) return;
+  const msg = `Eliminare il prodotto:\n\n${p.nome}\nLotto: ${p.lotto || '(nessuno)'}\nGiacenza: ${p.qty != null ? p.qty : (p.giacenza||0)}\n\nL'operazione è annullabile con Undo.`;
+  if (!confirm(msg)) return;
+  if (typeof deleteProduct === 'function'){
+    deleteProduct(id);
+    // ricarica la lista duplicati dopo
+    setTimeout(renderDuplicatiList, 200);
+  } else {
+    toast('Funzione deleteProduct non disponibile', 'err');
+  }
+};
+
 // Allega scan ordine/DDT (stub se non disponibili)
 if (typeof allegaScanOrdine !== 'function') window.allegaScanOrdine = function(id){
   toast('Apri il dettaglio ordine per allegare', 'warn');
