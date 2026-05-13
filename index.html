@@ -3282,28 +3282,30 @@ function renderInv(){
   if(!prods.length){ tb.innerHTML=`<tr><td colspan="7"><div class="empty"><div class="e-ico">📦</div><p>Nessun prodotto trovato</p></div></td></tr>`; return; }
   tb.innerHTML=prods.map(p=>{
     const tracked = isBidoneTracked(p);
-    let qtyCell;
+    // Colonna principale: Ini → Att (sempre, identico a prima)
+    let qtyCell = `
+      <div style="display:flex;align-items:center;justify-content:center;gap:8px">
+        <span style="font-family:'DM Mono',monospace;font-size:17px;font-weight:700;color:var(--red)">${p.qty_init!==undefined?p.qty_init:'—'}</span>
+        <span style="color:var(--text3);font-size:13px">→</span>
+        <span style="font-family:'DM Mono',monospace;font-size:17px;font-weight:700;color:${p.qty<=0?'var(--red)':p.min>0&&p.qty<=p.min?'var(--yellow)':'var(--green)'}">${p.qty}</span>
+      </div>
+    `;
+    // Per reagenti/coloranti: aggiungo riga con dettaglio bidoni sotto qty
     if (tracked) {
       const c = countBidoniProd(p.id);
-      qtyCell = `
-        <div style="display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap">
-          <span class="badge bg-blue" style="font-size:10px;padding:2px 7px" title="Bidoni chiusi in magazzino">🔒 ${c.chiusi}</span>
-          ${c.aperti > 0 ? `<span class="badge bg-yellow" style="font-size:10px;padding:2px 7px" title="Bidone in uso">🔓 ${c.aperti}</span>` : '<span class="badge" style="font-size:10px;padding:2px 7px;background:var(--bg4);color:var(--text3)">🔓 0</span>'}
-          ${c.smaltiti > 0 ? `<span style="font-size:9px;color:var(--text3)" title="Storico smaltiti">✕${c.smaltiti}</span>` : ''}
+      qtyCell += `
+        <div style="display:flex;align-items:center;justify-content:center;gap:6px;margin-top:4px;flex-wrap:wrap">
+          <span class="badge bg-blue" style="font-size:9px;padding:1px 6px" title="Bidoni chiusi in magazzino">🔒 ${c.chiusi}</span>
+          ${c.aperti > 0
+            ? `<span class="badge bg-yellow" style="font-size:9px;padding:1px 6px" title="Bidone in uso">🔓 ${c.aperti}</span>`
+            : '<span class="badge" style="font-size:9px;padding:1px 6px;background:var(--bg4);color:var(--text3)" title="Nessun bidone aperto">🔓 0</span>'}
+          ${c.smaltiti > 0 ? `<span style="font-size:9px;color:var(--text3)" title="Bidoni smaltiti storici">✕${c.smaltiti}</span>` : ''}
         </div>
-        ${p.min?`<div style="font-size:10px;color:var(--text3);margin-top:2px">min: ${p.min}</div>`:''}
-      `;
-    } else {
-      qtyCell = `
-        <div style="display:flex;align-items:center;justify-content:center;gap:8px">
-          <span style="font-family:'DM Mono',monospace;font-size:17px;font-weight:700;color:var(--red)">${p.qty_init!==undefined?p.qty_init:'—'}</span>
-          <span style="color:var(--text3);font-size:13px">→</span>
-          <span style="font-family:'DM Mono',monospace;font-size:17px;font-weight:700;color:${p.qty<=0?'var(--red)':p.min>0&&p.qty<=p.min?'var(--yellow)':'var(--green)'}">${p.qty}</span>
-        </div>
-        ${p.min?`<div style="font-size:10px;color:var(--text3);margin-top:2px">min: ${p.min}</div>`:''}
       `;
     }
-    const expandBtn = tracked ? `<span class="exp-arrow" style="cursor:pointer;margin-right:4px" onclick="event.stopPropagation();toggleBidoniRow('${p.id}',this)">▶</span>` : '';
+    if(p.min) qtyCell += `<div style="font-size:10px;color:var(--text3);margin-top:2px">min: ${p.min}</div>`;
+
+    const expandBtn = tracked ? `<span class="exp-arrow" style="cursor:pointer;margin-right:4px;display:inline-block" onclick="event.stopPropagation();toggleBidoniRow('${p.id}',this)" title="Mostra/nascondi bidoni">▶</span>` : '';
     let rows = `<tr id="inv-row-${p.id}">
       <td>${expandBtn}<span style="font-weight:500">${p.nome}</span>${p.fornitore?`<div style="font-size:11px;color:var(--text3);margin-left:${tracked?'18px':'0'}">${p.fornitore}</div>`:''}${p.pos?`<div style="font-size:11px;color:var(--text3);margin-left:${tracked?'18px':'0'}">📍 ${p.pos}</div>`:''}</td>
       <td><span class="cat-badge">${CAT_ICON[p.cat]||'📌'} ${p.cat}</span></td>
@@ -6489,17 +6491,44 @@ async function openBidone(bidoneId) {
 }
 
 // Smaltimento di un bidone (chiuso o aperto).
+// Effetti: bidone → smaltito, p.qty -= 1, movimento di scarico loggato.
 async function smaltisciBidone(bidoneId) {
   const all = loadBidoni();
   const idx = all.findIndex(b => b.id === bidoneId);
   if (idx < 0) { toast('Bidone non trovato', 'err'); return false; }
   const b = all[idx];
   if (b.stato === 'smaltito') { toast('Bidone già smaltito', 'warn'); return false; }
+  const wasAperto = (b.stato === 'aperto');
   b.stato = 'smaltito';
   b.data_smaltimento = new Date().toISOString().slice(0,10);
   all[idx] = b;
   await saveBidoniArr(all);
-  _recomputeQtyFromBidoni(b.prod_id);
+  // Decrementa qty del prodotto + log movimento
+  try {
+    const prods = loadP();
+    const pi = prods.findIndex(p => p.id === b.prod_id);
+    if (pi >= 0) {
+      const p = prods[pi];
+      p.qty = Math.max(0, (parseInt(p.qty)||0) - 1);
+      prods[pi] = p;
+      if (typeof saveP === 'function') await saveP(prods); else _setCache(LS_P, _stampMod(prods));
+      // Log movimento scarico
+      if (typeof loadM === 'function' && typeof saveM === 'function') {
+        const movs = loadM();
+        movs.unshift({
+          id: (typeof genId === 'function' ? genId() : 'mov_' + Date.now()),
+          ts: new Date().toISOString(),
+          tipo: 'scarico',
+          prod: p.nome,
+          prodId: p.id,
+          qty: 1,
+          lotto: b.lotto || '',
+          note: wasAperto ? 'Smaltimento bidone aperto #' + b.id.slice(-6) : 'Smaltimento bidone chiuso #' + b.id.slice(-6)
+        });
+        await saveM(movs);
+      }
+    }
+  } catch(e) { console.warn('[smaltisciBidone qty/mov]', e); }
   toast('Bidone smaltito ✓', 'ok');
   return true;
 }
@@ -6535,29 +6564,17 @@ async function createBidoniChiusi(prodId, n, opts) {
 }
 
 // Ricalcola qty del prodotto in base ai bidoni attivi (chiusi + aperti)
+// DISATTIVATA: la richiesta dell'utente è che bidoni sia info aggiuntiva,
+// non sostitutiva. Quindi qty/qty_init restano il dato originale (legato
+// a carico DDT e scarico classico) e i bidoni sono un layer parallelo.
 function _recomputeQtyFromBidoni(prodId) {
-  const prods = loadP();
-  const idx = prods.findIndex(p => p.id === prodId);
-  if (idx < 0) return;
-  const prod = prods[idx];
-  if (!isBidoneTracked(prod)) return; // solo reagenti/coloranti
-  const counts = countBidoniProd(prodId);
-  prod.qty = counts.attivi;
-  // qty_init: lo lasciamo invariato (storico)
-  prods[idx] = prod;
-  _setCache(LS_P, _stampMod(prods));
+  // No-op intenzionale. Manteniamo la funzione per non rompere chiamate esistenti.
+  return;
 }
 
-// Ricalcola TUTTI i qty dei prodotti tracciati a bidoni (utility)
+// Stessa cosa: niente ricalcolo aggregato
 function recomputeAllBidoniQty() {
-  const prods = loadP();
-  let changed = false;
-  prods.forEach((p, i) => {
-    if (!isBidoneTracked(p)) return;
-    const counts = countBidoniProd(p.id);
-    if (p.qty !== counts.attivi) { p.qty = counts.attivi; prods[i] = p; changed = true; }
-  });
-  if (changed) _setCache(LS_P, _stampMod(prods));
+  return;
 }
 
 /* ─── MIGRAZIONE AUTOMATICA: genera bidoni 'chiuso' per i prodotti
