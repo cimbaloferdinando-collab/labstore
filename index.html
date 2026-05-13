@@ -437,7 +437,21 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
 .strip-ord-pct.zero{color:var(--text3)}
 .strip-empty{font-size:11px;color:var(--text3);font-style:italic;padding:8px 0}
 
-@media(max-width:1100px){.dash-strip{grid-template-columns:1fr;gap:0}.strip-sep{display:none}.strip-cell{padding:14px 16px;border-bottom:1px solid var(--border)}.strip-cell:last-child{border-bottom:none}}
+/* ─── Classi CSS usate dal logic file (render originale) ─── */
+.cat-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:999px;background:var(--bg4);border:1px solid var(--border);color:var(--text2);font-size:11px;font-weight:600;white-space:nowrap}
+.prog-wrap{display:flex;align-items:center;gap:6px;min-width:90px}
+.prog-bar{flex:1;height:6px;background:var(--border);border-radius:99px;overflow:hidden;min-width:48px}
+.prog-fill{height:100%;border-radius:99px;transition:width .25s}
+.prog-pct{font-family:'DM Mono',monospace;font-size:10px;font-weight:600;color:var(--text3);min-width:32px;text-align:right}
+.empty{text-align:center;padding:36px 16px;color:var(--text3)}
+.empty .e-ico,.e-ico{font-size:38px;display:block;margin-bottom:10px;opacity:.6}
+.empty p{font-size:13px;margin-top:2px}
+.page-title{font-family:'Libre Baskerville',serif;font-size:22px;font-weight:700;color:var(--accent);margin-bottom:2px}
+.page-sub{font-size:12px;color:var(--text3);margin-bottom:14px}
+
+/* Variante bottoni semi-allineata al logic file */
+.btn-waste{background:#fef3c7;color:#92400e;border-color:#fcd34d}
+.btn-waste:hover{background:#fde68a}
 
 </style>
 </head>
@@ -482,6 +496,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
     <div class="rail-item" data-view="ihc"          title="IHC">🔬</div>
     <div class="rail-div"></div>
     <div class="rail-item" data-view="inventario"   title="Inventario">▦</div>
+    <div class="rail-item" data-view="bidoni"        title="Bidoni reagenti/coloranti">🪣</div>
     <div class="rail-item" data-view="movimenti"    title="Movimenti">↕</div>
     <div class="rail-item" data-view="allerte"      title="Allerte" style="position:relative">
       !<span class="rail-badge hidden" id="rail-badge-allerte">0</span>
@@ -506,10 +521,14 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
     <!-- ══════════════════════════════════════════════════════════════
          VIEW: DASHBOARD (home)
          ══════════════════════════════════════════════════════════════ -->
+    <!-- ══════════════════════════════════════════════════════════════
+         VIEW: DASHBOARD (home) — clone preview pixel-perfect
+         IDs custom popolati dal glue layer con dati reali
+         ══════════════════════════════════════════════════════════════ -->
     <div class="view active" data-view="home" id="view-dashboard">
 
       <!-- GREETING -->
-      <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px">
         <div>
           <div style="font-family:'Libre Baskerville',serif;font-size:28px;font-weight:700;color:var(--accent);letter-spacing:-.3px" id="dash-greeting">Buongiorno, Ferdinando</div>
           <div style="font-size:11px;color:var(--text3);margin-top:4px;text-transform:uppercase;letter-spacing:.06em" id="dash-subtitle">caricamento…</div>
@@ -520,175 +539,165 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
         </div>
       </div>
 
-      <!-- STRIP RIEPILOGO orizzontale (header bar) -->
-      <div class="dash-strip">
-        <!-- CASI PROCESSATI -->
-        <div class="strip-cell" onclick="showView('tracciabilita')">
-          <div class="strip-lbl">Casi processati</div>
-          <div class="strip-val" id="kpi-casi-val">—</div>
-          <div class="strip-meta" id="kpi-casi-breakdown"></div>
-          <div class="strip-delta" id="kpi-casi-delta"></div>
-        </div>
-        <div class="strip-sep"></div>
+      <!-- KPI 4-col -->
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px">
 
-        <!-- RIFIUTI ATTIVI -->
-        <div class="strip-cell strip-cell-rifiuti" onclick="showView('rifiuti')">
-          <div class="strip-lbl">Rifiuti attivi</div>
-          <div id="kpi-rifiuti-content">
-            <div class="rifiuti-grid">
-              <div class="rifiuti-half">
-                <div class="rifiuti-half-lbl">Solidi</div>
-                <div class="rifiuti-half-row">
-                  <span class="rifiuti-num orange" id="rif-strip-sol-p">0</span><span class="rifiuti-tag">pieni</span>
-                  <span class="rifiuti-num gray" id="rif-strip-sol-v">0</span><span class="rifiuti-tag">vuoti</span>
-                </div>
-              </div>
-              <div class="rifiuti-half">
-                <div class="rifiuti-half-lbl">Liquidi</div>
-                <div class="rifiuti-half-row">
-                  <span class="rifiuti-num blue" id="rif-strip-liq-p">0</span><span class="rifiuti-tag">pieni</span>
-                  <span class="rifiuti-num gray" id="rif-strip-liq-v">0</span><span class="rifiuti-tag">vuoti</span>
-                </div>
+        <!-- 1. CASI PROCESSATI -->
+        <div class="kpi-card" onclick="showView('tracciabilita')">
+          <div class="kpi-lbl">Casi processati</div>
+          <div class="kpi-val" id="kpi-casi-val">—</div>
+          <div style="display:flex;gap:10px;margin-top:6px;font-size:11px;color:var(--text3)" id="kpi-casi-breakdown">
+            <span>Isto <b style="color:var(--accent)" id="kpi-casi-ist">0</b></span>
+            <span>Cito <b style="color:var(--accent)" id="kpi-casi-cit">0</b></span>
+            <span>PAP <b style="color:var(--accent)" id="kpi-casi-pap">0</b></span>
+          </div>
+          <div class="kpi-delta up" id="kpi-casi-delta"></div>
+        </div>
+
+        <!-- 2. RIFIUTI ATTIVI -->
+        <div class="kpi-card" onclick="showView('rifiuti')">
+          <div class="kpi-lbl">Rifiuti attivi</div>
+          <!-- solidi / liquidi affiancati -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:7px;margin-bottom:8px">
+            <div style="background:var(--surface2,#f8fafc);border:1px solid var(--border);border-radius:6px;padding:6px 8px">
+              <div style="font-size:8px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin-bottom:4px">Solidi</div>
+              <div style="display:flex;gap:6px;align-items:baseline">
+                <span style="font-family:'DM Mono',monospace;font-size:16px;font-weight:700;color:var(--orange)" id="rif-sol-p">0</span><span style="font-size:9px;color:var(--text3)">pieni</span>
+                <span style="font-family:'DM Mono',monospace;font-size:13px;color:var(--text3);margin-left:2px" id="rif-sol-v">0</span><span style="font-size:9px;color:var(--text3)">vuoti</span>
               </div>
             </div>
-            <div class="rifiuti-cer-list" id="rif-strip-cer"></div>
+            <div style="background:var(--surface2,#f8fafc);border:1px solid var(--border);border-radius:6px;padding:6px 8px">
+              <div style="font-size:8px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin-bottom:4px">Liquidi</div>
+              <div style="display:flex;gap:6px;align-items:baseline">
+                <span style="font-family:'DM Mono',monospace;font-size:16px;font-weight:700;color:var(--blue)" id="rif-liq-p">0</span><span style="font-size:9px;color:var(--text3)">piene</span>
+                <span style="font-family:'DM Mono',monospace;font-size:13px;color:var(--text3);margin-left:2px" id="rif-liq-v">0</span><span style="font-size:9px;color:var(--text3)">vuote</span>
+              </div>
+            </div>
+          </div>
+          <!-- per-CER list -->
+          <div style="display:flex;flex-direction:column;gap:3px" id="rif-cer-mini"></div>
+        </div>
+
+        <!-- 3. ORDINI APERTI -->
+        <div class="kpi-card" onclick="showView('ordini')">
+          <div class="kpi-lbl">Ordini aperti</div>
+          <div style="display:flex;flex-direction:column;gap:6px;margin-top:6px" id="kpi-ordini-list">
+            <div style="font-size:11px;color:var(--text3);font-style:italic;padding:8px 0;text-align:center">Nessun ordine in corso</div>
           </div>
         </div>
-        <div class="strip-sep"></div>
 
-        <!-- ORDINI APERTI con mini-lista -->
-        <div class="strip-cell strip-cell-ordini">
-          <div class="strip-lbl" onclick="showView('ordini')" style="cursor:pointer">Ordini aperti</div>
-          <div class="strip-ordini-list" id="kpi-ordini-list">
-            <div class="strip-empty">Nessun ordine in corso</div>
-          </div>
+        <!-- 4. IHC DA FARE -->
+        <div class="kpi-card k-red" onclick="showView('ihc')">
+          <div class="kpi-lbl">IHC da fare</div>
+          <div class="kpi-val red" id="kpi-ihc-val">—</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:4px" id="kpi-ihc-sub"></div>
         </div>
-        <div class="strip-sep"></div>
 
-        <!-- IHC DA FARE -->
-        <div class="strip-cell" onclick="showView('ihc')">
-          <div class="strip-lbl">IHC da fare</div>
-          <div class="strip-val red" id="kpi-ihc-val">—</div>
-          <div class="strip-meta" id="kpi-ihc-sub"></div>
-        </div>
-      </div>
+      </div><!-- /kpi -->
 
-      <!-- STORICO CICLI processatore + coloratore (mini) -->
+      <!-- STORICO CICLI: Processatore / Coloratore -->
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px">
-        <div class="card">
-          <div class="card-hdr">
-            <span class="card-title">Processatore</span>
-            <span class="card-sub">Ultimi 5 cicli</span>
-            <span class="card-lnk" onclick="showView('processatore')">storico →</span>
-          </div>
-          <div style="overflow-x:auto" id="home-proc-mini">
-            <div class="empty-state" style="padding:14px"><div style="font-size:12px;color:var(--text3)">Nessun ciclo registrato</div></div>
-          </div>
-        </div>
-        <div class="card">
-          <div class="card-hdr">
-            <span class="card-title">Coloratore</span>
-            <span class="card-sub">Ultimi 5 giorni</span>
-            <span class="card-lnk" onclick="showView('coloratore')">storico →</span>
-          </div>
-          <div style="overflow-x:auto" id="home-color-mini">
-            <div class="empty-state" style="padding:14px"><div style="font-size:12px;color:var(--text3)">Nessun ciclo registrato</div></div>
-          </div>
-        </div>
-      </div>
 
-      <!-- ALLERTE / IHC mini (Ordini ora sono nella strip in alto) -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px">
         <div class="card">
-          <div class="card-hdr">
-            <span class="card-title">Allerte attive</span>
-            <span class="card-lnk" onclick="showView('allerte')">tutte →</span>
-          </div>
-          <div id="home-allerte-list" style="padding:4px 0">
-            <div class="home-empty">Nessuna allerta</div>
-          </div>
-        </div>
-        <div class="card" id="home-ihc-card">
-          <div class="card-hdr">
-            <span class="card-title">🔬 IHC pendenti</span>
-            <button class="btn btn-sm btn-primary" style="font-size:10px;padding:3px 8px" onclick="event.stopPropagation();openNuovaIHC()">＋</button>
-            <span class="card-lnk" onclick="showView('ihc')">tutte →</span>
-          </div>
-          <div id="home-ihc-content" style="padding:4px 0">
-            <div class="home-empty">Nessuna richiesta</div>
+          <div class="card-hdr"><span class="card-title">Processatore</span><span class="card-sub">Ultimi 5 cicli</span><button class="hbtn2 primary" style="font-size:10px;padding:3px 8px;margin-right:4px" onclick="event.stopPropagation();openNuovoProcessatore()">＋ Nuovo</button><span class="card-lnk" onclick="showView('processatore')">storico →</span></div>
+          <div style="overflow-x:auto" id="home-proc-wrap">
+            <table class="tbl" style="font-size:10px">
+              <thead><tr><th>Data partenza</th><th>Range casi ID</th><th>Cassette</th><th>Stato reagenti</th></tr></thead>
+              <tbody id="home-proc-tbody"><tr><td colspan="4" style="text-align:center;color:var(--text3);padding:14px;font-style:italic">Nessun ciclo registrato</td></tr></tbody>
+            </table>
           </div>
         </div>
-      </div>
 
-      <!-- WRAPPER per renderDashAnalytics -->
-      <div id="dash-analytics">
-      <!-- DIVIDER: Statistiche -->
-      <div class="sect-div">
-        <div class="sect-div-title">Statistiche</div>
-        <div class="sect-div-line"></div>
-        <span class="sect-div-tag">Campioni</span>
+        <div class="card">
+          <div class="card-hdr"><span class="card-title">Coloratore</span><span class="card-sub">Ultimi 5 giorni</span><button class="hbtn2 primary" style="font-size:10px;padding:3px 8px;margin-right:4px" onclick="event.stopPropagation();openNuovoColoratore()">＋ Nuovo</button><span class="card-lnk" onclick="showView('coloratore')">storico →</span></div>
+          <div style="overflow-x:auto" id="home-color-wrap">
+            <table class="tbl" style="font-size:10px">
+              <thead>
+                <tr style="background:var(--bg3)">
+                  <th rowspan="2" style="border-bottom:2px solid var(--border);vertical-align:middle">Data</th>
+                  <th colspan="2" style="text-align:center;border-bottom:1px solid var(--border);background:#eff6ff;color:var(--blue);font-size:9px">🧫 Istologia (EE)</th>
+                  <th colspan="2" style="text-align:center;border-bottom:1px solid var(--border);background:#ecfeff;color:var(--teal);font-size:9px">🔬 Citologia (EE)</th>
+                  <th colspan="2" style="text-align:center;border-bottom:1px solid var(--border);background:#f5f3ff;color:var(--purple);font-size:9px">📋 PAP</th>
+                  <th rowspan="2" style="border-bottom:2px solid var(--border);vertical-align:middle">Reagenti</th>
+                </tr>
+                <tr>
+                  <th style="background:#eff6ff;font-size:9px">Cicli</th><th style="background:#eff6ff;font-size:9px">Vetri</th>
+                  <th style="background:#ecfeff;font-size:9px">Cicli</th><th style="background:#ecfeff;font-size:9px">Vetri</th>
+                  <th style="background:#f5f3ff;font-size:9px">Cicli</th><th style="background:#f5f3ff;font-size:9px">Vetri</th>
+                </tr>
+              </thead>
+              <tbody id="home-color-tbody"><tr><td colspan="8" style="text-align:center;color:var(--text3);padding:14px;font-style:italic">Nessun ciclo registrato</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
+      </div><!-- /storico cicli -->
+
+      <!-- GRAFICI CAMPIONI -->
+      <div style="margin-bottom:8px;display:flex;align-items:center;gap:10px">
+        <div style="font-family:'Libre Baskerville',serif;font-size:16px;font-weight:700;color:var(--accent)">Statistiche</div>
+        <div style="flex:1;height:1px;background:var(--border)"></div>
+        <span style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em">Campioni</span>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:18px">
+
         <div class="card">
           <div class="card-hdr"><span class="card-title">Andamento campioni</span><span class="card-sub" id="dash-line-sub">ultimi 8 mesi</span></div>
           <div style="padding:12px 14px">
-            <svg id="dash-chart-line" width="100%" viewBox="0 0 280 120" style="overflow:visible"></svg>
+            <svg id="dash-chart-line" width="100%" viewBox="0 0 280 140" style="overflow:visible"></svg>
             <div style="display:flex;gap:12px;margin-top:8px;font-size:10px">
-              <span class="leg-item"><span class="leg-dot" style="background:#2563eb"></span>Istologia</span>
-              <span class="leg-item"><span class="leg-dot" style="background:#0891b2"></span>Citologia</span>
-              <span class="leg-item"><span class="leg-dot" style="background:#7c3aed"></span>PAP</span>
+              <span style="display:flex;align-items:center;gap:4px"><span style="width:12px;height:2px;background:#2563eb;display:inline-block;border-radius:1px"></span>Istologia</span>
+              <span style="display:flex;align-items:center;gap:4px"><span style="width:12px;height:2px;background:#0891b2;display:inline-block;border-radius:1px"></span>Citologia</span>
+              <span style="display:flex;align-items:center;gap:4px"><span style="width:12px;height:2px;background:#7c3aed;display:inline-block;border-radius:1px"></span>PAP</span>
             </div>
           </div>
         </div>
+
         <div class="card">
           <div class="card-hdr"><span class="card-title">Distribuzione tipi</span><span class="card-sub" id="dash-donut-sub">mese corrente</span></div>
           <div style="padding:12px 14px;display:flex;align-items:center;gap:16px">
             <svg id="dash-chart-donut" width="110" height="110" viewBox="0 0 110 110" style="flex-shrink:0"></svg>
-            <div style="font-size:11px;display:flex;flex-direction:column;gap:6px;flex:1" id="dash-donut-legend"></div>
+            <div style="font-size:11px;display:flex;flex-direction:column;gap:6px" id="dash-donut-legend"></div>
           </div>
         </div>
+
         <div class="card">
           <div class="card-hdr"><span class="card-title">Confronto mensile</span><span class="card-sub" id="dash-bar-sub">corrente vs precedente</span></div>
           <div style="padding:12px 14px">
-            <svg id="dash-chart-bar" width="100%" viewBox="0 0 280 120" style="overflow:visible"></svg>
+            <svg id="dash-chart-bar" width="100%" viewBox="0 0 280 140" style="overflow:visible"></svg>
             <div style="display:flex;gap:12px;margin-top:8px;font-size:10px" id="dash-bar-legend"></div>
           </div>
         </div>
-      </div>
 
-      <!-- DIVIDER: Magazzino & Ordini -->
-      <div class="sect-div">
-        <div class="sect-div-title">Magazzino &amp; Ordini</div>
-        <div class="sect-div-line"></div>
-        <span class="sect-div-tag">Analisi</span>
+      </div><!-- /grafici campioni -->
+
+      <!-- GRAFICI MAGAZZINO / ORDINI -->
+      <div style="margin-bottom:8px;display:flex;align-items:center;gap:10px">
+        <div style="font-family:'Libre Baskerville',serif;font-size:16px;font-weight:700;color:var(--accent)">Magazzino &amp; Ordini</div>
+        <div style="flex:1;height:1px;background:var(--border)"></div>
+        <span style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em">Analisi</span>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:24px">
+
         <div class="card">
           <div class="card-hdr"><span class="card-title">Top 10 consumati</span><span class="card-sub" id="dash-hbar-sub">ultimi 90gg</span></div>
-          <div style="padding:10px 14px"><svg id="dash-chart-hbar" width="100%" viewBox="0 0 280 175"></svg></div>
+          <div style="padding:10px 14px"><svg id="dash-chart-hbar" width="100%" viewBox="0 0 240 170"></svg></div>
         </div>
+
         <div class="card">
           <div class="card-hdr"><span class="card-title">Previsione esaurimento</span><span class="card-sub">scorte critiche</span></div>
           <div id="dash-prev-table" style="padding:0"></div>
         </div>
+
         <div class="card">
           <div class="card-hdr"><span class="card-title">Ordini per fornitore</span><span class="card-sub" id="dash-vbar-sub">ultimi 6 mesi</span></div>
           <div style="padding:12px 14px">
-            <svg id="dash-chart-vbar" width="100%" viewBox="0 0 280 120" style="overflow:visible"></svg>
+            <svg id="dash-chart-vbar" width="100%" viewBox="0 0 280 140" style="overflow:visible"></svg>
             <div style="display:flex;gap:10px;margin-top:8px;font-size:10px;flex-wrap:wrap" id="dash-vbar-legend"></div>
           </div>
         </div>
-      </div>
 
-      </div><!-- /dash-analytics -->
-
-      <!-- HOME GRID prodotti (drill-down) -->
-      <div class="sect-div">
-        <div class="sect-div-title">Prodotti per categoria</div>
-        <div class="sect-div-line"></div>
-        <span class="sect-div-tag">Drill-down</span>
-      </div>
-      <div id="home-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;margin-bottom:20px"></div>
+      </div><!-- /grafici magazzino -->
 
     </div><!-- /view-dashboard -->
 
@@ -742,42 +751,32 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
          ══════════════════════════════════════════════════════════════ -->
     <div class="view" data-view="processatore" id="view-processatore">
       <div class="pg-hdr">
-        <div class="pg-title">Processatore</div>
-        <div style="display:flex;gap:8px;align-items:center">
-          <span style="font-size:11px;color:var(--text3)" id="proc-last-info">—</span>
-          <button class="hbtn2 primary" style="padding:8px 16px;font-size:13px;font-weight:600" onclick="openNuovoProcessatore()">＋ Nuovo ciclo processatore</button>
+        <div>
+          <div class="pg-title">⚗️ Registro Processatore</div>
+          <div class="page-sub" id="proc-stats">—</div>
+        </div>
+        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+          <input type="date" class="search-inp" id="proc-filter-from" onchange="renderProcessatore()" style="max-width:140px;padding:6px 8px" title="Da">
+          <input type="date" class="search-inp" id="proc-filter-to"   onchange="renderProcessatore()" style="max-width:140px;padding:6px 8px" title="A">
+          <div class="search-wrap">
+            <span class="s-ico">🔍</span>
+            <input type="text" class="search-inp" id="proc-search" placeholder="Cerca caso o lotto…" oninput="renderProcessatore()">
+          </div>
+          <button class="hbtn2" onclick="cercaPerLotto()" title="Tracciabilità inversa lotto">🔍 Lotto</button>
+          <button class="hbtn2 primary" onclick="openNuovoProcessatore()">＋ Nuovo Ciclo</button>
         </div>
       </div>
 
-      <!-- ricerca inversa -->
-      <div class="card" style="margin-bottom:14px;padding:14px 16px">
-        <div style="font-size:10px;font-weight:700;letter-spacing:.10em;text-transform:uppercase;color:var(--text3);margin-bottom:8px">🔍 Ricerca inversa — tracciabilità lotti</div>
-        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-          <input class="search-inp" style="width:220px" placeholder="ID caso es. 2764/26" id="proc-search" onkeydown="if(event.key==='Enter')cercaPerLotto('proc')">
-          <button class="hbtn2 primary" onclick="cercaPerLotto('proc')">Cerca lotti</button>
-          <span style="font-size:12px;color:var(--text3)">→ Trova reagenti del ciclo che conteneva quel caso</span>
-        </div>
-        <div id="proc-search-result" class="inverse-result"></div>
-      </div>
-
-      <!-- mini stats -->
-      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px" id="proc-stats">
+      <!-- mini KPI (4 cards) -->
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px" id="proc-mini-stats">
         <div class="cnt-card"><div class="cnt-lbl">Cicli mese</div><div class="cnt-val" style="color:var(--blue)" id="proc-s-cicli">0</div></div>
         <div class="cnt-card"><div class="cnt-lbl">Cassette tot.</div><div class="cnt-val" style="color:var(--accent)" id="proc-s-cass">0</div></div>
         <div class="cnt-card"><div class="cnt-lbl">Anomalie mese</div><div class="cnt-val" style="color:var(--yellow)" id="proc-s-ano">0</div></div>
         <div class="cnt-card"><div class="cnt-lbl">Ultimo</div><div class="cnt-val" style="color:var(--green);font-size:14px;line-height:1.4" id="proc-s-ultimo">—</div></div>
       </div>
 
-      <!-- storico cicli -->
-      <div class="card">
-        <div class="card-hdr"><span class="card-title">Storico cicli processatore</span><span class="card-sub">Clicca riga per dettaglio reagenti</span></div>
-        <div style="overflow-x:auto">
-          <table class="tbl">
-            <thead><tr><th></th><th>Data partenza</th><th>Range casi ID</th><th>Cassette</th><th>Stato reagenti</th></tr></thead>
-            <tbody id="proc-tbody"></tbody>
-          </table>
-        </div>
-      </div>
+      <!-- Lista cicli: il logic file usa proc-list (innerHTML pieno con tabella), io tengo una vista alternativa con tabella espandibile -->
+      <div id="proc-list"></div>
     </div><!-- /view-processatore -->
 
     <!-- ══════════════════════════════════════════════════════════════
@@ -785,39 +784,28 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
          ══════════════════════════════════════════════════════════════ -->
     <div class="view" data-view="coloratore" id="view-coloratore">
       <div class="pg-hdr">
-        <div class="pg-title">Coloratore</div>
-        <div style="display:flex;gap:8px;align-items:center">
-          <span style="font-size:11px;color:var(--text3)" id="color-last-info">—</span>
-          <button class="hbtn2 primary" style="padding:8px 16px;font-size:13px;font-weight:600" onclick="openNuovoColoratore()">＋ Nuovo ciclo coloratore</button>
+        <div>
+          <div class="pg-title">🎨 Registro Coloratore</div>
+          <div class="page-sub" id="color-stats">—</div>
+        </div>
+        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+          <input type="date" class="search-inp" id="color-filter-from" onchange="renderColoratore()" style="max-width:140px;padding:6px 8px" title="Da">
+          <input type="date" class="search-inp" id="color-filter-to"   onchange="renderColoratore()" style="max-width:140px;padding:6px 8px" title="A">
+          <div class="search-wrap">
+            <span class="s-ico">🔍</span>
+            <input type="text" class="search-inp" id="color-search" placeholder="Cerca caso o lotto…" oninput="renderColoratore()">
+          </div>
+          <button class="hbtn2 primary" onclick="openNuovoColoratore()">＋ Nuovo Ciclo</button>
         </div>
       </div>
 
-      <!-- ricerca inversa -->
-      <div class="card" style="margin-bottom:14px;padding:14px 16px">
-        <div style="font-size:10px;font-weight:700;letter-spacing:.10em;text-transform:uppercase;color:var(--text3);margin-bottom:8px">🔍 Ricerca inversa — tracciabilità lotti colorazione</div>
-        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-          <input class="search-inp" style="width:220px" placeholder="ID caso es. 2764/26" id="col-search" onkeydown="if(event.key==='Enter')cercaPerLotto('col')">
-          <button class="hbtn2 primary" onclick="cercaPerLotto('col')">Cerca lotti</button>
-          <span style="font-size:12px;color:var(--text3)">→ Trova reagenti di colorazione usati per quel caso</span>
-        </div>
-        <div id="col-search-result" class="inverse-result"></div>
-      </div>
-
-      <!-- mini stats globali (mese corrente) -->
-      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px" id="color-stats">
-        <div class="cnt-card"><div class="cnt-lbl">Giornate registrate (mese)</div><div class="cnt-val" style="color:var(--blue)" id="color-s-cicli">0</div></div>
-        <div class="cnt-card"><div class="cnt-lbl">Vetrini totali (mese)</div><div class="cnt-val" style="color:var(--accent)" id="color-s-vetri">0</div></div>
-        <div class="cnt-card"><div class="cnt-lbl">EE cicli (Ist+Cit)</div><div class="cnt-val" style="color:var(--teal)" id="color-s-ee">0</div></div>
-        <div class="cnt-card"><div class="cnt-lbl">PAP cicli</div><div class="cnt-val" style="color:var(--purple)" id="color-s-pap">0</div></div>
-      </div>
-
-      <!-- 3 colonne: Istologia / Citologia / PAP -->
+      <!-- 3 colonne riassuntive (Ist / Cit / PAP) aggregato mese corrente -->
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px">
         <div class="card" style="border-top:3px solid var(--blue)">
           <div class="card-hdr" style="padding:10px 14px">
             <span class="card-title" style="color:var(--blue);font-size:13px">🧫 Istologia (EE)</span>
           </div>
-          <div style="padding:14px 16px" id="color-col-ist">
+          <div style="padding:14px 16px">
             <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em">Cicli mese</div>
             <div style="font-family:'Libre Baskerville',serif;font-size:32px;font-weight:700;color:var(--blue);line-height:1;margin:2px 0 8px" id="col-ist-cicli">0</div>
             <div style="display:flex;justify-content:space-between;font-size:12px;padding:4px 0;border-top:1px solid var(--border-faint)">
@@ -838,7 +826,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
           <div class="card-hdr" style="padding:10px 14px">
             <span class="card-title" style="color:var(--teal);font-size:13px">🔬 Citologia (EE)</span>
           </div>
-          <div style="padding:14px 16px" id="color-col-cit">
+          <div style="padding:14px 16px">
             <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em">Cicli mese</div>
             <div style="font-family:'Libre Baskerville',serif;font-size:32px;font-weight:700;color:var(--teal);line-height:1;margin:2px 0 8px" id="col-cit-cicli">0</div>
             <div style="display:flex;justify-content:space-between;font-size:12px;padding:4px 0;border-top:1px solid var(--border-faint)">
@@ -859,7 +847,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
           <div class="card-hdr" style="padding:10px 14px">
             <span class="card-title" style="color:var(--purple);font-size:13px">📋 PAP</span>
           </div>
-          <div style="padding:14px 16px" id="color-col-pap">
+          <div style="padding:14px 16px">
             <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em">Cicli mese</div>
             <div style="font-family:'Libre Baskerville',serif;font-size:32px;font-weight:700;color:var(--purple);line-height:1;margin:2px 0 8px" id="col-pap-cicli">0</div>
             <div style="display:flex;justify-content:space-between;font-size:12px;padding:4px 0;border-top:1px solid var(--border-faint)">
@@ -878,33 +866,8 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
         </div>
       </div>
 
-      <!-- storico per giorno: 3 colonne dentro una tabella unificata -->
-      <div class="card">
-        <div class="card-hdr">
-          <span class="card-title">Storico per giorno — vista a 3 colonne</span>
-          <span class="card-sub">Ogni riga = un giorno · click ✎ per modificare</span>
-        </div>
-        <div style="overflow-x:auto">
-          <table class="tbl">
-            <thead>
-              <tr style="background:var(--bg3)">
-                <th rowspan="2" style="border-bottom:2px solid var(--border)">Data</th>
-                <th colspan="3" style="text-align:center;border-bottom:1px solid var(--border);background:#eff6ff;color:var(--blue)">🧫 Istologia (EE)</th>
-                <th colspan="3" style="text-align:center;border-bottom:1px solid var(--border);background:#ecfeff;color:var(--teal)">🔬 Citologia (EE)</th>
-                <th colspan="3" style="text-align:center;border-bottom:1px solid var(--border);background:#f5f3ff;color:var(--purple)">📋 PAP</th>
-                <th rowspan="2" style="border-bottom:2px solid var(--border)">Reagenti</th>
-                <th rowspan="2" style="border-bottom:2px solid var(--border)"></th>
-              </tr>
-              <tr>
-                <th style="background:#eff6ff">Cicli</th><th style="background:#eff6ff">Vetri</th><th style="background:#eff6ff">Range</th>
-                <th style="background:#ecfeff">Cicli</th><th style="background:#ecfeff">Vetri</th><th style="background:#ecfeff">Range</th>
-                <th style="background:#f5f3ff">Cicli</th><th style="background:#f5f3ff">Vetri</th><th style="background:#f5f3ff">Range</th>
-              </tr>
-            </thead>
-            <tbody id="color-tbody"></tbody>
-          </table>
-        </div>
-      </div>
+      <!-- Lista cicli (il logic file riempie color-list con la sua tabella) -->
+      <div id="color-list"></div>
     </div><!-- /view-coloratore -->
 
     <!-- ══════════════════════════════════════════════════════════════
@@ -941,7 +904,6 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
       <div class="pg-hdr">
         <div class="pg-title">Inventario</div>
         <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
-          <span style="font-size:11px;color:var(--text3)" id="inv-count">—</span>
           <button class="hbtn2 warn" onclick="openDuplicatiModal()" title="Trova prodotti duplicati">⚠ Duplicati</button>
           <button class="hbtn2 ok" onclick="apriCaricoScan()">⬆ Carico</button>
           <button class="hbtn2 warn" onclick="openModalScarica()">⬇ Scarico</button>
@@ -950,55 +912,54 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
         </div>
       </div>
 
-      <!-- ricerca -->
-      <div class="filter-bar" style="margin-bottom:8px;align-items:center">
-        <div class="search-wrap" style="flex:1;max-width:320px">
-          <span class="s-ico">🔍</span>
-          <input type="text" class="search-inp" id="inv-search" placeholder="Cerca per nome, codice, lotto…" oninput="if(typeof renderInv==='function')renderInv()" style="width:100%">
-        </div>
+      <!-- Filtri esattamente come nel logic file -->
+      <div class="filter-bar" id="inv-filter-bar">
+        <button class="f-btn active" onclick="setInvFilter('all',this)">Tutti</button>
+        <button class="f-btn" onclick="setInvFilter('Reagenti',this)">🧪 Reagenti</button>
+        <button class="f-btn" onclick="setInvFilter('IHC',this)">🔬 IHC</button>
+        <button class="f-btn" onclick="setInvFilter('Vetrini',this)">🪟 Vetrini</button>
+        <button class="f-btn" onclick="setInvFilter('Cassette',this)">📁 Cassette</button>
+        <button class="f-btn" onclick="setInvFilter('Coloranti',this)">🎨 Coloranti</button>
+        <button class="f-btn" onclick="setInvFilter('Consumabili',this)">🧤 Consumabili</button>
+        <button class="f-btn" onclick="setInvFilter('Kit Colorazioni',this)">🔬 Kit Color.</button>
+        <button class="f-btn" onclick="setInvFilter('Lame',this)">⚔ Lame</button>
+        <button class="f-btn" onclick="setInvFilter('Altro',this)">📌 Altro</button>
       </div>
-
-      <!-- LIVELLO 1: Categoria (mappa class f-btn → chip) -->
-      <div class="filter-bar" id="inv-filter-bar" style="margin-bottom:6px">
-        <button class="chip f-btn active" onclick="setInvFilter('all',this)">Tutti</button>
-        <button class="chip f-btn" onclick="setInvFilter('Reagenti',this)">🧪 Reagenti</button>
-        <button class="chip f-btn" onclick="setInvFilter('IHC',this)">🔬 IHC</button>
-        <button class="chip f-btn" onclick="setInvFilter('Vetrini',this)">🪟 Vetrini</button>
-        <button class="chip f-btn" onclick="setInvFilter('Cassette',this)">📁 Cassette</button>
-        <button class="chip f-btn" onclick="setInvFilter('Coloranti',this)">🎨 Coloranti</button>
-        <button class="chip f-btn" onclick="setInvFilter('Consumabili',this)">🧤 Consumabili</button>
-        <button class="chip f-btn" onclick="setInvFilter('Kit Colorazioni',this)">🔬 Kit Color.</button>
-        <button class="chip f-btn" onclick="setInvFilter('Lame',this)">⚔ Lame</button>
-        <button class="chip f-btn" onclick="setInvFilter('Altro',this)">📌 Altro</button>
-      </div>
-
-      <!-- LIVELLO 2: Fornitore -->
-      <div class="filter-bar" id="inv-fornitore-bar" style="margin-bottom:6px">
+      <div class="filter-bar" id="inv-fornitore-bar" style="margin-top:4px">
         <span style="font-size:11px;color:var(--text3);padding:0 6px;align-self:center">Fornitore:</span>
-        <button class="chip f-btn active" onclick="setFornFilter('all',this)">Tutti</button>
-        <button class="chip f-btn" onclick="setFornFilter('Epredia',this)">Epredia</button>
-        <button class="chip f-btn" onclick="setFornFilter('Bio Optica',this)">Bio Optica</button>
-        <button class="chip f-btn" onclick="setFornFilter('Ventana',this)">Ventana</button>
-        <button class="chip f-btn" onclick="setFornFilter('__altri',this)">Altri fornitori</button>
+        <button class="f-btn active" onclick="setFornFilter('all',this)">Tutti</button>
+        <button class="f-btn" onclick="setFornFilter('Epredia',this)">Epredia</button>
+        <button class="f-btn" onclick="setFornFilter('Bio Optica',this)">Bio Optica</button>
+        <button class="f-btn" onclick="setFornFilter('Ventana',this)">Ventana</button>
+        <button class="f-btn" onclick="setFornFilter('__altri',this)">Altri fornitori</button>
       </div>
-
-      <!-- LIVELLO 3: Sottofiltro (popolato dinamicamente da _updateSubBar) -->
-      <div class="filter-bar" id="inv-sub-bar" style="margin-bottom:6px;display:none"></div>
-
-      <!-- LIVELLO 4: Sub2 (anche popolato dinamicamente) -->
-      <div class="filter-bar" id="inv-sub2-bar" style="margin-bottom:10px;display:none"></div>
-
-      <!-- legenda colori -->
-      <div class="leg-inline">
-        <span><span class="leg-sw" style="background:var(--red-bg);border:1px solid var(--red-bd)"></span>Esaurito</span>
-        <span><span class="leg-sw" style="background:var(--yellow-bg);border:1px solid var(--yellow-bd)"></span>Sotto scorta min.</span>
-        <span><span class="leg-sw" style="background:var(--orange-bg);border:1px solid var(--orange-bd)"></span>In scadenza (&lt;30gg)</span>
+      <div class="filter-bar" id="inv-sub-bar" style="margin-top:4px;display:none">
+        <span style="font-size:11px;color:var(--text3);padding:0 6px;align-self:center" id="inv-sub-label">Sottofiltro:</span>
+      </div>
+      <div class="filter-bar" id="inv-sub2-bar" style="margin-top:4px;display:none">
+        <span style="font-size:11px;color:var(--text3);padding:0 6px;align-self:center">Prodotto:</span>
       </div>
 
       <div class="card">
+        <div class="card-hdr">
+          <span class="card-title" id="inv-count">0 prodotti</span>
+          <div style="flex:1"></div>
+          <div class="search-wrap">
+            <span class="s-ico">🔍</span>
+            <input type="text" class="search-inp" id="inv-search" placeholder="Cerca nome, codice, lotto…" oninput="if(typeof debouncedRenderInv==='function')debouncedRenderInv();else if(typeof renderInv==='function')renderInv()">
+          </div>
+        </div>
         <div style="overflow-x:auto">
           <table class="tbl">
-            <thead><tr><th>Prodotto</th><th>Codice</th><th>Fornitore</th><th>Lotto</th><th>Scadenza</th><th>Giacenza</th><th>Sc.Min.</th><th>U.M.</th><th>Stato</th><th></th></tr></thead>
+            <thead><tr>
+              <th>Prodotto</th>
+              <th>Categoria</th>
+              <th>Lotto</th>
+              <th>Scadenza</th>
+              <th style="text-align:center">Ini → Att</th>
+              <th>Livello</th>
+              <th style="text-align:right">Azioni</th>
+            </tr></thead>
             <tbody id="inv-tbody"></tbody>
           </table>
         </div>
@@ -1006,27 +967,79 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
     </div><!-- /view-inventario -->
 
     <!-- ══════════════════════════════════════════════════════════════
+         VIEW: BIDONI (tracciabilità singola unità)
+         ══════════════════════════════════════════════════════════════ -->
+    <div class="view" data-view="bidoni" id="view-bidoni">
+      <div class="pg-hdr">
+        <div>
+          <div class="pg-title">🪣 Bidoni reagenti &amp; coloranti</div>
+          <div class="page-sub" id="bidoni-stats">—</div>
+        </div>
+        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+          <div class="search-wrap">
+            <span class="s-ico">🔍</span>
+            <input type="text" class="search-inp" id="bidoni-search" placeholder="Cerca prodotto, lotto…" oninput="renderBidoniView()">
+          </div>
+        </div>
+      </div>
+
+      <div class="filter-bar" id="bidoni-filter-bar">
+        <button class="f-btn active" onclick="setBidoniFilter('all',this)">Tutti</button>
+        <button class="f-btn" onclick="setBidoniFilter('aperto',this)">🔓 Aperti</button>
+        <button class="f-btn" onclick="setBidoniFilter('chiuso',this)">🔒 Chiusi</button>
+        <button class="f-btn" onclick="setBidoniFilter('smaltito',this)">✕ Smaltiti</button>
+      </div>
+
+      <div class="card">
+        <div class="card-hdr"><span class="card-title" id="bidoni-count">0 bidoni</span></div>
+        <div style="overflow-x:auto">
+          <table class="tbl">
+            <thead><tr>
+              <th>Prodotto</th>
+              <th>Categoria</th>
+              <th>Lotto</th>
+              <th>Scadenza</th>
+              <th>Stato</th>
+              <th>Carico</th>
+              <th>Apertura</th>
+              <th style="text-align:right">Azioni</th>
+            </tr></thead>
+            <tbody id="bidoni-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div><!-- /view-bidoni -->
+
+    <!-- ══════════════════════════════════════════════════════════════
          VIEW: MOVIMENTI
          ══════════════════════════════════════════════════════════════ -->
     <div class="view" data-view="movimenti" id="view-movimenti">
       <div class="pg-hdr">
         <div class="pg-title">Movimenti</div>
-        <button class="hbtn2 danger" onclick="svuotaStoricoMovimenti()">🗑 Svuota storico</button>
-      </div>
-      <div class="filter-bar" style="margin-bottom:12px">
-        <button class="chip active" onclick="setMovFilter('all',this)">Tutti</button>
-        <button class="chip" onclick="setMovFilter('carico',this)">Carico</button>
-        <button class="chip" onclick="setMovFilter('scarico',this)">Scarico</button>
-        <div style="flex:1"></div>
-        <div class="search-wrap">
-          <span class="s-ico">🔍</span>
-          <input class="search-inp" id="mov-search" placeholder="Cerca prodotto…" oninput="renderMovimenti()">
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <button class="hbtn2" onclick="openDDTModal()">📷 DDT</button>
+          <button class="hbtn2 ok" onclick="apriCaricoScan()">⬆ Carico Scan</button>
+          <button class="hbtn2 warn" onclick="openModalScarica()">⬇ Scarico</button>
+          <button class="hbtn2" onclick="openManualMovModal('carico')">＋ Carico man.</button>
+          <button class="hbtn2" onclick="openManualMovModal('scarico')">− Scarico man.</button>
         </div>
       </div>
       <div class="card">
+        <div class="card-hdr">
+          <span class="card-title">Storico movimenti</span>
+          <div style="flex:1"></div>
+          <button class="hbtn2 danger" onclick="clearMovimenti()" style="font-size:11px">🗑 Svuota</button>
+        </div>
         <div style="overflow-x:auto">
           <table class="tbl">
-            <thead><tr><th>Data/Ora</th><th>Tipo</th><th>Prodotto</th><th>Quantità</th><th>U.M.</th><th>Lotto</th><th>Operatore</th></tr></thead>
+            <thead><tr>
+              <th>Data/Ora</th>
+              <th>Tipo</th>
+              <th>Prodotto</th>
+              <th style="text-align:center">Qtà</th>
+              <th>Lotto</th>
+              <th>Note</th>
+            </tr></thead>
             <tbody id="mov-tbody"></tbody>
           </table>
         </div>
@@ -1039,16 +1052,33 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
     <div class="view" data-view="allerte" id="view-allerte">
       <div class="pg-hdr">
         <div class="pg-title">Allerte</div>
-        <button class="hbtn2 danger" onclick="ordinaDaAllerte()">🚨 Ordina da allerte</button>
+        <button class="hbtn2 danger" onclick="if(typeof ordinaDaAllerte==='function')ordinaDaAllerte();else if(typeof openOrdineModal==='function')openOrdineModal('new',null)">🚨 Ordina da allerte</button>
       </div>
-      <div class="filter-bar" id="all-filter-bar" style="margin-bottom:14px">
-        <button class="chip active" onclick="setAllFilter('all',this)">Tutti <span style="background:var(--red);color:#fff;border-radius:999px;padding:0 5px;font-size:9px;margin-left:3px" id="all-count-tot">0</span></button>
-        <button class="chip" onclick="setAllFilter('esaurito',this)">Esauriti</button>
-        <button class="chip" onclick="setAllFilter('scorta',this)">Scorta bassa</button>
-        <button class="chip" onclick="setAllFilter('scaduto',this)">Scaduti</button>
-        <button class="chip" onclick="setAllFilter('inscadenza',this)">In scadenza</button>
+      <div class="filter-bar" id="allerte-filter-bar">
+        <button class="f-btn active" onclick="setAllerteFilter('all',this)">Tutti</button>
+        <button class="f-btn" onclick="setAllerteFilter('esauriti',this)">🔴 Esauriti</button>
+        <button class="f-btn" onclick="setAllerteFilter('critici',this)">🟡 Scorta bassa</button>
+        <button class="f-btn" onclick="setAllerteFilter('scaduti',this)">💀 Scaduti</button>
+        <button class="f-btn" onclick="setAllerteFilter('inscadenza',this)">⏰ In scadenza (30gg)</button>
       </div>
-      <div id="allerte-list" style="display:flex;flex-direction:column;gap:8px"></div>
+      <div class="card">
+        <div class="card-hdr"><span class="card-title" id="allerte-count">0 prodotti</span></div>
+        <div style="overflow-x:auto">
+          <table class="tbl">
+            <thead><tr>
+              <th>Prodotto</th>
+              <th>Categoria</th>
+              <th>Fornitore</th>
+              <th>Lotto</th>
+              <th style="text-align:center">Qtà / Min</th>
+              <th>Scadenza</th>
+              <th>Stato</th>
+              <th style="text-align:right">Azione</th>
+            </tr></thead>
+            <tbody id="allerte-tbody"></tbody>
+          </table>
+        </div>
+      </div>
     </div><!-- /view-allerte -->
 
     <!-- ══════════════════════════════════════════════════════════════
@@ -1104,24 +1134,14 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
     <div class="view" data-view="schede" id="view-schede">
       <div class="pg-hdr">
         <div class="pg-title">Schede Tecniche</div>
-        <button class="hbtn2 primary" onclick="openSchedaScan()">📷 Scansiona</button>
-      </div>
-      <div class="filter-bar" style="margin-bottom:12px">
-        <button class="chip active" onclick="setSchFilter('all',this)">Tutti</button>
-        <div style="flex:1"></div>
-        <div class="search-wrap">
-          <span class="s-ico">🔍</span>
-          <input class="search-inp" id="sch-search" placeholder="Cerca prodotto…" oninput="renderSchede()">
+        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+          <select class="search-inp" id="schede-filter-forn" onchange="renderSchede()" style="min-width:160px;padding:6px 10px">
+            <option value="">Tutti i fornitori</option>
+          </select>
+          <button class="hbtn2 primary" onclick="if(typeof openSchedaScanModal==='function')openSchedaScanModal();else if(typeof openSchedaScan==='function')openSchedaScan()">📷 Scansiona QR</button>
         </div>
       </div>
-      <div class="card">
-        <div style="overflow-x:auto">
-          <table class="tbl">
-            <thead><tr><th>Prodotto</th><th>Fornitore</th><th>Codice</th><th>TDS</th><th>SDS</th></tr></thead>
-            <tbody id="schede-tbody"></tbody>
-          </table>
-        </div>
-      </div>
+      <div id="schede-list"></div>
     </div><!-- /view-schede -->
 
     <!-- ══════════════════════════════════════════════════════════════
@@ -1221,6 +1241,67 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
       </div>
     </div><!-- /view-report -->
 
+    <!-- ════════════════════════════════════════════════════════════════
+         ZOMBIE IDs — elementi nascosti per soddisfare getElementById di
+         funzioni del logic file che non hanno una UI dedicata nel nostro
+         layout custom (dashboard strip, ordini split, etc.). Non visibili,
+         non interferiscono col rendering ma evitano `null` runtime errors.
+         ════════════════════════════════════════════════════════════════ -->
+    <div style="display:none" aria-hidden="true" id="zombie-container">
+      <!-- Dashboard logic-file rende qui (rimpiazzata da nostra strip) -->
+      <span id="dash-date"></span>
+      <span id="dash-kpi-row"></span>
+      <span id="dash-line-legend"></span>
+      <span id="alerts-wrap"></span>
+      <span id="home-tracc-oggi"></span>
+      <span id="home-proc-oggi"></span>
+      <span id="home-color-oggi"></span>
+      <span id="home-color-table"></span>
+      <span id="home-ordini-list"></span>
+      <span id="home-scadenze-list"></span>
+      <span id="home-cat-grid"></span>
+      <span id="home-search"></span>
+      <!-- Quick caso widget (lo manteniamo zombie - può attivarsi via FC menu in futuro) -->
+      <input id="quick-id" value="">
+      <select id="quick-tipo"><option value="istologia">istologia</option></select>
+      <input id="quick-prov" value="">
+      <input id="quick-desc" value="">
+      <!-- Ordini: il logic file scrive in ordini-tbody/ordini-count; noi riscriviamo poi via override -->
+      <span id="ordini-count"></span>
+      <table><tbody id="ordini-tbody"></tbody></table>
+      <!-- Archivio filtri (la UI è split panel) -->
+      <select id="arch-filter-forn"><option value="">Tutti</option></select>
+      <select id="arch-filter-mese"><option value="">Tutti</option></select>
+      <select id="arch-filter-stato"><option value="">Tutti</option></select>
+      <!-- Tracciabilità campioni: noi facciamo render custom -->
+      <input id="tracc-from" type="date">
+      <input id="tracc-to"   type="date">
+      <input id="tracc-search" value="">
+      <input id="tracc-search-lotto" value="">
+      <span id="tracc-stats"></span>
+      <div id="tracc-list"></div>
+      <!-- Report: la nostra UI è custom -->
+      <span id="report-period"></span>
+      <div id="report-content"></div>
+      <!-- Rifiuti: nostra UI custom 4 KPI + cer-big -->
+      <div id="waste-grid"></div>
+      <table><tbody id="waste-log-tbody"></tbody></table>
+      <!-- Stats grid (legacy) -->
+      <div id="stats-grid"></div>
+      <!-- Scan UI -->
+      <div id="scan-line"></div>
+      <!-- Sync status (in più rispetto al sync-chip che abbiamo) -->
+      <span id="sync-status"></span>
+      <!-- Legacy submenu IDs (vecchia sidebar nav nidificata) -->
+      <span id="mag-submenu"></span>
+      <span id="mag-arrow"></span>
+      <span id="cat-submenu"></span>
+      <span id="cat-arrow"></span>
+      <span id="bar-sub"></span>
+      <!-- Legacy dashboard IDs -->
+      <span id="dash-analytics"></span>
+      <span id="home-allerte-list"></span>
+    </div>
   </main>
 
   <!-- ════════════════════════════
@@ -1486,7 +1567,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
           <button class="btn btn-sm btn-primary" onclick="addReagenteProc()">＋ Reagente</button>
         </div>
       </div>
-      <div style="font-size:11px;color:var(--text3);margin-bottom:8px">Scansiona il barcode o seleziona dal menu — stato: cambiato/rabboccato</div>
+      <div style="font-size:11px;color:var(--text3);margin-bottom:8px">Scansiona il barcode o seleziona dal menu — stato: ✅ verificato / ➕ rabboccato / 🔄 sostituito</div>
       <div id="proc-reagenti-list"></div>
     </div>
 
@@ -3199,22 +3280,56 @@ function renderInv(){
   document.getElementById('inv-count').textContent=prods.length+' prodott'+(prods.length===1?'o':'i');
   const tb=document.getElementById('inv-tbody');
   if(!prods.length){ tb.innerHTML=`<tr><td colspan="7"><div class="empty"><div class="e-ico">📦</div><p>Nessun prodotto trovato</p></div></td></tr>`; return; }
-  tb.innerHTML=prods.map(p=>`<tr>
-    <td><div style="font-weight:500">${p.nome}</div>${p.fornitore?`<div style="font-size:11px;color:var(--text3)">${p.fornitore}</div>`:''}${p.pos?`<div style="font-size:11px;color:var(--text3)">📍 ${p.pos}</div>`:''}</td>
-    <td><span class="cat-badge">${CAT_ICON[p.cat]||'📌'} ${p.cat}</span></td>
-    <td class="mono">${p.lotto||'—'}</td>
-    <td>${scBadge(p.scadenza)}</td>
-    <td style="text-align:center">
-      <div style="display:flex;align-items:center;justify-content:center;gap:8px">
-        <span style="font-family:'DM Mono',monospace;font-size:17px;font-weight:700;color:var(--red)">${p.qty_init!==undefined?p.qty_init:'—'}</span>
-        <span style="color:var(--text3);font-size:13px">→</span>
-        <span style="font-family:'DM Mono',monospace;font-size:17px;font-weight:700;color:${p.qty<=0?'var(--red)':p.min>0&&p.qty<=p.min?'var(--yellow)':'var(--green)'}">${p.qty}</span>
-      </div>
-      ${p.min?`<div style="font-size:10px;color:var(--text3);margin-top:2px">min: ${p.min}</div>`:''}
-    </td>
-    <td>${progBar(p)}</td>
-    <td><div style="display:flex;gap:4px;justify-content:flex-end"><button class="btn btn-sm" onclick="openEditModal('${p.id}')">✎</button><button class="btn btn-sm btn-danger" onclick="deleteProduct('${p.id}')">✕</button></div></td>
-  </tr>`).join('');
+  tb.innerHTML=prods.map(p=>{
+    const tracked = isBidoneTracked(p);
+    let qtyCell;
+    if (tracked) {
+      const c = countBidoniProd(p.id);
+      qtyCell = `
+        <div style="display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap">
+          <span class="badge bg-blue" style="font-size:10px;padding:2px 7px" title="Bidoni chiusi in magazzino">🔒 ${c.chiusi}</span>
+          ${c.aperti > 0 ? `<span class="badge bg-yellow" style="font-size:10px;padding:2px 7px" title="Bidone in uso">🔓 ${c.aperti}</span>` : '<span class="badge" style="font-size:10px;padding:2px 7px;background:var(--bg4);color:var(--text3)">🔓 0</span>'}
+          ${c.smaltiti > 0 ? `<span style="font-size:9px;color:var(--text3)" title="Storico smaltiti">✕${c.smaltiti}</span>` : ''}
+        </div>
+        ${p.min?`<div style="font-size:10px;color:var(--text3);margin-top:2px">min: ${p.min}</div>`:''}
+      `;
+    } else {
+      qtyCell = `
+        <div style="display:flex;align-items:center;justify-content:center;gap:8px">
+          <span style="font-family:'DM Mono',monospace;font-size:17px;font-weight:700;color:var(--red)">${p.qty_init!==undefined?p.qty_init:'—'}</span>
+          <span style="color:var(--text3);font-size:13px">→</span>
+          <span style="font-family:'DM Mono',monospace;font-size:17px;font-weight:700;color:${p.qty<=0?'var(--red)':p.min>0&&p.qty<=p.min?'var(--yellow)':'var(--green)'}">${p.qty}</span>
+        </div>
+        ${p.min?`<div style="font-size:10px;color:var(--text3);margin-top:2px">min: ${p.min}</div>`:''}
+      `;
+    }
+    const expandBtn = tracked ? `<span class="exp-arrow" style="cursor:pointer;margin-right:4px" onclick="event.stopPropagation();toggleBidoniRow('${p.id}',this)">▶</span>` : '';
+    let rows = `<tr id="inv-row-${p.id}">
+      <td>${expandBtn}<span style="font-weight:500">${p.nome}</span>${p.fornitore?`<div style="font-size:11px;color:var(--text3);margin-left:${tracked?'18px':'0'}">${p.fornitore}</div>`:''}${p.pos?`<div style="font-size:11px;color:var(--text3);margin-left:${tracked?'18px':'0'}">📍 ${p.pos}</div>`:''}</td>
+      <td><span class="cat-badge">${CAT_ICON[p.cat]||'📌'} ${p.cat}</span></td>
+      <td class="mono">${p.lotto||'—'}</td>
+      <td>${scBadge(p.scadenza)}</td>
+      <td style="text-align:center">${qtyCell}</td>
+      <td>${progBar(p)}</td>
+      <td><div style="display:flex;gap:4px;justify-content:flex-end"><button class="btn btn-sm" onclick="openEditModal('${p.id}')">✎</button><button class="btn btn-sm btn-danger" onclick="deleteProduct('${p.id}')">✕</button></div></td>
+    </tr>`;
+    if (tracked) {
+      rows += `<tr id="inv-bidoni-${p.id}" class="hidden" style="display:none"><td colspan="7" style="background:#f8fafc;padding:8px 12px">${renderBidoniProd(p.id)}</td></tr>`;
+    }
+    return rows;
+  }).join('');
+}
+
+// Toggle espansione riga bidoni
+function toggleBidoniRow(prodId, arrowEl) {
+  const row = document.getElementById('inv-bidoni-' + prodId);
+  if (!row) return;
+  const isOpen = row.style.display !== 'none';
+  row.style.display = isOpen ? 'none' : 'table-row';
+  if (arrowEl) {
+    arrowEl.style.transform = isOpen ? '' : 'rotate(90deg)';
+    arrowEl.style.display = 'inline-block';
+  }
 }
 function adjQty(id,delta){
   const prods=loadP(), p=prods.find(x=>x.id===id); if(!p) return;
@@ -4131,9 +4246,10 @@ function addReagenteProc(preset){
     </select>
     <span class="reag-lotto" style="font-family:DM Mono,monospace;font-size:11px;color:var(--text2);min-width:70px">${preset?.lotto||'—'}</span>
     <span class="reag-scad" style="font-size:11px;color:var(--text3);min-width:80px">${preset?.scadenza?fmtDate(preset.scadenza):'—'}</span>
-    <select class="reag-stato" style="width:100px">
-      <option value="cambiato" ${preset?.stato==='cambiato'?'selected':''}>Cambiato</option>
-      <option value="rabboccato" ${preset?.stato==='rabboccato'?'selected':''}>Rabboccato</option>
+    <select class="reag-stato" style="width:110px">
+      <option value="verificato" ${(!preset?.stato || preset?.stato==='verificato')?'selected':''}>✅ Verificato</option>
+      <option value="rabboccato" ${preset?.stato==='rabboccato'?'selected':''}>➕ Rabboccato</option>
+      <option value="cambiato" ${preset?.stato==='cambiato'?'selected':''}>🔄 Sostituito</option>
     </select>
     <button class="btn btn-sm btn-danger" onclick="this.closest('.reagente-usato-row').remove()">✕</button>`;
   document.getElementById('proc-reagenti-list').appendChild(div);
@@ -4321,8 +4437,9 @@ function addReagenteColor(preset){
     <span class="reag-lotto" style="font-family:DM Mono,monospace;font-size:11px;color:var(--text2);min-width:70px">${preset?.lotto||'—'}</span>
     <span class="reag-scad" style="font-size:11px;color:var(--text3);min-width:80px">${preset?.scadenza?fmtDate(preset.scadenza):'—'}</span>
     <select class="reag-stato" style="width:110px">
-      <option value="cambiato" ${preset?.stato==='cambiato'?'selected':''}>Cambiato</option>
-      <option value="rabboccato" ${preset?.stato==='rabboccato'?'selected':''}>Rabboccato</option>
+      <option value="verificato" ${(!preset?.stato || preset?.stato==='verificato')?'selected':''}>✅ Verificato</option>
+      <option value="rabboccato" ${preset?.stato==='rabboccato'?'selected':''}>➕ Rabboccato</option>
+      <option value="cambiato" ${preset?.stato==='cambiato'?'selected':''}>🔄 Sostituito</option>
     </select>
     <button class="btn btn-sm btn-danger" onclick="this.closest('.reagente-usato-row').remove()">✕</button>`;
   document.getElementById('color-reagenti-list').appendChild(div);
@@ -6297,6 +6414,298 @@ async function deleteIHC(){
 // ══════════════════════════════════════════
 // FIX [INFRASTRUTTURA]: LS_CAMP dichiarata in cima al file
 
+
+/* ════════════════════════════════════════════════════════════════
+   PARTE 2.5 — Modulo BIDONI (tracciabilità singola unità per reagenti/coloranti)
+   ════════════════════════════════════════════════════════════════
+   Stati: 'chiuso' → 'aperto' → 'smaltito'
+   Vincolo: max 1 bidone 'aperto' per prodotto alla volta
+   Categorie tracciate: 'Reagenti' e 'Coloranti'
+   Fonte di verità: i bidoni; qty del prodotto = count(bidoni != smaltito)
+   ════════════════════════════════════════════════════════════════ */
+
+const LS_BIDONI = 'ls_bidoni';
+const BIDONE_CATS = ['Reagenti', 'Coloranti'];
+if (Array.isArray(window._UNDO_KEYS) && !_UNDO_KEYS.includes(LS_BIDONI)) _UNDO_KEYS.push(LS_BIDONI);
+
+const loadBidoni = () => _getCache(LS_BIDONI, '[]');
+
+async function saveBidoniArr(arr, deletedId) {
+  _setCache(LS_BIDONI, _stampMod(arr));
+  if (typeof IS_ONLINE !== 'undefined' && !IS_ONLINE) { enqueue({type:'bidoni'}); return; }
+  try {
+    if (deletedId) await supaFetch('bidoni', 'DELETE', null, '?id=eq.' + deletedId);
+    if (arr.length) await supaFetch('bidoni', 'POST', arr, '?on_conflict=id');
+  } catch(e) { enqueue({type:'bidoni'}); }
+}
+
+// Helper: serve tracciare questo prodotto a bidoni?
+function isBidoneTracked(prod) {
+  return prod && BIDONE_CATS.includes(prod.cat);
+}
+
+// Helper: bidoni attivi (non smaltiti) per un prodotto
+function getBidoniByProd(prodId) {
+  return loadBidoni().filter(b => b.prod_id === prodId && b.stato !== 'smaltito');
+}
+
+// Helper: il bidone aperto di un prodotto (al massimo uno)
+function getBidoneAperto(prodId) {
+  return loadBidoni().find(b => b.prod_id === prodId && b.stato === 'aperto') || null;
+}
+
+// Conteggio: {chiusi, aperti, smaltiti} per UI
+function countBidoniProd(prodId) {
+  const all = loadBidoni().filter(b => b.prod_id === prodId);
+  return {
+    chiusi:    all.filter(b => b.stato === 'chiuso').length,
+    aperti:    all.filter(b => b.stato === 'aperto').length,
+    smaltiti:  all.filter(b => b.stato === 'smaltito').length,
+    totali:    all.length,
+    attivi:    all.filter(b => b.stato !== 'smaltito').length,
+  };
+}
+
+// Apertura di un bidone chiuso (per id). Verifica vincolo: max 1 aperto/prod.
+async function openBidone(bidoneId) {
+  const all = loadBidoni();
+  const idx = all.findIndex(b => b.id === bidoneId);
+  if (idx < 0) { toast('Bidone non trovato', 'err'); return false; }
+  const b = all[idx];
+  if (b.stato !== 'chiuso') { toast('Il bidone non è chiuso (stato: ' + b.stato + ')', 'err'); return false; }
+  // Controllo: c'è già un aperto per lo stesso prodotto?
+  const giàAperto = all.find(x => x.prod_id === b.prod_id && x.stato === 'aperto');
+  if (giàAperto) {
+    toast('Esiste già un bidone aperto per questo prodotto. Smaltisci prima quello.', 'err');
+    return false;
+  }
+  b.stato = 'aperto';
+  b.data_apertura = new Date().toISOString().slice(0,10);
+  all[idx] = b;
+  await saveBidoniArr(all);
+  _recomputeQtyFromBidoni(b.prod_id);
+  toast('Bidone aperto ✓', 'ok');
+  return true;
+}
+
+// Smaltimento di un bidone (chiuso o aperto).
+async function smaltisciBidone(bidoneId) {
+  const all = loadBidoni();
+  const idx = all.findIndex(b => b.id === bidoneId);
+  if (idx < 0) { toast('Bidone non trovato', 'err'); return false; }
+  const b = all[idx];
+  if (b.stato === 'smaltito') { toast('Bidone già smaltito', 'warn'); return false; }
+  b.stato = 'smaltito';
+  b.data_smaltimento = new Date().toISOString().slice(0,10);
+  all[idx] = b;
+  await saveBidoniArr(all);
+  _recomputeQtyFromBidoni(b.prod_id);
+  toast('Bidone smaltito ✓', 'ok');
+  return true;
+}
+
+// Crea N nuovi bidoni 'chiuso' per un prodotto (chiamato da carico DDT / carico manuale)
+async function createBidoniChiusi(prodId, n, opts) {
+  opts = opts || {};
+  const prod = loadP().find(p => p.id === prodId);
+  if (!prod) return [];
+  if (!isBidoneTracked(prod)) return [];
+  if (!n || n <= 0) return [];
+  const all = loadBidoni();
+  const oggi = new Date().toISOString().slice(0,10);
+  const nuovi = [];
+  for (let i = 0; i < n; i++) {
+    nuovi.push({
+      id: 'bid_' + Date.now() + '_' + Math.random().toString(36).slice(2,8) + '_' + i,
+      prod_id: prodId,
+      lotto: opts.lotto || prod.lotto || '',
+      scadenza: opts.scadenza || prod.scadenza || '',
+      ddt_id: opts.ddt_id || null,
+      data_carico: opts.data_carico || oggi,
+      stato: 'chiuso',
+      data_apertura: null,
+      data_smaltimento: null,
+      note: opts.note || ''
+    });
+  }
+  all.push(...nuovi);
+  await saveBidoniArr(all);
+  _recomputeQtyFromBidoni(prodId);
+  return nuovi;
+}
+
+// Ricalcola qty del prodotto in base ai bidoni attivi (chiusi + aperti)
+function _recomputeQtyFromBidoni(prodId) {
+  const prods = loadP();
+  const idx = prods.findIndex(p => p.id === prodId);
+  if (idx < 0) return;
+  const prod = prods[idx];
+  if (!isBidoneTracked(prod)) return; // solo reagenti/coloranti
+  const counts = countBidoniProd(prodId);
+  prod.qty = counts.attivi;
+  // qty_init: lo lasciamo invariato (storico)
+  prods[idx] = prod;
+  _setCache(LS_P, _stampMod(prods));
+}
+
+// Ricalcola TUTTI i qty dei prodotti tracciati a bidoni (utility)
+function recomputeAllBidoniQty() {
+  const prods = loadP();
+  let changed = false;
+  prods.forEach((p, i) => {
+    if (!isBidoneTracked(p)) return;
+    const counts = countBidoniProd(p.id);
+    if (p.qty !== counts.attivi) { p.qty = counts.attivi; prods[i] = p; changed = true; }
+  });
+  if (changed) _setCache(LS_P, _stampMod(prods));
+}
+
+/* ─── MIGRAZIONE AUTOMATICA: genera bidoni 'chiuso' per i prodotti
+   reagenti/coloranti esistenti che non hanno ancora bidoni ─── */
+function migrateProductsToBidoni() {
+  const prods = loadP();
+  const bidoni = loadBidoni();
+  const oggi = new Date().toISOString().slice(0,10);
+  let nuoviTot = 0;
+  prods.forEach(p => {
+    if (!isBidoneTracked(p)) return;
+    const giàEsistono = bidoni.some(b => b.prod_id === p.id);
+    if (giàEsistono) return; // già migrato
+    const qty = parseInt(p.qty) || 0;
+    if (qty <= 0) return;
+    for (let i = 0; i < qty; i++) {
+      bidoni.push({
+        id: 'bid_' + Date.now() + '_' + Math.random().toString(36).slice(2,8) + '_' + i,
+        prod_id: p.id,
+        lotto: p.lotto || '',
+        scadenza: p.scadenza || '',
+        ddt_id: null,
+        data_carico: oggi,
+        stato: 'chiuso',
+        data_apertura: null,
+        data_smaltimento: null,
+        note: 'Migrato automaticamente da inventario esistente'
+      });
+      nuoviTot++;
+    }
+  });
+  if (nuoviTot > 0) {
+    _setCache(LS_BIDONI, _stampMod(bidoni));
+    console.log('[migrateProductsToBidoni] creati ' + nuoviTot + ' bidoni dai prodotti esistenti');
+    toast('Migrazione: ' + nuoviTot + ' bidoni creati da prodotti esistenti', 'ok');
+  }
+}
+
+/* ─── HOOK: dopo carico DDT (saveCarico), crea bidoni chiusi per
+   reagenti/coloranti. Wrap della funzione esistente. ─── */
+(function() {
+  if (typeof saveCarico === 'function') {
+    const _origSaveCarico = saveCarico;
+    window.saveCarico = async function(...args) {
+      const result = await _origSaveCarico.apply(this, args);
+      // dopo carico: per ogni prodotto reagente/colorante caricato di recente, 
+      // crea N bidoni chiusi se non ci sono ancora bidoni associati a quel lotto
+      try {
+        const prods = loadP();
+        const bidoni = loadBidoni();
+        const oggi = new Date().toISOString().slice(0,10);
+        prods.forEach(p => {
+          if (!isBidoneTracked(p)) return;
+          // Bidoni esistenti per questo prodotto+lotto
+          const bidoniLotto = bidoni.filter(b => b.prod_id === p.id && b.lotto === (p.lotto||''));
+          // Se qty > bidoni attivi → ne mancano
+          const counts = countBidoniProd(p.id);
+          const mancanti = (parseInt(p.qty)||0) - counts.attivi;
+          if (mancanti > 0) {
+            // Creiamo i mancanti come 'chiuso' del lotto corrente
+            createBidoniChiusi(p.id, mancanti, {lotto:p.lotto, scadenza:p.scadenza, data_carico:oggi});
+          }
+        });
+      } catch(e) { console.warn('[saveCarico bidoni hook]', e); }
+      return result;
+    };
+  }
+})();
+
+/* ─── HOOK: dopo scarico, NON modifichiamo bidoni (lo scarico classico
+   continua a decrementare qty come prima per categorie non-bidone).
+   Per reagenti/coloranti, lo scarico significa che l'utente sta smaltendo 
+   un bidone aperto → si fa esplicitamente via smaltisciBidone(). ─── */
+
+
+/* ─── UI: tabella bidoni per un singolo prodotto (espandibile in inventario) ─── */
+function renderBidoniProd(prodId) {
+  const prod = loadP().find(p => p.id === prodId);
+  if (!prod || !isBidoneTracked(prod)) return '';
+  const bidoni = loadBidoni().filter(b => b.prod_id === prodId);
+  if (!bidoni.length) return '<div style="padding:10px;font-size:11px;color:var(--text3);font-style:italic">Nessun bidone registrato — crea uno dal carico DDT</div>';
+  // Ordina: aperti prima, poi chiusi (più vecchi prima), poi smaltiti
+  const order = {aperto:0, chiuso:1, smaltito:2};
+  bidoni.sort((a,b) => (order[a.stato]||9) - (order[b.stato]||9) || (a.data_carico||'').localeCompare(b.data_carico||''));
+  const statoBadge = (s) => {
+    if (s === 'aperto')   return '<span class="badge bg-yellow">🔓 Aperto</span>';
+    if (s === 'chiuso')   return '<span class="badge bg-blue">🔒 Chiuso</span>';
+    if (s === 'smaltito') return '<span class="badge" style="background:var(--bg4);color:var(--text3)">✕ Smaltito</span>';
+    return '<span class="badge">' + esc(s) + '</span>';
+  };
+  const fmtD = d => d ? new Date(d).toLocaleDateString('it-IT',{day:'2-digit',month:'2-digit',year:'2-digit'}) : '—';
+  const daysAgo = d => { if(!d) return ''; const days = Math.floor((Date.now() - new Date(d).getTime())/86400000); return days + 'gg fa'; };
+  let html = `<table class="tbl" style="font-size:11px;margin:0">
+    <thead><tr>
+      <th>Bidone</th><th>Lotto</th><th>Scadenza</th><th>Stato</th><th>Carico</th><th>Apertura</th><th style="text-align:right">Azioni</th>
+    </tr></thead><tbody>`;
+  // Esiste già un aperto?
+  const giàAperto = bidoni.some(b => b.stato === 'aperto');
+  bidoni.forEach((b,i) => {
+    const azioni = [];
+    if (b.stato === 'chiuso') {
+      if (giàAperto) azioni.push('<span style="font-size:10px;color:var(--text3)" title="Esiste già un bidone aperto">—</span>');
+      else azioni.push(`<button class="btn btn-sm btn-ok" onclick="event.stopPropagation();openBidoneAction('${b.id}')" title="Apri questo bidone">🔓 Apri</button>`);
+      azioni.push(`<button class="btn btn-sm btn-danger" onclick="event.stopPropagation();smaltisciBidoneAction('${b.id}')" title="Smaltisci senza aprirlo">✕</button>`);
+    } else if (b.stato === 'aperto') {
+      azioni.push(`<button class="btn btn-sm btn-danger" onclick="event.stopPropagation();smaltisciBidoneAction('${b.id}')" title="Smaltisci bidone aperto">✕ Smaltisci</button>`);
+    }
+    const idShort = b.id.slice(-6);
+    html += `<tr style="${b.stato==='smaltito'?'opacity:.5':''}">
+      <td class="mono">#${idShort}</td>
+      <td class="mono">${esc(b.lotto||'—')}</td>
+      <td class="mono">${fmtD(b.scadenza)}</td>
+      <td>${statoBadge(b.stato)}</td>
+      <td class="mono">${fmtD(b.data_carico)}</td>
+      <td class="mono">${b.data_apertura ? fmtD(b.data_apertura) + ' <span style="color:var(--text3);font-size:9px">(' + daysAgo(b.data_apertura) + ')</span>' : '—'}</td>
+      <td style="text-align:right;white-space:nowrap">${azioni.join(' ')}</td>
+    </tr>`;
+  });
+  html += '</tbody></table>';
+  return html;
+}
+
+window.openBidoneAction = async function(bidoneId) {
+  if (!confirm('Aprire questo bidone? Verrà segnato come "in uso" da oggi.')) return;
+  const ok = await openBidone(bidoneId);
+  if (ok) {
+    if (typeof renderInv === 'function') renderInv();
+    if (typeof renderBidoniView === 'function') renderBidoniView();
+  }
+};
+
+window.smaltisciBidoneAction = async function(bidoneId) {
+  const b = loadBidoni().find(x => x.id === bidoneId);
+  if (!b) return;
+  const prod = loadP().find(p => p.id === b.prod_id);
+  const msg = `Smaltire definitivamente questo bidone?\n\n${prod?.nome || '—'}\nLotto: ${b.lotto || '—'}\nStato attuale: ${b.stato}\n\nL'operazione è annullabile con Undo.`;
+  if (!confirm(msg)) return;
+  const ok = await smaltisciBidone(bidoneId);
+  if (ok) {
+    if (typeof renderInv === 'function') renderInv();
+    if (typeof renderBidoniView === 'function') renderBidoniView();
+  }
+};
+
+
+// FIX [INFRASTRUTTURA]: LS_CAMP dichiarata in cima al file
+
+
 /* ════════════════════════════════════════════════════════════════
    PARTE 3 — renderDashAnalytics (6 chart SVG con dati reali)
    ════════════════════════════════════════════════════════════════ */
@@ -6823,289 +7232,348 @@ function updateRailBadges(){
   }
 }
 
-// ─── Override renderDashboard per layout preview ───
+// ═══════════════════════════════════════════════════════════════════
+// DASHBOARD GLUE — popola la nuova view preview-clone con dati reali
+// ═══════════════════════════════════════════════════════════════════
+
 const _origRenderDashboard = (typeof renderDashboard === 'function') ? renderDashboard : null;
+
 function renderDashboardPreview(){
-  // Update KPI
+  const set = (id, v) => { const e = document.getElementById(id); if(e) e.textContent = v; };
+  const setHTML = (id, v) => { const e = document.getElementById(id); if(e) e.innerHTML = v; };
+
+  // ─── KPI 1: Casi processati ───
   try {
-    if(typeof loadCampioni === 'function'){
+    if (typeof loadCampioni === 'function') {
       const camps = loadCampioni();
       const now = new Date(); now.setHours(0,0,0,0);
       const ms = new Date(now.getFullYear(), now.getMonth(), 1);
       const monthCamps = camps.filter(c => c.data && new Date(c.data) >= ms);
-      const totVal = document.getElementById('kpi-casi-val');
-      if(totVal) totVal.textContent = monthCamps.length;
-      const breakd = document.getElementById('kpi-casi-breakdown');
-      if(breakd){
-        const cIst = monthCamps.filter(c => c.tipo === 'Istologia' || c.tipo === 'istologia').length;
-        const cCit = monthCamps.filter(c => c.tipo === 'Citologia' || c.tipo === 'citologia').length;
-        const cPap = monthCamps.filter(c => (c.tipo||'').toLowerCase().includes('pap')).length;
-        breakd.innerHTML = `<span>Isto <b style="color:var(--accent)">${cIst}</b></span><span>Cito <b style="color:var(--accent)">${cCit}</b></span><span>PAP <b style="color:var(--accent)">${cPap}</b></span>`;
-      }
-      // delta vs mese scorso
+      set('kpi-casi-val', monthCamps.length);
+      const tl = t => (t||'').toLowerCase();
+      const cIst = monthCamps.filter(c => tl(c.tipo) === 'istologia').length;
+      const cCit = monthCamps.filter(c => tl(c.tipo) === 'citologia').length;
+      const cPap = monthCamps.filter(c => tl(c.tipo).includes('pap')).length;
+      set('kpi-casi-ist', cIst);
+      set('kpi-casi-cit', cCit);
+      set('kpi-casi-pap', cPap);
+      // delta vs mese precedente
       const prevMs = new Date(now.getFullYear(), now.getMonth()-1, 1);
-      const prevMonthCamps = camps.filter(c => c.data && new Date(c.data) >= prevMs && new Date(c.data) < ms);
+      const prev = camps.filter(c => c.data && new Date(c.data) >= prevMs && new Date(c.data) < ms);
       const delta = document.getElementById('kpi-casi-delta');
-      if(delta){
-        if(prevMonthCamps.length > 0){
-          const pct = Math.round((monthCamps.length - prevMonthCamps.length) / prevMonthCamps.length * 100);
-          if(pct > 0){ delta.className = 'kpi-delta up'; delta.textContent = '↑ +' + pct + '% vs mese scorso'; }
-          else if(pct < 0){ delta.className = 'kpi-delta down'; delta.textContent = '↓ ' + pct + '% vs mese scorso'; }
+      if (delta) {
+        if (prev.length > 0) {
+          const pct = Math.round((monthCamps.length - prev.length) / prev.length * 100);
+          if (pct > 0) { delta.className = 'kpi-delta up'; delta.textContent = '↑ +' + pct + '% vs mese scorso'; }
+          else if (pct < 0) { delta.className = 'kpi-delta down'; delta.textContent = '↓ ' + pct + '% vs mese scorso'; }
           else { delta.className = 'kpi-delta'; delta.textContent = '= invariato'; }
         } else delta.textContent = '';
       }
     }
-  } catch(e){ console.warn('[KPI casi]', e); }
+  } catch(e) { console.warn('[KPI casi]', e); }
 
-  // KPI Rifiuti — strip a 2 colonne (Solidi/Liquidi) + lista CER
+  // ─── KPI 2: Rifiuti attivi (Solidi/Liquidi + lista CER) ───
   try {
-    if(typeof loadW === 'function'){
+    if (typeof loadW === 'function') {
       const w = loadW();
       const sP = (w.solidi_pieni||[]).length;
       const sV = (w.solidi_vuoti||[]).length;
       const lP = (w.liquidi_pieni||[]).length;
       const lV = (w.liquidi_vuoti||[]).length;
-      const set = (id, v) => { const e = document.getElementById(id); if(e) e.textContent = v; };
-      set('rif-strip-sol-p', sP);
-      set('rif-strip-sol-v', sV);
-      set('rif-strip-liq-p', lP);
-      set('rif-strip-liq-v', lV);
-      // Lista CER (aggregata sui pieni)
-      const cerList = document.getElementById('rif-strip-cer');
-      if(cerList){
+      set('rif-sol-p', sP);
+      set('rif-sol-v', sV);
+      set('rif-liq-p', lP);
+      set('rif-liq-v', lV);
+      // Lista CER aggregata
+      const cerEl = document.getElementById('rif-cer-mini');
+      if (cerEl) {
         const byCer = {};
-        (w.solidi_pieni||[]).forEach(b => { const c = b.cer || '180103'; byCer[c] = (byCer[c]||{p:0,v:0}); byCer[c].p++; });
-        (w.solidi_vuoti||[]).forEach(b => { const c = b.cer || '180103'; byCer[c] = (byCer[c]||{p:0,v:0}); byCer[c].v++; });
-        (w.liquidi_pieni||[]).forEach(b => { const c = b.cer || '150110'; byCer[c] = (byCer[c]||{p:0,v:0}); byCer[c].p++; });
-        (w.liquidi_vuoti||[]).forEach(b => { const c = b.cer || '150110'; byCer[c] = (byCer[c]||{p:0,v:0}); byCer[c].v++; });
+        (w.solidi_pieni ||[]).forEach(b => { const c = b.cer || '180103'; byCer[c] = byCer[c]||{p:0,v:0}; byCer[c].p++; });
+        (w.solidi_vuoti ||[]).forEach(b => { const c = b.cer || '180103'; byCer[c] = byCer[c]||{p:0,v:0}; byCer[c].v++; });
+        (w.liquidi_pieni||[]).forEach(b => { const c = b.cer || '150110'; byCer[c] = byCer[c]||{p:0,v:0}; byCer[c].p++; });
+        (w.liquidi_vuoti||[]).forEach(b => { const c = b.cer || '150110'; byCer[c] = byCer[c]||{p:0,v:0}; byCer[c].v++; });
+        const cls = (c) => {
+          if (c === '180103' || c === '180108') return 'red';
+          if (c === '150110' || c === '180106') return 'yellow';
+          return 'gray';
+        };
         const keys = Object.keys(byCer).sort();
-        cerList.innerHTML = keys.map(k => `<div class="cer-row"><span>CER ${k}*</span><span><b>${byCer[k].p}P</b> / ${byCer[k].v}V</span></div>`).join('');
+        cerEl.innerHTML = keys.length ? keys.map(k => `
+          <div style="display:flex;align-items:center;justify-content:space-between;font-size:10px">
+            <span class="cer-chip ${cls(k)}" style="font-size:9px">${k}*</span>
+            <span style="font-family:'DM Mono',monospace;color:var(--text3)">${byCer[k].p}P / ${byCer[k].v}V</span>
+          </div>`).join('') : '<div style="font-size:10px;color:var(--text3);font-style:italic">Nessun bidone</div>';
       }
     }
-  } catch(e){ console.warn('[KPI rifiuti]', e); }
+  } catch(e) { console.warn('[KPI rifiuti]', e); }
 
-  // KPI Ordini — mini-lista scrollabile
+  // ─── KPI 3: Ordini aperti (mini-cards) ───
   try {
-    if(typeof loadOrd === 'function'){
-      const ords = loadOrd().filter(o => o.stato !== 'ricevuto' && o.stato !== 'annullato');
+    if (typeof loadOrd === 'function') {
       const list = document.getElementById('kpi-ordini-list');
-      if(list){
-        if(!ords.length){
-          list.innerHTML = '<div class="strip-empty">Nessun ordine in corso</div>';
+      if (list) {
+        const ords = loadOrd().filter(o => o.stato !== 'ricevuto' && o.stato !== 'annullato');
+        if (!ords.length) {
+          list.innerHTML = '<div style="font-size:11px;color:var(--text3);font-style:italic;padding:8px 0;text-align:center">Nessun ordine in corso</div>';
         } else {
+          const statoBg = {bozza:'bg-blue', inviato:'bg-yellow', approvato:'bg-purple', parziale:'bg-orange'};
           const statoLabel = {bozza:'Bozza', inviato:'Inviato', approvato:'Approvato', parziale:'Parziale'};
-          // Ordina: parziali → inviati → approvati → bozza
           const order = {parziale:0, inviato:1, approvato:2, bozza:3};
           ords.sort((a,b) => (order[a.stato]||9) - (order[b.stato]||9));
-          list.innerHTML = ords.map(o => {
+          list.innerHTML = ords.slice(0,3).map(o => {
             const tot = (o.righe||[]).reduce((s,r) => s + (parseFloat(r.qta)||0), 0);
             const ric = (o.righe||[]).reduce((s,r) => s + (parseFloat(r.qtyRicevuta)||0), 0);
             const pct = tot > 0 ? Math.round(ric/tot*100) : 0;
             const nP = (o.righe||[]).length;
-            return `<div class="strip-ord-item" onclick="showView('ordini');setTimeout(()=>{if(typeof selectOrdineDetail==='function')selectOrdineDetail('${o.id}')},80)">
-              <div class="strip-ord-row1">
-                <span class="strip-ord-num">${esc(o.num||'—')}</span>
-                <span class="strip-ord-stato ${o.stato}">${statoLabel[o.stato]||o.stato}</span>
+            const barCol = pct >= 100 ? 'var(--green)' : (pct > 0 ? 'var(--orange)' : 'var(--blue)');
+            return `<div style="background:var(--surface2,#f8fafc);border:1px solid var(--border);border-radius:6px;padding:6px 8px;cursor:pointer" onclick="event.stopPropagation();showView('ordini');setTimeout(()=>{if(typeof selectOrdineDetail==='function')selectOrdineDetail('${o.id}')},80)">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px">
+                <span style="font-family:'DM Mono',monospace;font-size:11px;font-weight:700;color:var(--accent)">${esc(o.num||'—')}</span>
+                <span class="badge ${statoBg[o.stato]||''}" style="font-size:8px">${statoLabel[o.stato]||o.stato}</span>
               </div>
-              <div class="strip-ord-row2">
-                <span class="strip-ord-meta">${esc(o.fornitore||'—')} · ${nP} prodott${nP===1?'o':'i'}</span>
-                <span class="strip-ord-pct ${pct===0?'zero':''}">${pct}%</span>
+              <div style="font-size:10px;color:var(--text3);margin-bottom:4px">${esc(o.fornitore||'—')} · ${nP} prodott${nP===1?'o':'i'}</div>
+              <div style="display:flex;align-items:center;gap:5px">
+                <div style="flex:1;height:3px;background:var(--border);border-radius:99px;overflow:hidden"><div style="width:${pct}%;height:100%;background:${barCol};border-radius:99px"></div></div>
+                <span style="font-family:'DM Mono',monospace;font-size:9px;color:var(--text3)">${pct===0&&o.stato==='bozza'?'—':pct+'%'}</span>
               </div>
             </div>`;
           }).join('');
         }
       }
     }
-  } catch(e){ console.warn('[KPI ordini]', e); }
+  } catch(e) { console.warn('[KPI ordini]', e); }
 
-  // KPI IHC
+  // ─── KPI 4: IHC da fare ───
   try {
-    if(typeof loadIHC === 'function'){
+    if (typeof loadIHC === 'function') {
       const ihc = loadIHC();
       const pending = ihc.filter(r => r.stato !== 'completata');
       const urg = pending.filter(r => r.priorita === 'urgente').length;
-      const v = document.getElementById('kpi-ihc-val');
-      if(v) v.textContent = pending.length;
+      const prog = pending.filter(r => r.priorita !== 'urgente').length;
+      set('kpi-ihc-val', pending.length);
       const sub = document.getElementById('kpi-ihc-sub');
-      if(sub) sub.textContent = urg ? (urg + ' urgenti · ' + (pending.length-urg) + ' altri') : (pending.length + ' in attesa');
+      if (sub) {
+        if (!pending.length) sub.textContent = '';
+        else sub.textContent = urg + ' urgent' + (urg===1?'e':'i') + ' · ' + prog + ' programmat' + (prog===1?'o':'i');
+      }
     }
-  } catch(e){ console.warn('[KPI IHC]', e); }
+  } catch(e) { console.warn('[KPI IHC]', e); }
 
-  // Subtitle dinamico
+  // ─── Subtitle dinamico ───
   try {
     const sub = document.getElementById('dash-subtitle');
-    if(sub){
+    if (sub) {
       const today = new Date();
       const camps = (typeof loadCampioni === 'function') ? loadCampioni() : [];
-      const todayStr = today.toISOString().slice(0,10);
-      const todayN = camps.filter(c => c.data === todayStr).length;
+      const ms = new Date(today.getFullYear(), today.getMonth(), 1);
+      const monthN = camps.filter(c => c.data && new Date(c.data) >= ms).length;
       const ihcDaFare = (typeof loadIHC === 'function') ? loadIHC().filter(r => r.stato !== 'completata').length : 0;
-      const allerteN = parseInt((document.getElementById('rail-badge-allerte')?.textContent || '0'));
-      sub.textContent = today.toLocaleDateString('it-IT',{weekday:'short',day:'2-digit',month:'short',year:'numeric'}) + ' · ' + todayN + ' casi oggi · ' + ihcDaFare + ' IHC in attesa · ' + allerteN + ' allerte magazzino';
+      const allerteN = parseInt(document.getElementById('rail-badge-allerte')?.textContent || '0');
+      const dateStr = today.toLocaleDateString('it-IT',{weekday:'short',day:'2-digit',month:'short',year:'numeric'});
+      sub.textContent = dateStr + ' · ' + monthN + ' casi ' + today.toLocaleDateString('it-IT',{month:'short'}) + ' · ' + ihcDaFare + ' IHC in attesa · ' + allerteN + ' allerte magazzino';
     }
-  } catch(e){ console.warn('[subtitle]', e); }
+  } catch(e) { console.warn('[subtitle]', e); }
 
-  // Mini cicli proc + color
-  renderHomeProcMini();
-  renderHomeColorMini();
+  // ─── Tabelle storico Proc/Color ───
+  renderHomeProcTable();
+  renderHomeColorTable();
 
-  // Mini liste
-  renderHomeAllerte();
-  renderHomeOrdini();
-  renderHomeIHC();
-
-  // Grid prodotti
-  if(typeof renderHomeGrid === 'function') try { renderHomeGrid(); } catch(e){ console.warn('[homeGrid]', e); }
-
-  // Analytics
-  if(typeof renderDashAnalytics === 'function') try { renderDashAnalytics(); } catch(e){ console.warn('[dashAnalytics]', e); }
+  // ─── 6 chart SVG dashboard analytics ───
+  if (typeof renderDashAnalytics === 'function') {
+    try { renderDashAnalytics(); } catch(e) { console.warn('[dashAnalytics]', e); }
+  }
 
   updateRailBadges();
 }
 window.renderDashboard = renderDashboardPreview;
 
-// ─── Mini home: ultimi 5 cicli processatore ───
-function renderHomeProcMini(){
-  const el = document.getElementById('home-proc-mini');
-  if(!el || typeof loadProc !== 'function') return;
+// ─── Tabella processatore: ultimi 5 cicli ───
+function renderHomeProcTable() {
+  const tbody = document.getElementById('home-proc-tbody');
+  if (!tbody || typeof loadProc !== 'function') return;
   const proc = loadProc().slice(0,5);
-  if(!proc.length){
-    el.innerHTML = '<div class="empty-state" style="padding:14px"><div style="font-size:12px;color:var(--text3)">Nessun ciclo registrato</div></div>';
+  if (!proc.length) {
+    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text3);padding:14px;font-style:italic">Nessun ciclo registrato</td></tr>';
     return;
   }
   const statoBadge = (r) => {
     const reag = r.reagenti||[];
-    if(!reag.length) return '<span class="badge bg-green" style="font-size:8px">— —</span>';
-    if(reag.some(x => (x.stato||'').includes('sostituit') || x.stato === 'cambiato')) return '<span class="badge bg-orange" style="font-size:8px">🔄 Sost.</span>';
-    if(reag.some(x => x.stato === 'rabboccato')) return '<span class="badge bg-blue" style="font-size:8px">➕ Rabb.</span>';
+    if (!reag.length) return '<span style="font-size:10px;color:var(--text3)">—</span>';
+    if (reag.some(x => x.stato === 'cambiato' || (x.stato||'').includes('sostit'))) return '<span class="badge bg-orange" style="font-size:8px">🔄 Sost.</span>';
+    if (reag.some(x => x.stato === 'rabboccato')) return '<span class="badge bg-blue" style="font-size:8px">➕ Rabb.</span>';
+    if (reag.some(x => (x.stato||'').includes('corso'))) return '<span class="badge bg-yellow" style="font-size:8px">In corso</span>';
     return '<span class="badge bg-green" style="font-size:8px">✅ Verif.</span>';
   };
-  let html = '<table class="tbl" style="font-size:10px"><thead><tr><th>Data</th><th>Range casi</th><th>Cassette</th><th>Stato reagenti</th></tr></thead><tbody>';
-  proc.forEach(r => {
+  tbody.innerHTML = proc.map(r => {
     const data = r.data ? new Date(r.data).toLocaleDateString('it-IT',{day:'2-digit',month:'2-digit'}) : '—';
     const ora = r.ora_inizio || '';
-    const casi = r.casi || [];
-    const range = casi.length ? (casi[0] + (casi.length>1 ? ' → ' + casi[casi.length-1] : '')) : '—';
-    const ncass = r.n_cassette || casi.length;
-    html += `<tr style="cursor:pointer" onclick="showView('processatore')"><td class="mono">${data} ${ora}</td><td class="mono">${esc?esc(range):range}</td><td>${ncass}</td><td>${statoBadge(r)}</td></tr>`;
-  });
-  html += '</tbody></table>';
-  el.innerHTML = html;
-}
-
-// ─── Mini home: ultimi 5 giorni coloratore ───
-function renderHomeColorMini(){
-  const el = document.getElementById('home-color-mini');
-  if(!el || typeof loadColor !== 'function') return;
-  const reg = loadColor().slice(0,5);
-  if(!reg.length){
-    el.innerHTML = '<div class="empty-state" style="padding:14px"><div style="font-size:12px;color:var(--text3)">Nessun registro</div></div>';
-    return;
-  }
-  const statoBadge = (r) => {
-    const reag = r.reagenti||[];
-    if(!reag.length) return '<span style="font-size:10px;color:var(--text3)">—</span>';
-    if(reag.some(x => (x.stato||'').includes('sostituit') || x.stato === 'cambiato')) return '<span class="badge bg-orange" style="font-size:8px">🔄 Sost.</span>';
-    if(reag.some(x => x.stato === 'rabboccato')) return '<span class="badge bg-blue" style="font-size:8px">➕ Rabb.</span>';
-    return '<span class="badge bg-green" style="font-size:8px">✅ Verif.</span>';
-  };
-  let html = '<table class="tbl" style="font-size:10px"><thead><tr><th>Data</th><th>EE Ist.</th><th>EE Cit.</th><th>PAP</th><th>Reag.</th></tr></thead><tbody>';
-  reg.forEach(r => {
-    const data = r.data ? new Date(r.data).toLocaleDateString('it-IT',{day:'2-digit',month:'2-digit'}) : '—';
-    const ee = r.cicli_ee || 0;
-    const eeCit = r.cicli_ee_cit || 0;
-    const pap = r.cicli_pap || 0;
-    const vEe = r.vetri_ist || 0;
-    const vCit = r.vetri_cit || 0;
-    const vPap = r.vetri_pap || 0;
-    html += `<tr style="cursor:pointer" onclick="showView('coloratore')"><td class="mono">${data}</td><td>${ee}c/${vEe}v</td><td>${eeCit}c/${vCit}v</td><td>${pap}c/${vPap}v</td><td>${statoBadge(r)}</td></tr>`;
-  });
-  html += '</tbody></table>';
-  el.innerHTML = html;
-}
-
-// ─── Mini home: allerte (top 5) ───
-function renderHomeAllerte(){
-  const el = document.getElementById('home-allerte-list');
-  if(!el || typeof loadP !== 'function') return;
-  const prods = loadP();
-  const today = new Date(); today.setHours(0,0,0,0);
-  const allerte = [];
-  prods.forEach(p => {
-    if(p.giacenza <= 0) allerte.push({prod:p, sev:0, label:'Esaurito', cls:'bg-red'});
-    else if(p.scorta_min && p.giacenza < p.scorta_min) allerte.push({prod:p, sev:1, label:'Scorta bassa', cls:'bg-yellow'});
-    else if(p.scadenza){
-      const sd = new Date(p.scadenza);
-      if(!isNaN(sd) && sd <= today) allerte.push({prod:p, sev:0, label:'Scaduto', cls:'bg-red'});
-      else if(!isNaN(sd) && (sd - today) / 86400000 < 30) allerte.push({prod:p, sev:2, label:'In scadenza', cls:'bg-orange'});
-    }
-  });
-  allerte.sort((a,b) => a.sev - b.sev);
-  if(!allerte.length){
-    el.innerHTML = '<div class="home-empty">Nessuna allerta — tutto sotto controllo ✓</div>';
-    return;
-  }
-  el.innerHTML = allerte.slice(0,5).map(a =>
-    `<div class="home-list-item" onclick="showView('allerte')">
-      <span><strong>${esc?esc(a.prod.nome):a.prod.nome}</strong>${a.prod.lotto?'<small style="color:var(--text3);margin-left:5px;font-family:DM Mono,monospace">'+(esc?esc(a.prod.lotto):a.prod.lotto)+'</small>':''}</span>
-      <span class="badge ${a.cls}" style="font-size:9px">${a.label}</span>
-    </div>`
-  ).join('') + (allerte.length > 5 ? `<div class="home-empty">+${allerte.length-5} altre</div>` : '');
-}
-
-// ─── Mini home: ordini ───
-function renderHomeOrdini(){
-  const el = document.getElementById('home-ordini-list');
-  if(!el || typeof loadOrd !== 'function') return;
-  const ords = loadOrd().filter(o => o.stato !== 'ricevuto' && o.stato !== 'annullato').slice(0,5);
-  if(!ords.length){
-    el.innerHTML = '<div class="home-empty">Nessun ordine in corso</div>';
-    return;
-  }
-  const statoBadge = {
-    bozza: '<span class="badge bg-blue" style="font-size:9px">Bozza</span>',
-    inviato: '<span class="badge bg-yellow" style="font-size:9px">Inviato</span>',
-    approvato: '<span class="badge bg-purple" style="font-size:9px">Approvato</span>',
-    parziale: '<span class="badge bg-orange" style="font-size:9px">Parziale</span>'
-  };
-  el.innerHTML = ords.map(o => {
-    const tot = (o.righe || []).reduce((s,r) => s + (parseFloat(r.qta) || 0), 0);
-    const ric = (o.righe || []).reduce((s,r) => s + (parseFloat(r.qtyRicevuta) || 0), 0);
-    const pct = tot > 0 ? Math.round(ric / tot * 100) : 0;
-    return `<div class="home-list-item" onclick="showView('ordini');setTimeout(()=>selectOrdineDetail('${o.id}'),100)">
-      <span><strong style="font-family:DM Mono,monospace">${esc?esc(o.num||'—'):o.num||'—'}</strong><small style="color:var(--text3);margin-left:5px">${(o.righe||[]).length} prodotti</small></span>
-      <span style="display:flex;align-items:center;gap:6px">${statoBadge[o.stato]||''}<small style="color:var(--text3);font-family:DM Mono,monospace">${pct}%</small></span>
-    </div>`;
+    let range = '—';
+    if (r.casi_da && r.casi_a) range = r.casi_da + (r.casi_a !== r.casi_da ? ' → ' + r.casi_a : '');
+    else if (r.casi_da) range = r.casi_da;
+    else if (r.casi_a) range = r.casi_a;
+    else if ((r.casi||[]).length === 1) range = r.casi[0];
+    else if ((r.casi||[]).length > 1) range = r.casi[0] + ' → ' + r.casi[r.casi.length-1];
+    const cass = r.n_cassette || (r.casi||[]).length || '—';
+    return `<tr style="cursor:pointer" onclick="showView('processatore')">
+      <td class="mono">${data} ${ora}</td>
+      <td class="mono">${esc(range)}</td>
+      <td>${cass}</td>
+      <td>${statoBadge(r)}</td>
+    </tr>`;
   }).join('');
 }
 
-// ─── Mini home: IHC ───
-function renderHomeIHC(){
-  const el = document.getElementById('home-ihc-content');
-  if(!el || typeof loadIHC !== 'function') return;
-  const ihc = loadIHC();
-  const _ihcN = s => { const m = (s||'').match(/^(\d+)/); return m ? parseInt(m[1]) : 0; };
-  const pending = ihc.filter(x => x.stato !== 'completata').sort((a,b) => {
-    if(a.priorita === 'urgente' && b.priorita !== 'urgente') return -1;
-    if(b.priorita === 'urgente' && a.priorita !== 'urgente') return 1;
-    return _ihcN(b.campione_id) - _ihcN(a.campione_id);
-  });
-  if(!pending.length){
-    el.innerHTML = '<div class="home-empty">Nessuna richiesta in sospeso ✓</div>';
+// ─── Tabella coloratore home: ultimi 5 giorni × 3 tipi colorazione ───
+function renderHomeColorTable() {
+  const tbody = document.getElementById('home-color-tbody');
+  const loader = (typeof loadColoratore === 'function') ? loadColoratore : (typeof loadColor === 'function' ? loadColor : null);
+  if (!tbody || !loader) return;
+  // raggruppa per data (un record = un giorno, ma per sicurezza aggrega)
+  const reg = loader();
+  if (!reg.length) {
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--text3);padding:14px;font-style:italic">Nessun ciclo registrato</td></tr>';
     return;
   }
-  const prioBadge = {urgente:'<span class="badge bg-red" style="font-size:9px">🔴 Urgente</span>', normale:'', differibile:'<span class="badge" style="background:var(--bg4);color:var(--text3);border-color:var(--border2);font-size:9px">Diff.</span>'};
-  const statoBadge = {da_fare:'<span class="badge bg-red" style="font-size:9px">Da fare</span>', in_lavorazione:'<span class="badge bg-yellow" style="font-size:9px">In lav.</span>'};
-  el.innerHTML = pending.slice(0,5).map(r =>
-    `<div class="home-list-item" style="flex-direction:column;align-items:flex-start;gap:4px;${r.priorita==='urgente'?'border-left:3px solid var(--red);padding-left:10px':''}" onclick="openNuovaIHC(loadIHC().find(x=>x.id==='${r.id}'))">
-      <div style="display:flex;width:100%;justify-content:space-between;align-items:center">
-        <span><strong style="font-family:DM Mono,monospace">${esc?esc(r.campione_id||'—'):r.campione_id||'—'}</strong> <span style="color:var(--text3);font-size:11px">${esc?esc(r.patologo||''):r.patologo||''}</span></span>
-        <span style="display:flex;align-items:center;gap:4px">${prioBadge[r.priorita]||''}${statoBadge[r.stato]||''}</span>
-      </div>
-      ${typeof _ihcChips === 'function' ? _ihcChips(r) : ''}
-    </div>`
-  ).join('') + (pending.length > 5 ? `<div class="home-empty">+${pending.length-5} altre</div>` : '');
+  // Aggrega per data
+  const byDate = {};
+  reg.forEach(r => {
+    if (!r.data) return;
+    if (!byDate[r.data]) byDate[r.data] = {data:r.data, cicli_ee:0, cicli_ee_cit:0, cicli_pap:0, vetri_ist:0, vetri_cit:0, vetri_pap:0, reagenti:[]};
+    const b = byDate[r.data];
+    b.cicli_ee     += (r.cicli_ee||0);
+    b.cicli_ee_cit += (r.cicli_ee_cit||0);
+    b.cicli_pap    += (r.cicli_pap||0);
+    b.vetri_ist    += (r.vetri_ist||0);
+    b.vetri_cit    += (r.vetri_cit||0);
+    b.vetri_pap    += (r.vetri_pap||0);
+    b.reagenti      = b.reagenti.concat(r.reagenti||[]);
+  });
+  const days = Object.values(byDate).sort((a,b) => (b.data||'').localeCompare(a.data||'')).slice(0,5);
+
+  const statoBadge = (reag) => {
+    if (!reag.length) return '<span style="font-size:10px;color:var(--text3)">—</span>';
+    if (reag.some(x => x.stato === 'cambiato' || (x.stato||'').includes('sostit'))) return '<span class="badge bg-orange" style="font-size:8px">🔄 Sost.</span>';
+    if (reag.some(x => x.stato === 'rabboccato')) return '<span class="badge bg-blue" style="font-size:8px">➕ Rabb.</span>';
+    return '<span class="badge bg-green" style="font-size:8px">✅ Verif.</span>';
+  };
+  const dim = v => (!v || v == 0) ? 'color:var(--text4)' : '';
+
+  tbody.innerHTML = days.map(d => {
+    const data = d.data ? new Date(d.data).toLocaleDateString('it-IT',{weekday:'short',day:'2-digit',month:'2-digit'}) : '—';
+    return `<tr style="cursor:pointer" onclick="showView('coloratore')">
+      <td class="mono" style="font-weight:600">${data}</td>
+      <td style="background:#f7faff;text-align:center;${dim(d.cicli_ee)}">${d.cicli_ee}</td>
+      <td style="background:#f7faff;text-align:center;${dim(d.vetri_ist)}">${d.vetri_ist}</td>
+      <td style="background:#f7feff;text-align:center;${dim(d.cicli_ee_cit)}">${d.cicli_ee_cit}</td>
+      <td style="background:#f7feff;text-align:center;${dim(d.vetri_cit)}">${d.vetri_cit}</td>
+      <td style="background:#fbf9ff;text-align:center;${dim(d.cicli_pap)}">${d.cicli_pap}</td>
+      <td style="background:#fbf9ff;text-align:center;${dim(d.vetri_pap)}">${d.vetri_pap}</td>
+      <td>${statoBadge(d.reagenti)}</td>
+    </tr>`;
+  }).join('');
 }
+
+// ═══════════════════════════════════════════════════════════════════
+// BIDONI VIEW GLUE
+// ═══════════════════════════════════════════════════════════════════
+let _bidoniFilter = 'all';
+window.setBidoniFilter = function(f, btn) {
+  _bidoniFilter = f;
+  if (btn) {
+    btn.parentElement.querySelectorAll('.f-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  }
+  renderBidoniView();
+};
+
+window.renderBidoniView = function() {
+  if (typeof loadBidoni !== 'function') return;
+  const all = loadBidoni();
+  const prods = loadP();
+  const prodMap = {};
+  prods.forEach(p => prodMap[p.id] = p);
+  // Filtro stato
+  let visible = all;
+  if (_bidoniFilter !== 'all') visible = visible.filter(b => b.stato === _bidoniFilter);
+  // Filtro search
+  const q = (document.getElementById('bidoni-search')?.value || '').toLowerCase().trim();
+  if (q) {
+    visible = visible.filter(b => {
+      const p = prodMap[b.prod_id];
+      return (p?.nome||'').toLowerCase().includes(q) ||
+             (b.lotto||'').toLowerCase().includes(q) ||
+             (p?.fornitore||'').toLowerCase().includes(q);
+    });
+  }
+  // Ordina: aperti più vecchi prima, chiusi più nuovi, smaltiti più recenti
+  const ord = {aperto:0, chiuso:1, smaltito:2};
+  visible.sort((a,b) => {
+    const so = (ord[a.stato]||9) - (ord[b.stato]||9);
+    if (so !== 0) return so;
+    if (a.stato === 'aperto') return (a.data_apertura||'').localeCompare(b.data_apertura||'');
+    if (a.stato === 'chiuso') return (b.data_carico||'').localeCompare(a.data_carico||'');
+    return (b.data_smaltimento||'').localeCompare(a.data_smaltimento||'');
+  });
+
+  // Stats
+  const stats = {tot:all.length, chiusi:0, aperti:0, smaltiti:0};
+  all.forEach(b => { stats[b.stato + (b.stato==='smaltito'?'i':b.stato==='aperto'?'i':'i')]++; });
+  // fix above (it's clunky): recount
+  stats.chiusi = all.filter(b => b.stato === 'chiuso').length;
+  stats.aperti = all.filter(b => b.stato === 'aperto').length;
+  stats.smaltiti = all.filter(b => b.stato === 'smaltito').length;
+
+  const statsEl = document.getElementById('bidoni-stats');
+  if (statsEl) statsEl.textContent = `${stats.tot} totali · 🔓 ${stats.aperti} aperti · 🔒 ${stats.chiusi} chiusi · ✕ ${stats.smaltiti} smaltiti`;
+
+  const countEl = document.getElementById('bidoni-count');
+  if (countEl) countEl.textContent = visible.length + ' bidon' + (visible.length === 1 ? 'e' : 'i');
+
+  const tbody = document.getElementById('bidoni-tbody');
+  if (!tbody) return;
+  if (!visible.length) {
+    tbody.innerHTML = '<tr><td colspan="8"><div class="empty"><div class="e-ico">🪣</div><p>Nessun bidone trovato</p></div></td></tr>';
+    return;
+  }
+  const statoBadge = (s) => {
+    if (s === 'aperto')   return '<span class="badge bg-yellow">🔓 Aperto</span>';
+    if (s === 'chiuso')   return '<span class="badge bg-blue">🔒 Chiuso</span>';
+    if (s === 'smaltito') return '<span class="badge" style="background:var(--bg4);color:var(--text3)">✕ Smaltito</span>';
+    return '<span class="badge">' + esc(s) + '</span>';
+  };
+  const fmtD = d => d ? new Date(d).toLocaleDateString('it-IT',{day:'2-digit',month:'2-digit',year:'2-digit'}) : '—';
+  const daysAgo = d => { if(!d) return ''; const days = Math.floor((Date.now() - new Date(d).getTime())/86400000); return days + 'gg'; };
+
+  // Per controllo: già aperto per prod?
+  const apertiByProd = {};
+  all.forEach(b => { if (b.stato === 'aperto') apertiByProd[b.prod_id] = true; });
+
+  tbody.innerHTML = visible.map(b => {
+    const p = prodMap[b.prod_id];
+    const azioni = [];
+    if (b.stato === 'chiuso') {
+      if (apertiByProd[b.prod_id]) azioni.push('<span style="font-size:10px;color:var(--text3)" title="Esiste già un bidone aperto">—</span>');
+      else azioni.push(`<button class="btn btn-sm btn-ok" onclick="openBidoneAction('${b.id}')" title="Apri questo bidone">🔓 Apri</button>`);
+      azioni.push(`<button class="btn btn-sm btn-danger" onclick="smaltisciBidoneAction('${b.id}')" title="Smaltisci senza aprirlo">✕</button>`);
+    } else if (b.stato === 'aperto') {
+      azioni.push(`<button class="btn btn-sm btn-danger" onclick="smaltisciBidoneAction('${b.id}')" title="Smaltisci bidone aperto">✕ Smaltisci</button>`);
+    }
+    return `<tr style="${b.stato==='smaltito'?'opacity:.55':''}">
+      <td>
+        <div style="font-weight:500">${esc(p?.nome || '—')}</div>
+        ${p?.fornitore?`<div style="font-size:11px;color:var(--text3)">${esc(p.fornitore)}</div>`:''}
+        <div style="font-size:10px;color:var(--text3);font-family:'DM Mono',monospace">#${b.id.slice(-6)}</div>
+      </td>
+      <td><span class="cat-badge">${CAT_ICON[p?.cat]||'📌'} ${esc(p?.cat||'—')}</span></td>
+      <td class="mono">${esc(b.lotto||'—')}</td>
+      <td>${scBadge(b.scadenza)}</td>
+      <td>${statoBadge(b.stato)}</td>
+      <td class="mono" style="font-size:11px">${fmtD(b.data_carico)}</td>
+      <td class="mono" style="font-size:11px">${b.data_apertura ? fmtD(b.data_apertura) + ' <span style="color:var(--text3);font-size:9px">('+daysAgo(b.data_apertura)+')</span>' : '—'}</td>
+      <td style="text-align:right;white-space:nowrap">${azioni.join(' ')}</td>
+    </tr>`;
+  }).join('');
+};
 
 // ─── Override showView per gestire IHC + dashboard ───
 const _origShowView = (typeof showView === 'function') ? showView : null;
@@ -7136,6 +7604,7 @@ window.showView = function(v){
     else if(v === 'schede' && typeof renderSchede === 'function') renderSchede();
     else if(v === 'rifiuti' && typeof renderRifiuti === 'function') renderRifiuti();
     else if(v === 'report' && typeof renderReport === 'function') renderReport();
+    else if(v === 'bidoni' && typeof renderBidoniView === 'function') renderBidoniView();
   } catch(e){ console.warn('[showView render]', v, e); }
 };
 
@@ -7398,27 +7867,10 @@ window.setCampFilter = function(f, btn){
 };
 
 
-/* ─── INVENTARIO: usiamo le funzioni native del logic file ───
-   Niente override: setInvFilter, setFornFilter, setSubFilter, setSub2Filter
-   e renderInv vengono dal logic file e popolano correttamente p.cat / fornitore.
-   Aggiungiamo solo un piccolo touch: dopo render, applica gli stili row colorati. */
-const _origRenderInv = (typeof renderInv === 'function') ? renderInv : null;
-if (_origRenderInv) {
-  window.renderInv = function() {
-    _origRenderInv();
-    // Post-render: applica colori riga in base allo stato (la funzione originale potrebbe non farlo nello stile preview)
-    try {
-      const tbody = document.getElementById('inv-tbody');
-      if (!tbody) return;
-      const today = new Date(); today.setHours(0,0,0,0);
-      tbody.querySelectorAll('tr').forEach(tr => {
-        // Cerca un attributo data-id o l'elemento prodotto associato
-        // Strategia semplice: cerca classi/contenuto già impostati e migliora se serve
-        // (Lasciamo la logica originale fare il suo lavoro - questo è solo un hook futuro.)
-      });
-    } catch(e) { console.warn('[renderInv post]', e); }
-  };
-}
+/* ─── INVENTARIO: usiamo ESCLUSIVAMENTE le funzioni native del logic file ───
+   setInvFilter, setFornFilter, setSubFilter, setSub2Filter, renderInv,
+   debouncedRenderInv: tutte già definite dal logic file e funzionano
+   sull'HTML che ho appena riportato identico all'originale. */
 
 
 /* ─── Override renderTracciabilita → tabella campioni ─── */
@@ -7476,263 +7928,101 @@ window.renderTracciabilita = function(){
 };
 
 
-/* ─── Override renderProcessatore → layout preview con expandable rows ─── */
-window.renderProcessatore = function(){
-  const tbody = document.getElementById('proc-tbody');
-  if(!tbody || typeof loadProc !== 'function') return;
-  const proc = loadProc();
-  // stats
-  const now = new Date(); now.setHours(0,0,0,0);
-  const ms = new Date(now.getFullYear(), now.getMonth(), 1);
-  const monthCicli = proc.filter(r => r.data && new Date(r.data) >= ms);
-  const totCass = monthCicli.reduce((s,r) => s + (r.n_cassette || (r.casi||[]).length || 0), 0);
-  const anomalie = monthCicli.filter(r => (r.reagenti||[]).some(x => (x.stato||'').includes('sostit') || x.stato === 'cambiato')).length;
-  const set = (id, v) => { const e = document.getElementById(id); if(e) e.textContent = v; };
-  set('proc-s-cicli', monthCicli.length);
-  set('proc-s-cass', totCass);
-  set('proc-s-ano', anomalie);
-  if(proc[0]){
-    const ld = proc[0];
-    const ds = ld.data ? new Date(ld.data).toLocaleDateString('it-IT',{day:'2-digit',month:'2-digit',year:'2-digit'}) : '—';
-    set('proc-s-ultimo', ds + (ld.ora_inizio ? ' ' + ld.ora_inizio : ''));
-  } else set('proc-s-ultimo', '—');
-
-  if(!proc.length){
-    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text3);padding:20px">Nessun ciclo registrato</td></tr>';
-    return;
-  }
-
-  let html = '';
-  proc.forEach((r, idx) => {
-    const data = r.data ? new Date(r.data).toLocaleDateString('it-IT',{day:'2-digit',month:'2-digit',year:'2-digit'}) : '—';
-    const ora = r.ora_inizio || '';
-    const casi = r.casi || [];
-    // Range: prima usa casi_da/casi_a (campi espliciti), poi fallback su casi[0..n-1]
-    let range = '—';
-    if (r.casi_da && r.casi_a) range = r.casi_da + (r.casi_a !== r.casi_da ? ' → ' + r.casi_a : '');
-    else if (r.casi_da) range = r.casi_da;
-    else if (r.casi_a) range = r.casi_a;
-    else if (casi.length === 1) range = casi[0];
-    else if (casi.length > 1) range = casi[0] + ' → ' + casi[casi.length-1];
-    const reag = r.reagenti || [];
-    const cambiati = reag.filter(x => x.stato === 'cambiato' || (x.stato||'').includes('sostit'));
-    const rabboccati = reag.filter(x => x.stato === 'rabboccato');
-    const verifMt = reag.filter(x => x.stato === 'verificato_mattina');
-    const verifPm = reag.filter(x => x.stato === 'verificato_pomeriggio');
-    let stato;
-    if(cambiati.length) stato = `<span class="badge bg-orange">🔄 ${cambiati.length} sostituiti</span>`;
-    else if(rabboccati.length) stato = `<span class="badge bg-blue">➕ ${rabboccati.length} rabboccati</span>`;
-    else stato = '<span class="badge bg-green">✅ Verificati</span>';
-
-    html += `<tr class="expandable" onclick="(function(b){const r=b.nextElementSibling;if(r)r.classList.toggle('hidden');b.classList.toggle('open')})(this)">
-      <td><span class="exp-arrow">▶</span></td>
-      <td class="mono">${data} ${ora}</td>
-      <td class="mono">${esc(range)}</td>
-      <td>${casi.length} casi · ${r.n_cassette||casi.length} cass.</td>
-      <td>${stato}</td>
-    </tr>`;
-    let reagDetail = '<div style="font-size:11px;color:var(--text3);margin-bottom:6px">REAGENTI USATI:</div>';
-    if(!reag.length) reagDetail += '<div style="color:var(--text3);font-size:11px">Nessun reagente tracciato</div>';
-    else {
-      reagDetail += '<table class="tbl" style="font-size:11px"><thead><tr><th>Posizione</th><th>Reagente</th><th>Lotto</th><th>Stato</th></tr></thead><tbody>';
-      reag.forEach(rg => {
-        const stB = rg.stato === 'cambiato' ? '<span class="badge bg-orange">Sostituito</span>'
-                  : rg.stato === 'rabboccato' ? '<span class="badge bg-blue">Rabboccato</span>'
-                  : rg.stato === 'verificato_mattina' ? '<span class="badge bg-green">Verif. mattina</span>'
-                  : rg.stato === 'verificato_pomeriggio' ? '<span class="badge bg-green">Verif. pomeriggio</span>'
-                  : '<span class="badge">' + esc(rg.stato||'—') + '</span>';
-        reagDetail += `<tr><td>Pos. ${rg.posizione||'—'}</td><td>${esc(rg.tipo||rg.reagente||'—')}</td><td class="mono">${esc(rg.lotto||'—')}</td><td>${stB}</td></tr>`;
-      });
-      reagDetail += '</tbody></table>';
-    }
-    if(casi.length){
-      reagDetail += '<div style="font-size:11px;color:var(--text3);margin:10px 0 4px">CASI ELABORATI:</div>';
-      reagDetail += '<div style="display:flex;flex-wrap:wrap;gap:4px">';
-      casi.forEach(c => reagDetail += `<span class="frammento-chip">${esc(c)}</span>`);
-      reagDetail += '</div>';
-    }
-    html += `<tr class="exp-row hidden"><td colspan="5"><div class="exp-body">${reagDetail}</div></td></tr>`;
-  });
-  tbody.innerHTML = html;
-};
-
-/* ─── Override renderColoratore → 3 colonne (Ist/Cit/Pap) + tabella unificata ─── */
-window.renderColoratore = function(){
-  const tbody = document.getElementById('color-tbody');
-  if(!tbody || typeof loadColor !== 'function') return;
-  const reg = loadColor();
-  const set = (id, v) => { const e = document.getElementById(id); if(e) e.textContent = v; };
-
-  // Stats globali (mese corrente)
-  const now = new Date(); now.setHours(0,0,0,0);
-  const ms = new Date(now.getFullYear(), now.getMonth(), 1);
-  const monthReg = reg.filter(r => r.data && new Date(r.data) >= ms);
-  const totVet = monthReg.reduce((s,r) => s + (r.vetri_ist||0) + (r.vetri_cit||0) + (r.vetri_pap||0), 0);
-  const totEe  = monthReg.reduce((s,r) => s + (r.cicli_ee||0) + (r.cicli_ee_cit||0), 0);
-  const totPap = monthReg.reduce((s,r) => s + (r.cicli_pap||0), 0);
-  set('color-s-cicli', monthReg.length);
-  set('color-s-vetri', totVet);
-  set('color-s-ee',    totEe);
-  set('color-s-pap',   totPap);
-
-  // Helper: formatta range con stessa logica del logic file (rng helper)
-  const fmtRange = (r) => {
-    if (!r) return '—';
-    const from = (r.from || '').trim();
-    const to   = (r.to   || '').trim();
-    if (!from && !to) return '—';
-    if (from && !to)  return from;
-    if (!from && to)  return '→ ' + to;
-    if (from === to)  return from;
-    return from + ' → ' + to;
+/* ─── Processatore: il logic file riempie proc-list + proc-stats.
+       Noi aggiungiamo solo l'aggiornamento delle 4 mini-KPI cards. ─── */
+const _origRenderProc = (typeof renderProcessatore === 'function') ? renderProcessatore : null;
+if (_origRenderProc) {
+  window.renderProcessatore = function() {
+    _origRenderProc();
+    // Mini-KPI sopra la lista
+    try {
+      if (typeof loadProc !== 'function') return;
+      const proc = loadProc();
+      const now = new Date(); now.setHours(0,0,0,0);
+      const ms = new Date(now.getFullYear(), now.getMonth(), 1);
+      const monthCicli = proc.filter(r => r.data && new Date(r.data) >= ms);
+      const totCass = monthCicli.reduce((s,r) => s + (r.n_cassette || (r.casi||[]).length || 0), 0);
+      const anomalie = monthCicli.filter(r => (r.reagenti||[]).some(x => (x.stato||'').includes('sostit') || x.stato === 'cambiato')).length;
+      const set = (id, v) => { const e = document.getElementById(id); if(e) e.textContent = v; };
+      set('proc-s-cicli', monthCicli.length);
+      set('proc-s-cass', totCass);
+      set('proc-s-ano', anomalie);
+      if (proc[0]) {
+        const ld = proc[0];
+        const ds = ld.data ? new Date(ld.data).toLocaleDateString('it-IT',{day:'2-digit',month:'2-digit',year:'2-digit'}) : '—';
+        set('proc-s-ultimo', ds + (ld.ora_inizio ? ' ' + ld.ora_inizio : ''));
+      } else set('proc-s-ultimo', '—');
+    } catch(e) { console.warn('[renderProcessatore KPI]', e); }
   };
+}
 
-  // ── 3 colonne (Ist / Cit / Pap) - aggregato mese corrente ──
-  const aggIst = monthReg.reduce((a,r) => {
-    a.cicli += (r.cicli_ee||0);
-    a.vetri += (r.vetri_ist||0);
-    if(r.range_ist?.from && (!a.from || r.range_ist.from < a.from)) a.from = r.range_ist.from;
-    if(r.range_ist?.to   && (!a.to   || r.range_ist.to   > a.to))   a.to   = r.range_ist.to;
-    return a;
-  }, {cicli:0, vetri:0, from:null, to:null});
-  const aggCit = monthReg.reduce((a,r) => {
-    a.cicli += (r.cicli_ee_cit||0);
-    a.vetri += (r.vetri_cit||0);
-    if(r.range_cit?.from && (!a.from || r.range_cit.from < a.from)) a.from = r.range_cit.from;
-    if(r.range_cit?.to   && (!a.to   || r.range_cit.to   > a.to))   a.to   = r.range_cit.to;
-    return a;
-  }, {cicli:0, vetri:0, from:null, to:null});
-  const aggPap = monthReg.reduce((a,r) => {
-    a.cicli += (r.cicli_pap||0);
-    a.vetri += (r.vetri_pap||0);
-    if(r.range_pap?.from && (!a.from || r.range_pap.from < a.from)) a.from = r.range_pap.from;
-    if(r.range_pap?.to   && (!a.to   || r.range_pap.to   > a.to))   a.to   = r.range_pap.to;
-    return a;
-  }, {cicli:0, vetri:0, from:null, to:null});
 
-  set('col-ist-cicli', aggIst.cicli);
-  set('col-ist-vetri', aggIst.vetri);
-  set('col-ist-range', fmtRange(aggIst));
-  set('col-cit-cicli', aggCit.cicli);
-  set('col-cit-vetri', aggCit.vetri);
-  set('col-cit-range', fmtRange(aggCit));
-  set('col-pap-cicli', aggPap.cicli);
-  set('col-pap-vetri', aggPap.vetri);
-  set('col-pap-range', fmtRange(aggPap));
 
-  // Ultimo giorno per tipo (qualsiasi data, non solo mese)
-  const sortedDesc = reg.slice().sort((a,b) => (b.data||'').localeCompare(a.data||''));
-  const lastIst = sortedDesc.find(r => (r.cicli_ee||0) > 0 || (r.vetri_ist||0) > 0);
-  const lastCit = sortedDesc.find(r => (r.cicli_ee_cit||0) > 0 || (r.vetri_cit||0) > 0);
-  const lastPap = sortedDesc.find(r => (r.cicli_pap||0) > 0 || (r.vetri_pap||0) > 0);
-  const fmtD = d => d ? new Date(d).toLocaleDateString('it-IT',{day:'2-digit',month:'2-digit',year:'2-digit'}) : '—';
-  set('col-ist-last', lastIst ? fmtD(lastIst.data) : '—');
-  set('col-cit-last', lastCit ? fmtD(lastCit.data) : '—');
-  set('col-pap-last', lastPap ? fmtD(lastPap.data) : '—');
+/* ─── Coloratore: il logic file riempie color-list + color-stats.
+       Noi calcoliamo le 3 colonne aggregate Ist/Cit/PAP del mese. ─── */
+const _origRenderColor = (typeof renderColoratore === 'function') ? renderColoratore : null;
+if (_origRenderColor) {
+  window.renderColoratore = function() {
+    _origRenderColor();
+    try {
+      if (typeof loadColoratore !== 'function') return;
+      const reg = loadColoratore();
+      const set = (id, v) => { const e = document.getElementById(id); if(e) e.textContent = v; };
+      const fmtRange = (r) => {
+        if (!r) return '—';
+        const from = (r.from || '').trim(), to = (r.to || '').trim();
+        if (!from && !to) return '—';
+        if (from && !to)  return from;
+        if (!from && to)  return '→ ' + to;
+        if (from === to)  return from;
+        return from + ' → ' + to;
+      };
+      const fmtD = d => d ? new Date(d).toLocaleDateString('it-IT',{day:'2-digit',month:'2-digit',year:'2-digit'}) : '—';
+      // Filtro mese corrente
+      const now = new Date(); now.setHours(0,0,0,0);
+      const ms = new Date(now.getFullYear(), now.getMonth(), 1);
+      const monthReg = reg.filter(r => r.data && new Date(r.data) >= ms);
+      // Aggrega per tipo
+      const aggIst = monthReg.reduce((a,r) => {
+        a.cicli += (r.cicli_ee||0);
+        a.vetri += (r.vetri_ist||0);
+        if(r.range_ist?.from && (!a.from || r.range_ist.from < a.from)) a.from = r.range_ist.from;
+        if(r.range_ist?.to   && (!a.to   || r.range_ist.to   > a.to))   a.to   = r.range_ist.to;
+        return a;
+      }, {cicli:0, vetri:0, from:null, to:null});
+      const aggCit = monthReg.reduce((a,r) => {
+        a.cicli += (r.cicli_ee_cit||0);
+        a.vetri += (r.vetri_cit||0);
+        if(r.range_cit?.from && (!a.from || r.range_cit.from < a.from)) a.from = r.range_cit.from;
+        if(r.range_cit?.to   && (!a.to   || r.range_cit.to   > a.to))   a.to   = r.range_cit.to;
+        return a;
+      }, {cicli:0, vetri:0, from:null, to:null});
+      const aggPap = monthReg.reduce((a,r) => {
+        a.cicli += (r.cicli_pap||0);
+        a.vetri += (r.vetri_pap||0);
+        if(r.range_pap?.from && (!a.from || r.range_pap.from < a.from)) a.from = r.range_pap.from;
+        if(r.range_pap?.to   && (!a.to   || r.range_pap.to   > a.to))   a.to   = r.range_pap.to;
+        return a;
+      }, {cicli:0, vetri:0, from:null, to:null});
+      set('col-ist-cicli', aggIst.cicli); set('col-ist-vetri', aggIst.vetri); set('col-ist-range', fmtRange(aggIst));
+      set('col-cit-cicli', aggCit.cicli); set('col-cit-vetri', aggCit.vetri); set('col-cit-range', fmtRange(aggCit));
+      set('col-pap-cicli', aggPap.cicli); set('col-pap-vetri', aggPap.vetri); set('col-pap-range', fmtRange(aggPap));
+      // Ultimo giorno per tipo (assoluto, non solo mese)
+      const sortedDesc = reg.slice().sort((a,b) => (b.data||'').localeCompare(a.data||''));
+      const lastIst = sortedDesc.find(r => (r.cicli_ee||0)     > 0 || (r.vetri_ist||0) > 0);
+      const lastCit = sortedDesc.find(r => (r.cicli_ee_cit||0) > 0 || (r.vetri_cit||0) > 0);
+      const lastPap = sortedDesc.find(r => (r.cicli_pap||0)    > 0 || (r.vetri_pap||0) > 0);
+      set('col-ist-last', lastIst ? fmtD(lastIst.data) : '—');
+      set('col-cit-last', lastCit ? fmtD(lastCit.data) : '—');
+      set('col-pap-last', lastPap ? fmtD(lastPap.data) : '—');
+    } catch(e) { console.warn('[renderColoratore 3-col]', e); }
+  };
+}
 
-  // Last info nell'header
-  const lastAll = sortedDesc[0];
-  const lastInfo = document.getElementById('color-last-info');
-  if(lastInfo){
-    if(!lastAll) lastInfo.textContent = 'Nessuna registrazione';
-    else lastInfo.textContent = 'Ultimo: ' + fmtD(lastAll.data);
-  }
 
-  // ── Tabella unificata 3 colonne ──
-  if(!reg.length){
-    tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;color:var(--text3);padding:24px"><div style="font-size:32px;margin-bottom:6px">📋</div>Nessun ciclo registrato — clicca <b>＋ Nuovo ciclo coloratore</b></td></tr>';
-    return;
-  }
+/* ─── Allerte: usiamo renderAllerte del logic file (tabella 8 colonne) ─── */
 
-  const sortedAsc = reg.slice().sort((a,b) => (b.data||'').localeCompare(a.data||''));
-  tbody.innerHTML = sortedAsc.map(r => {
-    const data = r.data ? new Date(r.data).toLocaleDateString('it-IT',{weekday:'short',day:'2-digit',month:'2-digit'}) : '—';
-    const reag = r.reagenti || [];
-    let stato;
-    if(reag.some(x => x.stato === 'cambiato' || (x.stato||'').includes('sostit'))) stato = '<span class="badge bg-orange" style="font-size:9px">🔄 Lotto cambiato</span>';
-    else if(reag.some(x => x.stato === 'rabboccato')) stato = '<span class="badge bg-blue" style="font-size:9px">➕ Rabboccato</span>';
-    else if(reag.length) stato = '<span class="badge bg-green" style="font-size:9px">✅ Verif.</span>';
-    else stato = '<span style="color:var(--text3);font-size:10px">—</span>';
 
-    const rangeIst = fmtRange(r.range_ist);
-    const rangeCit = fmtRange(r.range_cit);
-    const rangePap = fmtRange(r.range_pap);
-
-    // dim se 0 (per chiarezza visiva)
-    const dim = v => v == 0 ? 'color:var(--text4)' : '';
-    return `<tr>
-      <td class="mono">${data}</td>
-      <td style="background:#f7faff;${dim(r.cicli_ee||0)}">${r.cicli_ee||0}</td>
-      <td style="background:#f7faff;${dim(r.vetri_ist||0)}">${r.vetri_ist||0}</td>
-      <td style="background:#f7faff" class="mono" style="font-size:10px">${rangeIst}</td>
-      <td style="background:#f7feff;${dim(r.cicli_ee_cit||0)}">${r.cicli_ee_cit||0}</td>
-      <td style="background:#f7feff;${dim(r.vetri_cit||0)}">${r.vetri_cit||0}</td>
-      <td style="background:#f7feff" class="mono" style="font-size:10px">${rangeCit}</td>
-      <td style="background:#fbf9ff;${dim(r.cicli_pap||0)}">${r.cicli_pap||0}</td>
-      <td style="background:#fbf9ff;${dim(r.vetri_pap||0)}">${r.vetri_pap||0}</td>
-      <td style="background:#fbf9ff" class="mono" style="font-size:10px">${rangePap}</td>
-      <td>${stato}</td>
-      <td class="act-cell"><button class="act-btn" title="Modifica" onclick="openNuovoColoratore(loadColor().find(x=>x.id==='${r.id}'))">✎</button></td>
-    </tr>`;
-  }).join('');
-};
-
-/* ─── Bonus: aggiorna anche "Ultimo" del processatore ─── */
-const _origRenderProc_v2 = window.renderProcessatore;
-window.renderProcessatore = function(){
-  if(_origRenderProc_v2) _origRenderProc_v2();
-  const lastInfo = document.getElementById('proc-last-info');
-  if(lastInfo && typeof loadProc === 'function'){
-    const p = loadProc()[0];
-    if(!p) lastInfo.textContent = 'Nessuna registrazione';
-    else {
-      const fd = p.data ? new Date(p.data).toLocaleDateString('it-IT',{day:'2-digit',month:'2-digit',year:'2-digit'}) : '—';
-      lastInfo.textContent = 'Ultimo: ' + fd + (p.ora_inizio ? ' ' + p.ora_inizio : '');
-    }
-  }
-};
-
-/* ─── Override renderAllerte → layout preview ─── */
-window.renderAllerte = function(){
-  const list = document.getElementById('allerte-list');
-  if(!list || typeof loadP !== 'function') return;
-  const prods = loadP();
-  const today = new Date(); today.setHours(0,0,0,0);
-  const allerte = [];
-  prods.forEach(p => {
-    if(p.giacenza <= 0) allerte.push({prod:p, sev:0, sevKey:'esaurito', label:'Esaurito', cls:'bg-red', col:'red'});
-    else if(p.scorta_min && p.giacenza < p.scorta_min) allerte.push({prod:p, sev:1, sevKey:'scorta', label:'Scorta bassa', cls:'bg-yellow', col:'yellow'});
-    if(p.scadenza){
-      const sd = new Date(p.scadenza);
-      if(!isNaN(sd) && sd <= today) allerte.push({prod:p, sev:0, sevKey:'scaduto', label:'Scaduto', cls:'bg-red', col:'red'});
-      else if(!isNaN(sd) && (sd-today)/86400000 < 30) allerte.push({prod:p, sev:2, sevKey:'inscadenza', label:'In scadenza', cls:'bg-orange', col:'orange'});
-    }
-  });
-  // counter totale
-  const tot = document.getElementById('all-count-tot');
-  if(tot) tot.textContent = allerte.length;
-  // filtri
-  let visible = allerte;
-  if(_allFilter !== 'all') visible = allerte.filter(a => a.sevKey === _allFilter);
-  visible.sort((a,b) => a.sev - b.sev);
-  if(!visible.length){
-    list.innerHTML = '<div class="empty-state"><div class="ico">✅</div><div>Nessuna allerta</div></div>';
-    return;
-  }
-  list.innerHTML = visible.map(a => {
-    const giac = a.prod.giacenza !== undefined ? `${a.prod.giacenza} ${a.prod.um||''}` : '—';
-    const lotto = a.prod.lotto ? '<span class="mono" style="color:var(--text3);font-size:11px;margin-left:8px">Lotto ' + esc(a.prod.lotto) + '</span>' : '';
-    const scad = a.prod.scadenza ? '<span style="color:var(--text3);font-size:11px;margin-left:8px">Scad. ' + new Date(a.prod.scadenza).toLocaleDateString('it-IT',{month:'2-digit',year:'2-digit'}) + '</span>' : '';
-    return `<div class="alert-row" style="border-left:4px solid var(--${a.col})">
-      <div style="flex:1">
-        <div class="alert-prod">${esc(a.prod.nome||'—')}${lotto}${scad}</div>
-        <div class="alert-meta">${esc(a.prod.fornitore||'—')} · giacenza <b>${giac}</b>${a.prod.scorta_min?' / sc.min '+a.prod.scorta_min:''}</div>
-      </div>
-      <span class="badge ${a.cls}">${a.label}</span>
-      <button class="hbtn2" onclick="if(typeof openSchedaProdotto==='function')openSchedaProdotto('${a.prod.id}')">Apri</button>
-    </div>`;
-  }).join('');
-};
 
 
 /* ─── Override renderArchivio → split panel + dettaglio docs ─── */
@@ -7908,42 +8198,12 @@ window.renderRifiuti = function(){
   }
 };
 
-/* ─── Override renderMovimenti → tabella semplice ─── */
-window.renderMovimenti = function(){
-  const tbody = document.getElementById('mov-tbody');
-  if(!tbody || typeof loadM !== 'function') return;
-  let movs = loadM();
-  if(_movFilter !== 'all') movs = movs.filter(m => m.tipo === _movFilter);
-  const q = (document.getElementById('mov-search')?.value || '').toLowerCase().trim();
-  if(q) movs = movs.filter(m => (m.prodotto_nome||'').toLowerCase().includes(q));
-  if(!movs.length){
-    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text3);padding:20px">Nessun movimento</td></tr>';
-    return;
-  }
-  tbody.innerHTML = movs.slice(0,300).map(m => {
-    const ts = m.ts ? new Date(m.ts).toLocaleString('it-IT',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}) : '—';
-    const tipo = m.tipo === 'carico' ? '<span class="badge bg-green">↑ Carico</span>' : '<span class="badge bg-red">↓ Scarico</span>';
-    return `<tr><td class="mono">${ts}</td><td>${tipo}</td><td>${esc(m.prodotto_nome||'—')}</td><td>${m.qta||0}</td><td>${esc(m.um||'')}</td><td class="mono">${esc(m.lotto||'—')}</td><td>${esc(m.operatore||'—')}</td></tr>`;
-  }).join('');
-};
+/* ─── Movimenti: usiamo renderMovimenti del logic file ─── */
 
-/* ─── Override renderSchede → tabella ─── */
-window.renderSchede = function(){
-  const tbody = document.getElementById('schede-tbody');
-  if(!tbody || typeof loadSchede !== 'function') return;
-  let sched = loadSchede();
-  const q = (document.getElementById('sch-search')?.value || '').toLowerCase().trim();
-  if(q) sched = sched.filter(s => (s.nome||'').toLowerCase().includes(q));
-  if(!sched.length){
-    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text3);padding:20px">Nessuna scheda tecnica</td></tr>';
-    return;
-  }
-  tbody.innerHTML = sched.map(s => {
-    const tds = s.tds ? '<button class="hbtn2 ok" style="font-size:10px" onclick="if(typeof viewSchedaDoc===\'function\')viewSchedaDoc(\''+s.id+'\',\'tds\')">📄 Visualizza</button>' : '<span style="color:var(--text3);font-size:11px">—</span>';
-    const sds = s.sds ? '<button class="hbtn2 ok" style="font-size:10px" onclick="if(typeof viewSchedaDoc===\'function\')viewSchedaDoc(\''+s.id+'\',\'sds\')">📄 Visualizza</button>' : '<span style="color:var(--text3);font-size:11px">—</span>';
-    return `<tr><td>${esc(s.nome||'—')}</td><td>${esc(s.fornitore||'—')}</td><td class="mono">${esc(s.codice||'—')}</td><td>${tds}</td><td>${sds}</td></tr>`;
-  }).join('');
-};
+
+/* ─── Schede: usiamo renderSchede del logic file ─── */
+
+
 
 
 /* ─── Override renderReport → 5 metriche + 2 tabelle + line ─── */
@@ -8092,6 +8352,12 @@ document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('.rail-item[data-view]').forEach(item => {
     item.addEventListener('click', () => _railClick(item));
   });
+
+  // 5.5 Migrazione bidoni (reagenti/coloranti esistenti → bidoni chiusi)
+  try {
+    if (typeof migrateProductsToBidoni === 'function') migrateProductsToBidoni();
+    if (typeof recomputeAllBidoniQty === 'function') recomputeAllBidoniQty();
+  } catch(e) { console.warn('[migrate bidoni]', e); }
 
   // 6. Filtri inventario: gestiti dal logic file (setInvFilter, setFornFilter, ecc.)
   //    Non serve init custom - i bottoni sono hardcoded nell'HTML del view-inventario.
