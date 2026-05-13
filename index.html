@@ -3305,6 +3305,30 @@ function renderInv(){
     }
     if(p.min) qtyCell += `<div style="font-size:10px;color:var(--text3);margin-top:2px">min: ${p.min}</div>`;
 
+    // Azioni: per reagenti/coloranti aggiungo 🔓 Apri / ✕ Smaltisci diretti
+    let actionsCell;
+    if (tracked) {
+      const c = countBidoniProd(p.id);
+      const aperto = getBidoneAperto(p.id);
+      let bidoneActions = '';
+      if (aperto) {
+        // C'è già un bidone aperto: bottone per smaltirlo direttamente
+        bidoneActions = `<button class="btn btn-sm btn-warn" onclick="event.stopPropagation();smaltisciBidoneAperto('${p.id}')" title="Smaltisci il bidone aperto (lotto ${aperto.lotto||'—'})">✕ Bid.</button>`;
+      } else if (c.chiusi > 0) {
+        // C'è almeno un bidone chiuso: bottone per aprirne uno
+        bidoneActions = `<button class="btn btn-sm btn-ok" onclick="event.stopPropagation();apriBidoneFifo('${p.id}')" title="Apri il bidone chiuso più vecchio">🔓 Apri</button>`;
+      } else {
+        bidoneActions = `<span style="font-size:10px;color:var(--text3);padding:0 4px" title="Nessun bidone disponibile">—</span>`;
+      }
+      actionsCell = `<div style="display:flex;gap:4px;justify-content:flex-end;flex-wrap:wrap">
+        ${bidoneActions}
+        <button class="btn btn-sm" onclick="openEditModal('${p.id}')" title="Modifica prodotto">✎</button>
+        <button class="btn btn-sm btn-danger" onclick="deleteProduct('${p.id}')" title="Elimina prodotto">✕</button>
+      </div>`;
+    } else {
+      actionsCell = `<div style="display:flex;gap:4px;justify-content:flex-end"><button class="btn btn-sm" onclick="openEditModal('${p.id}')">✎</button><button class="btn btn-sm btn-danger" onclick="deleteProduct('${p.id}')">✕</button></div>`;
+    }
+
     const expandBtn = tracked ? `<span class="exp-arrow" style="cursor:pointer;margin-right:4px;display:inline-block" onclick="event.stopPropagation();toggleBidoniRow('${p.id}',this)" title="Mostra/nascondi bidoni">▶</span>` : '';
     let rows = `<tr id="inv-row-${p.id}">
       <td>${expandBtn}<span style="font-weight:500">${p.nome}</span>${p.fornitore?`<div style="font-size:11px;color:var(--text3);margin-left:${tracked?'18px':'0'}">${p.fornitore}</div>`:''}${p.pos?`<div style="font-size:11px;color:var(--text3);margin-left:${tracked?'18px':'0'}">📍 ${p.pos}</div>`:''}</td>
@@ -3313,7 +3337,7 @@ function renderInv(){
       <td>${scBadge(p.scadenza)}</td>
       <td style="text-align:center">${qtyCell}</td>
       <td>${progBar(p)}</td>
-      <td><div style="display:flex;gap:4px;justify-content:flex-end"><button class="btn btn-sm" onclick="openEditModal('${p.id}')">✎</button><button class="btn btn-sm btn-danger" onclick="deleteProduct('${p.id}')">✕</button></div></td>
+      <td>${actionsCell}</td>
     </tr>`;
     if (tracked) {
       rows += `<tr id="inv-bidoni-${p.id}" class="hidden" style="display:none"><td colspan="7" style="background:#f8fafc;padding:8px 12px">${renderBidoniProd(p.id)}</td></tr>`;
@@ -6719,6 +6743,57 @@ window.smaltisciBidoneAction = async function(bidoneId) {
   }
 };
 
+// ─── Apri direttamente il bidone più vecchio (FIFO) ───
+// Usato dalla riga inventario per un'azione veloce.
+window.apriBidoneFifo = async function(prodId) {
+  const prod = loadP().find(p => p.id === prodId);
+  if (!prod) return;
+  const giàAperto = getBidoneAperto(prodId);
+  if (giàAperto) {
+    toast('C\'è già un bidone aperto per questo prodotto', 'warn');
+    return;
+  }
+  // Trova il bidone chiuso più vecchio (FIFO per data_carico, poi per scadenza)
+  const chiusi = loadBidoni()
+    .filter(b => b.prod_id === prodId && b.stato === 'chiuso')
+    .sort((a,b) => {
+      const ds = (a.data_carico||'').localeCompare(b.data_carico||'');
+      if (ds !== 0) return ds;
+      return (a.scadenza||'').localeCompare(b.scadenza||'');
+    });
+  if (!chiusi.length) {
+    toast('Nessun bidone chiuso disponibile', 'err');
+    return;
+  }
+  const target = chiusi[0];
+  const msg = `Aprire un bidone di ${prod.nome}?\n\nLotto: ${target.lotto || '—'}\nScadenza: ${target.scadenza ? new Date(target.scadenza).toLocaleDateString('it-IT') : '—'}\nCarico: ${target.data_carico ? new Date(target.data_carico).toLocaleDateString('it-IT') : '—'}\n\nVerrà segnato come "in uso" da oggi.`;
+  if (!confirm(msg)) return;
+  const ok = await openBidone(target.id);
+  if (ok) {
+    if (typeof renderInv === 'function') renderInv();
+    if (typeof renderBidoniView === 'function') renderBidoniView();
+  }
+};
+
+// ─── Smaltisci il bidone aperto del prodotto (azione veloce inventario) ───
+window.smaltisciBidoneAperto = async function(prodId) {
+  const aperto = getBidoneAperto(prodId);
+  if (!aperto) {
+    toast('Nessun bidone aperto da smaltire', 'warn');
+    return;
+  }
+  const prod = loadP().find(p => p.id === prodId);
+  const aperturaStr = aperto.data_apertura ? new Date(aperto.data_apertura).toLocaleDateString('it-IT') : '—';
+  const giorniAperto = aperto.data_apertura ? Math.floor((Date.now() - new Date(aperto.data_apertura).getTime())/86400000) : '—';
+  const msg = `Smaltire il bidone aperto di ${prod?.nome || '—'}?\n\nLotto: ${aperto.lotto || '—'}\nAperto il: ${aperturaStr} (${giorniAperto}gg)\n\nVerrà segnato come smaltito e la giacenza scende di 1.\nMovimento di scarico loggato automaticamente.`;
+  if (!confirm(msg)) return;
+  const ok = await smaltisciBidone(aperto.id);
+  if (ok) {
+    if (typeof renderInv === 'function') renderInv();
+    if (typeof renderBidoniView === 'function') renderBidoniView();
+  }
+};
+
 
 // FIX [INFRASTRUTTURA]: LS_CAMP dichiarata in cima al file
 
@@ -6727,10 +6802,56 @@ window.smaltisciBidoneAction = async function(bidoneId) {
    PARTE 3 — renderDashAnalytics (6 chart SVG con dati reali)
    ════════════════════════════════════════════════════════════════ */
 
+// ─── Helper: estrae "campioni virtuali" da processatore + coloratore ───
+// Usato dalle statistiche dashboard quando l'utente non popola loadCampioni().
+// Per ogni record coloratore, crea N record per ogni tipo (ist/cit/pap) con
+// le date del giorno; il count usato è max(cicli, vetri_calcolati).
+function _derivedCampioni() {
+  const out = [];
+  let _i = 0;
+  // Coloratore: fonte primaria (ha breakdown per tipo)
+  const reg = (typeof loadColoratore === 'function') ? loadColoratore() : [];
+  reg.forEach(r => {
+    if (!r.data) return;
+    const data = r.data;
+    // Istologia: usa max(cicli_ee, ranges_ist.length)
+    const istN = Math.max(r.cicli_ee||0, (r.ranges_ist||[]).length);
+    for (let i = 0; i < istN; i++) {
+      out.push({ id: 'derived_ist_'+(_i++), data: data, tipo: 'istologia' });
+    }
+    // Citologia
+    const citN = Math.max(r.cicli_ee_cit||0, (r.ranges_cit||[]).length);
+    for (let i = 0; i < citN; i++) {
+      out.push({ id: 'derived_cit_'+(_i++), data: data, tipo: 'citologia' });
+    }
+    // PAP: usa max(cicli_pap, ranges_pap.length)
+    const papN = Math.max(r.cicli_pap||0, (r.ranges_pap||[]).length);
+    for (let i = 0; i < papN; i++) {
+      out.push({ id: 'derived_pap_'+(_i++), data: data, tipo: 'pap' });
+    }
+  });
+  // Processatore: fallback. Se per una data non c'è coloratore, conta i casi
+  // come istologia (i processati sono quasi sempre istologia).
+  const proc = (typeof loadProc === 'function') ? loadProc() : [];
+  const dateConColoratore = new Set(reg.map(r => r.data));
+  proc.forEach(p => {
+    if (!p.data) return;
+    if (dateConColoratore.has(p.data)) return; // già contato dal coloratore
+    const n = Array.isArray(p.casi) ? p.casi.length : (p.n_cassette || 0);
+    for (let i = 0; i < n; i++) {
+      out.push({ id: 'derived_proc_'+(_i++), data: p.data, tipo: 'istologia' });
+    }
+  });
+  return out;
+}
+
 function renderDashAnalytics(){
   const root=document.getElementById('dash-analytics');
   if(!root) return;
-  const campioni=loadCampioni(), prods=loadP(), movs=loadM(), ords=loadOrd();
+  // ★ DATI DA processatore + coloratore (non da campioni)
+  let campioni = (typeof loadCampioni === 'function') ? loadCampioni() : [];
+  if (!campioni.length) campioni = _derivedCampioni();
+  const prods=loadP(), movs=loadM(), ords=loadOrd();
   const today=new Date(); today.setHours(0,0,0,0);
   const isoDay=d=>d.toISOString().slice(0,10);
   const ymOf=s=>(s||'').slice(0,7);
@@ -7262,7 +7383,8 @@ function renderDashboardPreview(){
   // ─── KPI 1: Casi processati ───
   try {
     if (typeof loadCampioni === 'function') {
-      const camps = loadCampioni();
+      let camps = loadCampioni();
+      if (!camps.length && typeof _derivedCampioni === 'function') camps = _derivedCampioni();
       const now = new Date(); now.setHours(0,0,0,0);
       const ms = new Date(now.getFullYear(), now.getMonth(), 1);
       const monthCamps = camps.filter(c => c.data && new Date(c.data) >= ms);
@@ -7381,7 +7503,8 @@ function renderDashboardPreview(){
     const sub = document.getElementById('dash-subtitle');
     if (sub) {
       const today = new Date();
-      const camps = (typeof loadCampioni === 'function') ? loadCampioni() : [];
+      let camps = (typeof loadCampioni === 'function') ? loadCampioni() : [];
+      if (!camps.length && typeof _derivedCampioni === 'function') camps = _derivedCampioni();
       const ms = new Date(today.getFullYear(), today.getMonth(), 1);
       const monthN = camps.filter(c => c.data && new Date(c.data) >= ms).length;
       const ihcDaFare = (typeof loadIHC === 'function') ? loadIHC().filter(r => r.stato !== 'completata').length : 0;
@@ -7654,22 +7777,50 @@ window.forceSave = async function(){
 
 // ─── exportBackup / importBackup ───
 window.exportBackup = function(){
-  const data = {};
-  const keys = ['ls_p','ls_m','ls_w','ls_wl','ls_ord','ls_arch','ls_camp','ls_proc','ls_color_reg','ls_schede','ls_ihc'];
-  keys.forEach(k => {
-    try { data[k] = JSON.parse(localStorage.getItem(k) || '[]'); } catch(e){ data[k] = []; }
+  // Genera backup nel formato standard {timestamp, version, data:{products, movements, ...}}
+  const out = {
+    timestamp: new Date().toISOString(),
+    version: '1.0',
+    data: {}
+  };
+  BACKUP_SECTIONS.forEach(sec => {
+    try {
+      const raw = localStorage.getItem(sec.ls);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        out.data[sec.bk] = parsed;
+      } else {
+        out.data[sec.bk] = (sec.bk === 'waste_state') ? {} : [];
+      }
+    } catch(e) {
+      out.data[sec.bk] = (sec.bk === 'waste_state') ? {} : [];
+    }
   });
-  data.exported_at = new Date().toISOString();
-  data.version = 'v5';
-  const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+  const blob = new Blob([JSON.stringify(out, null, 2)], {type:'application/json'});
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = 'lupolab_ap_backup_' + new Date().toISOString().slice(0,10) + '.json';
+  a.download = 'lupolab-backup-' + new Date().toISOString().slice(0,10) + '.json';
   a.click();
   URL.revokeObjectURL(url);
   toast('Backup esportato ✓', 'ok');
 };
+
+// Mapping tra le sezioni del backup e le chiavi LS interne
+const BACKUP_SECTIONS = [
+  {bk:'products',          ls:'ls_products',      label:'📦 Prodotti magazzino', desc:'inventario completo'},
+  {bk:'movements',         ls:'ls_movements',     label:'↕ Movimenti',           desc:'storico carichi/scarichi'},
+  {bk:'waste_state',       ls:'ls_waste',         label:'✕ Rifiuti (stato)',    desc:'bidoni CER attuali'},
+  {bk:'waste_log',         ls:'ls_waste_log',     label:'📋 Rifiuti (log)',      desc:'storico smaltimenti'},
+  {bk:'ordini',            ls:'ls_ordini',        label:'↻ Ordini aperti',       desc:'ordini in corso'},
+  {bk:'archivio_ordini',   ls:'ls_archivio_ordini', label:'🗂 Archivio ordini', desc:'ordini chiusi/ricevuti'},
+  {bk:'campioni',          ls:'ls_campioni',      label:'⌁ Campioni',           desc:'tracciabilità campioni'},
+  {bk:'processatore',      ls:'ls_processatore',  label:'⚗ Processatore',       desc:'cicli processatore'},
+  {bk:'coloratore',        ls:'ls_coloratore',    label:'🎨 Coloratore',         desc:'cicli coloratore'},
+  {bk:'schede',            ls:'ls_schede_tecniche', label:'📋 Schede tecniche', desc:'TDS/SDS'},
+  {bk:'ihc',               ls:'ls_ihc',           label:'🔬 IHC',               desc:'richieste IHC'},
+  {bk:'bidoni',            ls:'ls_bidoni',        label:'🪣 Bidoni (tracciab.)', desc:'tracciabilità singolo bidone'}
+];
 
 window.importBackup = function(){
   const inp = document.createElement('input');
@@ -7681,14 +7832,11 @@ window.importBackup = function(){
     const r = new FileReader();
     r.onload = ev => {
       try {
-        const data = JSON.parse(ev.target.result);
-        if(!confirm('⚠️ ATTENZIONE: questa operazione sovrascrive TUTTI i dati locali con quelli del file. Procedere?')) return;
-        const keys = ['ls_p','ls_m','ls_w','ls_wl','ls_ord','ls_arch','ls_camp','ls_proc','ls_color_reg','ls_schede','ls_ihc'];
-        keys.forEach(k => {
-          if(data[k]) localStorage.setItem(k, JSON.stringify(data[k]));
-        });
-        toast('Backup ripristinato — ricarico la pagina…', 'ok');
-        setTimeout(() => location.reload(), 1500);
+        const parsed = JSON.parse(ev.target.result);
+        // Il backup può avere struttura {data: {...}} (nuovo) o piatta (vecchio)
+        const payload = (parsed && typeof parsed === 'object' && parsed.data && typeof parsed.data === 'object') ? parsed.data : parsed;
+        // Mostra modal di selezione sezioni
+        showImportSelector(payload, parsed.timestamp);
       } catch(err){
         toast('File non valido: ' + err.message, 'err');
       }
@@ -7696,6 +7844,125 @@ window.importBackup = function(){
     r.readAsText(f);
   };
   inp.click();
+};
+
+function showImportSelector(payload, timestamp) {
+  // Costruisci HTML del modal dinamicamente
+  const tsStr = timestamp ? new Date(timestamp).toLocaleString('it-IT') : '—';
+  let rowsHTML = '';
+  let hasData = false;
+  BACKUP_SECTIONS.forEach(sec => {
+    // Supporta sia chiave nuova (products) sia vecchia (ls_p / ls_products)
+    let bkData = payload[sec.bk];
+    if (!Array.isArray(bkData) && typeof bkData !== 'object') bkData = null;
+    // fallback: chiavi LS dirette nel payload
+    if (!bkData && payload[sec.ls]) bkData = payload[sec.ls];
+    const countBk = Array.isArray(bkData) ? bkData.length : (bkData && typeof bkData === 'object' ? Object.keys(bkData).length : 0);
+    // Conta record attuali in LS
+    let countLs = 0;
+    try {
+      const raw = localStorage.getItem(sec.ls);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        countLs = Array.isArray(parsed) ? parsed.length : (parsed && typeof parsed === 'object' ? Object.keys(parsed).length : 0);
+      }
+    } catch(e) {}
+    if (countBk === 0 && countLs === 0) return; // niente da mostrare
+    hasData = true;
+    const diff = countBk - countLs;
+    const diffLabel = diff > 0 ? `<span style="color:var(--green);font-weight:600">+${diff}</span>` : (diff < 0 ? `<span style="color:var(--red);font-weight:600">${diff}</span>` : `<span style="color:var(--text3)">=</span>`);
+    const warning = countLs > countBk
+      ? `<div style="font-size:10px;color:var(--orange);margin-top:2px">⚠ Hai ${countLs - countBk} record in più rispetto al backup — verranno PERSI</div>`
+      : '';
+    // Default: deselezionato per le sezioni in cui hai PIÙ dati ora (così non perdi roba)
+    // Selezionato di default solo se il backup ha più dati (caso classico: prodotti puliti)
+    const checked = (countBk > countLs && countBk > 0) ? 'checked' : '';
+    rowsHTML += `
+      <label style="display:flex;gap:12px;align-items:flex-start;padding:8px 12px;border:1px solid var(--border);border-radius:var(--r);margin-bottom:6px;cursor:pointer;background:#fff" data-bk="${sec.bk}" data-ls="${sec.ls}">
+        <input type="checkbox" class="imp-sec-chk" data-bk="${sec.bk}" data-ls="${sec.ls}" ${checked} style="margin-top:3px;width:16px;height:16px;cursor:pointer">
+        <div style="flex:1">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+            <span style="font-weight:600;color:var(--text)">${sec.label}</span>
+            <div style="display:flex;gap:8px;align-items:center;font-family:'DM Mono',monospace;font-size:11px">
+              <span style="color:var(--text3)">attuale: <b>${countLs}</b></span>
+              <span style="color:var(--text3)">→ backup: <b>${countBk}</b></span>
+              ${diffLabel}
+            </div>
+          </div>
+          <div style="font-size:11px;color:var(--text3);margin-top:1px">${sec.desc}</div>
+          ${warning}
+        </div>
+      </label>
+    `;
+  });
+  if (!hasData) rowsHTML = '<div class="empty-state"><div class="ico">📭</div><div>Il backup è vuoto</div></div>';
+
+  // Inserisce modal nel DOM se non già presente
+  let modal = document.getElementById('modal-import-backup');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'modal-import-backup';
+    modal.className = 'modal-overlay';
+    document.body.appendChild(modal);
+  }
+  modal.innerHTML = `
+    <div class="modal" style="max-width:680px;width:100%">
+      <div class="modal-header">
+        <div class="modal-title">📥 Importa backup selettivo</div>
+        <button class="modal-close" onclick="closeModal('modal-import-backup')">×</button>
+      </div>
+      <div style="font-size:12px;color:var(--text3);margin-bottom:14px;line-height:1.5">
+        Backup del: <b>${tsStr}</b><br>
+        Seleziona le sezioni da ripristinare. Le sezioni <b>non spuntate</b> resteranno invariate.<br>
+        <span style="color:var(--orange)">⚠ Quelle spuntate verranno SOSTITUITE — l'operazione non è reversibile (salvo Undo).</span>
+      </div>
+      <div style="max-height:50vh;overflow-y:auto;padding:2px">${rowsHTML}</div>
+      <div style="display:flex;gap:8px;margin-top:14px;padding-top:12px;border-top:1px solid var(--border)">
+        <button class="btn btn-sm" onclick="toggleAllImportCheck(true)">✓ Seleziona tutto</button>
+        <button class="btn btn-sm" onclick="toggleAllImportCheck(false)">✗ Deseleziona tutto</button>
+        <div style="flex:1"></div>
+        <button class="btn" onclick="closeModal('modal-import-backup')">Annulla</button>
+        <button class="btn btn-primary" onclick="confirmSelectiveImport()">📥 Importa selezionati</button>
+      </div>
+    </div>
+  `;
+  // Stash payload per uso futuro
+  modal._payload = payload;
+  modal.classList.add('open');
+}
+
+window.toggleAllImportCheck = function(checked) {
+  document.querySelectorAll('.imp-sec-chk').forEach(c => c.checked = checked);
+};
+
+window.confirmSelectiveImport = function() {
+  const modal = document.getElementById('modal-import-backup');
+  if (!modal || !modal._payload) return;
+  const payload = modal._payload;
+  const selected = [];
+  document.querySelectorAll('.imp-sec-chk:checked').forEach(c => {
+    selected.push({bk: c.dataset.bk, ls: c.dataset.ls});
+  });
+  if (!selected.length) {
+    toast('Nessuna sezione selezionata', 'warn');
+    return;
+  }
+  const labels = selected.map(s => {
+    const sec = BACKUP_SECTIONS.find(x => x.bk === s.bk);
+    return sec ? sec.label : s.bk;
+  });
+  if (!confirm(`⚠️ Sostituire i dati locali con quelli del backup per:\n\n${labels.join('\n')}\n\nLe altre sezioni resteranno invariate.\n\nProcedere?`)) return;
+  let imported = 0;
+  selected.forEach(s => {
+    let val = payload[s.bk];
+    if (val === undefined) val = payload[s.ls];
+    if (val !== undefined) {
+      localStorage.setItem(s.ls, JSON.stringify(val));
+      imported++;
+    }
+  });
+  toast(`${imported} sezion${imported===1?'e':'i'} importate — ricarico la pagina…`, 'ok');
+  setTimeout(() => location.reload(), 1500);
 };
 
 window.exportCSVInventario = function(){
