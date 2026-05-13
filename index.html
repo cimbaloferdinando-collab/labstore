@@ -621,9 +621,9 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
                   <th rowspan="2" style="border-bottom:2px solid var(--border);vertical-align:middle">Reagenti</th>
                 </tr>
                 <tr>
-                  <th style="background:#eff6ff;font-size:9px">Cicli</th><th style="background:#eff6ff;font-size:9px">Vetri</th>
-                  <th style="background:#ecfeff;font-size:9px">Cicli</th><th style="background:#ecfeff;font-size:9px">Vetri</th>
-                  <th style="background:#f5f3ff;font-size:9px">Cicli</th><th style="background:#f5f3ff;font-size:9px">Vetri</th>
+                  <th style="background:#eff6ff;font-size:9px">Cicli</th><th style="background:#eff6ff;font-size:9px">Casi</th>
+                  <th style="background:#ecfeff;font-size:9px">Cicli</th><th style="background:#ecfeff;font-size:9px">Casi</th>
+                  <th style="background:#f5f3ff;font-size:9px">Cicli</th><th style="background:#f5f3ff;font-size:9px">Casi</th>
                 </tr>
               </thead>
               <tbody id="home-color-tbody"><tr><td colspan="8" style="text-align:center;color:var(--text3);padding:14px;font-style:italic">Nessun ciclo registrato</td></tr></tbody>
@@ -809,8 +809,8 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
             <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em">Cicli mese</div>
             <div style="font-family:'Libre Baskerville',serif;font-size:32px;font-weight:700;color:var(--blue);line-height:1;margin:2px 0 8px" id="col-ist-cicli">0</div>
             <div style="display:flex;justify-content:space-between;font-size:12px;padding:4px 0;border-top:1px solid var(--border-faint)">
-              <span style="color:var(--text3)">Vetrini totali</span>
-              <span style="font-weight:600;color:var(--text)" id="col-ist-vetri">0</span>
+              <span style="color:var(--text3)">Casi totali</span>
+              <span style="font-weight:600;color:var(--text)" id="col-ist-casi">0</span>
             </div>
             <div style="display:flex;justify-content:space-between;font-size:12px;padding:4px 0;border-top:1px solid var(--border-faint)">
               <span style="color:var(--text3)">Range casi</span>
@@ -830,8 +830,8 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
             <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em">Cicli mese</div>
             <div style="font-family:'Libre Baskerville',serif;font-size:32px;font-weight:700;color:var(--teal);line-height:1;margin:2px 0 8px" id="col-cit-cicli">0</div>
             <div style="display:flex;justify-content:space-between;font-size:12px;padding:4px 0;border-top:1px solid var(--border-faint)">
-              <span style="color:var(--text3)">Vetrini totali</span>
-              <span style="font-weight:600;color:var(--text)" id="col-cit-vetri">0</span>
+              <span style="color:var(--text3)">Casi totali</span>
+              <span style="font-weight:600;color:var(--text)" id="col-cit-casi">0</span>
             </div>
             <div style="display:flex;justify-content:space-between;font-size:12px;padding:4px 0;border-top:1px solid var(--border-faint)">
               <span style="color:var(--text3)">Range casi</span>
@@ -851,8 +851,8 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
             <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em">Cicli mese</div>
             <div style="font-family:'Libre Baskerville',serif;font-size:32px;font-weight:700;color:var(--purple);line-height:1;margin:2px 0 8px" id="col-pap-cicli">0</div>
             <div style="display:flex;justify-content:space-between;font-size:12px;padding:4px 0;border-top:1px solid var(--border-faint)">
-              <span style="color:var(--text3)">Vetrini totali</span>
-              <span style="font-weight:600;color:var(--text)" id="col-pap-vetri">0</span>
+              <span style="color:var(--text3)">Casi totali</span>
+              <span style="font-weight:600;color:var(--text)" id="col-pap-casi">0</span>
             </div>
             <div style="display:flex;justify-content:space-between;font-size:12px;padding:4px 0;border-top:1px solid var(--border-faint)">
               <span style="color:var(--text3)">Range casi</span>
@@ -1519,7 +1519,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
 
 <!-- MODAL PROCESSATORE -->
 <div class="modal-overlay" id="modal-processatore">
-  <div class="modal" style="width:600px;max-height:92vh;overflow-y:auto">
+  <div class="modal" style="width:min(660px,96vw);max-width:96vw;max-height:92vh;overflow-y:auto">
     <div class="modal-title" id="proc-modal-title">Nuovo Ciclo Processatore</div>
     <input type="hidden" id="proc-edit-id">
 
@@ -1582,7 +1582,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
 
 <!-- MODAL COLORATORE -->
 <div class="modal-overlay" id="modal-coloratore">
-  <div class="modal" style="width:600px;max-height:92vh;overflow-y:auto">
+  <div class="modal" style="width:min(720px,96vw);max-width:96vw;max-height:92vh;overflow-y:auto">
     <div class="modal-title" id="color-modal-title">Registro Coloratore</div>
     <input type="hidden" id="color-edit-id">
 
@@ -1594,10 +1594,13 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
       </div>
     </div>
 
-    <!-- N° CICLI PER TIPO -->
+    <!-- N° CICLI PER TIPO (passaggi del coloratore, separati dai casi) -->
     <div style="background:var(--bg3);border-radius:var(--r);padding:12px;margin-bottom:14px">
-      <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px">N° cicli effettuati</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.8px">N° cicli effettuati</div>
+        <div style="font-size:10px;color:var(--text3);font-style:italic">passaggi della macchina, NON i casi</div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px">
         <div style="text-align:center;background:var(--bg2);border-radius:8px;padding:12px;border:1px solid var(--border)">
           <div style="font-size:11px;color:var(--blue);font-weight:600;margin-bottom:6px">EE — Istologia</div>
           <input type="number" id="color-cicli-ee" min="0" value="0" style="width:70px;text-align:center;font-family:DM Mono,monospace;font-size:22px;font-weight:700;border:none;background:transparent;color:var(--blue)">
@@ -1616,31 +1619,71 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
       </div>
     </div>
 
-    <!-- RANGE CASI PER TIPO -->
+    <!-- CASI LAVORATI PER TIPO (range cumulabili + singoli, chip rimovibili) -->
     <div style="background:var(--bg3);border-radius:var(--r);padding:12px;margin-bottom:14px">
-      <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px">Range ID casi lavorati</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
-        <div style="background:var(--bg2);border-radius:8px;padding:10px;border:1px solid var(--border)">
-          <div style="font-size:11px;color:var(--blue);font-weight:600;margin-bottom:6px">Istologia</div>
-          <input type="text" id="color-range-ist-from" placeholder="Da es. 2764/26" style="width:100%;margin-bottom:5px;font-family:DM Mono,monospace;font-size:12px">
-          <input type="text" id="color-range-ist-to" placeholder="A es. 2800/26" style="width:100%;font-family:DM Mono,monospace;font-size:12px">
+      <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px">Casi lavorati (range cumulabili + ID singoli)</div>
+
+      <!-- ISTOLOGIA -->
+      <div style="background:var(--bg2);border-radius:8px;padding:10px;border:1px solid var(--border);margin-bottom:10px">
+        <div style="font-size:11px;color:var(--blue);font-weight:600;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center">
+          <span>🧫 Istologia</span>
+          <span style="font-size:10px;color:var(--text3);font-weight:400">N° casi: <span id="color-casi-ist-count" style="font-weight:600;color:var(--blue)">0</span></span>
         </div>
-        <div style="background:var(--bg2);border-radius:8px;padding:10px;border:1px solid var(--border)">
-          <div style="font-size:11px;color:var(--teal);font-weight:600;margin-bottom:6px">Citologia</div>
-          <input type="text" id="color-range-cit-from" placeholder="Da es. 2764/26" style="width:100%;margin-bottom:5px;font-family:DM Mono,monospace;font-size:12px">
-          <input type="text" id="color-range-cit-to" placeholder="A es. 2800/26" style="width:100%;font-family:DM Mono,monospace;font-size:12px">
+        <div style="display:flex;gap:6px;margin-bottom:6px;flex-wrap:wrap">
+          <input type="text" id="color-ist-from" placeholder="Da (es. 2764/26)" style="flex:1;min-width:120px;font-family:DM Mono,monospace;font-size:12px">
+          <span style="align-self:center;color:var(--text3)">→</span>
+          <input type="text" id="color-ist-to" placeholder="A" style="flex:1;min-width:80px;font-family:DM Mono,monospace;font-size:12px">
+          <button class="btn btn-sm btn-primary" onclick="addRangeCasiColor('ist')">＋ Range</button>
         </div>
-        <div style="background:var(--bg2);border-radius:8px;padding:10px;border:1px solid var(--border)">
-          <div style="font-size:11px;color:var(--purple);font-weight:600;margin-bottom:6px">Pap LupoLab</div>
-          <input type="text" id="color-range-pap-from" placeholder="Da es. 100/26L" style="width:100%;margin-bottom:5px;font-family:DM Mono,monospace;font-size:12px">
-          <input type="text" id="color-range-pap-to" placeholder="A es. 150/26L" style="width:100%;font-family:DM Mono,monospace;font-size:12px">
+        <div style="display:flex;gap:6px;margin-bottom:6px">
+          <input type="text" id="color-ist-singolo" placeholder="ID singolo…" style="flex:1;font-family:DM Mono,monospace;font-size:12px" onkeydown="if(event.key==='Enter')addCasoSingoloColor('ist')">
+          <button class="btn btn-sm btn-ok" onclick="addCasoSingoloColor('ist')">＋</button>
         </div>
+        <div id="color-casi-ist-list" style="display:flex;flex-wrap:wrap;gap:4px;min-height:28px;padding:5px;background:var(--bg);border:1px solid var(--border-faint);border-radius:6px"></div>
+      </div>
+
+      <!-- CITOLOGIA -->
+      <div style="background:var(--bg2);border-radius:8px;padding:10px;border:1px solid var(--border);margin-bottom:10px">
+        <div style="font-size:11px;color:var(--teal);font-weight:600;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center">
+          <span>🔬 Citologia</span>
+          <span style="font-size:10px;color:var(--text3);font-weight:400">N° casi: <span id="color-casi-cit-count" style="font-weight:600;color:var(--teal)">0</span></span>
+        </div>
+        <div style="display:flex;gap:6px;margin-bottom:6px;flex-wrap:wrap">
+          <input type="text" id="color-cit-from" placeholder="Da (es. C100/26)" style="flex:1;min-width:120px;font-family:DM Mono,monospace;font-size:12px">
+          <span style="align-self:center;color:var(--text3)">→</span>
+          <input type="text" id="color-cit-to" placeholder="A" style="flex:1;min-width:80px;font-family:DM Mono,monospace;font-size:12px">
+          <button class="btn btn-sm btn-primary" onclick="addRangeCasiColor('cit')">＋ Range</button>
+        </div>
+        <div style="display:flex;gap:6px;margin-bottom:6px">
+          <input type="text" id="color-cit-singolo" placeholder="ID singolo…" style="flex:1;font-family:DM Mono,monospace;font-size:12px" onkeydown="if(event.key==='Enter')addCasoSingoloColor('cit')">
+          <button class="btn btn-sm btn-ok" onclick="addCasoSingoloColor('cit')">＋</button>
+        </div>
+        <div id="color-casi-cit-list" style="display:flex;flex-wrap:wrap;gap:4px;min-height:28px;padding:5px;background:var(--bg);border:1px solid var(--border-faint);border-radius:6px"></div>
+      </div>
+
+      <!-- PAP -->
+      <div style="background:var(--bg2);border-radius:8px;padding:10px;border:1px solid var(--border)">
+        <div style="font-size:11px;color:var(--purple);font-weight:600;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center">
+          <span>📋 PAP LupoLab</span>
+          <span style="font-size:10px;color:var(--text3);font-weight:400">N° casi: <span id="color-casi-pap-count" style="font-weight:600;color:var(--purple)">0</span></span>
+        </div>
+        <div style="display:flex;gap:6px;margin-bottom:6px;flex-wrap:wrap">
+          <input type="text" id="color-pap-from" placeholder="Da (es. 100/26L)" style="flex:1;min-width:120px;font-family:DM Mono,monospace;font-size:12px">
+          <span style="align-self:center;color:var(--text3)">→</span>
+          <input type="text" id="color-pap-to" placeholder="A" style="flex:1;min-width:80px;font-family:DM Mono,monospace;font-size:12px">
+          <button class="btn btn-sm btn-primary" onclick="addRangeCasiColor('pap')">＋ Range</button>
+        </div>
+        <div style="display:flex;gap:6px;margin-bottom:6px">
+          <input type="text" id="color-pap-singolo" placeholder="ID singolo…" style="flex:1;font-family:DM Mono,monospace;font-size:12px" onkeydown="if(event.key==='Enter')addCasoSingoloColor('pap')">
+          <button class="btn btn-sm btn-ok" onclick="addCasoSingoloColor('pap')">＋</button>
+        </div>
+        <div id="color-casi-pap-list" style="display:flex;flex-wrap:wrap;gap:4px;min-height:28px;padding:5px;background:var(--bg);border:1px solid var(--border-faint);border-radius:6px"></div>
       </div>
     </div>
 
     <!-- REAGENTI ATTIVI NEL COLORATORE QUEL GIORNO -->
     <div style="background:var(--bg3);border-radius:var(--r);padding:12px;margin-bottom:14px">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;gap:8px;flex-wrap:wrap">
         <div>
           <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.8px">Reagenti presenti nel coloratore</div>
           <div style="font-size:11px;color:var(--text3);margin-top:2px">Tutti i reagenti attivi nelle vaschette quel giorno</div>
@@ -4241,8 +4284,8 @@ function addRangeCasiProc(){
       for(let n=nFrom;n<=nTo;n++) procCasiList.push(n+'/'+anno);
     } else { procCasiList.push(from); if(to) procCasiList.push(to); }
   }
-  document.getElementById('proc-caso-from').value=preset?.casi_da||'';
-  document.getElementById('proc-caso-to').value=preset?.casi_a||'';
+  document.getElementById('proc-caso-from').value='';
+  document.getElementById('proc-caso-to').value='';
   renderProcCasiList();
 }
 
@@ -4350,7 +4393,7 @@ function renderProcessatore(){
   const protoLabel={standard:'Standard notturno',rapido:'Rapido',biopsie:'Biopsie',altro:'Altro'};
 
   // Tabella principale
-  el.innerHTML=`<div style="overflow-x:auto"><table>
+  el.innerHTML=`<div style="overflow-x:auto"><table class="tbl">
     <thead><tr>
       <th>Data</th>
       <th style="text-align:center">Cassette</th>
@@ -4414,6 +4457,36 @@ async function saveColoratoreReg(arr, deletedId){
   }catch(e){ enqueue({type:'coloratore'}); }
 }
 
+// ─── Casi coloratore: liste cumulabili per tipo (ist/cit/pap) ───
+// Stesso meccanismo del processatore (procCasiList) ma triplicato.
+let colorCasiList = { ist: [], cit: [], pap: [] };
+
+function _normalizeColorCasi(preset) {
+  // Accetta sia il vecchio schema (range_ist = {from,to}) sia il nuovo (range_ist = [...] + casi_ist = [...])
+  // Restituisce array di stringhe (singoli casi espansi + chip singoli).
+  const acc = new Set();
+  if (!preset) return [];
+  return null; // mai chiamato direttamente con un solo argomento
+}
+
+function _extractCasiFromPreset(preset, tipo) {
+  if (!preset) return [];
+  const acc = new Set();
+  // 1) range_<tipo>: può essere oggetto singolo {from,to} (vecchio) o array (nuovo)
+  const rng = preset['range_' + tipo];
+  if (rng) {
+    const ranges = Array.isArray(rng) ? rng : [rng];
+    ranges.forEach(r => {
+      if (!r || (!r.from && !r.to)) return;
+      _expandCasoRange(r.from, r.to).forEach(c => { if (c) acc.add(c); });
+    });
+  }
+  // 2) casi_<tipo>: array di singoli (nuovo schema)
+  const sing = preset['casi_' + tipo];
+  if (Array.isArray(sing)) sing.forEach(c => { if (c) acc.add(String(c)); });
+  return Array.from(acc);
+}
+
 function openNuovoColoratore(preset){
   document.getElementById('color-edit-id').value = preset?.id||'';
   document.getElementById('color-modal-title').textContent = preset ? 'Modifica Registro Coloratore' : 'Registro Coloratore';
@@ -4422,13 +4495,21 @@ function openNuovoColoratore(preset){
   document.getElementById('color-cicli-ee').value = preset?.cicli_ee||0;
   document.getElementById('color-cicli-ee-cit').value = preset?.cicli_ee_cit||0;
   document.getElementById('color-cicli-pap').value = preset?.cicli_pap||0;
-  // Range casi
-  document.getElementById('color-range-ist-from').value = preset?.range_ist?.from||'';
-  document.getElementById('color-range-ist-to').value   = preset?.range_ist?.to||'';
-  document.getElementById('color-range-cit-from').value = preset?.range_cit?.from||'';
-  document.getElementById('color-range-cit-to').value   = preset?.range_cit?.to||'';
-  document.getElementById('color-range-pap-from').value = preset?.range_pap?.from||'';
-  document.getElementById('color-range-pap-to').value   = preset?.range_pap?.to||'';
+  // ─── Casi: migrazione vecchio schema → nuovo schema chip ───
+  colorCasiList = {
+    ist: _extractCasiFromPreset(preset, 'ist'),
+    cit: _extractCasiFromPreset(preset, 'cit'),
+    pap: _extractCasiFromPreset(preset, 'pap')
+  };
+  // Reset input from/to/singolo
+  ['ist','cit','pap'].forEach(t => {
+    const f = document.getElementById('color-'+t+'-from'); if (f) f.value = '';
+    const to = document.getElementById('color-'+t+'-to'); if (to) to.value = '';
+    const s = document.getElementById('color-'+t+'-singolo'); if (s) s.value = '';
+  });
+  renderColorCasiList('ist');
+  renderColorCasiList('cit');
+  renderColorCasiList('pap');
   // Reagenti
   const rl = document.getElementById('color-reagenti-list');
   rl.innerHTML='';
@@ -4436,6 +4517,52 @@ function openNuovoColoratore(preset){
   else { precompileReagentiColoratore(); }
   document.getElementById('modal-coloratore').classList.add('open');
 }
+
+// ─── Render chip casi per tipo ───
+function renderColorCasiList(tipo) {
+  const list = colorCasiList[tipo] || [];
+  const colors = { ist: 'var(--blue)', cit: 'var(--teal)', pap: 'var(--purple)' };
+  const el = document.getElementById('color-casi-'+tipo+'-list');
+  if (el) {
+    el.innerHTML = list.map((id, i) => `
+      <span style="display:inline-flex;align-items:center;gap:3px;background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:2px 6px;font-family:DM Mono,monospace;font-size:11px;color:${colors[tipo]}">
+        ${esc(id)}<button onclick="removeCasoColor('${tipo}',${i})" style="background:none;border:none;cursor:pointer;color:var(--red);font-size:10px;padding:0 0 0 2px">✕</button>
+      </span>`).join('');
+  }
+  const c = document.getElementById('color-casi-'+tipo+'-count');
+  if (c) c.textContent = list.length;
+}
+
+window.addRangeCasiColor = function(tipo) {
+  const fromEl = document.getElementById('color-'+tipo+'-from');
+  const toEl   = document.getElementById('color-'+tipo+'-to');
+  const from = fromEl?.value?.trim() || '';
+  const to   = toEl?.value?.trim() || '';
+  if (!from) { toast('Inserisci almeno il caso iniziale','error'); return; }
+  const exp = _expandCasoRange(from, to || from);
+  const set = new Set(colorCasiList[tipo]);
+  let added = 0;
+  exp.forEach(c => { if (c && !set.has(c)) { set.add(c); added++; } });
+  colorCasiList[tipo] = Array.from(set);
+  if (fromEl) fromEl.value = '';
+  if (toEl) toEl.value = '';
+  renderColorCasiList(tipo);
+  if (added > 0) toast('+' + added + ' casi ' + tipo.toUpperCase(), 'ok');
+};
+
+window.addCasoSingoloColor = function(tipo) {
+  const inp = document.getElementById('color-'+tipo+'-singolo');
+  const v = inp?.value?.trim();
+  if (!v) return;
+  if (!colorCasiList[tipo].includes(v)) colorCasiList[tipo].push(v);
+  if (inp) inp.value = '';
+  renderColorCasiList(tipo);
+};
+
+window.removeCasoColor = function(tipo, i) {
+  colorCasiList[tipo].splice(i, 1);
+  renderColorCasiList(tipo);
+};
 
 // Precompila reagenti del coloratore dal magazzino (coloranti EE e PAP)
 function precompileReagentiColoratore(){
@@ -4477,6 +4604,12 @@ async function saveColoratore(){
   if(!data){ toast('Data obbligatoria','error'); return; }
   _takeSnapshot('Salva coloratore '+data); // FIX [UNDO]
   const editId = document.getElementById('color-edit-id').value;
+  // ─── Schema nuovo: casi_<tipo> = array di singoli + range_<tipo> sintetico (per backward compat in display) ───
+  const casiIst = colorCasiList.ist.slice();
+  const casiCit = colorCasiList.cit.slice();
+  const casiPap = colorCasiList.pap.slice();
+  // Sintetizza range "from→to" per display (primo e ultimo)
+  const synthRange = (list) => list.length === 0 ? {from:'',to:''} : (list.length === 1 ? {from:list[0], to:list[0]} : {from:list[0], to:list[list.length-1]});
   const registro = {
     id: editId||genId(),
     data,
@@ -4484,9 +4617,12 @@ async function saveColoratore(){
     cicli_ee:     parseInt(document.getElementById('color-cicli-ee').value)||0,
     cicli_ee_cit: parseInt(document.getElementById('color-cicli-ee-cit').value)||0,
     cicli_pap:    parseInt(document.getElementById('color-cicli-pap').value)||0,
-    range_ist: { from: document.getElementById('color-range-ist-from').value.trim(), to: document.getElementById('color-range-ist-to').value.trim() },
-    range_cit: { from: document.getElementById('color-range-cit-from').value.trim(), to: document.getElementById('color-range-cit-to').value.trim() },
-    range_pap: { from: document.getElementById('color-range-pap-from').value.trim(), to: document.getElementById('color-range-pap-to').value.trim() },
+    casi_ist: casiIst,
+    casi_cit: casiCit,
+    casi_pap: casiPap,
+    range_ist: synthRange(casiIst),
+    range_cit: synthRange(casiCit),
+    range_pap: synthRange(casiPap),
     reagenti: getReagentiList('color-reagenti-list'),
     modificato: new Date().toISOString()
   };
@@ -4510,13 +4646,19 @@ function renderColoratore(){
   if(to) arr=arr.filter(x=>x.data<=to);
   if(q) arr=arr.filter(x=>(x.reagenti||[]).some(r=>(r.lotto||'').toLowerCase().includes(q)||(r.nome||'').toLowerCase().includes(q)));
 
+  // Conteggi: usiamo casi reali (espandendo range) per il riepilogo
   const all = loadColoratore();
-  const totEE = all.reduce((s,x)=>s+(x.cicli_ee||0),0);
-  const totCit = all.reduce((s,x)=>s+(x.cicli_ee_cit||0),0);
-  const totPap = all.reduce((s,x)=>s+(x.cicli_pap||0),0);
+  const _extr = (typeof _extractCasiByTipo === 'function') ? _extractCasiByTipo : null;
+  const casiTot = (tipo) => _extr ? all.reduce((s,x)=>s + _extr(x, tipo).length, 0) : 0;
+  const totIst = casiTot('ist');
+  const totCit = casiTot('cit');
+  const totPap = casiTot('pap');
+  const totCicliEE = all.reduce((s,x)=>s+(x.cicli_ee||0),0);
+  const totCicliCit = all.reduce((s,x)=>s+(x.cicli_ee_cit||0),0);
+  const totCicliPap = all.reduce((s,x)=>s+(x.cicli_pap||0),0);
   const el = document.getElementById('color-list');
   {const _cs=document.getElementById('color-stats');if(_cs)_cs.textContent=
-    `${all.length} giorni registrati · EE: ${totEE} cicli · EE-Cit: ${totCit} cicli · PAP: ${totPap} cicli`;}
+    `${all.length} giorni · Casi: ${totIst} ist + ${totCit} cit + ${totPap} pap (tot ${totIst+totCit+totPap}) · Cicli macc.: ${totCicliEE+totCicliCit+totCicliPap}`;}
 
   if(!arr.length){ el.innerHTML='<div class="empty"><div class="e-ico">🎨</div><p>Nessun registro</p></div>'; return; }
 
@@ -4528,18 +4670,28 @@ function renderColoratore(){
     const hasNew=(reg.reagenti||[]).some(r=>!(prev.reagenti||[]).find(p=>(p.lotto||p.nome)===(r.lotto||r.nome)));
     return hasNew ? {label:'🔄 Cambiato',cls:'bg-red'} : {label:'➕ Rabboccato',cls:'bg-yellow'};
   };
-  const rng=r=>r?.from?(r.from+(r.to&&r.to!==r.from?' → '+String(r.to).split('/')[0]:'')):'—';
+  // Etichetta range: "100/26 → 115/26 (16 casi)"
+  const fmtRangeWithCount = (reg, tipo) => {
+    const casi = _extr ? _extr(reg, tipo) : [];
+    if (!casi.length) return '<span style="color:var(--text4)">—</span>';
+    if (casi.length === 1) return `<span style="color:var(--text2)">${esc(casi[0])}</span>`;
+    const first = casi[0], last = casi[casi.length-1];
+    return `<div style="line-height:1.3">
+      <div style="color:var(--text2)">${esc(first)} → ${esc(last)}</div>
+      <div style="font-size:10px;color:var(--text3)">${casi.length} casi</div>
+    </div>`;
+  };
 
   el.innerHTML=`<div style="overflow-x:auto">
-  <table>
+  <table class="tbl">
     <thead><tr>
       <th>Data</th>
-      <th style="color:var(--blue);text-align:center">EE Ist.</th>
-      <th style="color:var(--blue)">Range Ist.</th>
-      <th style="color:var(--teal);text-align:center">EE Cit.</th>
-      <th style="color:var(--teal)">Range Cit.</th>
-      <th style="color:var(--purple);text-align:center">PAP</th>
-      <th style="color:var(--purple)">Range PAP</th>
+      <th style="color:var(--blue);text-align:center">Cicli Ist.</th>
+      <th style="color:var(--blue)">Casi Ist.</th>
+      <th style="color:var(--teal);text-align:center">Cicli Cit.</th>
+      <th style="color:var(--teal)">Casi Cit.</th>
+      <th style="color:var(--purple);text-align:center">Cicli PAP</th>
+      <th style="color:var(--purple)">Casi PAP</th>
       <th>Reagenti</th>
       <th style="width:70px"></th>
     </tr></thead>
@@ -4550,11 +4702,11 @@ function renderColoratore(){
         return `<tr>
           <td style="font-weight:600;white-space:nowrap">${fmtDate(reg.data)}</td>
           <td style="text-align:center;font-family:'DM Mono',monospace;font-weight:700;color:var(--blue)">${reg.cicli_ee||0}</td>
-          <td style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text3)">${rng(reg.range_ist)}</td>
+          <td style="font-family:'DM Mono',monospace;font-size:11px">${fmtRangeWithCount(reg, 'ist')}</td>
           <td style="text-align:center;font-family:'DM Mono',monospace;font-weight:700;color:var(--teal)">${reg.cicli_ee_cit||0}</td>
-          <td style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text3)">${rng(reg.range_cit)}</td>
+          <td style="font-family:'DM Mono',monospace;font-size:11px">${fmtRangeWithCount(reg, 'cit')}</td>
           <td style="text-align:center;font-family:'DM Mono',monospace;font-weight:700;color:var(--purple)">${reg.cicli_pap||0}</td>
-          <td style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text3)">${rng(reg.range_pap)}</td>
+          <td style="font-family:'DM Mono',monospace;font-size:11px">${fmtRangeWithCount(reg, 'pap')}</td>
           <td><span class="badge ${stato.cls}" style="font-size:11px">${stato.label}</span></td>
           <td style="white-space:nowrap">
             <button class="btn btn-sm" onclick="openNuovoColoratore(loadColoratore().find(x=>x.id==='${reg.id}'))">✎</button>
@@ -6802,45 +6954,93 @@ window.smaltisciBidoneAperto = async function(prodId) {
    PARTE 3 — renderDashAnalytics (6 chart SVG con dati reali)
    ════════════════════════════════════════════════════════════════ */
 
+// ─── Helper: espande un range "100/26 → 115/26" in array ["100/26", "101/26", ..., "115/26"] ───
+// Se from e to hanno anno diverso, o non c'è numero progressivo, ritorna i singoli senza espansione.
+// Restituisce sempre un array di stringhe.
+function _expandCasoRange(from, to) {
+  from = (from||'').trim();
+  to = (to||'').trim();
+  if (!from && !to) return [];
+  if (from && !to) return [from];
+  if (!from && to) return [to];
+  if (from === to) return [from];
+  // Tenta parsing: "NUMERO/SUFFISSO" — il suffisso può contenere lettere (es. 100/26L)
+  const parseId = s => {
+    const m = s.match(/^(\d+)(\/.+)?$/);
+    if (!m) return null;
+    return { num: parseInt(m[1], 10), suff: m[2] || '' };
+  };
+  const a = parseId(from), b = parseId(to);
+  if (a && b && a.suff === b.suff && b.num >= a.num && (b.num - a.num) < 10000) {
+    const out = [];
+    for (let n = a.num; n <= b.num; n++) out.push(n + a.suff);
+    return out;
+  }
+  // Fallback: non espandibili, ritorno entrambi gli estremi come 2 singoli
+  return [from, to];
+}
+
+// ─── Helper: estrae TUTTI i casi da un campo range_xxx + casi_xxx di un record coloratore ───
+// Schema vecchio: range_ist = {from,to} (oggetto)
+// Schema nuovo:   range_ist = [{from,to}, ...] (array di range)
+// Schema nuovo:   casi_ist  = ['100/26','200/26',...] (singoli)
+// Ritorna l'unione di tutti, deduplicata.
+function _extractCasiByTipo(record, tipo) {
+  const out = new Set();
+  // Range: gestiamo entrambi i formati (oggetto singolo o array di oggetti)
+  const rng = record['range_' + tipo];
+  if (rng) {
+    const ranges = Array.isArray(rng) ? rng : [rng];
+    ranges.forEach(r => {
+      if (!r) return;
+      _expandCasoRange(r.from, r.to).forEach(c => { if (c) out.add(c); });
+    });
+  }
+  // Casi singoli (nuovo schema)
+  const sing = record['casi_' + tipo];
+  if (Array.isArray(sing)) sing.forEach(c => { if (c) out.add(String(c)); });
+  return Array.from(out);
+}
+
 // ─── Helper: estrae "campioni virtuali" da processatore + coloratore ───
-// Usato dalle statistiche dashboard quando l'utente non popola loadCampioni().
-// Per ogni record coloratore, crea N record per ogni tipo (ist/cit/pap) con
-// le date del giorno; il count usato è max(cicli, vetri_calcolati).
+// Sostituisce loadCampioni() quando l'utente non popola direttamente i campioni.
+// Per il COLORATORE: espande i range in singoli casi per OGNI tipo (Ist/Cit/PAP).
+// Per il PROCESSATORE: usa i casi come istologia (fallback per date senza coloratore).
 function _derivedCampioni() {
   const out = [];
   let _i = 0;
-  // Coloratore: fonte primaria (ha breakdown per tipo)
+  // ─── Coloratore: fonte primaria (range espansi → 1 record per caso reale) ───
   const reg = (typeof loadColoratore === 'function') ? loadColoratore() : [];
   reg.forEach(r => {
     if (!r.data) return;
     const data = r.data;
-    // Istologia: usa max(cicli_ee, ranges_ist.length)
-    const istN = Math.max(r.cicli_ee||0, (r.ranges_ist||[]).length);
-    for (let i = 0; i < istN; i++) {
-      out.push({ id: 'derived_ist_'+(_i++), data: data, tipo: 'istologia' });
-    }
+    // Istologia
+    _extractCasiByTipo(r, 'ist').forEach(idCaso => {
+      out.push({ id: 'derived_ist_'+(_i++), data, tipo: 'istologia', id_caso: idCaso });
+    });
     // Citologia
-    const citN = Math.max(r.cicli_ee_cit||0, (r.ranges_cit||[]).length);
-    for (let i = 0; i < citN; i++) {
-      out.push({ id: 'derived_cit_'+(_i++), data: data, tipo: 'citologia' });
-    }
-    // PAP: usa max(cicli_pap, ranges_pap.length)
-    const papN = Math.max(r.cicli_pap||0, (r.ranges_pap||[]).length);
-    for (let i = 0; i < papN; i++) {
-      out.push({ id: 'derived_pap_'+(_i++), data: data, tipo: 'pap' });
-    }
+    _extractCasiByTipo(r, 'cit').forEach(idCaso => {
+      out.push({ id: 'derived_cit_'+(_i++), data, tipo: 'citologia', id_caso: idCaso });
+    });
+    // PAP
+    _extractCasiByTipo(r, 'pap').forEach(idCaso => {
+      out.push({ id: 'derived_pap_'+(_i++), data, tipo: 'pap', id_caso: idCaso });
+    });
   });
-  // Processatore: fallback. Se per una data non c'è coloratore, conta i casi
-  // come istologia (i processati sono quasi sempre istologia).
+  // ─── Processatore: fallback per date dove non c'è registro coloratore ───
   const proc = (typeof loadProc === 'function') ? loadProc() : [];
   const dateConColoratore = new Set(reg.map(r => r.data));
   proc.forEach(p => {
     if (!p.data) return;
-    if (dateConColoratore.has(p.data)) return; // già contato dal coloratore
-    const n = Array.isArray(p.casi) ? p.casi.length : (p.n_cassette || 0);
-    for (let i = 0; i < n; i++) {
-      out.push({ id: 'derived_proc_'+(_i++), data: p.data, tipo: 'istologia' });
+    if (dateConColoratore.has(p.data)) return;
+    // Espandi range processatore + casi singoli
+    let casi = Array.isArray(p.casi) ? p.casi.slice() : [];
+    if (p.casi_da || p.casi_a) {
+      _expandCasoRange(p.casi_da, p.casi_a).forEach(c => { if (c && !casi.includes(c)) casi.push(c); });
     }
+    casi.forEach(idCaso => {
+      out.push({ id: 'derived_proc_'+(_i++), data: p.data, tipo: 'istologia', id_caso: idCaso });
+    });
   });
   return out;
 }
@@ -7568,24 +7768,26 @@ function renderHomeColorTable() {
   const tbody = document.getElementById('home-color-tbody');
   const loader = (typeof loadColoratore === 'function') ? loadColoratore : (typeof loadColor === 'function' ? loadColor : null);
   if (!tbody || !loader) return;
-  // raggruppa per data (un record = un giorno, ma per sicurezza aggrega)
   const reg = loader();
   if (!reg.length) {
     tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--text3);padding:14px;font-style:italic">Nessun ciclo registrato</td></tr>';
     return;
   }
+  // Helper count casi (espande i range)
+  const _extr = (typeof _extractCasiByTipo === 'function') ? _extractCasiByTipo : null;
+  const casiCount = (rec, tipo) => _extr ? _extr(rec, tipo).length : 0;
   // Aggrega per data
   const byDate = {};
   reg.forEach(r => {
     if (!r.data) return;
-    if (!byDate[r.data]) byDate[r.data] = {data:r.data, cicli_ee:0, cicli_ee_cit:0, cicli_pap:0, vetri_ist:0, vetri_cit:0, vetri_pap:0, reagenti:[]};
+    if (!byDate[r.data]) byDate[r.data] = {data:r.data, cicli_ee:0, cicli_ee_cit:0, cicli_pap:0, casi_ist:0, casi_cit:0, casi_pap:0, reagenti:[]};
     const b = byDate[r.data];
     b.cicli_ee     += (r.cicli_ee||0);
     b.cicli_ee_cit += (r.cicli_ee_cit||0);
     b.cicli_pap    += (r.cicli_pap||0);
-    b.vetri_ist    += (r.vetri_ist||0);
-    b.vetri_cit    += (r.vetri_cit||0);
-    b.vetri_pap    += (r.vetri_pap||0);
+    b.casi_ist     += casiCount(r, 'ist');
+    b.casi_cit     += casiCount(r, 'cit');
+    b.casi_pap     += casiCount(r, 'pap');
     b.reagenti      = b.reagenti.concat(r.reagenti||[]);
   });
   const days = Object.values(byDate).sort((a,b) => (b.data||'').localeCompare(a.data||'')).slice(0,5);
@@ -7603,11 +7805,11 @@ function renderHomeColorTable() {
     return `<tr style="cursor:pointer" onclick="showView('coloratore')">
       <td class="mono" style="font-weight:600">${data}</td>
       <td style="background:#f7faff;text-align:center;${dim(d.cicli_ee)}">${d.cicli_ee}</td>
-      <td style="background:#f7faff;text-align:center;${dim(d.vetri_ist)}">${d.vetri_ist}</td>
+      <td style="background:#f7faff;text-align:center;${dim(d.casi_ist)}">${d.casi_ist}</td>
       <td style="background:#f7feff;text-align:center;${dim(d.cicli_ee_cit)}">${d.cicli_ee_cit}</td>
-      <td style="background:#f7feff;text-align:center;${dim(d.vetri_cit)}">${d.vetri_cit}</td>
+      <td style="background:#f7feff;text-align:center;${dim(d.casi_cit)}">${d.casi_cit}</td>
       <td style="background:#fbf9ff;text-align:center;${dim(d.cicli_pap)}">${d.cicli_pap}</td>
-      <td style="background:#fbf9ff;text-align:center;${dim(d.vetri_pap)}">${d.vetri_pap}</td>
+      <td style="background:#fbf9ff;text-align:center;${dim(d.casi_pap)}">${d.casi_pap}</td>
       <td>${statoBadge(d.reagenti)}</td>
     </tr>`;
   }).join('');
@@ -7871,12 +8073,14 @@ function showImportSelector(payload, timestamp) {
     hasData = true;
     const diff = countBk - countLs;
     const diffLabel = diff > 0 ? `<span style="color:var(--green);font-weight:600">+${diff}</span>` : (diff < 0 ? `<span style="color:var(--red);font-weight:600">${diff}</span>` : `<span style="color:var(--text3)">=</span>`);
-    const warning = countLs > countBk
-      ? `<div style="font-size:10px;color:var(--orange);margin-top:2px">⚠ Hai ${countLs - countBk} record in più rispetto al backup — verranno PERSI</div>`
-      : '';
-    // Default: deselezionato per le sezioni in cui hai PIÙ dati ora (così non perdi roba)
-    // Selezionato di default solo se il backup ha più dati (caso classico: prodotti puliti)
-    const checked = (countBk > countLs && countBk > 0) ? 'checked' : '';
+    const warning = countLs > countBk && countBk > 0
+      ? `<div style="font-size:10px;color:var(--orange);margin-top:2px">⚠ Hai ${countLs - countBk} record in più rispetto al backup — verranno PERSI se importi</div>`
+      : (countLs > 0 && countBk === 0
+        ? `<div style="font-size:10px;color:var(--red);margin-top:2px">⚠ Il backup è vuoto per questa sezione — importando perdi tutti i ${countLs} record locali</div>`
+        : '');
+    // Default: TUTTE le sezioni con dati nel backup sono spuntate.
+    // L'utente decide cosa togliere. Sezione vuota nel backup: non spuntata.
+    const checked = (countBk > 0) ? 'checked' : '';
     rowsHTML += `
       <label style="display:flex;gap:12px;align-items:flex-start;padding:8px 12px;border:1px solid var(--border);border-radius:var(--r);margin-bottom:6px;cursor:pointer;background:#fff" data-bk="${sec.bk}" data-ls="${sec.ls}">
         <input type="checkbox" class="imp-sec-chk" data-bk="${sec.bk}" data-ls="${sec.ls}" ${checked} style="margin-top:3px;width:16px;height:16px;cursor:pointer">
@@ -7961,6 +8165,8 @@ window.confirmSelectiveImport = function() {
       imported++;
     }
   });
+  // Invalida la cache in memoria — al reload riparte dalla LS appena scritta
+  if (typeof _invalidateAll === 'function') _invalidateAll();
   toast(`${imported} sezion${imported===1?'e':'i'} importate — ricarico la pagina…`, 'ok');
   setTimeout(() => location.reload(), 1500);
 };
@@ -8252,50 +8458,47 @@ if (_origRenderColor) {
       if (typeof loadColoratore !== 'function') return;
       const reg = loadColoratore();
       const set = (id, v) => { const e = document.getElementById(id); if(e) e.textContent = v; };
-      const fmtRange = (r) => {
-        if (!r) return '—';
-        const from = (r.from || '').trim(), to = (r.to || '').trim();
-        if (!from && !to) return '—';
-        if (from && !to)  return from;
-        if (!from && to)  return '→ ' + to;
-        if (from === to)  return from;
-        return from + ' → ' + to;
-      };
       const fmtD = d => d ? new Date(d).toLocaleDateString('it-IT',{day:'2-digit',month:'2-digit',year:'2-digit'}) : '—';
+      const _extr = (typeof _extractCasiByTipo === 'function') ? _extractCasiByTipo : null;
       // Filtro mese corrente
       const now = new Date(); now.setHours(0,0,0,0);
       const ms = new Date(now.getFullYear(), now.getMonth(), 1);
       const monthReg = reg.filter(r => r.data && new Date(r.data) >= ms);
-      // Aggrega per tipo
-      const aggIst = monthReg.reduce((a,r) => {
-        a.cicli += (r.cicli_ee||0);
-        a.vetri += (r.vetri_ist||0);
-        if(r.range_ist?.from && (!a.from || r.range_ist.from < a.from)) a.from = r.range_ist.from;
-        if(r.range_ist?.to   && (!a.to   || r.range_ist.to   > a.to))   a.to   = r.range_ist.to;
-        return a;
-      }, {cicli:0, vetri:0, from:null, to:null});
-      const aggCit = monthReg.reduce((a,r) => {
-        a.cicli += (r.cicli_ee_cit||0);
-        a.vetri += (r.vetri_cit||0);
-        if(r.range_cit?.from && (!a.from || r.range_cit.from < a.from)) a.from = r.range_cit.from;
-        if(r.range_cit?.to   && (!a.to   || r.range_cit.to   > a.to))   a.to   = r.range_cit.to;
-        return a;
-      }, {cicli:0, vetri:0, from:null, to:null});
-      const aggPap = monthReg.reduce((a,r) => {
-        a.cicli += (r.cicli_pap||0);
-        a.vetri += (r.vetri_pap||0);
-        if(r.range_pap?.from && (!a.from || r.range_pap.from < a.from)) a.from = r.range_pap.from;
-        if(r.range_pap?.to   && (!a.to   || r.range_pap.to   > a.to))   a.to   = r.range_pap.to;
-        return a;
-      }, {cicli:0, vetri:0, from:null, to:null});
-      set('col-ist-cicli', aggIst.cicli); set('col-ist-vetri', aggIst.vetri); set('col-ist-range', fmtRange(aggIst));
-      set('col-cit-cicli', aggCit.cicli); set('col-cit-vetri', aggCit.vetri); set('col-cit-range', fmtRange(aggCit));
-      set('col-pap-cicli', aggPap.cicli); set('col-pap-vetri', aggPap.vetri); set('col-pap-range', fmtRange(aggPap));
+      // Aggrega per tipo: per ogni record, estrai i casi reali (espansi)
+      const aggregaTipo = (tipo, cicliKey) => {
+        let cicli = 0;
+        const tuttiICasi = [];
+        monthReg.forEach(r => {
+          cicli += (r[cicliKey]||0);
+          if (_extr) _extr(r, tipo).forEach(c => tuttiICasi.push(c));
+        });
+        // Calcola range globale (primo→ultimo numericamente, se possibile)
+        let from = null, to = null;
+        if (tuttiICasi.length) {
+          const parseN = s => { const m = String(s).match(/^(\d+)/); return m ? parseInt(m[1]) : null; };
+          const sorted = tuttiICasi.slice().sort((a,b) => (parseN(a)||0) - (parseN(b)||0));
+          from = sorted[0];
+          to   = sorted[sorted.length-1];
+        }
+        return { cicli, casi: tuttiICasi.length, from, to };
+      };
+      const fmtRange = a => {
+        if (!a.from && !a.to) return '—';
+        if (a.from === a.to) return a.from || '—';
+        return (a.from || '—') + ' → ' + (a.to || '—');
+      };
+      const aggIst = aggregaTipo('ist', 'cicli_ee');
+      const aggCit = aggregaTipo('cit', 'cicli_ee_cit');
+      const aggPap = aggregaTipo('pap', 'cicli_pap');
+      set('col-ist-cicli', aggIst.cicli); set('col-ist-casi', aggIst.casi); set('col-ist-range', fmtRange(aggIst));
+      set('col-cit-cicli', aggCit.cicli); set('col-cit-casi', aggCit.casi); set('col-cit-range', fmtRange(aggCit));
+      set('col-pap-cicli', aggPap.cicli); set('col-pap-casi', aggPap.casi); set('col-pap-range', fmtRange(aggPap));
       // Ultimo giorno per tipo (assoluto, non solo mese)
       const sortedDesc = reg.slice().sort((a,b) => (b.data||'').localeCompare(a.data||''));
-      const lastIst = sortedDesc.find(r => (r.cicli_ee||0)     > 0 || (r.vetri_ist||0) > 0);
-      const lastCit = sortedDesc.find(r => (r.cicli_ee_cit||0) > 0 || (r.vetri_cit||0) > 0);
-      const lastPap = sortedDesc.find(r => (r.cicli_pap||0)    > 0 || (r.vetri_pap||0) > 0);
+      const hasTipo = (r, tipo, cicliKey) => (r[cicliKey]||0) > 0 || (_extr ? _extr(r, tipo).length > 0 : false);
+      const lastIst = sortedDesc.find(r => hasTipo(r, 'ist', 'cicli_ee'));
+      const lastCit = sortedDesc.find(r => hasTipo(r, 'cit', 'cicli_ee_cit'));
+      const lastPap = sortedDesc.find(r => hasTipo(r, 'pap', 'cicli_pap'));
       set('col-ist-last', lastIst ? fmtD(lastIst.data) : '—');
       set('col-cit-last', lastCit ? fmtD(lastCit.data) : '—');
       set('col-pap-last', lastPap ? fmtD(lastPap.data) : '—');
