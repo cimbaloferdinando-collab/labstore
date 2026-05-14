@@ -4272,21 +4272,19 @@ function renderProcCasiList(){
 
 function addRangeCasiProc(){
   const from = document.getElementById('proc-caso-from').value.trim();
-  const to = document.getElementById('proc-caso-to').value.trim();
+  const to   = document.getElementById('proc-caso-to').value.trim();
   if(!from){ toast('Inserisci almeno il caso iniziale','error'); return; }
-  if(!to){ procCasiList.push(from); }
-  else {
-    // Espandi range: estrai numero progressivo
-    const parseId = s => { const m=s.match(/^(\d+)\//); return m?parseInt(m[1]):null; };
-    const anno = from.includes('/')? from.split('/')[1] : '';
-    const nFrom = parseId(from), nTo = parseId(to);
-    if(nFrom&&nTo&&nTo>=nFrom){
-      for(let n=nFrom;n<=nTo;n++) procCasiList.push(n+'/'+anno);
-    } else { procCasiList.push(from); if(to) procCasiList.push(to); }
-  }
+  // Usa _expandCasoRange che gestisce sia "1230/26→1235/26" sia "1230→1235"
+  const exp = (typeof _expandCasoRange === 'function')
+    ? _expandCasoRange(from, to || from)
+    : (to && to !== from ? [from, to] : [from]);
+  const setP = new Set(procCasiList);
+  let added = 0;
+  exp.forEach(c => { if(c && !setP.has(c)){ procCasiList.push(c); added++; } });
   document.getElementById('proc-caso-from').value='';
   document.getElementById('proc-caso-to').value='';
   renderProcCasiList();
+  if(added > 0) toast('＋' + added + ' casi aggiunti', 'ok');
 }
 
 function addCasoSingoloProc(){
