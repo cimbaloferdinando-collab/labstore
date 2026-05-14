@@ -1558,16 +1558,9 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
       <div style="font-size:11px;color:var(--text3);margin-top:4px">N° casi: <span id="proc-casi-count" style="font-weight:600;color:var(--accent)">0</span></div>
     </div>
 
-    <!-- REAGENTI PROCESSATORE -->
+    <!-- REAGENTI PROCESSATORE — righe fisse, solo scelta lotto -->
     <div style="background:var(--bg3);border-radius:var(--r);padding:12px;margin-bottom:14px">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-        <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.8px">Reagenti processatore</div>
-        <div style="display:flex;gap:5px">
-          <button class="btn btn-sm" onclick="scanReagente('proc')">📷 Scan</button>
-          <button class="btn btn-sm btn-primary" onclick="addReagenteProc()">＋ Reagente</button>
-        </div>
-      </div>
-      <div style="font-size:11px;color:var(--text3);margin-bottom:8px">Scansiona il barcode o seleziona dal menu — stato: ✅ verificato / ➕ rabboccato / 🔄 sostituito</div>
+      <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px">Reagenti processatore</div>
       <div id="proc-reagenti-list"></div>
     </div>
 
@@ -1681,19 +1674,9 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
       </div>
     </div>
 
-    <!-- REAGENTI ATTIVI NEL COLORATORE QUEL GIORNO -->
+    <!-- REAGENTI COLORATORE — righe fisse, solo scelta lotto -->
     <div style="background:var(--bg3);border-radius:var(--r);padding:12px;margin-bottom:14px">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;gap:8px;flex-wrap:wrap">
-        <div>
-          <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.8px">Reagenti presenti nel coloratore</div>
-          <div style="font-size:11px;color:var(--text3);margin-top:2px">Tutti i reagenti attivi nelle vaschette quel giorno</div>
-        </div>
-        <div style="display:flex;gap:5px">
-          <button class="btn btn-sm" onclick="scanReagente('color')">📷 Scan</button>
-          <button class="btn btn-sm" onclick="precompileReagentiColoratore()">⟳ Auto</button>
-          <button class="btn btn-sm btn-primary" onclick="addReagenteColor()">＋</button>
-        </div>
-      </div>
+      <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px">Reagenti coloratore</div>
       <div id="color-reagenti-list"></div>
     </div>
 
@@ -4254,10 +4237,8 @@ function openNuovoProcessatore(preset){
   document.getElementById('proc-caso-to').value=preset?.casi_a||'';
   document.getElementById('proc-caso-singolo').value='';
   renderProcCasiList();
-  // Reagenti
-  const rl = document.getElementById('proc-reagenti-list');
-  rl.innerHTML='';
-  (preset?.reagenti||[]).forEach(r=>addReagenteProc(r));
+  // Reagenti fissi
+  _preloadReagentiProc(preset);
   document.getElementById('modal-processatore').classList.add('open');
 }
 
@@ -4297,49 +4278,171 @@ function addCasoSingoloProc(){
 
 function removeCasoProc(i){ procCasiList.splice(i,1); renderProcCasiList(); }
 
-function addReagenteProc(preset){
+// ══════════════════════════════════════════════════════════════
+// REAGENTI FISSI: processatore e coloratore
+// Ogni reagente ha keyword di matching sul nome prodotto in magazzino.
+// La riga è fissa (non aggiungibile/rimovibile), l'utente sceglie solo lotto e stato.
+// ══════════════════════════════════════════════════════════════
+
+const REAGENTI_PROC_DEF = [
+  { nome: 'Formalina',  keys: ['formalin','formol','nbf','tamponata'] },
+  { nome: 'Alcol 95%',  keys: ['alcool 95','alcoolpath 95','alcol 95','etanolo 95'] },
+  { nome: 'Alcol 100%', keys: ['alcool 100','alcoolpath 100','alcol 100','etanolo 100','alcol assol'] },
+  { nome: 'Xilene',     keys: ['xilene','xylene','sostituto xilene'] },
+];
+
+const REAGENTI_COLOR_DEF = [
+  { nome: 'Alcol 95%',  keys: ['alcool 95','alcoolpath 95','alcol 95','etanolo 95'] },
+  { nome: 'Alcol 100%', keys: ['alcool 100','alcoolpath 100','alcol 100','etanolo 100','alcol assol'] },
+  { nome: 'Xilene',     keys: ['xilene','xylene','sostituto xilene'] },
+  { nome: 'OG6',        keys: ['og6','orange g'] },
+  { nome: 'Eosina',     keys: ['eosina','eosin'] },
+  { nome: 'Ematossilina Harris', keys: ['harris','hematoxyl harris','ematoss harris'] },
+  { nome: 'Ematossilina Mayer',  keys: ['mayer','hematoxyl mayer','ematoss mayer'] },
+  { nome: 'EA50',       keys: ['ea50','ea 50'] },
+];
+
+// Trova prodotti in magazzino che matchano un reagente fisso
+function _matchProdottiReag(def) {
   const prods = loadP();
-  // Filtra solo reagenti del processatore
-  const filtered = prods.filter(p=>{
-    const n=(p.nome||'').toLowerCase();
-    return PROC_REAGENTI_DEFAULT.some(k=>n.includes(k));
+  return prods.filter(p => {
+    const n = (p.nome||'').toLowerCase();
+    return def.keys.some(k => n.includes(k));
   });
-  const opts = filtered.map(p=>`<option value="${p.id}" ${preset&&preset.prodId===p.id?'selected':''}>${p.nome} [${p.lotto||'—'}]</option>`).join('');
-  const div = document.createElement('div');
-  div.className = 'reagente-usato-row';
-  div.innerHTML = `
-    <select style="flex:2" onchange="updateReagLottoGeneric(this)">
-      <option value="">Seleziona reagente…</option>${opts}
-    </select>
-    <span class="reag-lotto" style="font-family:DM Mono,monospace;font-size:11px;color:var(--text2);min-width:70px">${preset?.lotto||'—'}</span>
-    <span class="reag-scad" style="font-size:11px;color:var(--text3);min-width:80px">${preset?.scadenza?fmtDate(preset.scadenza):'—'}</span>
-    <select class="reag-stato" style="width:110px">
-      <option value="verificato" ${(!preset?.stato || preset?.stato==='verificato')?'selected':''}>✅ Verificato</option>
-      <option value="rabboccato" ${preset?.stato==='rabboccato'?'selected':''}>➕ Rabboccato</option>
-      <option value="cambiato" ${preset?.stato==='cambiato'?'selected':''}>🔄 Sostituito</option>
-    </select>
-    <button class="btn btn-sm btn-danger" onclick="this.closest('.reagente-usato-row').remove()">✕</button>`;
-  document.getElementById('proc-reagenti-list').appendChild(div);
-  if(preset?.prodId){ const sel=div.querySelector('select'); sel.value=preset.prodId; updateReagLottoGeneric(sel); }
 }
 
-function updateReagLottoGeneric(sel){
-  const row = sel.closest('.reagente-usato-row');
-  const p = loadP().find(x=>x.id===sel.value);
-  if(p){
-    row.querySelector('.reag-lotto').textContent = p.lotto||'—';
-    row.querySelector('.reag-scad').textContent = p.scadenza?fmtDate(p.scadenza):'—';
+// Costruisce le options per il select lotto di un reagente fisso.
+// Mostra: "🔓 Aperto — Lotto XXX (scad YY)" per il bidone aperto,
+//         "Lotto XXX (scad YY) — N disponibili" per i chiusi,
+//         "— Nessun prodotto —" se non trovato in magazzino.
+function _buildLottoOptions(def, presetProdId, presetLotto) {
+  const prods = _matchProdottiReag(def);
+  if (!prods.length) {
+    return '<option value="">— Nessun prodotto in magazzino —</option>';
   }
+  let opts = '<option value="">— Nessun lotto selezionato —</option>';
+  prods.forEach(p => {
+    const lotto = p.lotto || '—';
+    const scad = p.scadenza ? fmtDate(p.scadenza) : '';
+    // Controlla bidone aperto
+    const bidoneAperto = (typeof getBidoneAperto === 'function') ? getBidoneAperto(p.id) : null;
+    const counts = (typeof countBidoniProd === 'function') ? countBidoniProd(p.id) : null;
+    let label = '';
+    if (bidoneAperto) {
+      const dataAp = bidoneAperto.data_apertura
+        ? new Date(bidoneAperto.data_apertura).toLocaleDateString('it-IT',{day:'2-digit',month:'2-digit',year:'2-digit'})
+        : '—';
+      label = `🔓 APERTO — ${lotto}${scad?' scad '+scad:''}  (aperto ${dataAp})`;
+    } else {
+      const nBid = counts ? counts.chiusi : (p.qty||0);
+      label = `${lotto}${scad?' scad '+scad:''}${nBid>1?' — '+nBid+' disponibili':''}`;
+    }
+    const selected = (p.id === presetProdId || lotto === presetLotto) ? 'selected' : '';
+    opts += `<option value="${p.id}" ${selected}>${esc(label)}</option>`;
+  });
+  return opts;
 }
 
+// Renderizza le righe fisse nel container dato
+function _renderRigheFixed(containerId, defs, presetReagenti) {
+  const cont = document.getElementById(containerId);
+  if (!cont) return;
+  cont.innerHTML = '';
+  defs.forEach((def, idx) => {
+    // Cerca il preset salvato per questo reagente (matching per nome chiave)
+    const preset = (presetReagenti||[]).find(r => {
+      const n = (r.nome||r.prodNome||'').toLowerCase();
+      return def.keys.some(k => n.includes(k));
+    }) || null;
+    const presetProdId = preset?.prodId || '';
+    const presetLotto  = preset?.lotto  || '';
+    const presetStato  = preset?.stato  || 'verificato';
+
+    const div = document.createElement('div');
+    div.className = 'reagente-usato-row';
+    div.dataset.reagIdx = idx;
+    div.dataset.reagDef = JSON.stringify(def);
+    div.innerHTML = `
+      <div style="min-width:110px;font-size:12px;font-weight:600;color:var(--text2);flex-shrink:0">${esc(def.nome)}</div>
+      <select class="reag-lotto-sel" style="flex:2;font-family:'DM Mono',monospace;font-size:11px" onchange="updateReagLottoFixed(this)">
+        ${_buildLottoOptions(def, presetProdId, presetLotto)}
+      </select>
+      <span class="reag-scad" style="font-size:10px;color:var(--text3);min-width:70px;flex-shrink:0"></span>
+      <select class="reag-stato" style="width:110px;flex-shrink:0">
+        <option value="verificato"  ${presetStato==='verificato' ?'selected':''}>✅ Verificato</option>
+        <option value="rabboccato"  ${presetStato==='rabboccato' ?'selected':''}>➕ Rabboccato</option>
+        <option value="cambiato"    ${presetStato==='cambiato'   ?'selected':''}>🔄 Sostituito</option>
+      </select>`;
+    cont.appendChild(div);
+    // Aggiorna scadenza subito
+    updateReagLottoFixed(div.querySelector('.reag-lotto-sel'));
+  });
+}
+
+window.updateReagLottoFixed = function(sel) {
+  const row = sel.closest('.reagente-usato-row');
+  if (!row) return;
+  const p = loadP().find(x => x.id === sel.value);
+  const scadEl = row.querySelector('.reag-scad');
+  if (scadEl) scadEl.textContent = p?.scadenza ? fmtDate(p.scadenza) : '';
+};
+
+// getReagentiList ora supporta anche le righe fisse
 function getReagentiList(containerId){
-  return [...document.querySelectorAll('#'+containerId+' .reagente-usato-row')].map(row=>{
-    const sel = row.querySelector('select');
-    const p = sel?.value ? loadP().find(x=>x.id===sel.value) : null;
-    const stato = row.querySelector('.reag-stato')?.value||'';
-    return p ? {prodId:p.id,nome:p.nome,lotto:p.lotto||'',scadenza:p.scadenza||'',stato} : null;
+  return [...document.querySelectorAll('#'+containerId+' .reagente-usato-row')].map(row => {
+    // Riga fissa (ha reag-lotto-sel)
+    const fixedSel = row.querySelector('.reag-lotto-sel');
+    const legacySel = row.querySelector('select:not(.reag-stato):not(.reag-lotto-sel)');
+    const sel = fixedSel || legacySel;
+    const p = sel?.value ? loadP().find(x => x.id === sel.value) : null;
+    const stato = row.querySelector('.reag-stato')?.value || 'verificato';
+    if (!p) return null;
+    // Per righe fisse prendo il nome del def
+    let nomeDisplay = p.nome;
+    const defRaw = row.dataset.reagDef;
+    if (defRaw) {
+      try { nomeDisplay = JSON.parse(defRaw).nome; } catch(e) {}
+    }
+    return { prodId:p.id, nome:nomeDisplay, prodNome:p.nome, lotto:p.lotto||'', scadenza:p.scadenza||'', stato };
   }).filter(Boolean);
 }
+
+// Recupera i reagenti dell'ultimo ciclo salvato (per auto-fill nuovo ciclo)
+function _getLastCycleReagenti(loader) {
+  const arr = (typeof loader === 'function') ? loader() : [];
+  if (!arr.length) return [];
+  // Il primo elemento è il più recente (unshift al salvataggio)
+  return arr[0].reagenti || [];
+}
+
+function _preloadReagentiProc(preset) {
+  // Se è una MODIFICA usa i reagenti del preset.
+  // Se è un NUOVO ciclo usa i reagenti dell'ultimo ciclo (auto-fill lotti, stato → verificato).
+  let reagenti;
+  if (preset) {
+    reagenti = preset.reagenti || [];
+  } else {
+    // Nuovo ciclo: prendo i reagenti dell'ultimo ciclo, tutti con stato "verificato"
+    reagenti = _getLastCycleReagenti(loadProc).map(r => ({...r, stato: 'verificato'}));
+  }
+  _renderRigheFixed('proc-reagenti-list', REAGENTI_PROC_DEF, reagenti);
+}
+
+function _preloadReagentiColor(preset) {
+  let reagenti;
+  if (preset) {
+    reagenti = preset.reagenti || [];
+  } else {
+    reagenti = _getLastCycleReagenti(loadColoratore).map(r => ({...r, stato: 'verificato'}));
+  }
+  _renderRigheFixed('color-reagenti-list', REAGENTI_COLOR_DEF, reagenti);
+}
+
+// Eliminazione funzioni legacy non più necessarie
+// addReagenteProc / addReagenteColor / precompileReagentiColoratore
+// sostituiti da _renderRigheFixed
+
+
 
 async function saveProcessatore(){
   const data = document.getElementById('proc-data').value;
@@ -4508,11 +4611,8 @@ function openNuovoColoratore(preset){
   renderColorCasiList('ist');
   renderColorCasiList('cit');
   renderColorCasiList('pap');
-  // Reagenti
-  const rl = document.getElementById('color-reagenti-list');
-  rl.innerHTML='';
-  if(preset?.reagenti?.length){ preset.reagenti.forEach(r=>addReagenteColor(r)); }
-  else { precompileReagentiColoratore(); }
+  // Reagenti fissi
+  _preloadReagentiColor(preset);
   document.getElementById('modal-coloratore').classList.add('open');
 }
 
