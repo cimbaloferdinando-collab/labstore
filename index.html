@@ -7072,7 +7072,8 @@ function renderDashAnalytics(){
   const campCur=campioni.filter(c=>ymOf(c.data)===ymCur).length;
   const campPrevTot=campioni.filter(c=>ymOf(c.data)===ymPrev).length;
   const istCur=campioni.filter(c=>ymOf(c.data)===ymCur&&c.tipo==='istologia').length;
-  const citCur=campioni.filter(c=>ymOf(c.data)===ymCur&&(c.tipo==='citologia'||c.tipo==='pap'||c.tipo==='pap_priv'||c.tipo==='pap_l')).length;
+  const citCur=campioni.filter(c=>ymOf(c.data)===ymCur&&c.tipo==='citologia').length;
+  const papCur=campioni.filter(c=>ymOf(c.data)===ymCur&&(c.tipo==='pap'||c.tipo==='pap_priv'||c.tipo==='pap_l')).length;
   const trend=campPrevTot>0?Math.round((campCur-campPrevTot)/campPrevTot*100):(campCur>0?100:0);
   const ordAperti=ords.filter(o=>o.stato!=='ricevuto'&&o.stato!=='annullato').length;
   const allerteCount=prods.filter(p=>(p.min>0&&p.qty<=p.min)||daysUntil(p.scadenza)<0||(daysUntil(p.scadenza)>=0&&daysUntil(p.scadenza)<=30)).length;
@@ -7096,40 +7097,105 @@ function renderDashAnalytics(){
     ).join('');
   }
 
-  // ── 1. LINE CHART — Andamento campioni ultimi 8 mesi (ist vs cit) ──
-  const months8=lastMonths(8);
-  const istSerie=months8.map(ym=>campioni.filter(c=>ymOf(c.data)===ym&&c.tipo==='istologia').length);
-  const citSerie=months8.map(ym=>campioni.filter(c=>ymOf(c.data)===ym&&(c.tipo==='citologia'||c.tipo==='pap'||c.tipo==='pap_priv'||c.tipo==='pap_l')).length);
+  // ── 1. LINE CHART — Andamento campioni: ultimi 5 mesi + mese corrente in settimane ──
+  // Strategia: 5 punti mensili (mesi precedenti) + 5 punti settimanali (mese corrente)
+  // = 10 punti totali con separator visivo tra le due fasi.
+  const isoWeek = (d) => { // YYYY-Wxx
+    const dt = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+    dt.setUTCDate(dt.getUTCDate() + 4 - (dt.getUTCDay()||7));
+    const yearStart = new Date(Date.UTC(dt.getUTCFullYear(),0,1));
+    const weekNo = Math.ceil((((dt-yearStart)/86400000)+1)/7);
+    return dt.getUTCFullYear() + '-W' + String(weekNo).padStart(2,'0');
+  };
+  // 5 mesi precedenti (escluso mese corrente)
+  const prev5Months = (()=>{
+    const arr=[]; const d=new Date(today.getFullYear(),today.getMonth(),1);
+    d.setMonth(d.getMonth()-1); // parte dal mese precedente
+    for(let i=0;i<5;i++){ arr.unshift(d.toISOString().slice(0,7)); d.setMonth(d.getMonth()-1); }
+    return arr; // ordine cronologico
+  })();
+  // Settimane del mese corrente
+  const currentMonthWeeks = (()=>{
+    const arr=[];
+    const start=new Date(today.getFullYear(),today.getMonth(),1);
+    const end=new Date(today.getFullYear(),today.getMonth()+1,0);
+    let d=new Date(start);
+    while(d<=end){
+      const wk=isoWeek(d);
+      if(!arr.includes(wk)) arr.push(wk);
+      d.setDate(d.getDate()+1);
+    }
+    return arr; // ordine cronologico
+  })();
+  // Costruisco i punti: ognuno ha {key, label, ist, cit, pap, isMonth}
+  const points = [];
+  prev5Months.forEach(ym => {
+    const lbl = fmtMese(ym).slice(0,3);
+    const f = c => ymOf(c.data) === ym;
+    points.push({
+      key: ym, label: lbl, isMonth: true,
+      ist: campioni.filter(c => f(c) && c.tipo === 'istologia').length,
+      cit: campioni.filter(c => f(c) && c.tipo === 'citologia').length,
+      pap: campioni.filter(c => f(c) && (c.tipo === 'pap' || c.tipo === 'pap_priv' || c.tipo === 'pap_l')).length,
+    });
+  });
+  currentMonthWeeks.forEach((wk, idx) => {
+    const lbl = 'S' + (idx+1);
+    const f = c => { if (!c.data) return false; try { return isoWeek(new Date(c.data)) === wk; } catch(e) { return false; } };
+    points.push({
+      key: wk, label: lbl, isMonth: false,
+      ist: campioni.filter(c => f(c) && c.tipo === 'istologia').length,
+      cit: campioni.filter(c => f(c) && c.tipo === 'citologia').length,
+      pap: campioni.filter(c => f(c) && (c.tipo === 'pap' || c.tipo === 'pap_priv' || c.tipo === 'pap_l')).length,
+    });
+  });
+  // Index dello switch mese→settimane (per disegnare divisore verticale)
+  const switchIdx = prev5Months.length; // primo indice "settimana"
+  const istSerie = points.map(p => p.ist);
+  const citSerie = points.map(p => p.cit);
+  const papSerie = points.map(p => p.pap);
   const lineSvg=document.getElementById('dash-chart-line');
   if(lineSvg){
-    const W=280,H=120,pad={l:24,r:8,t:10,b:22};
-    const max=Math.max(1,...istSerie,...citSerie);
-    const xStep=(W-pad.l-pad.r)/(months8.length-1||1);
+    const W=280,H=120,pad={l:24,r:8,t:14,b:22};
+    const max=Math.max(1,...istSerie,...citSerie,...papSerie);
+    const xStep=(W-pad.l-pad.r)/(points.length-1||1);
     const yScale=v=>H-pad.b-(v/max)*(H-pad.t-pad.b);
     const path=(arr)=>arr.map((v,i)=>(i?'L':'M')+(pad.l+i*xStep).toFixed(1)+' '+yScale(v).toFixed(1)).join(' ');
     const grid=[0,.25,.5,.75,1].map(t=>{ const y=pad.t+t*(H-pad.t-pad.b); return '<line x1="'+pad.l+'" x2="'+(W-pad.r)+'" y1="'+y+'" y2="'+y+'" stroke="var(--border-faint)" stroke-width=".5"/>'; }).join('');
-    const xLabels=months8.map((ym,i)=>'<text x="'+(pad.l+i*xStep).toFixed(1)+'" y="'+(H-6)+'" text-anchor="middle" font-size="8" fill="var(--text3)" font-family="DM Mono,monospace">'+fmtMese(ym).slice(0,3)+'</text>').join('');
+    // Divisore verticale tra mesi e settimane (semitrasparente)
+    let divisor = '';
+    if (switchIdx > 0 && switchIdx < points.length) {
+      const xDiv = pad.l + (switchIdx - 0.5) * xStep;
+      divisor = '<line x1="'+xDiv.toFixed(1)+'" x2="'+xDiv.toFixed(1)+'" y1="'+pad.t+'" y2="'+(H-pad.b)+'" stroke="var(--border)" stroke-width="1" stroke-dasharray="3,2"/>';
+      divisor += '<text x="'+xDiv.toFixed(1)+'" y="'+(pad.t-2)+'" text-anchor="middle" font-size="7" fill="var(--text3)" font-family="DM Mono,monospace">corrente</text>';
+    }
+    const xLabels=points.map((p,i)=>{
+      const col = p.isMonth ? 'var(--text3)' : 'var(--accent)';
+      return '<text x="'+(pad.l+i*xStep).toFixed(1)+'" y="'+(H-6)+'" text-anchor="middle" font-size="8" fill="'+col+'" font-family="DM Mono,monospace">'+esc(p.label)+'</text>';
+    }).join('');
     const yLabels=[0,.5,1].map(t=>{ const v=Math.round(max*(1-t)); const y=pad.t+t*(H-pad.t-pad.b); return '<text x="'+(pad.l-4)+'" y="'+(y+3)+'" text-anchor="end" font-size="8" fill="var(--text3)" font-family="DM Mono,monospace">'+v+'</text>'; }).join('');
-    const dotsIst=istSerie.map((v,i)=>'<circle cx="'+(pad.l+i*xStep).toFixed(1)+'" cy="'+yScale(v).toFixed(1)+'" r="2.5" fill="var(--blue)"/>').join('');
-    const dotsCit=citSerie.map((v,i)=>'<circle cx="'+(pad.l+i*xStep).toFixed(1)+'" cy="'+yScale(v).toFixed(1)+'" r="2.5" fill="var(--teal)"/>').join('');
-    lineSvg.innerHTML=grid+yLabels+xLabels+
-      '<path d="'+path(istSerie)+'" fill="none" stroke="var(--blue)" stroke-width="1.8"/>'+
-      '<path d="'+path(citSerie)+'" fill="none" stroke="var(--teal)" stroke-width="1.8"/>'+
-      dotsIst+dotsCit;
+    const dots=(arr,col)=>arr.map((v,i)=>'<circle cx="'+(pad.l+i*xStep).toFixed(1)+'" cy="'+yScale(v).toFixed(1)+'" r="2.2" fill="'+col+'"/>').join('');
+    lineSvg.innerHTML=grid+divisor+yLabels+xLabels+
+      '<path d="'+path(istSerie)+'" fill="none" stroke="var(--blue)" stroke-width="1.6"/>'+
+      '<path d="'+path(citSerie)+'" fill="none" stroke="var(--teal)" stroke-width="1.6"/>'+
+      '<path d="'+path(papSerie)+'" fill="none" stroke="#a855f7" stroke-width="1.6"/>'+
+      dots(istSerie,'var(--blue)')+dots(citSerie,'var(--teal)')+dots(papSerie,'#a855f7');
   }
   const lineLeg=document.getElementById('dash-line-legend');
   if(lineLeg) lineLeg.innerHTML=
     '<span class="leg-item"><span class="leg-dot" style="background:var(--blue)"></span>Istologia</span>'+
-    '<span class="leg-item"><span class="leg-dot" style="background:var(--teal)"></span>Citologia + PAP</span>';
+    '<span class="leg-item"><span class="leg-dot" style="background:var(--teal)"></span>Citologia</span>'+
+    '<span class="leg-item"><span class="leg-dot" style="background:#a855f7"></span>PAP</span>';
+  const lineSub=document.getElementById('dash-line-sub');
+  if(lineSub) lineSub.textContent = '5 mesi precedenti + ' + currentMonthWeeks.length + ' settimane corr.';
 
-  // ── 2. DONUT — Mix tipologie mese corrente ──
+  // ── 2. DONUT — Mix tipologie mese corrente (3 categorie) ──
   const mixCur={
     'Istologia':campioni.filter(c=>ymOf(c.data)===ymCur&&c.tipo==='istologia').length,
     'Citologia':campioni.filter(c=>ymOf(c.data)===ymCur&&c.tipo==='citologia').length,
-    'PAP':campioni.filter(c=>ymOf(c.data)===ymCur&&(c.tipo==='pap'||c.tipo==='pap_priv')).length,
-    'PAP LupoLab':campioni.filter(c=>ymOf(c.data)===ymCur&&c.tipo==='pap_l').length
+    'PAP':      campioni.filter(c=>ymOf(c.data)===ymCur&&(c.tipo==='pap'||c.tipo==='pap_priv'||c.tipo==='pap_l')).length
   };
-  const mixCols={'Istologia':'var(--blue)','Citologia':'var(--teal)','PAP':'#a855f7','PAP LupoLab':'var(--orange)'};
+  const mixCols={'Istologia':'var(--blue)','Citologia':'var(--teal)','PAP':'#a855f7'};
   const mixTot=Object.values(mixCur).reduce((s,v)=>s+v,0);
   const donutSvg=document.getElementById('dash-chart-donut');
   if(donutSvg){
@@ -7167,8 +7233,7 @@ function renderDashAnalytics(){
     const cats=[
       {lbl:'Ist.',cur:istCur,prev:campioni.filter(c=>ymOf(c.data)===ymPrev&&c.tipo==='istologia').length,col:'var(--blue)'},
       {lbl:'Cit.',cur:campioni.filter(c=>ymOf(c.data)===ymCur&&c.tipo==='citologia').length,prev:campioni.filter(c=>ymOf(c.data)===ymPrev&&c.tipo==='citologia').length,col:'var(--teal)'},
-      {lbl:'PAP',cur:campioni.filter(c=>ymOf(c.data)===ymCur&&(c.tipo==='pap'||c.tipo==='pap_priv')).length,prev:campioni.filter(c=>ymOf(c.data)===ymPrev&&(c.tipo==='pap'||c.tipo==='pap_priv')).length,col:'#a855f7'},
-      {lbl:'PAP L.',cur:campioni.filter(c=>ymOf(c.data)===ymCur&&c.tipo==='pap_l').length,prev:campioni.filter(c=>ymOf(c.data)===ymPrev&&c.tipo==='pap_l').length,col:'var(--orange)'}
+      {lbl:'PAP',cur:campioni.filter(c=>ymOf(c.data)===ymCur&&(c.tipo==='pap'||c.tipo==='pap_priv'||c.tipo==='pap_l')).length,prev:campioni.filter(c=>ymOf(c.data)===ymPrev&&(c.tipo==='pap'||c.tipo==='pap_priv'||c.tipo==='pap_l')).length,col:'#a855f7'}
     ];
     const max=Math.max(1,...cats.flatMap(c=>[c.cur,c.prev]));
     const groupW=(W-pad.l-pad.r)/cats.length;
@@ -7187,10 +7252,12 @@ function renderDashAnalytics(){
     }).join('');
     barSvg.innerHTML=grid+yLabels+bars;
   }
-  const barSub=document.getElementById('bar-sub');
+  const barSub=document.getElementById('dash-bar-sub');
   if(barSub) barSub.textContent=fmtMese(ymCur)+' vs '+fmtMese(ymPrev);
 
   // ── 4. HBAR — Top prodotti consumati ultimi 90gg ──
+  // ── 4. HBAR — Top prodotti consumati ultimi 90gg ──
+  // Fonte: movimenti di scarico (classico) + bidoni smaltiti ultimi 90gg
   const limit90=new Date(today); limit90.setDate(limit90.getDate()-90);
   const consumi={};
   movs.forEach(m=>{
@@ -7199,12 +7266,27 @@ function renderDashAnalytics(){
     const k=_aliasGroup(m.prod||'');
     consumi[k]=(consumi[k]||0)+(m.qty||0);
   });
+  // + Bidoni smaltiti (per reagenti/coloranti)
+  if (typeof loadBidoni === 'function') {
+    const bidoni = loadBidoni();
+    const prodById = {};
+    prods.forEach(p => { prodById[p.id] = p; });
+    bidoni.forEach(b => {
+      if (b.stato !== 'smaltito' || !b.data_smaltimento) return;
+      const ts = new Date(b.data_smaltimento);
+      if (isNaN(ts) || ts < limit90) return;
+      const p = prodById[b.prod_id];
+      if (!p) return;
+      const k = _aliasGroup(p.nome||'');
+      consumi[k] = (consumi[k]||0) + 1;
+    });
+  }
   const top=Object.entries(consumi).sort((a,b)=>b[1]-a[1]).slice(0,7);
   const hbarSvg=document.getElementById('dash-chart-hbar');
   if(hbarSvg){
     const W=280,H=175,pad={l:90,r:30,t:6,b:6};
     if(!top.length){
-      hbarSvg.innerHTML='<text x="'+(W/2)+'" y="'+(H/2)+'" text-anchor="middle" font-size="11" fill="var(--text3)" font-family="DM Mono,monospace">Nessun consumo registrato</text>';
+      hbarSvg.innerHTML='<text x="'+(W/2)+'" y="'+(H/2)+'" text-anchor="middle" font-size="11" fill="var(--text3)" font-family="DM Mono,monospace">Nessun consumo ancora</text>';
     } else {
       const max=top[0][1];
       const rowH=(H-pad.t-pad.b)/top.length;
@@ -7224,6 +7306,7 @@ function renderDashAnalytics(){
   // ── 5. PREVISIONE ESAURIMENTO — top 6 prodotti per giorni residui ──
   const prevTbl=document.getElementById('dash-prev-table');
   if(prevTbl){
+    // Consumo per prodotto: movimenti scarico + bidoni smaltiti, ultimi 90gg
     const consumiDay={};
     movs.forEach(m=>{
       if(m.tipo!=='scarico') return;
@@ -7231,6 +7314,14 @@ function renderDashAnalytics(){
       const k=m.prodId||m.prod;
       consumiDay[k]=(consumiDay[k]||0)+(m.qty||0);
     });
+    if (typeof loadBidoni === 'function') {
+      loadBidoni().forEach(b => {
+        if (b.stato !== 'smaltito' || !b.data_smaltimento) return;
+        const ts = new Date(b.data_smaltimento);
+        if (isNaN(ts) || ts < limit90) return;
+        consumiDay[b.prod_id] = (consumiDay[b.prod_id]||0) + 1;
+      });
+    }
     const forecast=prods.map(p=>{
       const tot=consumiDay[p.id]||consumiDay[p.nome]||0;
       const perDay=tot/90;
@@ -7238,7 +7329,7 @@ function renderDashAnalytics(){
       return {p,giorni,perDay};
     }).filter(f=>f.giorni!==null&&f.giorni<180).sort((a,b)=>a.giorni-b.giorni).slice(0,6);
     if(!forecast.length){
-      prevTbl.innerHTML='<div style="padding:16px;text-align:center;color:var(--text3);font-size:12px">Nessun consumo registrato negli ultimi 90 giorni</div>';
+      prevTbl.innerHTML='<div style="padding:16px;text-align:center;color:var(--text3);font-size:12px">Servono ≥90gg di consumi per la previsione</div>';
     } else {
       prevTbl.innerHTML='<div style="display:flex;flex-direction:column">'+forecast.map(f=>{
         const col=f.giorni<=14?'var(--red)':f.giorni<=30?'var(--yellow)':'var(--green)';
@@ -7253,11 +7344,13 @@ function renderDashAnalytics(){
     }
   }
 
-  // ── 6. VBAR — Ordini per fornitore ultimi 6 mesi ──
+  // ── 6. VBAR — Ordini per fornitore ultimi 6 mesi (aperti + archiviati) ──
   const months6=lastMonths(6);
   const fornSet={};
-  ords.forEach(o=>{
-    const ym=ymOf(o.data||o.dataCreazione||'');
+  const archivedOrds = (typeof loadArch === 'function') ? loadArch() : [];
+  const allOrds = ords.concat(archivedOrds);
+  allOrds.forEach(o=>{
+    const ym=ymOf(o.data||o.creato||o.dataCreazione||'');
     if(!months6.includes(ym)) return;
     const f=o.fornitore||'Altro';
     if(!fornSet[f]) fornSet[f]=Array(6).fill(0);
