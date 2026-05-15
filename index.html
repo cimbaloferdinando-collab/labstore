@@ -4425,6 +4425,34 @@ window.updateReagLottoFixed = function(sel) {
   const p = loadP().find(x => x.id === sel.value);
   const scadEl = row.querySelector('.reag-scad');
   if (scadEl) scadEl.textContent = p?.scadenza ? fmtDate(p.scadenza) : '';
+  // Auto-suggerisci stato in base al lotto selezionato:
+  // Se il lotto coincide con quello dell'ultimo ciclo → Verificato
+  // Se è diverso (nuovo lotto) → Sostituito
+  // (l'utente può sempre sovrascrivere manualmente)
+  const statoSel = row.querySelector('.reag-stato');
+  if (!statoSel || !p) return;
+  // Trova il lotto usato nell'ultimo ciclo per questo reagente
+  // (cercando nel dataset della riga il def, poi nel presetReagenti dell'ultimo ciclo)
+  const defRaw = row.dataset.reagDef;
+  if (!defRaw) return;
+  try {
+    const def = JSON.parse(defRaw);
+    // Cerca nell'ultimo ciclo
+    const loader = row.closest('#proc-reagenti-list') ? loadProc : loadColoratore;
+    const lastCiclo = (typeof loader === 'function') ? loader()[0] : null;
+    if (!lastCiclo) return;
+    const lastReag = (lastCiclo.reagenti||[]).find(r => {
+      const n = (r.nome||r.prodNome||'').toLowerCase();
+      return def.keys.some(k => n.includes(k));
+    });
+    if (!lastReag) return;
+    // Stesso lotto → verificato, lotto diverso → sostituito
+    const statoCorrente = statoSel.value;
+    // Non sovrascrivere se l'utente ha già scelto manualmente rabboccato
+    if (statoCorrente === 'rabboccato') return;
+    const nuovoStato = (p.lotto && lastReag.lotto && p.lotto === lastReag.lotto) ? 'verificato' : 'cambiato';
+    statoSel.value = nuovoStato;
+  } catch(e) {}
 };
 
 // getReagentiList ora supporta anche le righe fisse
@@ -4456,14 +4484,17 @@ function _getLastCycleReagenti(loader) {
 }
 
 function _preloadReagentiProc(preset) {
-  // Se è una MODIFICA usa i reagenti del preset.
-  // Se è un NUOVO ciclo usa i reagenti dell'ultimo ciclo (auto-fill lotti, stato → verificato).
   let reagenti;
   if (preset) {
     reagenti = preset.reagenti || [];
   } else {
-    // Nuovo ciclo: prendo i reagenti dell'ultimo ciclo, tutti con stato "verificato"
-    reagenti = _getLastCycleReagenti(loadProc).map(r => ({...r, stato: 'verificato'}));
+    // Nuovo ciclo: prendo i reagenti dell'ultimo ciclo.
+    // "cambiato/sostituito" → resetto a "verificato" (lotto già cambiato nel ciclo precedente)
+    // "rabboccato" → mantengo (può ripetersi sul ciclo successivo)
+    // "verificato" → mantengo
+    reagenti = _getLastCycleReagenti(loadProc).map(r => ({
+      ...r, stato: (r.stato === 'cambiato') ? 'verificato' : (r.stato || 'verificato')
+    }));
   }
   _renderRigheFixed('proc-reagenti-list', REAGENTI_PROC_DEF, reagenti);
 }
@@ -4473,7 +4504,9 @@ function _preloadReagentiColor(preset) {
   if (preset) {
     reagenti = preset.reagenti || [];
   } else {
-    reagenti = _getLastCycleReagenti(loadColoratore).map(r => ({...r, stato: 'verificato'}));
+    reagenti = _getLastCycleReagenti(loadColoratore).map(r => ({
+      ...r, stato: (r.stato === 'cambiato') ? 'verificato' : (r.stato || 'verificato')
+    }));
   }
   _renderRigheFixed('color-reagenti-list', REAGENTI_COLOR_DEF, reagenti);
 }
