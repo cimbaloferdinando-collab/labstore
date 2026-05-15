@@ -602,8 +602,8 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
           <div class="card-hdr"><span class="card-title">Processatore</span><span class="card-sub">Ultimi 5 cicli</span><button class="hbtn2 primary" style="font-size:10px;padding:3px 8px;margin-right:4px" onclick="event.stopPropagation();openNuovoProcessatore()">＋ Nuovo</button><span class="card-lnk" onclick="showView('processatore')">storico →</span></div>
           <div style="overflow-x:auto" id="home-proc-wrap">
             <table class="tbl" style="font-size:10px">
-              <thead><tr><th>Data partenza</th><th>Range casi ID</th><th>Cassette</th><th>Stato reagenti</th></tr></thead>
-              <tbody id="home-proc-tbody"><tr><td colspan="4" style="text-align:center;color:var(--text3);padding:14px;font-style:italic">Nessun ciclo registrato</td></tr></tbody>
+              <thead><tr><th>Data partenza</th><th>Range casi ID</th><th>Casi</th><th>Biocassette</th><th>Stato reagenti</th></tr></thead>
+              <tbody id="home-proc-tbody"><tr><td colspan="5" style="text-align:center;color:var(--text3);padding:14px;font-style:italic">Nessun ciclo registrato</td></tr></tbody>
             </table>
           </div>
         </div>
@@ -615,18 +615,18 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
               <thead>
                 <tr style="background:var(--bg3)">
                   <th rowspan="2" style="border-bottom:2px solid var(--border);vertical-align:middle">Data</th>
-                  <th colspan="2" style="text-align:center;border-bottom:1px solid var(--border);background:#eff6ff;color:var(--blue);font-size:9px">🧫 Istologia (EE)</th>
-                  <th colspan="2" style="text-align:center;border-bottom:1px solid var(--border);background:#ecfeff;color:var(--teal);font-size:9px">🔬 Citologia (EE)</th>
-                  <th colspan="2" style="text-align:center;border-bottom:1px solid var(--border);background:#f5f3ff;color:var(--purple);font-size:9px">📋 PAP</th>
+                  <th colspan="3" style="text-align:center;border-bottom:1px solid var(--border);background:#eff6ff;color:var(--blue);font-size:9px">🧫 Istologia (EE)</th>
+                  <th colspan="3" style="text-align:center;border-bottom:1px solid var(--border);background:#ecfeff;color:var(--teal);font-size:9px">🔬 Citologia (EE)</th>
+                  <th colspan="3" style="text-align:center;border-bottom:1px solid var(--border);background:#f5f3ff;color:var(--purple);font-size:9px">📋 PAP</th>
                   <th rowspan="2" style="border-bottom:2px solid var(--border);vertical-align:middle">Reagenti</th>
                 </tr>
                 <tr>
-                  <th style="background:#eff6ff;font-size:9px">Cicli</th><th style="background:#eff6ff;font-size:9px">Casi</th>
-                  <th style="background:#ecfeff;font-size:9px">Cicli</th><th style="background:#ecfeff;font-size:9px">Casi</th>
-                  <th style="background:#f5f3ff;font-size:9px">Cicli</th><th style="background:#f5f3ff;font-size:9px">Casi</th>
+                  <th style="background:#eff6ff;font-size:9px">Cicli</th><th style="background:#eff6ff;font-size:9px">Vetri</th><th style="background:#eff6ff;font-size:9px">Casi</th>
+                  <th style="background:#ecfeff;font-size:9px">Cicli</th><th style="background:#ecfeff;font-size:9px">Vetri</th><th style="background:#ecfeff;font-size:9px">Casi</th>
+                  <th style="background:#f5f3ff;font-size:9px">Cicli</th><th style="background:#f5f3ff;font-size:9px">Vetri</th><th style="background:#f5f3ff;font-size:9px">Casi</th>
                 </tr>
               </thead>
-              <tbody id="home-color-tbody"><tr><td colspan="8" style="text-align:center;color:var(--text3);padding:14px;font-style:italic">Nessun ciclo registrato</td></tr></tbody>
+              <tbody id="home-color-tbody"><tr><td colspan="11" style="text-align:center;color:var(--text3);padding:14px;font-style:italic">Nessun ciclo registrato</td></tr></tbody>
             </table>
           </div>
         </div>
@@ -1543,6 +1543,13 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
             </div>
             <div class="fg" style="margin:0"><label>Ora inizio</label><input type="time" id="proc-ora-inizio"></div>
             <div class="fg" style="margin:0"><label>Ora fine</label><input type="time" id="proc-ora-fine"></div>
+            <div class="fg" style="margin:0;grid-column:1/-1">
+              <label style="display:flex;align-items:center;gap:6px">
+                N° biocassette processate
+                <span style="font-size:10px;color:var(--text3);font-weight:400">— può differire dal N° casi</span>
+              </label>
+              <input type="number" id="proc-n-biocassette" min="0" value="0" style="font-family:'DM Mono',monospace;font-size:18px;font-weight:700;color:var(--accent);width:100px;text-align:center">
+            </div>
             <div class="fg" style="margin:0;grid-column:1/-1"><label>Note</label><input type="text" id="proc-note" placeholder="Note sul ciclo…"></div>
           </div>
         </div>
@@ -1604,20 +1611,47 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
         <div style="font-size:10px;color:var(--text3);font-style:italic">passaggi fisici del coloratore, distinti dai casi</div>
       </div>
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px">
-        <div style="text-align:center;background:var(--bg2);border-radius:10px;padding:14px 8px;border:1px solid var(--border)">
-          <div style="font-size:11px;color:var(--blue);font-weight:600;margin-bottom:6px">🧫 EE Istologia</div>
-          <input type="number" id="color-cicli-ee" min="0" value="0" style="width:60px;text-align:center;font-family:DM Mono,monospace;font-size:26px;font-weight:700;border:none;background:transparent;color:var(--blue)">
-          <div style="font-size:10px;color:var(--text3);margin-top:2px">cicli</div>
+        <div style="background:var(--bg2);border-radius:10px;padding:14px 8px;border:1px solid var(--border)">
+          <div style="font-size:11px;color:var(--blue);font-weight:600;margin-bottom:6px;text-align:center">🧫 EE Istologia</div>
+          <div style="display:flex;justify-content:space-around;align-items:flex-end;gap:8px">
+            <div style="text-align:center">
+              <div style="font-size:9px;color:var(--text3);margin-bottom:2px">cicli</div>
+              <input type="number" id="color-cicli-ee" min="0" value="0" style="width:52px;text-align:center;font-family:DM Mono,monospace;font-size:22px;font-weight:700;border:none;background:transparent;color:var(--blue)">
+            </div>
+            <div style="color:var(--border);font-size:18px;padding-bottom:4px">·</div>
+            <div style="text-align:center">
+              <div style="font-size:9px;color:var(--text3);margin-bottom:2px">vetrini</div>
+              <input type="number" id="color-vetri-ist" min="0" value="0" style="width:52px;text-align:center;font-family:DM Mono,monospace;font-size:22px;font-weight:700;border:none;background:transparent;color:var(--blue);opacity:.7">
+            </div>
+          </div>
         </div>
-        <div style="text-align:center;background:var(--bg2);border-radius:10px;padding:14px 8px;border:1px solid var(--border)">
-          <div style="font-size:11px;color:var(--teal);font-weight:600;margin-bottom:6px">🔬 EE Citologia</div>
-          <input type="number" id="color-cicli-ee-cit" min="0" value="0" style="width:60px;text-align:center;font-family:DM Mono,monospace;font-size:26px;font-weight:700;border:none;background:transparent;color:var(--teal)">
-          <div style="font-size:10px;color:var(--text3);margin-top:2px">cicli</div>
+        <div style="background:var(--bg2);border-radius:10px;padding:14px 8px;border:1px solid var(--border)">
+          <div style="font-size:11px;color:var(--teal);font-weight:600;margin-bottom:6px;text-align:center">🔬 EE Citologia</div>
+          <div style="display:flex;justify-content:space-around;align-items:flex-end;gap:8px">
+            <div style="text-align:center">
+              <div style="font-size:9px;color:var(--text3);margin-bottom:2px">cicli</div>
+              <input type="number" id="color-cicli-ee-cit" min="0" value="0" style="width:52px;text-align:center;font-family:DM Mono,monospace;font-size:22px;font-weight:700;border:none;background:transparent;color:var(--teal)">
+            </div>
+            <div style="color:var(--border);font-size:18px;padding-bottom:4px">·</div>
+            <div style="text-align:center">
+              <div style="font-size:9px;color:var(--text3);margin-bottom:2px">vetrini</div>
+              <input type="number" id="color-vetri-cit" min="0" value="0" style="width:52px;text-align:center;font-family:DM Mono,monospace;font-size:22px;font-weight:700;border:none;background:transparent;color:var(--teal);opacity:.7">
+            </div>
+          </div>
         </div>
-        <div style="text-align:center;background:var(--bg2);border-radius:10px;padding:14px 8px;border:1px solid var(--border)">
-          <div style="font-size:11px;color:var(--purple);font-weight:600;margin-bottom:6px">📋 PAP LupoLab</div>
-          <input type="number" id="color-cicli-pap" min="0" value="0" style="width:60px;text-align:center;font-family:DM Mono,monospace;font-size:26px;font-weight:700;border:none;background:transparent;color:var(--purple)">
-          <div style="font-size:10px;color:var(--text3);margin-top:2px">cicli</div>
+        <div style="background:var(--bg2);border-radius:10px;padding:14px 8px;border:1px solid var(--border)">
+          <div style="font-size:11px;color:var(--purple);font-weight:600;margin-bottom:6px;text-align:center">📋 PAP LupoLab</div>
+          <div style="display:flex;justify-content:space-around;align-items:flex-end;gap:8px">
+            <div style="text-align:center">
+              <div style="font-size:9px;color:var(--text3);margin-bottom:2px">cicli</div>
+              <input type="number" id="color-cicli-pap" min="0" value="0" style="width:52px;text-align:center;font-family:DM Mono,monospace;font-size:22px;font-weight:700;border:none;background:transparent;color:var(--purple)">
+            </div>
+            <div style="color:var(--border);font-size:18px;padding-bottom:4px">·</div>
+            <div style="text-align:center">
+              <div style="font-size:9px;color:var(--text3);margin-bottom:2px">vetrini</div>
+              <input type="number" id="color-vetri-pap" min="0" value="0" style="width:52px;text-align:center;font-family:DM Mono,monospace;font-size:22px;font-weight:700;border:none;background:transparent;color:var(--purple);opacity:.7">
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -4238,6 +4272,7 @@ function openNuovoProcessatore(preset){
   document.getElementById('proc-ora-fine').value = preset?.ora_fine||'';
   document.getElementById('proc-protocollo').value = preset?.protocollo||'standard';
   document.getElementById('proc-note').value = preset?.note||'';
+  document.getElementById('proc-n-biocassette').value = preset?.n_biocassette||0;
   document.getElementById('proc-caso-from').value=preset?.casi_da||'';
   document.getElementById('proc-caso-to').value=preset?.casi_a||'';
   document.getElementById('proc-caso-singolo').value='';
@@ -4469,7 +4504,8 @@ async function saveProcessatore(){
     casi:    casiList,
     casi_da,
     casi_a,
-    n_cassette: casiList.length,
+    n_cassette:    casiList.length,
+    n_biocassette: parseInt(document.getElementById('proc-n-biocassette').value)||0,
     reagenti: getReagentiList('proc-reagenti-list'),
     modificato: new Date().toISOString()
   };
@@ -4512,7 +4548,8 @@ function renderProcessatore(){
   el.innerHTML=`<div style="overflow-x:auto"><table class="tbl">
     <thead><tr>
       <th>Data</th>
-      <th style="text-align:center">Cassette</th>
+      <th style="text-align:center">Casi</th>
+      <th style="text-align:center">Biocassette</th>
       <th>Casi Da</th>
       <th>Casi A</th>
       <th>Protocollo</th>
@@ -4537,6 +4574,7 @@ function renderProcessatore(){
         return `<tr>
           <td style="font-weight:600;white-space:nowrap">${fmtDate(ciclo.data)}</td>
           <td style="text-align:center;font-family:'DM Mono',monospace;font-weight:700;color:var(--blue)">${ciclo.n_cassette||ciclo.casi?.length||0}</td>
+          <td style="text-align:center;font-family:'DM Mono',monospace;font-weight:700;color:var(--accent)">${ciclo.n_biocassette||'—'}</td>
           <td style="font-family:'DM Mono',monospace;font-size:12px">${esc(String(casiDa))}</td>
           <td style="font-family:'DM Mono',monospace;font-size:12px">${esc(String(casiA))}</td>
           <td style="font-size:12px;color:var(--text2)">${protoLabel[ciclo.protocollo]||ciclo.protocollo||'—'}</td>
@@ -4611,9 +4649,12 @@ function openNuovoColoratore(preset){
   document.getElementById('color-modal-title').textContent = preset ? 'Modifica Registro Coloratore' : 'Registro Coloratore';
   document.getElementById('color-data').value = preset?.data||new Date().toISOString().slice(0,10);
   document.getElementById('color-note').value = preset?.note||'';
-  document.getElementById('color-cicli-ee').value = preset?.cicli_ee||0;
+  document.getElementById('color-cicli-ee').value     = preset?.cicli_ee||0;
   document.getElementById('color-cicli-ee-cit').value = preset?.cicli_ee_cit||0;
-  document.getElementById('color-cicli-pap').value = preset?.cicli_pap||0;
+  document.getElementById('color-cicli-pap').value    = preset?.cicli_pap||0;
+  document.getElementById('color-vetri-ist').value    = preset?.vetri_ist||0;
+  document.getElementById('color-vetri-cit').value    = preset?.vetri_cit||0;
+  document.getElementById('color-vetri-pap').value    = preset?.vetri_pap||0;
   // ─── Casi: migrazione vecchio schema → nuovo schema chip ───
   colorCasiList = {
     ist: _extractCasiFromPreset(preset, 'ist'),
@@ -4739,6 +4780,9 @@ async function saveColoratore(){
     cicli_ee:     parseInt(document.getElementById('color-cicli-ee').value)||0,
     cicli_ee_cit: parseInt(document.getElementById('color-cicli-ee-cit').value)||0,
     cicli_pap:    parseInt(document.getElementById('color-cicli-pap').value)||0,
+    vetri_ist:    parseInt(document.getElementById('color-vetri-ist').value)||0,
+    vetri_cit:    parseInt(document.getElementById('color-vetri-cit').value)||0,
+    vetri_pap:    parseInt(document.getElementById('color-vetri-pap').value)||0,
     casi_ist: casiIst,
     casi_cit: casiCit,
     casi_pap: casiPap,
@@ -4821,10 +4865,13 @@ function renderColoratore(){
     <thead><tr>
       <th>Data</th>
       <th style="color:var(--blue);text-align:center">Cicli Ist.</th>
+      <th style="color:var(--blue);text-align:center">Vetri Ist.</th>
       <th style="color:var(--blue)">Casi Ist.</th>
       <th style="color:var(--teal);text-align:center">Cicli Cit.</th>
+      <th style="color:var(--teal);text-align:center">Vetri Cit.</th>
       <th style="color:var(--teal)">Casi Cit.</th>
       <th style="color:var(--purple);text-align:center">Cicli PAP</th>
+      <th style="color:var(--purple);text-align:center">Vetri PAP</th>
       <th style="color:var(--purple)">Casi PAP</th>
       <th>Reagenti</th>
       <th style="width:70px"></th>
@@ -4833,13 +4880,17 @@ function renderColoratore(){
       ${arr.map((reg,i)=>{
         const prev=arr[i+1]||null;
         const stato=statoReag(reg,prev);
+        const dim = v => (!v||v===0) ? 'color:var(--text4)' : '';
         return `<tr>
           <td style="font-weight:600;white-space:nowrap">${fmtDate(reg.data)}</td>
           <td style="text-align:center;font-family:'DM Mono',monospace;font-weight:700;color:var(--blue)">${reg.cicli_ee||0}</td>
+          <td style="text-align:center;font-family:'DM Mono',monospace;font-weight:600;${dim(reg.vetri_ist)}">${reg.vetri_ist||'—'}</td>
           <td style="font-family:'DM Mono',monospace;font-size:11px">${fmtCasiCell(reg, 'ist')}</td>
           <td style="text-align:center;font-family:'DM Mono',monospace;font-weight:700;color:var(--teal)">${reg.cicli_ee_cit||0}</td>
+          <td style="text-align:center;font-family:'DM Mono',monospace;font-weight:600;${dim(reg.vetri_cit)}">${reg.vetri_cit||'—'}</td>
           <td style="font-family:'DM Mono',monospace;font-size:11px">${fmtCasiCell(reg, 'cit')}</td>
           <td style="text-align:center;font-family:'DM Mono',monospace;font-weight:700;color:var(--purple)">${reg.cicli_pap||0}</td>
+          <td style="text-align:center;font-family:'DM Mono',monospace;font-weight:600;${dim(reg.vetri_pap)}">${reg.vetri_pap||'—'}</td>
           <td style="font-family:'DM Mono',monospace;font-size:11px">${fmtCasiCell(reg, 'pap')}</td>
           <td><span class="badge ${stato.cls}" style="font-size:11px">${stato.label}</span></td>
           <td style="white-space:nowrap">
@@ -8042,11 +8093,13 @@ function renderHomeProcTable() {
     else if (r.casi_a) range = r.casi_a;
     else if ((r.casi||[]).length === 1) range = r.casi[0];
     else if ((r.casi||[]).length > 1) range = r.casi[0] + ' → ' + r.casi[r.casi.length-1];
-    const cass = r.n_cassette || (r.casi||[]).length || '—';
+    const nCasi = r.n_cassette || (r.casi||[]).length || '—';
+    const nBio  = r.n_biocassette || '—';
     return `<tr style="cursor:pointer" onclick="showView('processatore')">
       <td class="mono">${data} ${ora}</td>
       <td class="mono">${esc(range)}</td>
-      <td>${cass}</td>
+      <td style="text-align:center">${nCasi}</td>
+      <td style="text-align:center">${nBio}</td>
       <td>${statoBadge(r)}</td>
     </tr>`;
   }).join('');
@@ -8069,11 +8122,14 @@ function renderHomeColorTable() {
   const byDate = {};
   reg.forEach(r => {
     if (!r.data) return;
-    if (!byDate[r.data]) byDate[r.data] = {data:r.data, cicli_ee:0, cicli_ee_cit:0, cicli_pap:0, casi_ist:0, casi_cit:0, casi_pap:0, reagenti:[]};
+    if (!byDate[r.data]) byDate[r.data] = {data:r.data, cicli_ee:0, cicli_ee_cit:0, cicli_pap:0, vetri_ist:0, vetri_cit:0, vetri_pap:0, casi_ist:0, casi_cit:0, casi_pap:0, reagenti:[]};
     const b = byDate[r.data];
     b.cicli_ee     += (r.cicli_ee||0);
     b.cicli_ee_cit += (r.cicli_ee_cit||0);
     b.cicli_pap    += (r.cicli_pap||0);
+    b.vetri_ist    += (r.vetri_ist||0);
+    b.vetri_cit    += (r.vetri_cit||0);
+    b.vetri_pap    += (r.vetri_pap||0);
     b.casi_ist     += casiCount(r, 'ist');
     b.casi_cit     += casiCount(r, 'cit');
     b.casi_pap     += casiCount(r, 'pap');
@@ -8094,10 +8150,13 @@ function renderHomeColorTable() {
     return `<tr style="cursor:pointer" onclick="showView('coloratore')">
       <td class="mono" style="font-weight:600">${data}</td>
       <td style="background:#f7faff;text-align:center;${dim(d.cicli_ee)}">${d.cicli_ee}</td>
+      <td style="background:#f7faff;text-align:center;${dim(d.vetri_ist)}">${d.vetri_ist||'—'}</td>
       <td style="background:#f7faff;text-align:center;${dim(d.casi_ist)}">${d.casi_ist}</td>
       <td style="background:#f7feff;text-align:center;${dim(d.cicli_ee_cit)}">${d.cicli_ee_cit}</td>
+      <td style="background:#f7feff;text-align:center;${dim(d.vetri_cit)}">${d.vetri_cit||'—'}</td>
       <td style="background:#f7feff;text-align:center;${dim(d.casi_cit)}">${d.casi_cit}</td>
       <td style="background:#fbf9ff;text-align:center;${dim(d.cicli_pap)}">${d.cicli_pap}</td>
+      <td style="background:#fbf9ff;text-align:center;${dim(d.vetri_pap)}">${d.vetri_pap||'—'}</td>
       <td style="background:#fbf9ff;text-align:center;${dim(d.casi_pap)}">${d.casi_pap}</td>
       <td>${statoBadge(d.reagenti)}</td>
     </tr>`;
