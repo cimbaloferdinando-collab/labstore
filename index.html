@@ -4592,15 +4592,19 @@ function renderProcessatore(){
     <tbody>
       ${arr.map((ciclo,i)=>{
         const prev=arr[i+1]||null;
-        // Calcola stato reagenti
-        let statoLabel='🆕', statoCls='bg-blue';
-        if(prev&&prev.reagenti?.length){
-          const allV=(ciclo.reagenti||[]).every(r=>r.stato==='verificato');
-          const hasR=(ciclo.reagenti||[]).some(r=>r.stato==='rabboccato');
-          const hasS=(ciclo.reagenti||[]).some(r=>r.stato==='sostituito');
-          if(hasS){ statoLabel='🔄 Sostituito'; statoCls='bg-red'; }
-          else if(hasR){ statoLabel='➕ Rabboccato'; statoCls='bg-yellow'; }
-          else if(allV){ statoLabel='✅ Verificato'; statoCls='bg-green'; }
+        // Badge stato: legge direttamente il campo stato di ogni reagente del ciclo
+        const reag = ciclo.reagenti||[];
+        let statoLabel, statoCls;
+        if (!reag.length) {
+          // Nessun reagente registrato
+          statoLabel = prev ? '—' : '🆕';
+          statoCls = 'bg-blue';
+        } else {
+          const hasS = reag.some(r => r.stato === 'cambiato' || r.stato === 'sostituito' || (r.stato||'').includes('sostit'));
+          const hasR = reag.some(r => r.stato === 'rabboccato');
+          if (hasS)      { statoLabel='🔄 Sostituito'; statoCls='bg-red'; }
+          else if (hasR) { statoLabel='➕ Rabboccato'; statoCls='bg-yellow'; }
+          else           { statoLabel='✅ Verificato'; statoCls='bg-green'; }
         }
         const casiDa = ciclo.casi_da||((ciclo.casi||[])[0]||'—');
         const casiA = ciclo.casi_a||((ciclo.casi||[]).slice(-1)[0]||'—');
@@ -4866,12 +4870,13 @@ function renderColoratore(){
   if(!arr.length){ el.innerHTML='<div class="empty"><div class="e-ico">🎨</div><p>Nessun registro</p></div>'; return; }
 
   const statoReag=(reg,prev)=>{
-    if(!prev||!prev.reagenti?.length) return {label:'🆕 Nuovo',cls:'bg-blue'};
-    const curL=(reg.reagenti||[]).map(r=>r.lotto||r.nome).sort().join(',');
-    const preL=(prev.reagenti||[]).map(r=>r.lotto||r.nome).sort().join(',');
-    if(curL===preL) return {label:'✅ Invariato',cls:'bg-green'};
-    const hasNew=(reg.reagenti||[]).some(r=>!(prev.reagenti||[]).find(p=>(p.lotto||p.nome)===(r.lotto||r.nome)));
-    return hasNew ? {label:'🔄 Cambiato',cls:'bg-red'} : {label:'➕ Rabboccato',cls:'bg-yellow'};
+    const reag = reg.reagenti||[];
+    if (!reag.length) return {label: prev ? '—' : '🆕 Nuovo', cls:'bg-blue'};
+    const hasS = reag.some(r => r.stato === 'cambiato' || r.stato === 'sostituito' || (r.stato||'').includes('sostit'));
+    const hasR = reag.some(r => r.stato === 'rabboccato');
+    if (hasS)      return {label:'🔄 Sostituito', cls:'bg-red'};
+    if (hasR)      return {label:'➕ Rabboccato', cls:'bg-yellow'};
+    return               {label:'✅ Verificato',  cls:'bg-green'};
   };
   // Etichetta casi per riga: usa _labelCasiByTipo (gestisce sia casi reali sia fallback cicli)
   const fmtCasiCell = (reg, tipo) => {
