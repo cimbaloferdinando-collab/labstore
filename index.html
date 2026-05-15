@@ -1519,19 +1519,19 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
 
 <!-- MODAL PROCESSATORE -->
 <div class="modal-overlay" id="modal-processatore">
-  <div class="modal" style="width:min(900px,96vw);max-width:96vw;max-height:94vh;overflow-y:auto">
+  <div class="modal" style="width:min(1000px,96vw);max-width:96vw;max-height:94vh;overflow-y:auto">
     <div class="modal-title" id="proc-modal-title">Nuovo Ciclo Processatore</div>
     <input type="hidden" id="proc-edit-id">
 
     <!-- Layout 2 colonne: sinistra info+casi, destra reagenti -->
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start">
 
       <!-- COLONNA SINISTRA -->
       <div>
         <!-- Info ciclo -->
-        <div style="background:var(--bg3);border-radius:var(--r);padding:12px;margin-bottom:12px">
-          <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px">Informazioni ciclo</div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div style="background:var(--bg3);border-radius:var(--r);padding:14px;margin-bottom:14px">
+          <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px">Informazioni ciclo</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
             <div class="fg" style="margin:0"><label>Data ciclo *</label><input type="date" id="proc-data"></div>
             <div class="fg" style="margin:0"><label>Protocollo</label>
               <select id="proc-protocollo">
@@ -1548,32 +1548,32 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
         </div>
 
         <!-- Casi processati -->
-        <div style="background:var(--bg3);border-radius:var(--r);padding:12px">
-          <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">Casi processati</div>
-          <div style="display:flex;gap:6px;margin-bottom:6px">
+        <div style="background:var(--bg3);border-radius:var(--r);padding:14px">
+          <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px">Casi processati</div>
+          <div style="display:flex;gap:8px;margin-bottom:8px">
             <input type="text" id="proc-caso-from" placeholder="Da (es. 2764/26)" style="flex:1;font-family:DM Mono,monospace;font-size:12px">
             <span style="align-self:center;color:var(--text3)">→</span>
             <input type="text" id="proc-caso-to" placeholder="A" style="flex:1;font-family:DM Mono,monospace;font-size:12px">
             <button class="btn btn-sm btn-primary" onclick="addRangeCasiProc()">＋ Range</button>
           </div>
-          <div style="display:flex;gap:6px;margin-bottom:6px">
+          <div style="display:flex;gap:8px;margin-bottom:8px">
             <input type="text" id="proc-caso-singolo" placeholder="Singolo ID…" style="flex:1;font-family:DM Mono,monospace;font-size:12px" onkeydown="if(event.key==='Enter') addCasoSingoloProc()">
             <button class="btn btn-sm btn-ok" onclick="addCasoSingoloProc()">＋</button>
           </div>
-          <div id="proc-casi-list" style="display:flex;flex-wrap:wrap;gap:4px;min-height:28px;padding:5px;background:var(--bg2);border:1px solid var(--border);border-radius:6px"></div>
-          <div style="font-size:11px;color:var(--text3);margin-top:4px">N° casi: <span id="proc-casi-count" style="font-weight:600;color:var(--accent)">0</span></div>
+          <div id="proc-casi-list" style="display:flex;flex-wrap:wrap;gap:4px;min-height:32px;padding:6px;background:var(--bg2);border:1px solid var(--border);border-radius:6px"></div>
+          <div style="font-size:11px;color:var(--text3);margin-top:6px">N° casi: <span id="proc-casi-count" style="font-weight:600;color:var(--accent)">0</span></div>
         </div>
       </div>
 
       <!-- COLONNA DESTRA: reagenti fissi -->
-      <div style="background:var(--bg3);border-radius:var(--r);padding:12px">
-        <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px">Reagenti processatore</div>
+      <div style="background:var(--bg3);border-radius:var(--r);padding:14px">
+        <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px">Reagenti processatore</div>
         <div id="proc-reagenti-list"></div>
       </div>
 
     </div><!-- /grid -->
 
-    <div class="modal-footer" style="margin-top:14px">
+    <div class="modal-footer" style="margin-top:16px">
       <button class="btn" onclick="closeModal('modal-processatore')">Annulla</button>
       <button class="btn btn-primary" onclick="saveProcessatore()">💾 Salva</button>
     </div>
@@ -1584,118 +1584,108 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
 
 <!-- MODAL COLORATORE -->
 <div class="modal-overlay" id="modal-coloratore">
-  <div class="modal" style="width:min(1000px,96vw);max-width:96vw;max-height:94vh;overflow-y:auto">
+  <div class="modal" style="width:min(680px,96vw);max-width:96vw;max-height:94vh;overflow-y:auto">
     <div class="modal-title" id="color-modal-title">Registro Coloratore</div>
     <input type="hidden" id="color-edit-id">
 
-    <!-- Layout 2 colonne: sinistra info+cicli+reagenti | destra casi per tipo -->
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start">
+    <!-- 1. Info giornata -->
+    <div style="background:var(--bg3);border-radius:var(--r);padding:14px;margin-bottom:14px">
+      <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px">Informazioni giornata</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div class="fg" style="margin:0"><label>Data *</label><input type="date" id="color-data"></div>
+        <div class="fg" style="margin:0"><label>Note</label><input type="text" id="color-note" placeholder="Note…"></div>
+      </div>
+    </div>
 
-      <!-- COLONNA SINISTRA: info + cicli macchina + reagenti -->
-      <div>
-        <!-- Info giornata -->
-        <div style="background:var(--bg3);border-radius:var(--r);padding:12px;margin-bottom:12px">
-          <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">Informazioni</div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-            <div class="fg" style="margin:0;grid-column:1/-1"><label>Data *</label><input type="date" id="color-data"></div>
-            <div class="fg" style="margin:0;grid-column:1/-1"><label>Note</label><input type="text" id="color-note" placeholder="Note…"></div>
-          </div>
+    <!-- 2. N° cicli macchina -->
+    <div style="background:var(--bg3);border-radius:var(--r);padding:14px;margin-bottom:14px">
+      <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:12px">
+        <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.8px">N° cicli macchina</div>
+        <div style="font-size:10px;color:var(--text3);font-style:italic">passaggi fisici del coloratore, distinti dai casi</div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px">
+        <div style="text-align:center;background:var(--bg2);border-radius:10px;padding:14px 8px;border:1px solid var(--border)">
+          <div style="font-size:11px;color:var(--blue);font-weight:600;margin-bottom:6px">🧫 EE Istologia</div>
+          <input type="number" id="color-cicli-ee" min="0" value="0" style="width:60px;text-align:center;font-family:DM Mono,monospace;font-size:26px;font-weight:700;border:none;background:transparent;color:var(--blue)">
+          <div style="font-size:10px;color:var(--text3);margin-top:2px">cicli</div>
         </div>
-
-        <!-- N° cicli macchina -->
-        <div style="background:var(--bg3);border-radius:var(--r);padding:12px;margin-bottom:12px">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-            <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.8px">N° cicli macchina</div>
-            <div style="font-size:9px;color:var(--text3);font-style:italic">passaggi, NON i casi</div>
-          </div>
-          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
-            <div style="text-align:center;background:var(--bg2);border-radius:8px;padding:10px;border:1px solid var(--border)">
-              <div style="font-size:10px;color:var(--blue);font-weight:600;margin-bottom:4px">EE Ist.</div>
-              <input type="number" id="color-cicli-ee" min="0" value="0" style="width:54px;text-align:center;font-family:DM Mono,monospace;font-size:20px;font-weight:700;border:none;background:transparent;color:var(--blue)">
-            </div>
-            <div style="text-align:center;background:var(--bg2);border-radius:8px;padding:10px;border:1px solid var(--border)">
-              <div style="font-size:10px;color:var(--teal);font-weight:600;margin-bottom:4px">EE Cit.</div>
-              <input type="number" id="color-cicli-ee-cit" min="0" value="0" style="width:54px;text-align:center;font-family:DM Mono,monospace;font-size:20px;font-weight:700;border:none;background:transparent;color:var(--teal)">
-            </div>
-            <div style="text-align:center;background:var(--bg2);border-radius:8px;padding:10px;border:1px solid var(--border)">
-              <div style="font-size:10px;color:var(--purple);font-weight:600;margin-bottom:4px">PAP</div>
-              <input type="number" id="color-cicli-pap" min="0" value="0" style="width:54px;text-align:center;font-family:DM Mono,monospace;font-size:20px;font-weight:700;border:none;background:transparent;color:var(--purple)">
-            </div>
-          </div>
+        <div style="text-align:center;background:var(--bg2);border-radius:10px;padding:14px 8px;border:1px solid var(--border)">
+          <div style="font-size:11px;color:var(--teal);font-weight:600;margin-bottom:6px">🔬 EE Citologia</div>
+          <input type="number" id="color-cicli-ee-cit" min="0" value="0" style="width:60px;text-align:center;font-family:DM Mono,monospace;font-size:26px;font-weight:700;border:none;background:transparent;color:var(--teal)">
+          <div style="font-size:10px;color:var(--text3);margin-top:2px">cicli</div>
         </div>
-
-        <!-- Reagenti fissi -->
-        <div style="background:var(--bg3);border-radius:var(--r);padding:12px">
-          <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px">Reagenti coloratore</div>
-          <div id="color-reagenti-list"></div>
+        <div style="text-align:center;background:var(--bg2);border-radius:10px;padding:14px 8px;border:1px solid var(--border)">
+          <div style="font-size:11px;color:var(--purple);font-weight:600;margin-bottom:6px">📋 PAP LupoLab</div>
+          <input type="number" id="color-cicli-pap" min="0" value="0" style="width:60px;text-align:center;font-family:DM Mono,monospace;font-size:26px;font-weight:700;border:none;background:transparent;color:var(--purple)">
+          <div style="font-size:10px;color:var(--text3);margin-top:2px">cicli</div>
         </div>
       </div>
+    </div>
 
-      <!-- COLONNA DESTRA: casi per tipo (Ist / Cit / PAP) -->
-      <div>
-        <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px">Casi lavorati</div>
-
-        <!-- ISTOLOGIA -->
-        <div style="background:var(--bg3);border-radius:var(--r);padding:10px;border-left:3px solid var(--blue);margin-bottom:10px">
-          <div style="font-size:11px;color:var(--blue);font-weight:600;margin-bottom:8px;display:flex;justify-content:space-between">
-            <span>🧫 Istologia</span>
-            <span style="font-size:10px;color:var(--text3);font-weight:400">N° casi: <span id="color-casi-ist-count" style="font-weight:600;color:var(--blue)">0</span></span>
-          </div>
-          <div style="display:flex;gap:5px;margin-bottom:5px">
-            <input type="text" id="color-ist-from" placeholder="Da (es. 2764/26)" style="flex:1;font-family:DM Mono,monospace;font-size:11px">
-            <span style="align-self:center;color:var(--text3);font-size:11px">→</span>
-            <input type="text" id="color-ist-to" placeholder="A" style="flex:1;font-family:DM Mono,monospace;font-size:11px">
-            <button class="btn btn-sm btn-primary" onclick="addRangeCasiColor('ist')">＋</button>
-          </div>
-          <div style="display:flex;gap:5px;margin-bottom:5px">
-            <input type="text" id="color-ist-singolo" placeholder="ID singolo…" style="flex:1;font-family:DM Mono,monospace;font-size:11px" onkeydown="if(event.key==='Enter')addCasoSingoloColor('ist')">
-            <button class="btn btn-sm btn-ok" onclick="addCasoSingoloColor('ist')">＋</button>
-          </div>
-          <div id="color-casi-ist-list" style="display:flex;flex-wrap:wrap;gap:3px;min-height:24px;padding:4px;background:var(--bg2);border:1px solid var(--border-faint);border-radius:5px"></div>
-        </div>
-
-        <!-- CITOLOGIA -->
-        <div style="background:var(--bg3);border-radius:var(--r);padding:10px;border-left:3px solid var(--teal);margin-bottom:10px">
-          <div style="font-size:11px;color:var(--teal);font-weight:600;margin-bottom:8px;display:flex;justify-content:space-between">
-            <span>🔬 Citologia</span>
-            <span style="font-size:10px;color:var(--text3);font-weight:400">N° casi: <span id="color-casi-cit-count" style="font-weight:600;color:var(--teal)">0</span></span>
-          </div>
-          <div style="display:flex;gap:5px;margin-bottom:5px">
-            <input type="text" id="color-cit-from" placeholder="Da (es. C100/26)" style="flex:1;font-family:DM Mono,monospace;font-size:11px">
-            <span style="align-self:center;color:var(--text3);font-size:11px">→</span>
-            <input type="text" id="color-cit-to" placeholder="A" style="flex:1;font-family:DM Mono,monospace;font-size:11px">
-            <button class="btn btn-sm btn-primary" onclick="addRangeCasiColor('cit')">＋</button>
-          </div>
-          <div style="display:flex;gap:5px;margin-bottom:5px">
-            <input type="text" id="color-cit-singolo" placeholder="ID singolo…" style="flex:1;font-family:DM Mono,monospace;font-size:11px" onkeydown="if(event.key==='Enter')addCasoSingoloColor('cit')">
-            <button class="btn btn-sm btn-ok" onclick="addCasoSingoloColor('cit')">＋</button>
-          </div>
-          <div id="color-casi-cit-list" style="display:flex;flex-wrap:wrap;gap:3px;min-height:24px;padding:4px;background:var(--bg2);border:1px solid var(--border-faint);border-radius:5px"></div>
-        </div>
-
-        <!-- PAP -->
-        <div style="background:var(--bg3);border-radius:var(--r);padding:10px;border-left:3px solid var(--purple)">
-          <div style="font-size:11px;color:var(--purple);font-weight:600;margin-bottom:8px;display:flex;justify-content:space-between">
-            <span>📋 PAP LupoLab</span>
-            <span style="font-size:10px;color:var(--text3);font-weight:400">N° casi: <span id="color-casi-pap-count" style="font-weight:600;color:var(--purple)">0</span></span>
-          </div>
-          <div style="display:flex;gap:5px;margin-bottom:5px">
-            <input type="text" id="color-pap-from" placeholder="Da (es. 100/26L)" style="flex:1;font-family:DM Mono,monospace;font-size:11px">
-            <span style="align-self:center;color:var(--text3);font-size:11px">→</span>
-            <input type="text" id="color-pap-to" placeholder="A" style="flex:1;font-family:DM Mono,monospace;font-size:11px">
-            <button class="btn btn-sm btn-primary" onclick="addRangeCasiColor('pap')">＋</button>
-          </div>
-          <div style="display:flex;gap:5px;margin-bottom:5px">
-            <input type="text" id="color-pap-singolo" placeholder="ID singolo…" style="flex:1;font-family:DM Mono,monospace;font-size:11px" onkeydown="if(event.key==='Enter')addCasoSingoloColor('pap')">
-            <button class="btn btn-sm btn-ok" onclick="addCasoSingoloColor('pap')">＋</button>
-          </div>
-          <div id="color-casi-pap-list" style="display:flex;flex-wrap:wrap;gap:3px;min-height:24px;padding:4px;background:var(--bg2);border:1px solid var(--border-faint);border-radius:5px"></div>
-        </div>
+    <!-- 3. Casi Istologia -->
+    <div style="background:var(--bg3);border-radius:var(--r);padding:14px;margin-bottom:14px;border-left:3px solid var(--blue)">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <div style="font-size:12px;font-weight:600;color:var(--blue)">🧫 Casi Istologia</div>
+        <div style="font-size:11px;color:var(--text3)">N° casi: <span id="color-casi-ist-count" style="font-weight:700;color:var(--blue)">0</span></div>
       </div>
+      <div style="display:flex;gap:8px;margin-bottom:8px;align-items:center">
+        <input type="text" id="color-ist-from" placeholder="Da (es. 2764/26)" style="flex:1;font-family:DM Mono,monospace;font-size:12px">
+        <span style="color:var(--text3);font-size:13px">→</span>
+        <input type="text" id="color-ist-to" placeholder="A" style="flex:1;font-family:DM Mono,monospace;font-size:12px">
+        <button class="btn btn-sm btn-primary" onclick="addRangeCasiColor('ist')">＋ Range</button>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:8px">
+        <input type="text" id="color-ist-singolo" placeholder="Oppure aggiungi ID singolo…" style="flex:1;font-family:DM Mono,monospace;font-size:12px" onkeydown="if(event.key==='Enter')addCasoSingoloColor('ist')">
+        <button class="btn btn-sm btn-ok" onclick="addCasoSingoloColor('ist')">＋</button>
+      </div>
+      <div id="color-casi-ist-list" style="display:flex;flex-wrap:wrap;gap:4px;min-height:30px;padding:6px;background:var(--bg2);border:1px solid var(--border-faint);border-radius:6px"></div>
+    </div>
 
-    </div><!-- /grid -->
+    <!-- 4. Casi Citologia -->
+    <div style="background:var(--bg3);border-radius:var(--r);padding:14px;margin-bottom:14px;border-left:3px solid var(--teal)">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <div style="font-size:12px;font-weight:600;color:var(--teal)">🔬 Casi Citologia</div>
+        <div style="font-size:11px;color:var(--text3)">N° casi: <span id="color-casi-cit-count" style="font-weight:700;color:var(--teal)">0</span></div>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:8px;align-items:center">
+        <input type="text" id="color-cit-from" placeholder="Da (es. C100/26)" style="flex:1;font-family:DM Mono,monospace;font-size:12px">
+        <span style="color:var(--text3);font-size:13px">→</span>
+        <input type="text" id="color-cit-to" placeholder="A" style="flex:1;font-family:DM Mono,monospace;font-size:12px">
+        <button class="btn btn-sm btn-primary" onclick="addRangeCasiColor('cit')">＋ Range</button>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:8px">
+        <input type="text" id="color-cit-singolo" placeholder="Oppure aggiungi ID singolo…" style="flex:1;font-family:DM Mono,monospace;font-size:12px" onkeydown="if(event.key==='Enter')addCasoSingoloColor('cit')">
+        <button class="btn btn-sm btn-ok" onclick="addCasoSingoloColor('cit')">＋</button>
+      </div>
+      <div id="color-casi-cit-list" style="display:flex;flex-wrap:wrap;gap:4px;min-height:30px;padding:6px;background:var(--bg2);border:1px solid var(--border-faint);border-radius:6px"></div>
+    </div>
 
-    <div class="modal-footer" style="margin-top:14px">
+    <!-- 5. Casi PAP -->
+    <div style="background:var(--bg3);border-radius:var(--r);padding:14px;margin-bottom:14px;border-left:3px solid var(--purple)">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <div style="font-size:12px;font-weight:600;color:var(--purple)">📋 Casi PAP LupoLab</div>
+        <div style="font-size:11px;color:var(--text3)">N° casi: <span id="color-casi-pap-count" style="font-weight:700;color:var(--purple)">0</span></div>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:8px;align-items:center">
+        <input type="text" id="color-pap-from" placeholder="Da (es. 100/26L)" style="flex:1;font-family:DM Mono,monospace;font-size:12px">
+        <span style="color:var(--text3);font-size:13px">→</span>
+        <input type="text" id="color-pap-to" placeholder="A" style="flex:1;font-family:DM Mono,monospace;font-size:12px">
+        <button class="btn btn-sm btn-primary" onclick="addRangeCasiColor('pap')">＋ Range</button>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:8px">
+        <input type="text" id="color-pap-singolo" placeholder="Oppure aggiungi ID singolo…" style="flex:1;font-family:DM Mono,monospace;font-size:12px" onkeydown="if(event.key==='Enter')addCasoSingoloColor('pap')">
+        <button class="btn btn-sm btn-ok" onclick="addCasoSingoloColor('pap')">＋</button>
+      </div>
+      <div id="color-casi-pap-list" style="display:flex;flex-wrap:wrap;gap:4px;min-height:30px;padding:6px;background:var(--bg2);border:1px solid var(--border-faint);border-radius:6px"></div>
+    </div>
+
+    <!-- 6. Reagenti -->
+    <div style="background:var(--bg3);border-radius:var(--r);padding:14px;margin-bottom:14px">
+      <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px">Reagenti coloratore</div>
+      <div id="color-reagenti-list"></div>
+    </div>
+
+    <div class="modal-footer">
       <button class="btn" onclick="closeModal('modal-coloratore')">Annulla</button>
       <button class="btn btn-primary" onclick="saveColoratore()">💾 Salva</button>
     </div>
