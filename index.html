@@ -4454,19 +4454,23 @@ async function saveProcessatore(){
   if(!data){ toast('Data obbligatoria','error'); return; }
   _takeSnapshot('Salva processatore '+data); // FIX [UNDO]
   const editId = document.getElementById('proc-edit-id').value;
+  const casiList = [...procCasiList];
+  // casi_da / casi_a: solo per display nella tabella (primo → ultimo caso reale).
+  // NON usati per espansione se esiste il campo casi[] — vedi _derivedCampioni.
+  const casi_da = casiList.length > 0 ? casiList[0] : '';
+  const casi_a  = casiList.length > 1 ? casiList[casiList.length-1] : casi_da;
   const ciclo = {
     id: editId||genId(),
     data,
     ora_inizio: document.getElementById('proc-ora-inizio').value,
-    ora_fine: document.getElementById('proc-ora-fine').value,
+    ora_fine:   document.getElementById('proc-ora-fine').value,
     protocollo: document.getElementById('proc-protocollo').value,
-    note: document.getElementById('proc-note').value.trim(),
-    casi: [...procCasiList],
-    casi_da: document.getElementById('proc-caso-from').value.trim(),
-    casi_a: document.getElementById('proc-caso-to').value.trim(),
-    n_cassette: procCasiList.length,
+    note:       document.getElementById('proc-note').value.trim(),
+    casi:    casiList,
+    casi_da,
+    casi_a,
+    n_cassette: casiList.length,
     reagenti: getReagentiList('proc-reagenti-list'),
-    creato: editId ? undefined : new Date().toISOString(),
     modificato: new Date().toISOString()
   };
   if(!editId) ciclo.creato = new Date().toISOString();
@@ -7208,11 +7212,15 @@ function _derivedCampioni() {
   proc.forEach(p => {
     if (!p.data) return;
     if (dateConColoratore.has(p.data)) return;
-    let casi = Array.isArray(p.casi) ? p.casi.slice() : [];
-    if (p.casi_da || p.casi_a) {
-      _expandCasoRange(p.casi_da, p.casi_a).forEach(c => { if (c && !casi.includes(c)) casi.push(c); });
+    // PRIORITÀ: casi[] array (fonte di verità, come per coloratore)
+    // FALLBACK: casi_da/casi_a solo se casi[] non esiste (record vecchi)
+    let casi = [];
+    if (Array.isArray(p.casi) && p.casi.length > 0) {
+      casi = p.casi.slice();
+    } else if (p.casi_da || p.casi_a) {
+      _expandCasoRange(p.casi_da, p.casi_a).forEach(c => { if (c) casi.push(c); });
     }
-    // Fallback: se nessun caso ma cassette > 0
+    // Fallback cicli/cassette se nessun caso specificato
     if (casi.length === 0 && (p.n_cassette||0) > 0) {
       casi = Array(p.n_cassette).fill(0).map((_,k) => '__synth_proc_' + p.id + '_' + k);
     }
