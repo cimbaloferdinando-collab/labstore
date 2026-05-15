@@ -4587,8 +4587,14 @@ function _normalizeColorCasi(preset) {
 
 function _extractCasiFromPreset(preset, tipo) {
   if (!preset) return [];
+  // PRIORITÀ: se esiste casi_<tipo> array → usare solo quello (fonte di verità).
+  // Ignorare range_<tipo> per evitare espansione sintetica (primo→ultimo).
+  const sing = preset['casi_' + tipo];
+  if (Array.isArray(sing)) {
+    return sing.filter(c => c).map(String);
+  }
+  // Fallback per record vecchi senza casi_<tipo>: espandi range_<tipo>
   const acc = new Set();
-  // 1) range_<tipo>: può essere oggetto singolo {from,to} (vecchio) o array (nuovo)
   const rng = preset['range_' + tipo];
   if (rng) {
     const ranges = Array.isArray(rng) ? rng : [rng];
@@ -4597,9 +4603,6 @@ function _extractCasiFromPreset(preset, tipo) {
       _expandCasoRange(r.from, r.to).forEach(c => { if (c) acc.add(c); });
     });
   }
-  // 2) casi_<tipo>: array di singoli (nuovo schema)
-  const sing = preset['casi_' + tipo];
-  if (Array.isArray(sing)) sing.forEach(c => { if (c) acc.add(String(c)); });
   return Array.from(acc);
 }
 
