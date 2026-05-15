@@ -4492,6 +4492,12 @@ async function saveProcessatore(){
 function renderProcessatore(){
   const _procList=document.getElementById('proc-list'); if(!_procList) return;
   let arr = loadProc();
+  // Ordine cronologico decrescente: prima per data, poi per ora_inizio (se stessa data)
+  arr.sort((a,b) => {
+    const da = (a.data||''), db = (b.data||'');
+    if (da !== db) return db.localeCompare(da);
+    return ((b.ora_inizio||'00:00').localeCompare(a.ora_inizio||'00:00'));
+  });
   const q = (document.getElementById('proc-search')?.value||'').toLowerCase();
   const from = document.getElementById('proc-filter-from')?.value;
   const to = document.getElementById('proc-filter-to')?.value;
@@ -4759,6 +4765,8 @@ async function saveColoratore(){
 function renderColoratore(){
   const _colorList=document.getElementById('color-list'); if(!_colorList) return;
   let arr = loadColoratore();
+  // Ordine cronologico decrescente per data
+  arr.sort((a,b) => (b.data||'').localeCompare(a.data||''));
   const q = (document.getElementById('color-search')?.value||'').toLowerCase();
   const from = document.getElementById('color-filter-from')?.value;
   const to = document.getElementById('color-filter-to')?.value;
@@ -8004,7 +8012,14 @@ window.renderDashboard = renderDashboardPreview;
 function renderHomeProcTable() {
   const tbody = document.getElementById('home-proc-tbody');
   if (!tbody || typeof loadProc !== 'function') return;
-  const proc = loadProc().slice(0,5);
+  const proc = loadProc()
+    .slice()
+    .sort((a,b) => {
+      const da=(a.data||''), db=(b.data||'');
+      if(da!==db) return db.localeCompare(da);
+      return ((b.ora_inizio||'00:00').localeCompare(a.ora_inizio||'00:00'));
+    })
+    .slice(0,5);
   if (!proc.length) {
     tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text3);padding:14px;font-style:italic">Nessun ciclo registrato</td></tr>';
     return;
