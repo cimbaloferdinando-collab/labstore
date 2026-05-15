@@ -9188,6 +9188,57 @@ document.addEventListener('DOMContentLoaded', () => {
     if (typeof recomputeAllBidoniQty === 'function') recomputeAllBidoniQty();
   } catch(e) { console.warn('[migrate bidoni]', e); }
 
+  // 5.7 Migrazione coloratore: record con solo range_xxx ma senza casi_xxx
+  // (salvati prima del fix che ha introdotto casi_ist/cit/pap)
+  try {
+    const col = loadColoratore();
+    let fixedCol = 0;
+    const fixedColArr = col.map(r => {
+      let changed = false;
+      const out = { ...r };
+      ['ist','cit','pap'].forEach(tipo => {
+        if (Array.isArray(r['casi_' + tipo])) return; // già ok
+        // Espandi range_xxx se presente
+        const rng = r['range_' + tipo];
+        if (rng && (rng.from || rng.to)) {
+          const espansi = _expandCasoRange(rng.from, rng.to);
+          out['casi_' + tipo] = espansi;
+          changed = true;
+        } else {
+          out['casi_' + tipo] = [];
+        }
+      });
+      if (changed) fixedCol++;
+      return out;
+    });
+    if (fixedCol > 0) {
+      _setCache(LS_COLOR_REG, _stampMod(fixedColArr));
+      console.log('[migrate color] ripristinati casi_xxx per ' + fixedCol + ' record');
+    }
+  } catch(e) { console.warn('[migrate color]', e); }
+  // (salvati con versione vecchia del save che non espandeva il range in casi[])
+  try {
+    const proc = loadProc();
+    let fixedCount = 0;
+    const fixed = proc.map(p => {
+      // Se casi[] ha già valori → ok
+      if (Array.isArray(p.casi) && p.casi.length > 0) return p;
+      // Se ha casi_da/casi_a → espandi e popola casi[]
+      if (p.casi_da || p.casi_a) {
+        const espansi = _expandCasoRange(p.casi_da, p.casi_a);
+        if (espansi.length > 0) {
+          fixedCount++;
+          return { ...p, casi: espansi, n_cassette: espansi.length };
+        }
+      }
+      return p;
+    });
+    if (fixedCount > 0) {
+      _setCache(LS_PROC, _stampMod(fixed));
+      console.log('[migrate proc] ripristinati casi[] per ' + fixedCount + ' record');
+    }
+  } catch(e) { console.warn('[migrate proc]', e); }
+
   // 6. Filtri inventario: gestiti dal logic file (setInvFilter, setFornFilter, ecc.)
   //    Non serve init custom - i bottoni sono hardcoded nell'HTML del view-inventario.
 
