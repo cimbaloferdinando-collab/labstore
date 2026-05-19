@@ -3734,11 +3734,19 @@ function openAddModal(){
   document.getElementById('modal-product').classList.add('open');
 }
 function openEditModal(id){
-  const p=loadP().find(x=>x.id===id); if(!p) return;
-  document.getElementById('prod-modal-title').textContent='Modifica Prodotto';
-  const fields={id:'id',nome:'nome','f-cat':'cat',fornitore:'fornitore',barcode:'barcode',lotto:'lotto',scadenza:'scadenza',qty:'qty',unita:'unita',min:'min',pos:'pos',note:'note'};
-  Object.entries(fields).forEach(([fid,pkey])=>{ const e=document.getElementById('f-'+fid.replace('f-','')); if(e) e.value=p[pkey]||''; });
-  document.getElementById('f-cat').value=p.cat||'';
+  const p = id ? loadP().find(x=>x.id===id) : null;
+  if(id && !p) return; // id fornito ma non trovato
+  document.getElementById('prod-modal-title').textContent = p ? 'Modifica Prodotto' : '＋ Nuovo Prodotto';
+  // Svuota tutti i campi
+  ['f-id','f-nome','f-cat','f-fornitore','f-barcode','f-lotto','f-scadenza','f-qty','f-unita','f-min','f-pos','f-note'].forEach(fid => {
+    const e = document.getElementById(fid); if(e) e.value = '';
+  });
+  if(p){
+    // Modalità modifica: popola con i valori esistenti
+    const fields = {id:'id',nome:'nome','f-cat':'cat',fornitore:'fornitore',barcode:'barcode',lotto:'lotto',scadenza:'scadenza',qty:'qty',unita:'unita',min:'min',pos:'pos',note:'note'};
+    Object.entries(fields).forEach(([fid,pkey])=>{ const e=document.getElementById('f-'+fid.replace('f-','')); if(e) e.value=p[pkey]||''; });
+    document.getElementById('f-cat').value = p.cat||'';
+  }
   document.getElementById('modal-product').classList.add('open');
 }
 function closeProductModal(){ closeModal('modal-product'); }
