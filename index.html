@@ -310,7 +310,10 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
 .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:12px 14px;box-shadow:var(--sh-sm)}
 
 /* Waste card / prod card */
-/* ─── Rifiuti ─── */
+/* ─── Tooltip universale ─── */
+#tt{position:fixed;z-index:9999;background:var(--text,#1e293b);color:#fff;font-size:11px;line-height:1.5;padding:6px 10px;border-radius:6px;max-width:220px;pointer-events:none;box-shadow:0 4px 12px rgba(0,0,0,.25);transition:opacity .12s;opacity:0}
+#tt.show{opacity:1}
+
 .waste-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;margin-bottom:14px}
 .waste-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:16px;box-shadow:var(--shadow-sm)}
 .waste-card.wc-yellow{border-top:3px solid var(--yellow)}
@@ -750,8 +753,8 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
 
       <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-bottom:16px" id="camp-counters">
         <div class="cnt-card"><div class="cnt-lbl">Totale oggi</div><div class="cnt-val" style="color:var(--accent)" id="camp-c-tot">0</div></div>
-        <div class="cnt-card"><div class="cnt-lbl">Istologia</div><div class="cnt-val" style="color:var(--blue)" id="camp-c-ist">0</div></div>
-        <div class="cnt-card"><div class="cnt-lbl">Citologia</div><div class="cnt-val" style="color:var(--teal)" id="camp-c-cit">0</div></div>
+        <div class="cnt-card" data-tip="Campioni di tessuto solido: biopsie, pezzi operatori"><div class="cnt-lbl">Istologia</div><div class="cnt-val" style="color:var(--blue)" id="camp-c-ist">0</div></div>
+        <div class="cnt-card" data-tip="Campioni liquidi: brushing, agoaspirati, BAL, versamenti"><div class="cnt-lbl">Citologia</div><div class="cnt-val" style="color:var(--teal)" id="camp-c-cit">0</div></div>
         <div class="cnt-card"><div class="cnt-lbl">PAP test</div><div class="cnt-val" style="color:var(--purple)" id="camp-c-pap">0</div></div>
         <div class="cnt-card"><div class="cnt-lbl">PAP privato</div><div class="cnt-val" style="color:var(--orange)" id="camp-c-papp">0</div></div>
         <div class="cnt-card"><div class="cnt-lbl">In attesa</div><div class="cnt-val" style="color:var(--yellow)" id="camp-c-att">0</div></div>
@@ -5047,6 +5050,7 @@ function renderColoratore(){
     return               {label:'✅ Verificato',  cls:'bg-green'};
   };
   // Etichetta casi per riga: usa _labelCasiByTipo (gestisce sia casi reali sia fallback cicli)
+  const _extr = (typeof _extractCasiByTipo === 'function') ? _extractCasiByTipo : null;
   const fmtCasiCell = (reg, tipo) => {
     if (!_cnt) return '<span style="color:var(--text4)">—</span>';
     const count = _cnt(reg, tipo);
@@ -9783,15 +9787,15 @@ window.renderReport = function(){
     const cicliColor = color.reduce((s,r) => s + (r.cicli_ee||0) + (r.cicli_ee_cit||0) + (r.cicli_pap||0), 0);
     const vetriTot   = color.reduce((s,r) => s + (r.vetri_ist||0) + (r.vetri_cit||0) + (r.vetri_pap||0), 0);
     metricsEl.innerHTML = `
-      <div class="cnt-card"><div class="cnt-lbl">Casi totali</div><div class="cnt-val" style="color:var(--accent)">${camps.length}</div></div>
-      <div class="cnt-card"><div class="cnt-lbl">Istologia</div><div class="cnt-val" style="color:var(--blue)">${istN}</div></div>
-      <div class="cnt-card"><div class="cnt-lbl">Citologia</div><div class="cnt-val" style="color:var(--teal)">${citN}</div></div>
-      <div class="cnt-card"><div class="cnt-lbl">PAP</div><div class="cnt-val" style="color:var(--purple)">${papN}</div></div>
-      <div class="cnt-card"><div class="cnt-lbl">Cicli proc.</div><div class="cnt-val" style="color:var(--orange)">${proc.length}</div></div>
-      <div class="cnt-card"><div class="cnt-lbl">Cicli color.</div><div class="cnt-val" style="color:var(--blue)">${cicliColor}</div></div>
-      ${vetriTot > 0 ? `<div class="cnt-card"><div class="cnt-lbl">Vetrini</div><div class="cnt-val" style="color:var(--text2)">${vetriTot}</div></div>` : ''}
-      <div class="cnt-card"><div class="cnt-lbl">Ordini</div><div class="cnt-val" style="color:var(--accent2)">${ords.length}</div></div>
-      <div class="cnt-card"><div class="cnt-lbl">Movim.</div><div class="cnt-val" style="color:var(--text2)">${movs.length}</div></div>`;
+      <div class="cnt-card" data-tip="Totale casi elaborati nel mese (istologia + citologia + PAP)"><div class="cnt-lbl">Casi totali</div><div class="cnt-val" style="color:var(--accent)">${camps.length}</div></div>
+      <div class="cnt-card" data-tip="Campioni di tessuto solido: biopsie, pezzi operatori"><div class="cnt-lbl">Istologia</div><div class="cnt-val" style="color:var(--blue)">${istN}</div></div>
+      <div class="cnt-card" data-tip="Campioni liquidi: brushing, agoaspirati, BAL, versamenti"><div class="cnt-lbl">Citologia</div><div class="cnt-val" style="color:var(--teal)">${citN}</div></div>
+      <div class="cnt-card" data-tip="Papanicolau LupoLab su campioni cervico-vaginali"><div class="cnt-lbl">PAP</div><div class="cnt-val" style="color:var(--purple)">${papN}</div></div>
+      <div class="cnt-card" data-tip="Cicli del processatore tissutale completati nel mese"><div class="cnt-lbl">Cicli proc.</div><div class="cnt-val" style="color:var(--orange)">${proc.length}</div></div>
+      <div class="cnt-card" data-tip="Passaggi macchina nel coloratore (EE ist. + EE cit. + PAP)"><div class="cnt-lbl">Cicli color.</div><div class="cnt-val" style="color:var(--blue)">${cicliColor}</div></div>
+      ${vetriTot > 0 ? `<div class="cnt-card" data-tip="Totale vetrini colorati nel mese (ist. + cit. + PAP)"><div class="cnt-lbl">Vetrini</div><div class="cnt-val" style="color:var(--text2)">${vetriTot}</div></div>` : ''}
+      <div class="cnt-card" data-tip="Ordini di magazzino creati nel mese (qualsiasi stato)"><div class="cnt-lbl">Ordini</div><div class="cnt-val" style="color:var(--accent2)">${ords.length}</div></div>
+      <div class="cnt-card" data-tip="Movimenti di magazzino: carichi + scarichi nel mese"><div class="cnt-lbl">Movim.</div><div class="cnt-val" style="color:var(--text2)">${movs.length}</div></div>`;
   }
 
   // ── Consumo reagenti dal magazzino ──
@@ -9806,8 +9810,8 @@ window.renderReport = function(){
     if(!sorted.length){
       ct.innerHTML = '<div style="padding:14px;color:var(--text3);font-size:12px;text-align:center">Nessun scarico registrato nel mese</div>';
     } else {
-      ct.innerHTML = '<table class="tbl"><thead><tr><th>Prodotto</th><th style="text-align:right">Qtà scaricata</th></tr></thead><tbody>' +
-        sorted.map(([n,q]) => `<tr><td>${esc(n)}</td><td class="mono" style="text-align:right">${q}</td></tr>`).join('') +
+      ct.innerHTML = '<table class="tbl"><thead><tr><th>Prodotto</th><th style="text-align:right" data-tip="Quantità totale scaricata nel mese">Qtà scaricata</th></tr></thead><tbody>' +
+        sorted.map(([n,q]) => `<tr><td>${esc(n)}</td><td class="mono" style="text-align:right" data-tip="Unità di ${esc(n)} scaricate nel mese">${q}</td></tr>`).join('') +
         '</tbody></table>';
     }
   }
@@ -9824,8 +9828,8 @@ window.renderReport = function(){
     if(!sorted.length){
       ot.innerHTML = '<div style="padding:14px;color:var(--text3);font-size:12px;text-align:center">Nessun ordine nel mese</div>';
     } else {
-      ot.innerHTML = '<table class="tbl"><thead><tr><th>Fornitore</th><th style="text-align:right">N° ordini</th></tr></thead><tbody>' +
-        sorted.map(([n,c]) => `<tr><td>${esc(n)}</td><td class="mono" style="text-align:right">${c}</td></tr>`).join('') +
+      ot.innerHTML = '<table class="tbl"><thead><tr><th>Fornitore</th><th style="text-align:right" data-tip="Numero di ordini creati nel mese per questo fornitore">N° ordini</th></tr></thead><tbody>' +
+        sorted.map(([n,c]) => `<tr><td>${esc(n)}</td><td class="mono" style="text-align:right" data-tip="${c} ordine/i creato/i a ${esc(n)} nel mese">${c}</td></tr>`).join('') +
         '</tbody></table>';
     }
   }
@@ -9904,15 +9908,15 @@ window.renderReportAnnuale = function() {
   const amEl = document.getElementById('report-annual-metrics');
   if (amEl) {
     amEl.innerHTML = `
-      <div class="cnt-card"><div class="cnt-lbl">Casi totali</div><div class="cnt-val" style="color:var(--accent)">${yearCamp.length}</div></div>
-      <div class="cnt-card"><div class="cnt-lbl">Istologia</div><div class="cnt-val" style="color:var(--blue)">${istN}</div></div>
-      <div class="cnt-card"><div class="cnt-lbl">Citologia</div><div class="cnt-val" style="color:var(--teal)">${citN}</div></div>
-      <div class="cnt-card"><div class="cnt-lbl">PAP</div><div class="cnt-val" style="color:var(--purple)">${papN}</div></div>
-      <div class="cnt-card"><div class="cnt-lbl">Cicli color.</div><div class="cnt-val" style="color:var(--blue)">${cicliColor}</div></div>
-      ${vetriTot > 0 ? `<div class="cnt-card"><div class="cnt-lbl">Vetrini</div><div class="cnt-val" style="color:var(--text2)">${vetriTot}</div></div>` : ''}
-      <div class="cnt-card"><div class="cnt-lbl">Cicli proc.</div><div class="cnt-val" style="color:var(--orange)">${proc.length}</div></div>
-      <div class="cnt-card"><div class="cnt-lbl">Ordini</div><div class="cnt-val" style="color:var(--accent2)">${ords.length}</div></div>
-      <div class="cnt-card"><div class="cnt-lbl">Movimenti</div><div class="cnt-val" style="color:var(--text2)">${movs.length}</div></div>`;
+      <div class="cnt-card" data-tip="Totale casi elaborati nel mese (istologia + citologia + PAP)"><div class="cnt-lbl">Casi totali</div><div class="cnt-val" style="color:var(--accent)">${yearCamp.length}</div></div>
+      <div class="cnt-card" data-tip="Campioni di tessuto solido: biopsie, pezzi operatori"><div class="cnt-lbl">Istologia</div><div class="cnt-val" style="color:var(--blue)">${istN}</div></div>
+      <div class="cnt-card" data-tip="Campioni liquidi: brushing, agoaspirati, BAL, versamenti"><div class="cnt-lbl">Citologia</div><div class="cnt-val" style="color:var(--teal)">${citN}</div></div>
+      <div class="cnt-card" data-tip="Papanicolau LupoLab su campioni cervico-vaginali"><div class="cnt-lbl">PAP</div><div class="cnt-val" style="color:var(--purple)">${papN}</div></div>
+      <div class="cnt-card" data-tip="Passaggi macchina nel coloratore (EE ist. + EE cit. + PAP)"><div class="cnt-lbl">Cicli color.</div><div class="cnt-val" style="color:var(--blue)">${cicliColor}</div></div>
+      ${vetriTot > 0 ? `<div class="cnt-card" data-tip="Totale vetrini colorati nel mese (ist. + cit. + PAP)"><div class="cnt-lbl">Vetrini</div><div class="cnt-val" style="color:var(--text2)">${vetriTot}</div></div>` : ''}
+      <div class="cnt-card" data-tip="Cicli del processatore tissutale completati nel mese"><div class="cnt-lbl">Cicli proc.</div><div class="cnt-val" style="color:var(--orange)">${proc.length}</div></div>
+      <div class="cnt-card" data-tip="Ordini di magazzino creati nel mese (qualsiasi stato)"><div class="cnt-lbl">Ordini</div><div class="cnt-val" style="color:var(--accent2)">${ords.length}</div></div>
+      <div class="cnt-card" data-tip="Movimenti di magazzino: carichi + scarichi nel mese"><div class="cnt-lbl">Movimenti</div><div class="cnt-val" style="color:var(--text2)">${movs.length}</div></div>`;
   }
 
   // Line chart: 12 mesi
@@ -9968,11 +9972,11 @@ window.renderReportAnnuale = function() {
     tblEl.innerHTML = `<table class="tbl">
       <thead><tr>
         <th>Mese</th>
-        <th style="color:var(--blue);text-align:center">Ist.</th>
-        <th style="color:var(--teal);text-align:center">Cit.</th>
-        <th style="color:#7c3aed;text-align:center">PAP</th>
-        <th style="text-align:center">Tot.</th>
-        <th style="text-align:center">Cicli color.</th>
+        <th style="color:var(--blue);text-align:center" data-tip="Casi di istologia nel mese">Ist.</th>
+        <th style="color:var(--teal);text-align:center" data-tip="Casi di citologia nel mese">Cit.</th>
+        <th style="color:#7c3aed;text-align:center" data-tip="Casi PAP LupoLab nel mese">PAP</th>
+        <th style="text-align:center" data-tip="Totale casi del mese (ist. + cit. + PAP)">Tot.</th>
+        <th style="text-align:center" data-tip="Passaggi macchina nel coloratore: cicli EE ist. + EE cit. + PAP">Cicli color.</th>
       </tr></thead>
       <tbody>${rows}</tbody>
       <tfoot><tr style="font-weight:700;background:var(--bg3)">
@@ -10144,6 +10148,34 @@ if(_origSetCache){
 console.log('[LupoLab AP v5] glue layer ready');
 // Costruisce il datalist prodotti subito dopo il boot
 if (typeof buildProdDatalist === 'function') buildProdDatalist();
+</script>
+<!-- Tooltip universale -->
+<div id="tt"></div>
+<script>
+(function(){
+  const tt = document.getElementById('tt');
+  let _hide;
+  document.addEventListener('mouseover', e => {
+    const el = e.target.closest('[data-tip]');
+    if (!el) return;
+    clearTimeout(_hide);
+    tt.textContent = el.dataset.tip;
+    tt.classList.add('show');
+  });
+  document.addEventListener('mousemove', e => {
+    if (!tt.classList.contains('show')) return;
+    const x = e.clientX, y = e.clientY;
+    const tw = tt.offsetWidth, th = tt.offsetHeight;
+    const vw = window.innerWidth, vh = window.innerHeight;
+    tt.style.left = (x + 14 + tw > vw ? x - tw - 8 : x + 14) + 'px';
+    tt.style.top  = (y + 24 + th > vh ? y - th - 8 : y + 24) + 'px';
+  });
+  document.addEventListener('mouseout', e => {
+    const el = e.target.closest('[data-tip]');
+    if (!el) return;
+    _hide = setTimeout(() => tt.classList.remove('show'), 80);
+  });
+})();
 </script>
 </body>
 </html>
