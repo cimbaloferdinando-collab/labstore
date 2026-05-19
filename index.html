@@ -562,10 +562,26 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
         <div class="kpi-card" onclick="showView('tracciabilita')">
           <div class="kpi-lbl">Casi processati</div>
           <div class="kpi-val" id="kpi-casi-val">—</div>
-          <div style="display:flex;gap:10px;margin-top:6px;font-size:11px;color:var(--text3)" id="kpi-casi-breakdown">
-            <span>Isto <b style="color:var(--accent)" id="kpi-casi-ist">0</b></span>
-            <span>Cito <b style="color:var(--accent)" id="kpi-casi-cit">0</b></span>
-            <span>PAP <b style="color:var(--accent)" id="kpi-casi-pap">0</b></span>
+          <div style="display:flex;flex-direction:column;gap:4px;margin-top:6px" id="kpi-casi-breakdown">
+            <div style="display:flex;align-items:center;gap:6px;font-size:11px">
+              <span style="color:var(--blue);width:28px;flex-shrink:0">Ist.</span>
+              <div style="flex:1;height:4px;background:var(--border);border-radius:99px;overflow:hidden"><div id="kpi-pct-ist-bar" style="height:100%;background:var(--blue);border-radius:99px;width:0%"></div></div>
+              <span style="font-family:'DM Mono',monospace;font-size:10px;color:var(--blue);min-width:32px;text-align:right" id="kpi-pct-ist">0%</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;font-size:11px">
+              <span style="color:var(--teal);width:28px;flex-shrink:0">Cit.</span>
+              <div style="flex:1;height:4px;background:var(--border);border-radius:99px;overflow:hidden"><div id="kpi-pct-cit-bar" style="height:100%;background:var(--teal);border-radius:99px;width:0%"></div></div>
+              <span style="font-family:'DM Mono',monospace;font-size:10px;color:var(--teal);min-width:32px;text-align:right" id="kpi-pct-cit">0%</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;font-size:11px">
+              <span style="color:#a855f7;width:28px;flex-shrink:0">PAP</span>
+              <div style="flex:1;height:4px;background:var(--border);border-radius:99px;overflow:hidden"><div id="kpi-pct-pap-bar" style="height:100%;background:#a855f7;border-radius:99px;width:0%"></div></div>
+              <span style="font-family:'DM Mono',monospace;font-size:10px;color:#a855f7;min-width:32px;text-align:right" id="kpi-pct-pap">0%</span>
+            </div>
+            <!-- legacy ids usati dal glue -->
+            <span id="kpi-casi-ist" style="display:none">0</span>
+            <span id="kpi-casi-cit" style="display:none">0</span>
+            <span id="kpi-casi-pap" style="display:none">0</span>
           </div>
           <div class="kpi-delta up" id="kpi-casi-delta"></div>
         </div>
@@ -665,19 +681,22 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
           </div>
         </div>
 
-        <div class="card">
-          <div class="card-hdr"><span class="card-title">Distribuzione tipi</span><span class="card-sub" id="dash-donut-sub">mese corrente</span></div>
-          <div style="padding:12px 14px;display:flex;align-items:center;gap:16px">
-            <svg id="dash-chart-donut" width="110" height="110" viewBox="0 0 110 110" style="flex-shrink:0"></svg>
-            <div style="font-size:11px;display:flex;flex-direction:column;gap:6px" id="dash-donut-legend"></div>
+        <div class="card" style="grid-column: span 2">
+          <div class="card-hdr">
+            <span class="card-title">Distribuzione &amp; Confronto mensile</span>
+            <span class="card-sub" id="dash-bar-sub">corrente vs precedente</span>
           </div>
-        </div>
-
-        <div class="card">
-          <div class="card-hdr"><span class="card-title">Confronto mensile</span><span class="card-sub" id="dash-bar-sub">corrente vs precedente</span></div>
-          <div style="padding:12px 14px">
-            <svg id="dash-chart-bar" width="100%" viewBox="0 0 280 140" style="overflow:visible"></svg>
-            <div style="display:flex;gap:12px;margin-top:8px;font-size:10px" id="dash-bar-legend"></div>
+          <div style="display:grid;grid-template-columns:140px 1fr;gap:16px;padding:12px 14px;align-items:center">
+            <!-- Donut sinistra -->
+            <div style="display:flex;flex-direction:column;align-items:center;gap:8px">
+              <svg id="dash-chart-donut" width="110" height="110" viewBox="0 0 110 110" style="flex-shrink:0"></svg>
+              <div style="font-size:10px;display:flex;flex-direction:column;gap:4px;width:100%" id="dash-donut-legend"></div>
+            </div>
+            <!-- Bar destra -->
+            <div>
+              <svg id="dash-chart-bar" width="100%" viewBox="0 0 280 140" style="overflow:visible"></svg>
+              <div style="display:flex;gap:12px;margin-top:6px;font-size:10px" id="dash-bar-legend"></div>
+            </div>
           </div>
         </div>
 
@@ -702,11 +721,8 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
         </div>
 
         <div class="card">
-          <div class="card-hdr"><span class="card-title">Ordini per fornitore</span><span class="card-sub" id="dash-vbar-sub">ultimi 6 mesi</span></div>
-          <div style="padding:12px 14px">
-            <svg id="dash-chart-vbar" width="100%" viewBox="0 0 280 140" style="overflow:visible"></svg>
-            <div style="display:flex;gap:10px;margin-top:8px;font-size:10px;flex-wrap:wrap" id="dash-vbar-legend"></div>
-          </div>
+          <div class="card-hdr"><span class="card-title">Top 5 anticorpi IHC</span><span class="card-sub" id="dash-ihc-top-sub"></span></div>
+          <div id="dash-ihc-top-list" style="padding:6px 14px 10px"></div>
         </div>
 
       </div><!-- /grafici magazzino -->
@@ -2697,7 +2713,7 @@ document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==
 const CAT_ICON={Reagenti:'🧪',IHC:'🔬',Vetrini:'🪟',Cassette:'📁',Coloranti:'🎨',Consumabili:'🧤','Kit Colorazioni':'🔬',Lame:'⚔',Altro:'📌'};
 const FORNITORI_PRINCIPALI=['Epredia','Bio Optica','Ventana','Altro'];
 const IHC_SUB={'Consumabili':['EzPrep','LCS','Reaction Buffer','CC1','CC2','Option'],'Kit Rivelazione':['OPT View','Ultra View','Bluing','Hema I','Hema II','Option 1']};
-const SUB_FILTERS={Reagenti:['Alcol 100','Alcool 95','Xilene','Formalina'],IHC:['Anticorpi','Consumabili','Kit Rivelazione'],Vetrini:['24x60','24x50','TOMO','P.O. Giallo','P.O. Blu'],Cassette:['Bianche','Blu'],Coloranti:['EA50','Eosina','Ema. Harris','Ema. Mayer','OG6'],Consumabili:['Guanti L','Guanti M','Guanti S','Cytocuvette'],'Kit Colorazioni':['Giemsa','PAS','Reticolo','Gram','Ziehl','Grocott','Alcian','Masson','Giallo Congo','Van Gieson'],Lame:['A35','HP35','MX35','Forbici'],Altro:['Montante','Paraffina']};
+const SUB_FILTERS={Reagenti:['Alcol 100','Alcool 95','Xilene','Formalina'],IHC:['Anticorpi','Consumabili','Kit Rivelazione'],Vetrini:['24x60','24x50','TOMO','P.O. Giallo','P.O. Bianchi'],Cassette:['Bianche','Blu'],Coloranti:['EA50','Eosina','Ema. Harris','Ema. Mayer','OG6'],Consumabili:['Guanti L','Guanti M','Guanti S','Cytocuvette'],'Kit Colorazioni':['Giemsa','PAS','Reticolo','Gram','Ziehl','Grocott','Alcian','Masson','Giallo Congo','Van Gieson'],Lame:['A35','HP35','MX35','Forbici'],Altro:['Montante','Paraffina']};
 
 // Alias semantici: ogni label del sottofiltro → array di keyword da cercare nel nome prodotto
 // Se il nome contiene ALMENO UNO dei keyword, il prodotto appartiene a quel filtro
@@ -2720,7 +2736,7 @@ const PRODUCT_ALIASES={
   '24x50':        ['24x50','24*50','24 x 50','coprioggetto 24x50','copri oggetto 24x50','24/50'],
   'TOMO':         ['tomo','porta oggetto tomo'],
   'P.O. Giallo':  ['giallo','portaoggetto giallo','porta oggetto giallo','yellow'],
-  'P.O. Blu':     ['blu','portaoggetto blu','porta oggetto blu','blue','azzurro'],
+  'P.O. Bianchi':     ['bianchi','bianco','portaoggetto bianco','portaoggetto bianchi','porta oggetto bianco','white'],
 
   // ── Cassette ──
   'Bianche':      ['bianca','bianche','white','cassette bianche'],
@@ -5000,21 +5016,21 @@ function renderColoratore(){
   };
   // Etichetta casi per riga: usa _labelCasiByTipo (gestisce sia casi reali sia fallback cicli)
   const fmtCasiCell = (reg, tipo) => {
-    if (!_lbl) return '<span style="color:var(--text4)">—</span>';
-    const info = _lbl(reg, tipo);
-    if (info.count === 0) return '<span style="color:var(--text4)">—</span>';
-    if (info.synth) {
-      // Fallback: solo cicli, niente casi specifici
-      return `<div style="line-height:1.3">
-        <div style="color:var(--text3);font-style:italic">${esc(info.label)}</div>
-        <div style="font-size:10px;color:var(--text3)">stimato</div>
-      </div>`;
+    if (!_cnt) return '<span style="color:var(--text4)">—</span>';
+    const count = _cnt(reg, tipo);
+    if (count === 0) return '<span style="color:var(--text4)">—</span>';
+    // Casi reali: mostra conteggio in evidenza + range sotto
+    const realCasi = _extr ? _extr(reg, tipo) : [];
+    const isSynth = realCasi.length === 0;
+    if (isSynth) {
+      return `<span style="font-family:'DM Mono',monospace;font-weight:700;color:var(--text3);font-style:italic">${count}</span>`;
     }
-    // Casi reali
-    if (info.count === 1) return `<span style="color:var(--text2)">${esc(info.label)}</span>`;
-    return `<div style="line-height:1.3">
-      <div style="color:var(--text2)">${esc(info.label.split(' (')[0])}</div>
-      <div style="font-size:10px;color:var(--text3)">${info.count} casi</div>
+    // Casi reali: numero grande + range sotto
+    const first = realCasi[0], last = realCasi[realCasi.length-1];
+    const rangeLabel = realCasi.length === 1 ? esc(first) : `${esc(first.split('/')[0])}→${esc(last.split('/')[0])}`;
+    return `<div style="line-height:1.2">
+      <span style="font-family:'DM Mono',monospace;font-weight:700;font-size:13px">${count}</span>
+      <div style="font-size:9px;color:var(--text3)">${rangeLabel}</div>
     </div>`;
   };
 
@@ -8460,6 +8476,18 @@ function renderDashboardPreview(){
       set('kpi-casi-ist', cIst);
       set('kpi-casi-cit', cCit);
       set('kpi-casi-pap', cPap);
+      // Percentuali con barre
+      const tot = monthCamps.length || 1;
+      const pIst = Math.round(cIst/tot*100);
+      const pCit = Math.round(cCit/tot*100);
+      const pPap = Math.round(cPap/tot*100);
+      set('kpi-pct-ist', pIst + '%');
+      set('kpi-pct-cit', pCit + '%');
+      set('kpi-pct-pap', pPap + '%');
+      ['ist','cit','pap'].forEach(t => {
+        const bar = document.getElementById('kpi-pct-'+t+'-bar');
+        if (bar) bar.style.width = ({ist:pIst,cit:pCit,pap:pPap}[t]) + '%';
+      });
       // delta vs mese precedente
       const prevMs = new Date(now.getFullYear(), now.getMonth()-1, 1);
       const prev = camps.filter(c => c.data && new Date(c.data) >= prevMs && new Date(c.data) < ms);
@@ -8522,7 +8550,7 @@ function renderDashboardPreview(){
           const order = {parziale:0, inviato:1, approvato:2, bozza:3};
           ords.sort((a,b) => (order[a.stato]||9) - (order[b.stato]||9));
           list.innerHTML = ords.slice(0,3).map(o => {
-            const tot = (o.righe||[]).reduce((s,r) => s + (parseFloat(r.qta)||0), 0);
+            const tot = (o.righe||[]).reduce((s,r) => s + (parseFloat(r.qty||r.qta)||0), 0);
             const ric = (o.righe||[]).reduce((s,r) => s + (parseFloat(r.qtyRicevuta)||0), 0);
             const pct = tot > 0 ? Math.round(ric/tot*100) : 0;
             const nP = (o.righe||[]).length;
@@ -8559,6 +8587,47 @@ function renderDashboardPreview(){
       }
     }
   } catch(e) { console.warn('[KPI IHC]', e); }
+
+  // ─── Top 5 anticorpi IHC (dashboard card) ───
+  try {
+    if (typeof loadIHC === 'function') {
+      const ihcAll = loadIHC();
+      const el = document.getElementById('dash-ihc-top-list');
+      const sub = document.getElementById('dash-ihc-top-sub');
+      if (el) {
+        if (sub) sub.textContent = ihcAll.length + ' richieste totali';
+        if (!ihcAll.length) {
+          el.innerHTML = '<div style="padding:8px 0;color:var(--text3);font-size:11px;font-style:italic;text-align:center">Nessuna richiesta IHC</div>';
+        } else {
+          const counts = {};
+          ihcAll.forEach(r => {
+            (r.anticorpo||'').split(/[,\n]+/).map(s=>s.trim()).filter(Boolean).forEach(ab => {
+              const k = ab.toUpperCase().trim();
+              if (!counts[k]) counts[k] = {label:ab.trim(), tot:0, done:0};
+              counts[k].tot++;
+              if ((r.anticorpi_done||[]).includes(ab.trim())) counts[k].done++;
+            });
+          });
+          const top5 = Object.values(counts).sort((a,b)=>b.tot-a.tot).slice(0,5);
+          const max = top5[0]?.tot || 1;
+          el.innerHTML = top5.map((ab,i) => {
+            const pct = Math.round(ab.tot/max*100);
+            const donePct = ab.tot>0 ? Math.round(ab.done/ab.tot*100) : 0;
+            const medal = i===0?'🥇':i===1?'🥈':i===2?'🥉':'';
+            return `<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--border-faint)">
+              <span style="width:18px;text-align:center;font-size:11px">${medal||'<span style="color:var(--text3);font-size:10px">'+(i+1)+'</span>'}</span>
+              <span style="flex:1;font-size:11px;font-weight:600;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(ab.label)}</span>
+              <div style="width:50px;height:4px;background:var(--border);border-radius:99px;overflow:hidden;flex-shrink:0">
+                <div style="width:${pct}%;height:100%;background:var(--blue);border-radius:99px"></div>
+              </div>
+              <span style="font-family:'DM Mono',monospace;font-size:11px;font-weight:700;color:var(--blue);min-width:22px;text-align:right">${ab.tot}</span>
+              <span style="font-size:9px;color:var(--text3);min-width:28px;text-align:right">${donePct}%✓</span>
+            </div>`;
+          }).join('');
+        }
+      }
+    }
+  } catch(e) { console.warn('[dash IHC top]', e); }
 
   // ─── Subtitle dinamico ───
   try {
@@ -9765,6 +9834,21 @@ document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('.rail-item[data-view]').forEach(item => {
     item.addEventListener('click', () => _railClick(item));
   });
+
+  // 5.4 Migrazione: rinomina "P.O. Blu" → "P.O. Bianchi" e riclassifica vetrini bianchi
+  try {
+    const prods = loadP();
+    let changed = false;
+    prods.forEach(p => {
+      if ((p.subcat||'') === 'P.O. Blu') { p.subcat = 'P.O. Bianchi'; changed = true; }
+      const n = (p.nome||'').toLowerCase();
+      const isPO = n.includes('portaoggetto') || n.includes('porta oggetto') ||
+                   n.includes('p.o.') || n.includes('vetrini') || n.includes('vetrino');
+      const isWhite = n.includes('bianco') || n.includes('bianchi') || n.includes('white');
+      if (isPO && isWhite && p.cat !== 'Vetrini') { p.cat = 'Vetrini'; changed = true; }
+    });
+    if (changed) { _setCache('ls_products', prods); localStorage.setItem('ls_products', JSON.stringify(prods)); }
+  } catch(e) { console.warn('[migrate PO Bianchi]', e); }
 
   // 5.5 Migrazione bidoni (reagenti/coloranti esistenti → bidoni chiusi)
   try {
