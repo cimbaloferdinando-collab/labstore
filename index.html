@@ -562,21 +562,27 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
         <div class="kpi-card" onclick="showView('tracciabilita')">
           <div class="kpi-lbl">Casi processati</div>
           <div class="kpi-val" id="kpi-casi-val">—</div>
-          <div style="display:flex;flex-direction:column;gap:4px;margin-top:6px" id="kpi-casi-breakdown">
-            <div style="display:flex;align-items:center;gap:6px;font-size:11px">
+          <div style="display:flex;flex-direction:column;gap:5px;margin-top:6px" id="kpi-casi-breakdown">
+            <div style="display:flex;align-items:center;gap:5px;font-size:11px">
               <span style="color:var(--blue);width:28px;flex-shrink:0">Ist.</span>
               <div style="flex:1;height:4px;background:var(--border);border-radius:99px;overflow:hidden"><div id="kpi-pct-ist-bar" style="height:100%;background:var(--blue);border-radius:99px;width:0%"></div></div>
-              <span style="font-family:'DM Mono',monospace;font-size:10px;color:var(--blue);min-width:32px;text-align:right" id="kpi-pct-ist">0%</span>
+              <span style="font-family:'DM Mono',monospace;font-size:10px;color:var(--blue);min-width:26px;text-align:right" id="kpi-pct-ist">0%</span>
+              <span style="font-family:'DM Mono',monospace;font-size:10px;color:var(--text3);min-width:22px;text-align:right" id="kpi-n-ist">0</span>
+              <span style="font-size:9px;min-width:30px;text-align:right" id="kpi-delta-ist"></span>
             </div>
-            <div style="display:flex;align-items:center;gap:6px;font-size:11px">
+            <div style="display:flex;align-items:center;gap:5px;font-size:11px">
               <span style="color:var(--teal);width:28px;flex-shrink:0">Cit.</span>
               <div style="flex:1;height:4px;background:var(--border);border-radius:99px;overflow:hidden"><div id="kpi-pct-cit-bar" style="height:100%;background:var(--teal);border-radius:99px;width:0%"></div></div>
-              <span style="font-family:'DM Mono',monospace;font-size:10px;color:var(--teal);min-width:32px;text-align:right" id="kpi-pct-cit">0%</span>
+              <span style="font-family:'DM Mono',monospace;font-size:10px;color:var(--teal);min-width:26px;text-align:right" id="kpi-pct-cit">0%</span>
+              <span style="font-family:'DM Mono',monospace;font-size:10px;color:var(--text3);min-width:22px;text-align:right" id="kpi-n-cit">0</span>
+              <span style="font-size:9px;min-width:30px;text-align:right" id="kpi-delta-cit"></span>
             </div>
-            <div style="display:flex;align-items:center;gap:6px;font-size:11px">
+            <div style="display:flex;align-items:center;gap:5px;font-size:11px">
               <span style="color:#a855f7;width:28px;flex-shrink:0">PAP</span>
               <div style="flex:1;height:4px;background:var(--border);border-radius:99px;overflow:hidden"><div id="kpi-pct-pap-bar" style="height:100%;background:#a855f7;border-radius:99px;width:0%"></div></div>
-              <span style="font-family:'DM Mono',monospace;font-size:10px;color:#a855f7;min-width:32px;text-align:right" id="kpi-pct-pap">0%</span>
+              <span style="font-family:'DM Mono',monospace;font-size:10px;color:#a855f7;min-width:26px;text-align:right" id="kpi-pct-pap">0%</span>
+              <span style="font-family:'DM Mono',monospace;font-size:10px;color:var(--text3);min-width:22px;text-align:right" id="kpi-n-pap">0</span>
+              <span style="font-size:9px;min-width:30px;text-align:right" id="kpi-delta-pap"></span>
             </div>
             <!-- legacy ids usati dal glue -->
             <span id="kpi-casi-ist" style="display:none">0</span>
@@ -686,10 +692,10 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
             <span class="card-title">Distribuzione &amp; Confronto mensile</span>
             <span class="card-sub" id="dash-bar-sub">corrente vs precedente</span>
           </div>
-          <div style="display:grid;grid-template-columns:140px 1fr;gap:16px;padding:12px 14px;align-items:center">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:12px 14px;align-items:center">
             <!-- Donut sinistra -->
             <div style="display:flex;flex-direction:column;align-items:center;gap:8px">
-              <svg id="dash-chart-donut" width="110" height="110" viewBox="0 0 110 110" style="flex-shrink:0"></svg>
+              <svg id="dash-chart-donut" width="100%" viewBox="0 0 280 140" style="overflow:visible"></svg>
               <div style="font-size:10px;display:flex;flex-direction:column;gap:4px;width:100%" id="dash-donut-legend"></div>
             </div>
             <!-- Bar destra -->
@@ -1240,10 +1246,8 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
         </div>
       </div>
 
-      <!-- riepilogo metriche -->
+      <!-- REPORT MENSILE -->
       <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:20px" id="report-metrics"></div>
-
-      <!-- tabelle side-by-side -->
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
         <div class="card">
           <div class="card-hdr"><span class="card-title">Consumo reagenti principali</span><span class="card-sub" id="report-consumo-sub"></span></div>
@@ -1254,10 +1258,8 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
           <div id="report-ord-tbl"></div>
         </div>
       </div>
-
-      <!-- andamento campioni line chart -->
-      <div class="card">
-        <div class="card-hdr"><span class="card-title">Andamento mensile campioni</span><span class="card-sub" id="report-line-sub"></span></div>
+      <div class="card" style="margin-bottom:32px">
+        <div class="card-hdr"><span class="card-title">Andamento campioni nel mese</span><span class="card-sub" id="report-line-sub"></span></div>
         <div style="padding:12px 16px">
           <svg id="report-line" width="100%" viewBox="0 0 600 100" style="overflow:visible"></svg>
           <div style="display:flex;gap:16px;margin-top:8px;font-size:10px">
@@ -1267,6 +1269,36 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
           </div>
         </div>
       </div>
+
+      <!-- DIVISORE -->
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+        <div style="font-family:'Libre Baskerville',serif;font-size:16px;font-weight:700;color:var(--accent)">Report Annuale</div>
+        <div style="flex:1;height:1px;background:var(--border)"></div>
+        <select class="search-inp" style="width:auto;padding:6px 10px" id="report-year-sel" onchange="renderReportAnnuale()"></select>
+      </div>
+
+      <!-- KPI annuali -->
+      <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-bottom:16px" id="report-annual-metrics"></div>
+
+      <!-- Line chart annuale (mese per mese) -->
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-hdr"><span class="card-title">Andamento annuale campioni</span><span class="card-sub" id="report-annual-line-sub"></span></div>
+        <div style="padding:12px 16px">
+          <svg id="report-annual-line" width="100%" viewBox="0 0 600 120" style="overflow:visible"></svg>
+          <div style="display:flex;gap:16px;margin-top:8px;font-size:10px">
+            <span class="leg-item"><span class="leg-dot" style="background:#2563eb"></span>Istologia</span>
+            <span class="leg-item"><span class="leg-dot" style="background:#0891b2"></span>Citologia</span>
+            <span class="leg-item"><span class="leg-dot" style="background:#7c3aed"></span>PAP</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tabella mensile riassuntiva dell'anno -->
+      <div class="card">
+        <div class="card-hdr"><span class="card-title">Riepilogo mensile</span></div>
+        <div style="overflow-x:auto" id="report-annual-table"></div>
+      </div>
+
     </div><!-- /view-report -->
 
     <!-- ════════════════════════════════════════════════════════════════
@@ -7632,7 +7664,7 @@ function renderDashAnalytics(){
   const mixTot=Object.values(mixCur).reduce((s,v)=>s+v,0);
   const donutSvg=document.getElementById('dash-chart-donut');
   if(donutSvg){
-    const cx=55,cy=55,r=38,inner=24;
+    const W=280,H=140,cx=75,cy=70,r=52,inner=30;
     if(mixTot===0){
       donutSvg.innerHTML='<circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="none" stroke="var(--border-faint)" stroke-width="'+(r-inner)+'"/><text x="'+cx+'" y="'+(cy+4)+'" text-anchor="middle" font-size="11" fill="var(--text3)" font-family="DM Mono,monospace">—</text>';
     } else {
@@ -7646,18 +7678,22 @@ function renderDashAnalytics(){
         const xi0=cx+inner*Math.cos(a0), yi0=cy+inner*Math.sin(a0);
         return '<path d="M '+x0.toFixed(2)+' '+y0.toFixed(2)+' A '+r+' '+r+' 0 '+large+' 1 '+x1.toFixed(2)+' '+y1.toFixed(2)+' L '+xi1.toFixed(2)+' '+yi1.toFixed(2)+' A '+inner+' '+inner+' 0 '+large+' 0 '+xi0.toFixed(2)+' '+yi0.toFixed(2)+' Z" fill="'+mixCols[lbl]+'"/>';
       }).join('');
+      // Legenda a destra nel SVG
+      const legendEntries = Object.entries(mixCur).map(([lbl,v],i)=>{
+        const pct = Math.round(v/mixTot*100);
+        const y = 35 + i*32;
+        return `<rect x="165" y="${y}" width="10" height="10" rx="2" fill="${mixCols[lbl]}"/>` +
+               `<text x="179" y="${y+9}" font-size="11" fill="var(--text2)" font-family="DM Sans,sans-serif">${esc(lbl)}</text>` +
+               `<text x="270" y="${y+9}" text-anchor="end" font-size="11" font-family="DM Mono,monospace" fill="${mixCols[lbl]}" font-weight="700">${v} <tspan fill="var(--text3)" font-size="9">${pct}%</tspan></text>`;
+      }).join('');
       donutSvg.innerHTML=arcs+
-        '<text x="'+cx+'" y="'+(cy-2)+'" text-anchor="middle" font-size="16" font-weight="700" fill="var(--text)" font-family="Cormorant Garamond,serif">'+mixTot+'</text>'+
-        '<text x="'+cx+'" y="'+(cy+10)+'" text-anchor="middle" font-size="7" fill="var(--text3)" font-family="DM Mono,monospace" letter-spacing=".5">CAMPIONI</text>';
+        '<text x="'+cx+'" y="'+(cy-6)+'" text-anchor="middle" font-size="22" font-weight="700" fill="var(--text)" font-family="Cormorant Garamond,serif">'+mixTot+'</text>'+
+        '<text x="'+cx+'" y="'+(cy+10)+'" text-anchor="middle" font-size="8" fill="var(--text3)" font-family="DM Mono,monospace" letter-spacing=".5">CASI</text>'+
+        legendEntries;
     }
   }
   const donutLeg=document.getElementById('dash-donut-legend');
-  if(donutLeg){
-    donutLeg.innerHTML=Object.entries(mixCur).map(([lbl,v])=>{
-      const pct=mixTot>0?Math.round(v/mixTot*100):0;
-      return '<div style="display:flex;align-items:center;gap:6px"><span style="width:8px;height:8px;border-radius:2px;background:'+mixCols[lbl]+';flex-shrink:0"></span><span style="flex:1;color:var(--text2)">'+esc(lbl)+'</span><span style="font-family:DM Mono,monospace;color:var(--text3);font-size:10px">'+v+' · '+pct+'%</span></div>';
-    }).join('');
-  }
+  if(donutLeg) donutLeg.innerHTML=''; // legenda ora dentro SVG
 
   // ── 3. BAR — Confronto mese vs precedente per tipologia ──
   const barSvg=document.getElementById('dash-chart-bar');
@@ -8476,6 +8512,10 @@ function renderDashboardPreview(){
       set('kpi-casi-ist', cIst);
       set('kpi-casi-cit', cCit);
       set('kpi-casi-pap', cPap);
+      // Numero effettivo per tipo
+      set('kpi-n-ist', cIst);
+      set('kpi-n-cit', cCit);
+      set('kpi-n-pap', cPap);
       // Percentuali con barre
       const tot = monthCamps.length || 1;
       const pIst = Math.round(cIst/tot*100);
@@ -8488,13 +8528,29 @@ function renderDashboardPreview(){
         const bar = document.getElementById('kpi-pct-'+t+'-bar');
         if (bar) bar.style.width = ({ist:pIst,cit:pCit,pap:pPap}[t]) + '%';
       });
-      // delta vs mese precedente
+      // Delta per tipo vs mese precedente
       const prevMs = new Date(now.getFullYear(), now.getMonth()-1, 1);
-      const prev = camps.filter(c => c.data && new Date(c.data) >= prevMs && new Date(c.data) < ms);
+      const prevCamps = camps.filter(c => c.data && new Date(c.data) >= prevMs && new Date(c.data) < ms);
+      const tlD = t => (t||'').toLowerCase();
+      const pIstPrev = prevCamps.filter(c => tlD(c.tipo) === 'istologia').length;
+      const pCitPrev = prevCamps.filter(c => tlD(c.tipo) === 'citologia').length;
+      const pPapPrev = prevCamps.filter(c => tlD(c.tipo).includes('pap')).length;
+      const fmtDelta = (cur, prev) => {
+        if (!prev) return '';
+        const d = cur - prev;
+        const pct = Math.round(d/prev*100);
+        if (d > 0) return `<span style="color:var(--green)">↑${pct}%</span>`;
+        if (d < 0) return `<span style="color:var(--red)">↓${Math.abs(pct)}%</span>`;
+        return `<span style="color:var(--text3)">→</span>`;
+      };
+      const dIst = document.getElementById('kpi-delta-ist'); if(dIst) dIst.innerHTML = fmtDelta(cIst, pIstPrev);
+      const dCit = document.getElementById('kpi-delta-cit'); if(dCit) dCit.innerHTML = fmtDelta(cCit, pCitPrev);
+      const dPap = document.getElementById('kpi-delta-pap'); if(dPap) dPap.innerHTML = fmtDelta(cPap, pPapPrev);
+      // delta totale vs mese precedente
       const delta = document.getElementById('kpi-casi-delta');
       if (delta) {
-        if (prev.length > 0) {
-          const pct = Math.round((monthCamps.length - prev.length) / prev.length * 100);
+        if (prevCamps.length > 0) {
+          const pct = Math.round((monthCamps.length - prevCamps.length) / prevCamps.length * 100);
           if (pct > 0) { delta.className = 'kpi-delta up'; delta.textContent = '↑ +' + pct + '% vs mese scorso'; }
           else if (pct < 0) { delta.className = 'kpi-delta down'; delta.textContent = '↓ ' + pct + '% vs mese scorso'; }
           else { delta.className = 'kpi-delta'; delta.textContent = '= invariato'; }
@@ -9812,7 +9868,134 @@ window.renderReport = function(){
 };
 
 
-/* ─── DOMContentLoaded init finale ─── */
+/* ─── Report Annuale ─── */
+window.renderReportAnnuale = function() {
+  // Popola selettore anni
+  const selA = document.getElementById('report-year-sel');
+  if (selA) {
+    const years = new Set();
+    const now = new Date();
+    years.add(String(now.getFullYear()));
+    if (typeof loadColoratore === 'function') loadColoratore().forEach(r => { if(r.data) years.add(r.data.slice(0,4)); });
+    if (typeof loadProc === 'function') loadProc().forEach(r => { if(r.data) years.add(r.data.slice(0,4)); });
+    const sorted = [...years].sort().reverse();
+    const curVal = selA.value || String(now.getFullYear());
+    selA.innerHTML = sorted.map(y => `<option value="${y}" ${y===curVal?'selected':''}>${y}</option>`).join('');
+    if (!selA.value) selA.value = sorted[0];
+  }
+  const year = parseInt((selA?.value) || new Date().getFullYear());
+
+  // Dati anno
+  const allCamp = (typeof _derivedCampioni === 'function') ? _derivedCampioni() : [];
+  const yearCamp = allCamp.filter(c => c.data && c.data.startsWith(String(year)));
+  const proc  = (typeof loadProc === 'function') ? loadProc().filter(r => r.data && r.data.startsWith(String(year))) : [];
+  const color = (typeof loadColoratore === 'function') ? loadColoratore().filter(r => r.data && r.data.startsWith(String(year))) : [];
+  const movs  = (typeof loadM === 'function') ? loadM().filter(m => m.ts && m.ts.startsWith(String(year))) : [];
+  const ords  = (typeof loadOrd === 'function') ? loadOrd().filter(o => (o.data||o.creato||'').startsWith(String(year))) : [];
+
+  const tlA = t => (t||'').toLowerCase();
+  const istN = yearCamp.filter(c => tlA(c.tipo) === 'istologia').length;
+  const citN = yearCamp.filter(c => tlA(c.tipo) === 'citologia').length;
+  const papN = yearCamp.filter(c => tlA(c.tipo) === 'pap').length;
+  const cicliColor = color.reduce((s,r) => s + (r.cicli_ee||0) + (r.cicli_ee_cit||0) + (r.cicli_pap||0), 0);
+  const vetriTot   = color.reduce((s,r) => s + (r.vetri_ist||0) + (r.vetri_cit||0) + (r.vetri_pap||0), 0);
+
+  // KPI annuali
+  const amEl = document.getElementById('report-annual-metrics');
+  if (amEl) {
+    amEl.innerHTML = `
+      <div class="cnt-card"><div class="cnt-lbl">Casi totali</div><div class="cnt-val" style="color:var(--accent)">${yearCamp.length}</div></div>
+      <div class="cnt-card"><div class="cnt-lbl">Istologia</div><div class="cnt-val" style="color:var(--blue)">${istN}</div></div>
+      <div class="cnt-card"><div class="cnt-lbl">Citologia</div><div class="cnt-val" style="color:var(--teal)">${citN}</div></div>
+      <div class="cnt-card"><div class="cnt-lbl">PAP</div><div class="cnt-val" style="color:var(--purple)">${papN}</div></div>
+      <div class="cnt-card"><div class="cnt-lbl">Cicli color.</div><div class="cnt-val" style="color:var(--blue)">${cicliColor}</div></div>
+      ${vetriTot > 0 ? `<div class="cnt-card"><div class="cnt-lbl">Vetrini</div><div class="cnt-val" style="color:var(--text2)">${vetriTot}</div></div>` : ''}
+      <div class="cnt-card"><div class="cnt-lbl">Cicli proc.</div><div class="cnt-val" style="color:var(--orange)">${proc.length}</div></div>
+      <div class="cnt-card"><div class="cnt-lbl">Ordini</div><div class="cnt-val" style="color:var(--accent2)">${ords.length}</div></div>
+      <div class="cnt-card"><div class="cnt-lbl">Movimenti</div><div class="cnt-val" style="color:var(--text2)">${movs.length}</div></div>`;
+  }
+
+  // Line chart: 12 mesi
+  const MONTHS = ['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'];
+  const data = { ist:[], cit:[], pap:[] };
+  for (let m = 0; m < 12; m++) {
+    const ym = String(year) + '-' + String(m+1).padStart(2,'0');
+    data.ist.push(yearCamp.filter(c => (c.data||'').startsWith(ym) && tlA(c.tipo) === 'istologia').length);
+    data.cit.push(yearCamp.filter(c => (c.data||'').startsWith(ym) && tlA(c.tipo) === 'citologia').length);
+    data.pap.push(yearCamp.filter(c => (c.data||'').startsWith(ym) && tlA(c.tipo) === 'pap').length);
+  }
+  const svgEl = document.getElementById('report-annual-line');
+  if (svgEl) {
+    const W=600,H=120,pad={t:10,r:10,b:18,l:28};
+    const maxV = Math.max(1, ...data.ist, ...data.cit, ...data.pap);
+    const xStep = (W-pad.l-pad.r)/11;
+    const yScale = v => pad.t + (H-pad.t-pad.b)*(1-v/maxV);
+    const path = arr => arr.map((v,i) => (i?'L':'M')+(pad.l+i*xStep).toFixed(1)+' '+yScale(v).toFixed(1)).join(' ');
+    const grid = [0,.5,1].map(t => { const yy=pad.t+t*(H-pad.t-pad.b); return `<line x1="${pad.l}" x2="${W-pad.r}" y1="${yy}" y2="${yy}" stroke="var(--border-faint)" stroke-width=".5"/>`; }).join('');
+    const xLbls = MONTHS.map((m,i) => `<text x="${(pad.l+i*xStep).toFixed(1)}" y="${H}" text-anchor="middle" font-size="8" fill="var(--text3)" font-family="DM Mono,monospace">${m}</text>`).join('');
+    svgEl.setAttribute('viewBox', `0 0 ${W} ${H}`);
+    svgEl.innerHTML = grid + xLbls +
+      `<path d="${path(data.ist)}" fill="none" stroke="#2563eb" stroke-width="1.8"/>` +
+      `<path d="${path(data.cit)}" fill="none" stroke="#0891b2" stroke-width="1.8"/>` +
+      `<path d="${path(data.pap)}" fill="none" stroke="#7c3aed" stroke-width="1.8"/>` +
+      data.ist.map((v,i)=>v>0?`<circle cx="${(pad.l+i*xStep).toFixed(1)}" cy="${yScale(v).toFixed(1)}" r="2.5" fill="#2563eb"/>`:'').join('') +
+      data.cit.map((v,i)=>v>0?`<circle cx="${(pad.l+i*xStep).toFixed(1)}" cy="${yScale(v).toFixed(1)}" r="2.5" fill="#0891b2"/>`:'').join('') +
+      data.pap.map((v,i)=>v>0?`<circle cx="${(pad.l+i*xStep).toFixed(1)}" cy="${yScale(v).toFixed(1)}" r="2.5" fill="#7c3aed"/>`:'').join('');
+    const sub = document.getElementById('report-annual-line-sub');
+    if (sub) sub.textContent = String(year);
+  }
+
+  // Tabella riepilogo mensile
+  const tblEl = document.getElementById('report-annual-table');
+  if (tblEl) {
+    const tot_row = [0,0,0,0,0];
+    const rows = MONTHS.map((m,i) => {
+      const ym = String(year) + '-' + String(i+1).padStart(2,'0');
+      const ist = data.ist[i], cit = data.cit[i], pap = data.pap[i];
+      const tot = ist+cit+pap;
+      tot_row[0]+=ist; tot_row[1]+=cit; tot_row[2]+=pap; tot_row[3]+=tot;
+      const cicliM = color.filter(r=>r.data&&r.data.startsWith(ym)).reduce((s,r)=>s+(r.cicli_ee||0)+(r.cicli_ee_cit||0)+(r.cicli_pap||0),0);
+      tot_row[4]+=cicliM;
+      return `<tr ${tot===0?'style="color:var(--text3)"':''}>
+        <td style="font-weight:600">${m}</td>
+        <td class="mono" style="text-align:center;color:${ist>0?'var(--blue)':'var(--text4)'}">${ist||'—'}</td>
+        <td class="mono" style="text-align:center;color:${cit>0?'var(--teal)':'var(--text4)'}">${cit||'—'}</td>
+        <td class="mono" style="text-align:center;color:${pap>0?'#7c3aed':'var(--text4)'}">${pap||'—'}</td>
+        <td class="mono" style="text-align:center;font-weight:700">${tot||'—'}</td>
+        <td class="mono" style="text-align:center;color:var(--text3)">${cicliM||'—'}</td>
+      </tr>`;
+    }).join('');
+    tblEl.innerHTML = `<table class="tbl">
+      <thead><tr>
+        <th>Mese</th>
+        <th style="color:var(--blue);text-align:center">Ist.</th>
+        <th style="color:var(--teal);text-align:center">Cit.</th>
+        <th style="color:#7c3aed;text-align:center">PAP</th>
+        <th style="text-align:center">Tot.</th>
+        <th style="text-align:center">Cicli color.</th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+      <tfoot><tr style="font-weight:700;background:var(--bg3)">
+        <td>Totale</td>
+        <td class="mono" style="text-align:center;color:var(--blue)">${tot_row[0]}</td>
+        <td class="mono" style="text-align:center;color:var(--teal)">${tot_row[1]}</td>
+        <td class="mono" style="text-align:center;color:#7c3aed">${tot_row[2]}</td>
+        <td class="mono" style="text-align:center">${tot_row[3]}</td>
+        <td class="mono" style="text-align:center;color:var(--text3)">${tot_row[4]}</td>
+      </tr></tfoot>
+    </table>`;
+  }
+};
+
+// Chiama renderReportAnnuale quando si apre la view report
+const _origRenderReport_wrap = (typeof window.renderReport === 'function') ? window.renderReport : null;
+if (_origRenderReport_wrap) {
+  window.renderReport = function() {
+    _origRenderReport_wrap();
+    try { renderReportAnnuale(); } catch(e) { console.warn('[renderReportAnnuale]', e); }
+  };
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   // 1. Orologio header
   updateClock();
@@ -9834,6 +10017,17 @@ document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('.rail-item[data-view]').forEach(item => {
     item.addEventListener('click', () => _railClick(item));
   });
+
+  // 5.3 Elimina ordini di test A-F1 e B-F2
+  try {
+    const ords = loadOrd();
+    const filtered = ords.filter(o => o.num !== 'A-F1' && o.num !== 'B-F2');
+    if (filtered.length !== ords.length) {
+      _setCache('ls_ordini', filtered);
+      localStorage.setItem('ls_ordini', JSON.stringify(filtered));
+      console.log('[migrate] rimossi ordini test A-F1/B-F2');
+    }
+  } catch(e) { console.warn('[migrate ordini test]', e); }
 
   // 5.4 Migrazione: rinomina "P.O. Blu" → "P.O. Bianchi" e riclassifica vetrini bianchi
   try {
