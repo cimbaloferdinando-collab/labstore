@@ -573,24 +573,20 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
         <!-- 2. RIFIUTI ATTIVI -->
         <div class="kpi-card" onclick="showView('rifiuti')">
           <div class="kpi-lbl">Rifiuti attivi</div>
-          <!-- solidi / liquidi affiancati -->
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:7px;margin-bottom:8px">
             <div style="background:var(--surface2,#f8fafc);border:1px solid var(--border);border-radius:6px;padding:6px 8px">
-              <div style="font-size:8px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin-bottom:4px">Solidi</div>
+              <div style="font-size:8px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin-bottom:4px">Pieni</div>
               <div style="display:flex;gap:6px;align-items:baseline">
-                <span style="font-family:'DM Mono',monospace;font-size:16px;font-weight:700;color:var(--orange)" id="rif-sol-p">0</span><span style="font-size:9px;color:var(--text3)">pieni</span>
-                <span style="font-family:'DM Mono',monospace;font-size:13px;color:var(--text3);margin-left:2px" id="rif-sol-v">0</span><span style="font-size:9px;color:var(--text3)">vuoti</span>
+                <span style="font-family:'DM Mono',monospace;font-size:20px;font-weight:700;color:var(--orange)" id="rif-sol-p">0</span><span style="font-size:9px;color:var(--text3)">bidoni</span>
               </div>
             </div>
             <div style="background:var(--surface2,#f8fafc);border:1px solid var(--border);border-radius:6px;padding:6px 8px">
-              <div style="font-size:8px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin-bottom:4px">Liquidi</div>
+              <div style="font-size:8px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin-bottom:4px">Vuoti</div>
               <div style="display:flex;gap:6px;align-items:baseline">
-                <span style="font-family:'DM Mono',monospace;font-size:16px;font-weight:700;color:var(--blue)" id="rif-liq-p">0</span><span style="font-size:9px;color:var(--text3)">piene</span>
-                <span style="font-family:'DM Mono',monospace;font-size:13px;color:var(--text3);margin-left:2px" id="rif-liq-v">0</span><span style="font-size:9px;color:var(--text3)">vuote</span>
+                <span style="font-family:'DM Mono',monospace;font-size:20px;font-weight:700;color:var(--green)" id="rif-sol-v">0</span><span style="font-size:9px;color:var(--text3)">disp.</span>
               </div>
             </div>
           </div>
-          <!-- per-CER list -->
           <div style="display:flex;flex-direction:column;gap:3px" id="rif-cer-mini"></div>
         </div>
 
@@ -783,12 +779,13 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
         </div>
       </div>
 
-      <!-- mini KPI (4 cards) -->
-      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px" id="proc-mini-stats">
+      <!-- mini KPI (5 cards) -->
+      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:14px" id="proc-mini-stats">
         <div class="cnt-card"><div class="cnt-lbl">Cicli mese</div><div class="cnt-val" style="color:var(--blue)" id="proc-s-cicli">0</div></div>
-        <div class="cnt-card"><div class="cnt-lbl">Cassette tot.</div><div class="cnt-val" style="color:var(--accent)" id="proc-s-cass">0</div></div>
-        <div class="cnt-card"><div class="cnt-lbl">Anomalie mese</div><div class="cnt-val" style="color:var(--yellow)" id="proc-s-ano">0</div></div>
-        <div class="cnt-card"><div class="cnt-lbl">Ultimo</div><div class="cnt-val" style="color:var(--green);font-size:14px;line-height:1.4" id="proc-s-ultimo">—</div></div>
+        <div class="cnt-card"><div class="cnt-lbl">Casi processati</div><div class="cnt-val" style="color:var(--accent)" id="proc-s-casi">0</div></div>
+        <div class="cnt-card"><div class="cnt-lbl">Biocassette</div><div class="cnt-val" style="color:var(--orange)" id="proc-s-bio">0</div></div>
+        <div class="cnt-card"><div class="cnt-lbl">Cassette/caso</div><div class="cnt-val" style="color:var(--teal);font-size:18px" id="proc-s-ratio">—</div></div>
+        <div class="cnt-card"><div class="cnt-lbl">Ultimo ciclo</div><div class="cnt-val" style="color:var(--green);font-size:14px;line-height:1.4" id="proc-s-ultimo">—</div></div>
       </div>
 
       <!-- Lista cicli: il logic file usa proc-list (innerHTML pieno con tabella), io tengo una vista alternativa con tabella espandibile -->
@@ -899,6 +896,15 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
             <input type="text" class="search-inp" id="ihc-search" placeholder="Cerca campione, patologo, anticorpo…" oninput="renderIHC()">
           </div>
         </div>
+      </div>
+
+      <!-- Top 10 anticorpi più usati -->
+      <div class="card" style="margin-bottom:14px">
+        <div class="card-hdr">
+          <span class="card-title">🏆 Anticorpi più richiesti</span>
+          <span class="card-sub" id="ihc-top-sub"></span>
+        </div>
+        <div id="ihc-top-list" style="padding:8px 16px 12px"></div>
       </div>
 
       <div class="filter-bar" id="ihc-filter-bar">
@@ -1568,7 +1574,61 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
 
 
 
-<!-- MODAL PROCESSATORE -->
+<!-- ══════════════════════════════
+     MODAL: CARICO MANUALE PRODOTTO
+══════════════════════════════ -->
+<div class="modal-overlay" id="modal-carico-manuale">
+  <div class="modal" style="width:min(560px,96vw);max-width:96vw;max-height:94vh;overflow-y:auto">
+    <div class="modal-title">⬆ Carico prodotto in magazzino</div>
+
+    <!-- Toggle: prodotto esistente / nuovo -->
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;padding:10px 12px;background:var(--bg3);border-radius:var(--r)">
+      <input type="checkbox" id="car-man-nuovo" onchange="toggleNuovoProdForm()" style="width:16px;height:16px">
+      <label for="car-man-nuovo" style="font-size:13px;font-weight:600;cursor:pointer">Prodotto non ancora in magazzino (nuovo)</label>
+    </div>
+
+    <!-- Prodotto ESISTENTE -->
+    <div id="car-man-exist-row" style="margin-bottom:12px">
+      <label style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.06em">Prodotto *</label>
+      <select id="car-man-prod" style="width:100%;margin-top:4px">
+        <option value="">— Seleziona prodotto —</option>
+      </select>
+    </div>
+
+    <!-- Prodotto NUOVO (nascosto di default) -->
+    <div id="car-man-new-form" style="display:none;background:var(--bg3);border-radius:var(--r);padding:12px;margin-bottom:12px">
+      <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Dati nuovo prodotto</div>
+      <div style="display:grid;grid-template-columns:2fr 1fr 80px;gap:8px">
+        <div class="fg" style="margin:0"><label>Nome *</label><input type="text" id="car-man-nome-nuovo" placeholder="es. Alcol 100°"></div>
+        <div class="fg" style="margin:0"><label>Categoria</label>
+          <select id="car-man-cat-nuovo">
+            <option>Reagenti</option><option>Coloranti</option><option>Vetrini</option>
+            <option>Cassette</option><option>IHC</option><option>Consumabili</option><option>Lame</option><option>Altro</option>
+          </select>
+        </div>
+        <div class="fg" style="margin:0"><label>Min.</label><input type="number" id="car-man-min-nuovo" min="0" value="0"></div>
+      </div>
+    </div>
+
+    <!-- Dati arrivo -->
+    <div style="background:var(--bg3);border-radius:var(--r);padding:12px;margin-bottom:12px">
+      <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Dati arrivo</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div class="fg" style="margin:0"><label>Quantità *</label><input type="number" id="car-man-qty" min="1" value="1" style="font-family:DM Mono,monospace"></div>
+        <div class="fg" style="margin:0"><label>Lotto</label><input type="text" id="car-man-lotto" placeholder="es. LOT-2024-001" style="font-family:DM Mono,monospace"></div>
+        <div class="fg" style="margin:0"><label>Scadenza</label><input type="date" id="car-man-scad"></div>
+        <div class="fg" style="margin:0"><label>Note</label><input type="text" id="car-man-note" placeholder="es. DDT n. 12345"></div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('modal-carico-manuale')">Annulla</button>
+      <button class="btn btn-primary" onclick="saveCaricaManuale()">⬆ Carica in magazzino</button>
+    </div>
+  </div>
+</div>
+
+
 <div class="modal-overlay" id="modal-processatore">
   <div class="modal" style="width:min(1000px,96vw);max-width:96vw;max-height:94vh;overflow-y:auto">
     <div class="modal-title" id="proc-modal-title">Nuovo Ciclo Processatore</div>
@@ -7824,6 +7884,159 @@ if (typeof _aliasGroup !== 'function') {
   };
 }
 
+// ─── IHC Top 10 anticorpi più usati ───────────────────────────────────
+function renderIHCTop() {
+  const el = document.getElementById('ihc-top-list');
+  const sub = document.getElementById('ihc-top-sub');
+  if (!el || typeof loadIHC !== 'function') return;
+  const all = loadIHC();
+  if (sub) sub.textContent = all.length + ' richieste totali';
+  if (!all.length) {
+    el.innerHTML = '<div style="color:var(--text3);font-size:12px;font-style:italic">Nessuna richiesta registrata</div>';
+    return;
+  }
+  // Conta le occorrenze di ogni anticorpo su TUTTE le richieste
+  const counts = {};
+  all.forEach(r => {
+    (r.anticorpo||'').split(/[,\n]+/).map(s => s.trim()).filter(Boolean).forEach(ab => {
+      const k = ab.toUpperCase().trim();
+      if (!counts[k]) counts[k] = {label: ab.trim(), tot: 0, done: 0};
+      counts[k].tot++;
+      if ((r.anticorpi_done||[]).includes(ab.trim())) counts[k].done++;
+    });
+  });
+  const top10 = Object.values(counts).sort((a,b) => b.tot - a.tot).slice(0,10);
+  if (!top10.length) {
+    el.innerHTML = '<div style="color:var(--text3);font-size:12px;font-style:italic">Nessun anticorpo registrato</div>';
+    return;
+  }
+  const max = top10[0].tot;
+  el.innerHTML = '<div style="display:flex;flex-direction:column;gap:6px">' +
+    top10.map((ab, i) => {
+      const pct = Math.round(ab.tot / max * 100);
+      const donePct = ab.tot > 0 ? Math.round(ab.done / ab.tot * 100) : 0;
+      const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `<span style="width:16px;text-align:center;display:inline-block;font-size:11px;color:var(--text3)">${i+1}</span>`;
+      return `<div style="display:flex;align-items:center;gap:10px;font-size:12px">
+        <span style="width:24px;flex-shrink:0;text-align:center">${medal}</span>
+        <span style="flex:1;font-weight:600;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${esc(ab.label)}">${esc(ab.label)}</span>
+        <div style="width:80px;flex-shrink:0">
+          <div style="height:5px;background:var(--border);border-radius:99px;overflow:hidden">
+            <div style="width:${pct}%;height:100%;background:var(--blue);border-radius:99px"></div>
+          </div>
+        </div>
+        <span style="font-family:'DM Mono',monospace;font-weight:700;color:var(--blue);min-width:28px;text-align:right">${ab.tot}</span>
+        <span style="font-size:10px;color:var(--text3);min-width:40px;text-align:right">${donePct}%✓</span>
+      </div>`;
+    }).join('') + '</div>';
+}
+
+// Wrap renderIHC per aggiornare anche il top anticorpi
+const _origRenderIHC = (typeof renderIHC === 'function') ? renderIHC : null;
+if (_origRenderIHC) {
+  window.renderIHC = function() {
+    _origRenderIHC();
+    try { renderIHCTop(); } catch(e) { console.warn('[renderIHCTop]', e); }
+  };
+}
+
+// ─── Funzioni bottoni inventario precedentemente inattivi ────────────────
+
+// Trova prodotti duplicati (stesso nome, lotto diverso o doppio inserimento)
+window.openDuplicatiModal = function() {
+  const prods = loadP();
+  const byNome = {};
+  prods.forEach(p => {
+    const k = (p.nome||'').toLowerCase().trim();
+    if (!byNome[k]) byNome[k] = [];
+    byNome[k].push(p);
+  });
+  const dupes = Object.values(byNome).filter(arr => arr.length > 1);
+  if (!dupes.length) { toast('Nessun duplicato trovato ✓', 'ok'); return; }
+  const lines = dupes.map(arr =>
+    arr.map(p => `• ${p.nome} [${p.lotto||'—'}] qty ${p.qty||0}`).join('\n')
+  ).join('\n\n');
+  alert(`Trovati ${dupes.length} gruppi di possibili duplicati:\n\n${lines}\n\nUsa il pulsante ✎ su ogni riga per correggere o eliminare i duplicati.`);
+};
+
+window.openProductModal = function() {
+  if (typeof openEditModal === 'function') openEditModal(null);
+  else toast('Funzione non disponibile', 'error');
+};
+
+// ─── Carico manuale prodotto (modale dedicato) ────────────────────────────
+window.apriCaricoScan = function() {
+  // Prima prova la funzione carico scan originale
+  if (typeof apriCaricoScanOrig === 'function') { apriCaricoScanOrig(); return; }
+  if (typeof openCaricaScan === 'function') { openCaricaScan(); return; }
+  // Fallback: apre il modal carico manuale
+  openCaricaManualeModal();
+};
+
+window.openCaricaManualeModal = function() {
+  // Popola select prodotti
+  const prods = loadP();
+  const sel = document.getElementById('car-man-prod');
+  if (sel) {
+    sel.innerHTML = '<option value="">— Seleziona prodotto —</option>' +
+      prods.map(p => `<option value="${p.id}">${esc(p.nome)} [${esc(p.lotto||'—')}]</option>`).join('');
+  }
+  // Reset campi
+  ['car-man-qty','car-man-lotto','car-man-scad','car-man-note'].forEach(id => {
+    const e = document.getElementById(id); if(e) e.value = '';
+  });
+  document.getElementById('car-man-qty').value = '1';
+  document.getElementById('modal-carico-manuale').classList.add('open');
+};
+
+window.saveCaricaManuale = async function() {
+  const sel    = document.getElementById('car-man-prod');
+  const qty    = parseInt(document.getElementById('car-man-qty').value)||0;
+  const lotto  = document.getElementById('car-man-lotto').value.trim();
+  const scad   = document.getElementById('car-man-scad').value;
+  const note   = document.getElementById('car-man-note').value.trim();
+  const newProd = document.getElementById('car-man-nuovo').checked;
+  const newNome = document.getElementById('car-man-nome-nuovo').value.trim();
+  const newCat  = document.getElementById('car-man-cat-nuovo').value;
+  const newMin  = parseInt(document.getElementById('car-man-min-nuovo').value)||0;
+  if (qty <= 0) { toast('Quantità deve essere > 0', 'error'); return; }
+  const prods = loadP();
+  let prodId, prodNome;
+  if (newProd) {
+    if (!newNome) { toast('Inserisci il nome del nuovo prodotto', 'error'); return; }
+    const p = { id: genId(), nome: newNome, cat: newCat||'Reagenti', qty: 0, min: newMin, lotto: lotto||'', scadenza: scad||'', creato: new Date().toISOString() };
+    prods.push(p);
+    prodId = p.id; prodNome = p.nome;
+  } else {
+    if (!sel.value) { toast('Seleziona un prodotto', 'error'); return; }
+    const p = prods.find(x => x.id === sel.value);
+    if (!p) { toast('Prodotto non trovato', 'error'); return; }
+    if (lotto) p.lotto = lotto;
+    if (scad)  p.scadenza = scad;
+    prodId = p.id; prodNome = p.nome;
+  }
+  // Aggiorna qty
+  const p = prods.find(x => x.id === prodId);
+  if (!p) { toast('Errore interno', 'error'); return; }
+  p.qty = (p.qty||0) + qty;
+  // Movimento carico
+  const movs = loadM();
+  movs.unshift({ id: genId(), ts: new Date().toISOString(), tipo: 'carico', prodId, prod: prodNome, qty, lotto: lotto||p.lotto||'', note: note||'Carico manuale' });
+  _takeSnapshot('Carico manuale ' + prodNome);
+  await saveP(prods);
+  await saveM(movs);
+  closeModal('modal-carico-manuale');
+  if (typeof renderInv === 'function') renderInv();
+  toast(`+${qty} ${prodNome} caricati in magazzino`, 'ok');
+};
+
+window.toggleNuovoProdForm = function() {
+  const isNew = document.getElementById('car-man-nuovo').checked;
+  const existForm = document.getElementById('car-man-exist-row');
+  const newForm   = document.getElementById('car-man-new-form');
+  if (existForm) existForm.style.display = isNew ? 'none' : '';
+  if (newForm)   newForm.style.display   = isNew ? '' : 'none';
+};
+
 window.openModalScarica = function() { openScaricaModal(); };
 window.openModalVuoti   = function() { openVuotiModal(); };
 window.openModalRifiuti = function() { openRifiutiModal(); };
@@ -8252,33 +8465,31 @@ function renderDashboardPreview(){
   try {
     if (typeof loadW === 'function') {
       const w = loadW();
-      const sP = (w.solidi_pieni||[]).length;
-      const sV = (w.solidi_vuoti||[]).length;
-      const lP = (w.liquidi_pieni||[]).length;
-      const lV = (w.liquidi_vuoti||[]).length;
-      set('rif-sol-p', sP);
-      set('rif-sol-v', sV);
-      set('rif-liq-p', lP);
-      set('rif-liq-v', lV);
+      // loadW() ritorna {cer_180103:{pieni,vuoti,smaltiti}, cer_150110:{...}, ...}
+      const cerKeys = Object.keys(w).filter(k => k.startsWith('cer_'));
+      const totPieni    = cerKeys.reduce((s,k) => s + (w[k].pieni||0), 0);
+      const totVuoti    = cerKeys.reduce((s,k) => s + (w[k].vuoti||0), 0);
+      const totSmaltiti = cerKeys.reduce((s,k) => s + (w[k].smaltiti||0), 0);
+      set('rif-sol-p', totPieni);
+      set('rif-sol-v', totVuoti);
+      set('rif-liq-p', totSmaltiti);
+      set('rif-liq-v', cerKeys.length);
       // Lista CER aggregata
       const cerEl = document.getElementById('rif-cer-mini');
       if (cerEl) {
-        const byCer = {};
-        (w.solidi_pieni ||[]).forEach(b => { const c = b.cer || '180103'; byCer[c] = byCer[c]||{p:0,v:0}; byCer[c].p++; });
-        (w.solidi_vuoti ||[]).forEach(b => { const c = b.cer || '180103'; byCer[c] = byCer[c]||{p:0,v:0}; byCer[c].v++; });
-        (w.liquidi_pieni||[]).forEach(b => { const c = b.cer || '150110'; byCer[c] = byCer[c]||{p:0,v:0}; byCer[c].p++; });
-        (w.liquidi_vuoti||[]).forEach(b => { const c = b.cer || '150110'; byCer[c] = byCer[c]||{p:0,v:0}; byCer[c].v++; });
-        const cls = (c) => {
-          if (c === '180103' || c === '180108') return 'red';
-          if (c === '150110' || c === '180106') return 'yellow';
+        const cls = (k) => {
+          if (k.includes('180103') || k.includes('180108')) return 'red';
+          if (k.includes('150110') || k.includes('180106')) return 'yellow';
           return 'gray';
         };
-        const keys = Object.keys(byCer).sort();
-        cerEl.innerHTML = keys.length ? keys.map(k => `
-          <div style="display:flex;align-items:center;justify-content:space-between;font-size:10px">
-            <span class="cer-chip ${cls(k)}" style="font-size:9px">${k}*</span>
-            <span style="font-family:'DM Mono',monospace;color:var(--text3)">${byCer[k].p}P / ${byCer[k].v}V</span>
-          </div>`).join('') : '<div style="font-size:10px;color:var(--text3);font-style:italic">Nessun bidone</div>';
+        cerEl.innerHTML = cerKeys.length ? cerKeys.map(k => {
+          const cerNum = k.replace('cer_','');
+          const d = w[k];
+          return `<div style="display:flex;align-items:center;justify-content:space-between;font-size:10px">
+            <span class="cer-chip ${cls(k)}" style="font-size:9px">${cerNum}*</span>
+            <span style="font-family:'DM Mono',monospace;color:var(--text3)">${d.pieni||0}P / ${d.vuoti||0}V</span>
+          </div>`;
+        }).join('') : '<div style="font-size:10px;color:var(--text3);font-style:italic">Nessun bidone</div>';
       }
     }
   } catch(e) { console.warn('[KPI rifiuti]', e); }
@@ -9270,12 +9481,16 @@ if (_origRenderProc) {
       const now = new Date(); now.setHours(0,0,0,0);
       const ms = new Date(now.getFullYear(), now.getMonth(), 1);
       const monthCicli = proc.filter(r => r.data && new Date(r.data) >= ms);
-      const totCass = monthCicli.reduce((s,r) => s + (r.n_cassette || (r.casi||[]).length || 0), 0);
-      const anomalie = monthCicli.filter(r => (r.reagenti||[]).some(x => (x.stato||'').includes('sostit') || x.stato === 'cambiato')).length;
+      const totCasi  = monthCicli.reduce((s,r) => s + (Array.isArray(r.casi) ? r.casi.length : (r.n_cassette||0)), 0);
+      const totBio   = monthCicli.reduce((s,r) => s + (r.n_biocassette||0), 0);
+      const ratio    = totCasi > 0 && totBio > 0 ? (totBio/totCasi).toFixed(1) : '—';
       const set = (id, v) => { const e = document.getElementById(id); if(e) e.textContent = v; };
       set('proc-s-cicli', monthCicli.length);
-      set('proc-s-cass', totCass);
-      set('proc-s-ano', anomalie);
+      set('proc-s-casi',  totCasi);
+      set('proc-s-bio',   totBio || '—');
+      set('proc-s-ratio', ratio);
+      // legacy: proc-s-cass per backward compat
+      set('proc-s-cass', totCasi);
       if (proc[0]) {
         const ld = proc[0];
         const ds = ld.data ? new Date(ld.data).toLocaleDateString('it-IT',{day:'2-digit',month:'2-digit',year:'2-digit'}) : '—';
