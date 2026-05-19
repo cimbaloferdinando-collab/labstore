@@ -310,7 +310,23 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
 .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:12px 14px;box-shadow:var(--sh-sm)}
 
 /* Waste card / prod card */
-.waste-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:12px;box-shadow:var(--sh-sm)}
+/* ─── Rifiuti ─── */
+.waste-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;margin-bottom:14px}
+.waste-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:16px;box-shadow:var(--shadow-sm)}
+.waste-card.wc-yellow{border-top:3px solid var(--yellow)}
+.waste-card.wc-orange{border-top:3px solid var(--orange)}
+.waste-card.wc-red{border-top:3px solid var(--red)}
+.waste-card.wc-blue{border-top:3px solid var(--blue)}
+.waste-card-title{display:flex;align-items:flex-start;gap:10px;margin-bottom:8px}
+.waste-type-icon{font-size:22px;flex-shrink:0;margin-top:2px}
+.waste-counters{display:flex;gap:12px;margin:12px 0}
+.wc-box{flex:1;text-align:center;background:var(--bg3);border-radius:8px;padding:10px 6px;border:1px solid var(--border-faint)}
+.wc-num{font-family:'DM Mono',monospace;font-size:28px;font-weight:700;line-height:1}
+.wc-lbl{font-size:10px;color:var(--text3);margin-top:4px;text-transform:uppercase;letter-spacing:.06em}
+.waste-btns{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.btn-waste{background:#fef3c7;color:#92400e;border-color:#fcd34d}
+.btn-waste:hover{background:#fde68a}
+
 .prod-card{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r);padding:10px 12px;cursor:pointer;transition:border-color .12s}
 .prod-card:hover{border-color:var(--accent2)}
 
@@ -1112,20 +1128,28 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
     <div class="view" data-view="arch-ordini" id="view-archivio">
       <div class="pg-hdr">
         <div class="pg-title">Archivio Ordini</div>
+        <button class="btn btn-primary" onclick="openOrdineArchivioModal()">＋ Registra ordine ricevuto</button>
       </div>
-      <div class="filter-bar" id="arch-filter-bar" style="margin-bottom:12px">
-        <button class="chip active" onclick="setArchFilter('all',this)">Tutti</button>
-        <div style="flex:1"></div>
-        <select class="search-inp" id="arch-year" style="width:auto;padding:6px 10px" onchange="renderArchivio()"></select>
+      <!-- Filtri che renderArchivio() si aspetta -->
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;align-items:center">
+        <select class="search-inp" id="arch-filter-mese" onchange="renderArchivio()" style="min-width:140px">
+          <option value="">Tutti i mesi</option>
+        </select>
+        <select class="search-inp" id="arch-filter-forn" onchange="renderArchivio()" style="min-width:160px">
+          <option value="">Tutti i fornitori</option>
+        </select>
+        <select class="search-inp" id="arch-filter-stato" onchange="renderArchivio()" style="min-width:140px">
+          <option value="">Tutti gli stati</option>
+          <option value="bozza">📝 Bozza</option>
+          <option value="inviato">📤 Inviato</option>
+          <option value="approvato">✅ Approvato</option>
+          <option value="parziale">📦⏳ Parziale</option>
+          <option value="ricevuto">📦 Ricevuto</option>
+          <option value="annullato">❌ Annullato</option>
+        </select>
       </div>
-      <div style="display:grid;grid-template-columns:360px 1fr;gap:14px;align-items:start">
-        <div id="archivio-list" style="display:flex;flex-direction:column;gap:8px">
-          <div class="empty-state"><div class="ico">🗂</div><div>Archivio vuoto</div></div>
-        </div>
-        <div class="card" id="archivio-detail">
-          <div class="empty-state"><div class="ico">👈</div><div>Seleziona un ordine archiviato</div></div>
-        </div>
-      </div>
+      <!-- renderArchivio() scrive card direttamente qui -->
+      <div id="archivio-list"></div>
     </div><!-- /view-archivio -->
 
     <!-- ══════════════════════════════════════════════════════════════
@@ -1149,52 +1173,34 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
          ══════════════════════════════════════════════════════════════ -->
     <div class="view" data-view="rifiuti" id="view-rifiuti">
       <div class="pg-hdr">
-        <div class="pg-title">Rifiuti</div>
+        <div>
+          <div class="pg-title">Rifiuti</div>
+          <div class="page-sub">Tracciamento bidoni prodotti, smaltiti e disponibili</div>
+        </div>
         <div style="display:flex;gap:6px;flex-wrap:wrap">
-          <button class="hbtn2 danger" onclick="openModalRifiuti()">＋ Registra bidone pieno</button>
-          <button class="hbtn2" onclick="openModalVuoti()">↺ Aggiorna vuoti</button>
-          <button class="hbtn2" onclick="svuotaLogRifiuti()">🗑 Svuota log</button>
+          <button class="btn" onclick="openVuotiModal()">🔄 Aggiorna bidoni vuoti</button>
+          <button class="btn btn-primary" onclick="openRifiutiModal()">＋ Registra</button>
         </div>
       </div>
 
-      <!-- 4 card grandi: solidi pieni/vuoti, liquidi pieni/vuoti -->
-      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px" id="rif-summary">
-        <div class="kpi-card" style="border-top:4px solid var(--orange)">
-          <div class="kpi-lbl">Solidi pieni</div>
-          <div class="kpi-val" style="color:var(--orange)" id="rif-sol-pieni">0</div>
-          <div style="font-size:11px;color:var(--text3);margin-top:4px">bidoni totali</div>
-        </div>
-        <div class="kpi-card">
-          <div class="kpi-lbl">Solidi vuoti</div>
-          <div class="kpi-val" style="color:var(--text3)" id="rif-sol-vuoti">0</div>
-          <div style="font-size:11px;color:var(--text3);margin-top:4px">disponibili</div>
-        </div>
-        <div class="kpi-card" style="border-top:4px solid var(--blue)">
-          <div class="kpi-lbl">Liquidi pieni</div>
-          <div class="kpi-val" style="color:var(--blue)" id="rif-liq-pieni">0</div>
-          <div style="font-size:11px;color:var(--text3);margin-top:4px">taniche totali</div>
-        </div>
-        <div class="kpi-card">
-          <div class="kpi-lbl">Liquidi vuoti</div>
-          <div class="kpi-val" style="color:var(--text3)" id="rif-liq-vuoti">0</div>
-          <div style="font-size:11px;color:var(--text3);margin-top:4px">disponibili</div>
-        </div>
-      </div>
+      <!-- waste-grid: popolata da renderRifiuti() con poolBanner + 4 card CER -->
+      <div class="waste-grid" id="waste-grid"></div>
 
-      <!-- griglia CER -->
-      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px" id="rif-cer-grid"></div>
-
-      <!-- storico smaltimenti -->
-      <div class="card">
+      <!-- Log smaltimenti -->
+      <div class="card" style="margin-top:16px">
         <div class="card-hdr">
-          <span class="card-title">Storico smaltimenti</span>
-          <span class="card-sub" id="rif-log-year">—</span>
-          <button class="hbtn2" style="font-size:11px" onclick="svuotaLogRifiuti()">Svuota log</button>
+          <span class="card-title">Storico movimenti rifiuti</span>
         </div>
         <div style="overflow-x:auto">
           <table class="tbl">
-            <thead><tr><th>Data</th><th>CER</th><th>Tipo</th><th>N° contenitori</th><th>Ditta</th><th>Formulario</th></tr></thead>
-            <tbody id="rif-log-tbody"></tbody>
+            <thead><tr>
+              <th>Data/Ora</th>
+              <th>Tipo CER</th>
+              <th>Azione</th>
+              <th style="text-align:center">Qty</th>
+              <th>Note</th>
+            </tr></thead>
+            <tbody id="waste-log-tbody"></tbody>
           </table>
         </div>
       </div>
@@ -1513,6 +1519,51 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
   </div>
 </div>
 
+<!-- ══════════════════════════════
+     MODAL: AGGIUNGI ORDINE CHIUSO AD ARCHIVIO
+══════════════════════════════ -->
+<div class="modal-overlay" id="modal-ordine-archivio">
+  <div class="modal" style="width:min(680px,96vw);max-width:96vw;max-height:94vh;overflow-y:auto">
+    <div class="modal-title">📦 Registra ordine ricevuto</div>
+
+    <!-- Info ordine -->
+    <div style="background:var(--bg3);border-radius:var(--r);padding:14px;margin-bottom:14px">
+      <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px">Dati ordine</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div class="fg" style="margin:0"><label>N° Ordine *</label><input type="text" id="arch-ord-num" placeholder="es. 4/BIO/2026" style="font-family:DM Mono,monospace"></div>
+        <div class="fg" style="margin:0"><label>Fornitore *</label><input type="text" id="arch-ord-forn" placeholder="es. Bio Optica" list="arch-ord-forn-list"><datalist id="arch-ord-forn-list"></datalist></div>
+        <div class="fg" style="margin:0"><label>Data ordine</label><input type="date" id="arch-ord-data"></div>
+        <div class="fg" style="margin:0"><label>Data ricezione</label><input type="date" id="arch-ord-data-ric"></div>
+        <div class="fg" style="margin:0;grid-column:1/-1"><label>Note</label><input type="text" id="arch-ord-note" placeholder="Opzionale"></div>
+      </div>
+    </div>
+
+    <!-- Righe prodotti -->
+    <div style="background:var(--bg3);border-radius:var(--r);padding:14px;margin-bottom:14px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.8px">Prodotti ricevuti</div>
+        <button class="btn btn-sm btn-primary" onclick="addArchOrdRiga()">＋ Prodotto</button>
+      </div>
+      <div id="arch-ord-righe"></div>
+    </div>
+
+    <!-- DDT allegati -->
+    <div style="background:var(--bg3);border-radius:var(--r);padding:14px;margin-bottom:14px">
+      <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px">DDT allegati (opzionale)</div>
+      <div style="display:flex;gap:8px;margin-bottom:8px">
+        <input type="text" id="arch-ddt-num" placeholder="N° DDT" style="flex:1;font-family:DM Mono,monospace">
+        <input type="date" id="arch-ddt-data" style="flex:1">
+        <button class="btn btn-sm btn-ok" onclick="addArchDdt()">＋ DDT</button>
+      </div>
+      <div id="arch-ddt-list" style="display:flex;flex-wrap:wrap;gap:6px"></div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('modal-ordine-archivio')">Annulla</button>
+      <button class="btn btn-primary" onclick="saveOrdineArchivio()">💾 Salva in archivio</button>
+    </div>
+  </div>
+</div>
 
 
 
@@ -6020,10 +6071,14 @@ function editRigaRicezione(ordId, rigaIdx){
     delete o.dataRicezione;
   }
   saveOrd(ords);
-  // Riapri il dettaglio aggiornato
-  closeModal('modal-ordine-detail');
-  viewOrdine(ordId);
-  renderOrdini();
+  // Aggiorna pannello o modal
+  if(document.getElementById('ordine-detail')) {
+    renderOrdiniPreview();
+  } else {
+    closeModal('modal-ordine-detail');
+    viewOrdine(ordId);
+    renderOrdini();
+  }
   toast(`${r.nome}: ricevuti aggiornati a ${val}`,'success');
 }
 
@@ -6211,8 +6266,13 @@ function confirmRicezioneParziale(id){
   // Se c'è una scan DDT, allega
   const _finalize = ()=>{
     saveP(prods); saveM(movs); saveOrd(ords);
-    closeModal('modal-ordine-detail');
-    renderOrdini();
+    // Aggiorna la view: usa il pannello se siamo nella view ordini, altrimenti renderOrdini
+    if(document.getElementById('ordine-detail')) {
+      renderOrdiniPreview();
+    } else {
+      closeModal('modal-ordine-detail');
+      renderOrdini();
+    }
     if(currentView==='inventario') renderInv();
     if(currentView==='dashboard') renderDashboard();
     if(currentView==='archivio') renderArchivio();
@@ -6698,7 +6758,12 @@ async function toggleIHCAnticorpo(id, item){
   const done=Array.isArray(r.anticorpi_done)?[...r.anticorpi_done]:[];
   const idx=done.indexOf(item);
   if(idx>=0) done.splice(idx,1); else done.push(item);
-  arr[i]={...r, anticorpi_done:done, modificato:new Date().toISOString()};
+  // Aggiorna stato automaticamente in base alla % di completamento
+  const items=(r.anticorpo||'').split(/[,\n]+/).map(s=>s.trim()).filter(Boolean);
+  const allDone = items.length > 0 && items.every(it => done.includes(it));
+  const someDone = items.some(it => done.includes(it));
+  const nuovoStato = allDone ? 'completata' : (someDone ? 'in_lavorazione' : 'da_fare');
+  arr[i]={...r, anticorpi_done:done, stato:nuovoStato, modificato:new Date().toISOString()};
   await saveIHCArr(arr);
   renderIHC();
   renderDashboard();
@@ -6722,12 +6787,12 @@ function renderIHC(){
     (x.patologo||'').toLowerCase().includes(q)||
     (x.anticorpo||'').toLowerCase().includes(q)
   );
-  // Urgenti in cima, poi per ID campione crescente
+  // Urgenti in cima, poi per ID campione DECRESCENTE (maggiore prima)
   const _ihcIdNum=s=>{const m=(s||'').match(/^(\d+)/);return m?parseInt(m[1]):0;};
   arr.sort((a,b)=>{
     if(a.priorita==='urgente'&&b.priorita!=='urgente') return -1;
     if(b.priorita==='urgente'&&a.priorita!=='urgente') return 1;
-    return _ihcIdNum(a.campione_id)-_ihcIdNum(b.campione_id);
+    return _ihcIdNum(b.campione_id)-_ihcIdNum(a.campione_id); // decrescente
   });
   if(!arr.length){
     el.innerHTML='<div class="empty"><div class="e-ico">🔬</div><p>Nessuna richiesta IHC</p></div>';
@@ -7535,16 +7600,16 @@ function renderDashAnalytics(){
 
   // ── 4. HBAR — Top prodotti consumati ultimi 90gg ──
   // ── 4. HBAR — Top prodotti consumati ultimi 90gg ──
-  // Fonte: movimenti di scarico (classico) + bidoni smaltiti ultimi 90gg
+  // Fonte: movimenti scarico + bidoni smaltiti
+  // Se nessun consumo registrato → fallback a giacenza corrente (top 7 per qty)
   const limit90=new Date(today); limit90.setDate(limit90.getDate()-90);
   const consumi={};
   movs.forEach(m=>{
     if(m.tipo!=='scarico') return;
-    const ts=new Date(m.ts); if(ts<limit90) return;
-    const k=_aliasGroup(m.prod||'');
+    const ts=new Date(m.ts); if(isNaN(ts)||ts<limit90) return;
+    const k=(typeof _aliasGroup==='function') ? _aliasGroup(m.prod||'') : (m.prod||'');
     consumi[k]=(consumi[k]||0)+(m.qty||0);
   });
-  // + Bidoni smaltiti (per reagenti/coloranti)
   if (typeof loadBidoni === 'function') {
     const bidoni = loadBidoni();
     const prodById = {};
@@ -7555,16 +7620,29 @@ function renderDashAnalytics(){
       if (isNaN(ts) || ts < limit90) return;
       const p = prodById[b.prod_id];
       if (!p) return;
-      const k = _aliasGroup(p.nome||'');
+      const k = (typeof _aliasGroup==='function') ? _aliasGroup(p.nome||'') : p.nome;
       consumi[k] = (consumi[k]||0) + 1;
     });
   }
-  const top=Object.entries(consumi).sort((a,b)=>b[1]-a[1]).slice(0,7);
+  let top=Object.entries(consumi).sort((a,b)=>b[1]-a[1]).slice(0,7);
+  let hbarLabel = 'Scarichi ultimi 90gg';
+  // Fallback: giacenza corrente se nessun consumo
+  if(!top.length && prods.length) {
+    const byNome = {};
+    prods.forEach(p => {
+      const k = (typeof _aliasGroup==='function') ? _aliasGroup(p.nome||'') : p.nome;
+      byNome[k] = (byNome[k]||0) + (p.qty||0);
+    });
+    top = Object.entries(byNome).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]).slice(0,7);
+    hbarLabel = 'Giacenza corrente';
+  }
+  const hbarSubEl = document.getElementById('dash-hbar-sub');
+  if(hbarSubEl) hbarSubEl.textContent = hbarLabel;
   const hbarSvg=document.getElementById('dash-chart-hbar');
   if(hbarSvg){
     const W=280,H=175,pad={l:90,r:30,t:6,b:6};
     if(!top.length){
-      hbarSvg.innerHTML='<text x="'+(W/2)+'" y="'+(H/2)+'" text-anchor="middle" font-size="11" fill="var(--text3)" font-family="DM Mono,monospace">Nessun consumo ancora</text>';
+      hbarSvg.innerHTML='<text x="'+(W/2)+'" y="'+(H/2)+'" text-anchor="middle" font-size="11" fill="var(--text3)" font-family="DM Mono,monospace">Magazzino vuoto</text>';
     } else {
       const max=top[0][1];
       const rowH=(H-pad.t-pad.b)/top.length;
@@ -7584,11 +7662,10 @@ function renderDashAnalytics(){
   // ── 5. PREVISIONE ESAURIMENTO — top 6 prodotti per giorni residui ──
   const prevTbl=document.getElementById('dash-prev-table');
   if(prevTbl){
-    // Consumo per prodotto: movimenti scarico + bidoni smaltiti, ultimi 90gg
     const consumiDay={};
     movs.forEach(m=>{
       if(m.tipo!=='scarico') return;
-      const ts=new Date(m.ts); if(ts<limit90) return;
+      const ts=new Date(m.ts); if(isNaN(ts)||ts<limit90) return;
       const k=m.prodId||m.prod;
       consumiDay[k]=(consumiDay[k]||0)+(m.qty||0);
     });
@@ -7600,23 +7677,38 @@ function renderDashAnalytics(){
         consumiDay[b.prod_id] = (consumiDay[b.prod_id]||0) + 1;
       });
     }
-    const forecast=prods.map(p=>{
-      const tot=consumiDay[p.id]||consumiDay[p.nome]||0;
-      const perDay=tot/90;
-      const giorni=perDay>0?Math.floor((p.qty||0)/perDay):null;
-      return {p,giorni,perDay};
-    }).filter(f=>f.giorni!==null&&f.giorni<180).sort((a,b)=>a.giorni-b.giorni).slice(0,6);
+    const hasConsumi = Object.keys(consumiDay).length > 0;
+    let forecast;
+    if (hasConsumi) {
+      forecast=prods.map(p=>{
+        const tot=consumiDay[p.id]||consumiDay[p.nome]||0;
+        const perDay=tot/90;
+        const giorni=perDay>0?Math.floor((p.qty||0)/perDay):null;
+        return {p, giorni, perDay, modo:'consumo'};
+      }).filter(f=>f.giorni!==null&&f.giorni<180).sort((a,b)=>a.giorni-b.giorni).slice(0,6);
+    } else {
+      // Fallback: mostra i prodotti con scorta bassa o al minimo
+      forecast=prods.filter(p=>(p.min||0)>0&&(p.qty||0)<=p.min).map(p=>({
+        p, giorni:null, perDay:0, modo:'scorta'
+      })).sort((a,b)=>(a.p.qty||0)-(b.p.qty||0)).slice(0,6);
+    }
     if(!forecast.length){
-      prevTbl.innerHTML='<div style="padding:16px;text-align:center;color:var(--text3);font-size:12px">Servono ≥90gg di consumi per la previsione</div>';
+      prevTbl.innerHTML='<div style="padding:16px;text-align:center;color:var(--text3);font-size:12px">'+(hasConsumi?'Nessun prodotto in esaurimento':'Nessun prodotto sotto scorta minima')+'</div>';
     } else {
       prevTbl.innerHTML='<div style="display:flex;flex-direction:column">'+forecast.map(f=>{
-        const col=f.giorni<=14?'var(--red)':f.giorni<=30?'var(--yellow)':'var(--green)';
-        const lbl=f.giorni===0?'oggi':f.giorni+' gg';
+        let col, lbl;
+        if (f.modo === 'scorta') {
+          col = (f.p.qty||0)===0 ? 'var(--red)' : 'var(--yellow)';
+          lbl = (f.p.qty||0)===0 ? 'Esaurito' : 'Scorta min';
+        } else {
+          col=f.giorni<=14?'var(--red)':f.giorni<=30?'var(--yellow)':'var(--green)';
+          lbl=f.giorni===0?'oggi':f.giorni+' gg';
+        }
         const nameS=f.p.nome.length>22?f.p.nome.slice(0,21)+'…':f.p.nome;
         return '<div onclick="openSchedaProdotto(\''+f.p.id+'\')" style="display:flex;align-items:center;gap:8px;padding:7px 10px;border-bottom:1px solid var(--border-faint);cursor:pointer;font-size:12px">'+
           '<span style="flex:1;color:var(--text);font-weight:500">'+esc(nameS)+'</span>'+
           '<span style="font-family:DM Mono,monospace;font-size:10px;color:var(--text3)">'+(f.p.qty||0)+' pz</span>'+
-          '<span style="font-family:DM Mono,monospace;font-size:11px;font-weight:700;color:'+col+';min-width:48px;text-align:right">'+lbl+'</span>'+
+          '<span style="font-family:DM Mono,monospace;font-size:11px;font-weight:700;color:'+col+';min-width:60px;text-align:right">'+lbl+'</span>'+
         '</div>';
       }).join('')+'</div>';
     }
@@ -7640,7 +7732,29 @@ function renderDashAnalytics(){
   if(vbarSvg){
     const W=280,H=120,pad={l:24,r:8,t:10,b:22};
     if(!fornNames.length){
-      vbarSvg.innerHTML='<text x="'+(W/2)+'" y="'+(H/2)+'" text-anchor="middle" font-size="11" fill="var(--text3)" font-family="DM Mono,monospace">Nessun ordine</text>';
+      // Fallback: mostra distribuzione prodotti per categoria
+      const byCat = {};
+      prods.forEach(p => { if(p.qty>0) byCat[p.cat||'Altro']=(byCat[p.cat||'Altro']||0)+1; });
+      const cats = Object.entries(byCat).sort((a,b)=>b[1]-a[1]).slice(0,6);
+      if(!cats.length){
+        vbarSvg.innerHTML='<text x="'+(W/2)+'" y="'+(H/2)+'" text-anchor="middle" font-size="11" fill="var(--text3)" font-family="DM Mono,monospace">Nessun ordine</text>';
+      } else {
+        const max=Math.max(1,...cats.map(c=>c[1]));
+        const bw = Math.min(30, (W-pad.l-pad.r)/cats.length - 4);
+        const gap = (W-pad.l-pad.r)/cats.length;
+        const yScale=v=>H-pad.b-(v/max)*(H-pad.t-pad.b);
+        const grid=[0,.5,1].map(t=>{ const y=pad.t+t*(H-pad.t-pad.b); return '<line x1="'+pad.l+'" x2="'+(W-pad.r)+'" y1="'+y+'" y2="'+y+'" stroke="var(--border-faint)" stroke-width=".5"/>'; }).join('');
+        const bars = cats.map(([cat,qty],i)=>{
+          const cx=pad.l+gap*i+gap/2-bw/2;
+          const yTop=yScale(qty); const yBot=H-pad.b;
+          const lbl=cat.length>7?cat.slice(0,6)+'…':cat;
+          return '<rect x="'+cx+'" y="'+yTop+'" width="'+bw+'" height="'+(yBot-yTop)+'" fill="'+fornCols[i%fornCols.length]+'" rx="2"/>'+
+                 '<text x="'+(cx+bw/2)+'" y="'+(H-6)+'" text-anchor="middle" font-size="8" fill="var(--text3)" font-family="DM Mono,monospace">'+esc(lbl)+'</text>';
+        }).join('');
+        vbarSvg.innerHTML=grid+bars;
+        const vbarSub=document.getElementById('dash-vbar-sub');
+        if(vbarSub) vbarSub.textContent='Prodotti per categoria';
+      }
     } else {
       const max=Math.max(1,...months6.map((_,i)=>fornNames.reduce((s,f)=>s+fornSet[f][i],0)));
       const groupW=(W-pad.l-pad.r)/months6.length;
@@ -7660,12 +7774,12 @@ function renderDashAnalytics(){
       }).join('');
       vbarSvg.innerHTML=grid+yLabels+stacks;
     }
-  }
+  } // end if(vbarSvg)
   const vbarLeg=document.getElementById('dash-vbar-legend');
   if(vbarLeg){
     vbarLeg.innerHTML=fornNames.map((f,i)=>'<span class="leg-item"><span class="leg-dot" style="background:'+fornCols[i%fornCols.length]+'"></span>'+esc(f)+'</span>').join('');
   }
-}
+} // end renderDashAnalytics
 
 /* ════════════════════════════════════════════════════════════════
    PARTE 4 — GLUE LAYER (preview ↔ logica)
@@ -7682,7 +7796,159 @@ if (typeof loadColor !== 'function' && typeof loadColoratore === 'function') win
 if (typeof openProductModal !== 'function' && typeof openEditModal === 'function') window.openProductModal = () => openEditModal(null);
 if (typeof editProduct !== 'function' && typeof openEditModal === 'function') window.editProduct = (id) => openEditModal(id);
 if (typeof apriCaricoScan !== 'function' && typeof openCaricaScanModal === 'function') window.apriCaricoScan = openCaricaScanModal;
-if (typeof openModalScarica !== 'function' && typeof openScaricaModal === 'function') window.openModalScarica = openScaricaModal;
+// Alias diretti per compatibilità onClick nei bottoni
+// ─── _aliasGroup: fallback se non esportata dal logic file ───
+// Raggruppa prodotti per alias semantico (xilene = xylene = xylol ecc.)
+if (typeof _aliasGroup !== 'function') {
+  window._aliasGroup = function(nome) {
+    const n = (nome||'').toLowerCase().trim();
+    const aliases = {
+      'Alcol 100':   ['alcol 100','alcool 100','alcoolpath 100','ethanol 100','etanolo 100'],
+      'Alcol 95':    ['alcol 95','alcool 95','alcoolpath 95','ethanol 95','etanolo 95'],
+      'Xilene':      ['xilene','xylene','xylol'],
+      'Formalina':   ['formalina','formalin','formol','nbt','tamponata'],
+      'EA50':        ['ea50','ea 50'],
+      'Eosina':      ['eosina','eosin'],
+      'Ema. Harris': ['harris','hematoxylin harris'],
+      'Ema. Mayer':  ['mayer','hematoxylin mayer'],
+      'OG6':         ['og6','orange g6'],
+      'Vetrini':     ['vetrini','vetrino','coprioggetto','portaoggetto','coverslip'],
+      'Cassette':    ['cassette','cassetta','biopsy cassette'],
+      'Guanti':      ['guanti','guanto','glove'],
+      'Lame':        ['lame','lama','blade','feather','a35','hp35','mx35'],
+    };
+    for (const [label, kws] of Object.entries(aliases)) {
+      if (kws.some(k => n.includes(k))) return label;
+    }
+    return nome; // nessun alias: ritorna il nome originale
+  };
+}
+
+window.openModalScarica = function() { openScaricaModal(); };
+window.openModalVuoti   = function() { openVuotiModal(); };
+window.openModalRifiuti = function() { openRifiutiModal(); };
+
+// ═══════════════════════════════════════════════════════════════════
+// MODAL: REGISTRA ORDINE CHIUSO IN ARCHIVIO
+// ═══════════════════════════════════════════════════════════════════
+let _archDdtList = [];
+
+window.openOrdineArchivioModal = function() {
+  // Reset campi
+  ['arch-ord-num','arch-ord-forn','arch-ord-note'].forEach(id => {
+    const e = document.getElementById(id); if(e) e.value = '';
+  });
+  document.getElementById('arch-ord-data').value     = new Date().toISOString().slice(0,10);
+  document.getElementById('arch-ord-data-ric').value = new Date().toISOString().slice(0,10);
+  document.getElementById('arch-ord-righe').innerHTML = '';
+  document.getElementById('arch-ddt-num').value  = '';
+  document.getElementById('arch-ddt-data').value = '';
+  document.getElementById('arch-ddt-list').innerHTML = '';
+  _archDdtList = [];
+  // Popola datalist fornitori da storico ordini
+  const fornitori = [...new Set(loadOrd().map(o => o.fornitore).filter(Boolean))].sort();
+  const dl = document.getElementById('arch-ord-forn-list');
+  if(dl) dl.innerHTML = fornitori.map(f => `<option value="${esc(f)}">`).join('');
+  // Aggiungi la prima riga prodotto
+  addArchOrdRiga();
+  document.getElementById('modal-ordine-archivio').classList.add('open');
+};
+
+window.addArchOrdRiga = function() {
+  const container = document.getElementById('arch-ord-righe');
+  const idx = container.querySelectorAll('.arch-ord-riga').length;
+  const prods = loadP();
+  const opts = '<option value="">Seleziona prodotto…</option>' +
+    prods.map(p => `<option value="${esc(p.nome)}" data-lotto="${esc(p.lotto||'')}" data-um="${esc(p.unita||'pz')}">${esc(p.nome)} [${esc(p.lotto||'—')}]</option>`).join('');
+  const div = document.createElement('div');
+  div.className = 'arch-ord-riga';
+  div.style.cssText = 'display:grid;grid-template-columns:2fr 80px 80px 120px 30px;gap:6px;align-items:center;margin-bottom:6px';
+  div.innerHTML = `
+    <select class="arch-riga-prod" onchange="archRigaSelProd(this)" style="font-size:12px">
+      ${opts}
+    </select>
+    <input type="number" class="arch-riga-qty" placeholder="Qty ord." min="1" value="1" style="font-family:DM Mono,monospace;text-align:center">
+    <input type="number" class="arch-riga-qty-ric" placeholder="Qty ric." min="0" value="1" style="font-family:DM Mono,monospace;text-align:center">
+    <input type="text" class="arch-riga-lotto" placeholder="Lotto" style="font-family:DM Mono,monospace;font-size:11px">
+    <button onclick="this.closest('.arch-ord-riga').remove()" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:16px;padding:0">✕</button>`;
+  container.appendChild(div);
+};
+
+window.archRigaSelProd = function(sel) {
+  const row = sel.closest('.arch-ord-riga');
+  const opt = sel.options[sel.selectedIndex];
+  const lotto = opt?.dataset?.lotto || '';
+  const lottoEl = row.querySelector('.arch-riga-lotto');
+  if(lottoEl && lotto) lottoEl.value = lotto;
+};
+
+window.addArchDdt = function() {
+  const num  = document.getElementById('arch-ddt-num').value.trim();
+  const data = document.getElementById('arch-ddt-data').value;
+  if(!num) { toast('Inserisci il numero DDT', 'error'); return; }
+  if(_archDdtList.find(d => d.numero === num)) { toast('DDT già aggiunto', 'warn'); return; }
+  _archDdtList.push({numero: num, data: data || new Date().toISOString().slice(0,10)});
+  document.getElementById('arch-ddt-num').value  = '';
+  document.getElementById('arch-ddt-data').value = '';
+  renderArchDdtChips();
+  toast('DDT aggiunto', 'ok');
+};
+
+function renderArchDdtChips() {
+  const el = document.getElementById('arch-ddt-list');
+  if(!el) return;
+  el.innerHTML = _archDdtList.map((d, i) =>
+    `<span style="display:inline-flex;align-items:center;gap:5px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:4px 8px;font-size:11px">
+      <span style="font-family:DM Mono,monospace;font-weight:600">DDT ${esc(d.numero)}</span>
+      <span style="color:var(--text3)">${d.data ? new Date(d.data).toLocaleDateString('it-IT',{day:'2-digit',month:'2-digit',year:'2-digit'}) : '—'}</span>
+      <button onclick="_archDdtList.splice(${i},1);renderArchDdtChips()" style="background:none;border:none;color:var(--red);cursor:pointer;padding:0;font-size:13px">✕</button>
+    </span>`
+  ).join('');
+}
+
+window.saveOrdineArchivio = async function() {
+  const num   = document.getElementById('arch-ord-num').value.trim();
+  const forn  = document.getElementById('arch-ord-forn').value.trim();
+  if(!num || !forn) { toast('Numero ordine e fornitore obbligatori', 'error'); return; }
+  // Raccoglie le righe
+  const righeDivs = document.querySelectorAll('#arch-ord-righe .arch-ord-riga');
+  const righe = [];
+  righeDivs.forEach(row => {
+    const nome     = row.querySelector('.arch-riga-prod')?.value;
+    const qty      = parseFloat(row.querySelector('.arch-riga-qty')?.value)   || 0;
+    const qtyRic   = parseFloat(row.querySelector('.arch-riga-qty-ric')?.value) || qty;
+    const lotto    = row.querySelector('.arch-riga-lotto')?.value?.trim() || '';
+    if(!nome) return;
+    righe.push({
+      nome, qty, qtyRicevuta: qtyRic, lotto, unita: 'pz', fornitore: forn,
+      ddtList: _archDdtList.map(d => ({numero: d.numero, data: d.data}))
+    });
+  });
+  if(!righe.length) { toast('Aggiungi almeno un prodotto', 'error'); return; }
+  _takeSnapshot('Salva ordine archivio ' + num);
+  const now = new Date().toISOString();
+  const ordine = {
+    id:             genId(),
+    num,
+    fornitore:      forn,
+    data:           document.getElementById('arch-ord-data').value     || now.slice(0,10),
+    data_ricezione: document.getElementById('arch-ord-data-ric').value || now.slice(0,10),
+    stato:          'ricevuto',
+    note:           document.getElementById('arch-ord-note').value.trim(),
+    righe,
+    ddtImages:      [],
+    ddtList:        _archDdtList.map(d => ({numero: d.numero, data: d.data})),
+    creato:         now,
+    modificato:     now
+  };
+  // Salva in ls_ordini (renderArchivio filtra per stato)
+  const ords = loadOrd();
+  ords.unshift(ordine);
+  await saveOrd(ords);
+  closeModal('modal-ordine-archivio');
+  if(typeof renderArchivio === 'function') renderArchivio();
+  toast('Ordine salvato in archivio ✓', 'ok');
+};
 if (typeof openModalRifiuti !== 'function' && typeof openRifiutiModal === 'function') window.openModalRifiuti = openRifiutiModal;
 if (typeof openModalVuoti !== 'function' && typeof openVuotiModal === 'function') window.openModalVuoti = openVuotiModal;
 if (typeof openSchedaScan !== 'function' && typeof openSchedaScanModal === 'function') window.openSchedaScan = openSchedaScanModal;
@@ -8701,34 +8967,54 @@ function renderOrdineDetailPanel(id){
     panel.innerHTML = '<div class="empty-state"><div class="ico">⚠️</div><div>Ordine non trovato</div></div>';
     return;
   }
-  const tot = (ord.righe||[]).reduce((s,r) => s + (parseFloat(r.qta)||0), 0);
+  // usa r.qty (schema reale) non r.qta
+  const tot = (ord.righe||[]).reduce((s,r) => s + (parseFloat(r.qty)||0), 0);
   const ric = (ord.righe||[]).reduce((s,r) => s + (parseFloat(r.qtyRicevuta)||0), 0);
   const pct = tot > 0 ? Math.round(ric/tot * 100) : 0;
   const colorPct = pct >= 100 ? 'var(--green)' : (pct > 0 ? 'var(--orange)' : 'var(--blue)');
-  const dateStr = ord.data_invio ? 'Inviato ' + new Date(ord.data_invio).toLocaleDateString('it-IT') : (ord.data_creazione ? 'Creato ' + new Date(ord.data_creazione).toLocaleDateString('it-IT') : '');
+  const dateStr = ord.data_invio ? 'Inviato ' + new Date(ord.data_invio).toLocaleDateString('it-IT') : (ord.data ? 'Data ord. ' + fmtDate(ord.data) : '');
 
-  // Bottoni dinamici
+  // Bottoni per stato
   let btns = '';
   if(ord.stato === 'bozza'){
-    btns = `<button class="hbtn2 primary" onclick="event.stopPropagation();inviaOrdine('${id}')">📤 Invia</button>
+    btns = `<button class="hbtn2 primary" onclick="event.stopPropagation();_inviaOrdinePanel('${id}')">📤 Invia</button>
             <button class="hbtn2" onclick="event.stopPropagation();editOrdine('${id}')">✏️ Modifica</button>
             <button class="hbtn2 danger" onclick="event.stopPropagation();deleteOrdine('${id}')">🗑 Elimina</button>`;
   } else if(ord.stato === 'inviato'){
-    btns = `<button class="hbtn2 primary" onclick="event.stopPropagation();riceviParziale('${id}')">📦 Registra ricezione</button>
-            <button class="hbtn2 ok" onclick="event.stopPropagation();approvaOrdine('${id}')">✅ Approva</button>
-            <button class="hbtn2 warn" onclick="event.stopPropagation();riapriOrdine('${id}')">↺ Riapri (bozza)</button>`;
+    btns = `<button class="hbtn2 primary" onclick="event.stopPropagation();_riceviPanel('${id}')">📦 Registra ricezione</button>
+            <button class="hbtn2" onclick="event.stopPropagation();editOrdine('${id}')">✏️ Modifica</button>
+            <button class="hbtn2 ok" onclick="event.stopPropagation();_approvaPanel('${id}')">✅ Approva</button>
+            <button class="hbtn2 danger" onclick="event.stopPropagation();deleteOrdine('${id}')">🗑 Elimina</button>`;
   } else if(ord.stato === 'approvato'){
-    btns = `<button class="hbtn2 primary" onclick="event.stopPropagation();riceviParziale('${id}')">📦 Registra ricezione</button>`;
+    btns = `<button class="hbtn2 primary" onclick="event.stopPropagation();_riceviPanel('${id}')">📦 Registra ricezione</button>
+            <button class="hbtn2" onclick="event.stopPropagation();editOrdine('${id}')">✏️ Modifica</button>
+            <button class="hbtn2 danger" onclick="event.stopPropagation();deleteOrdine('${id}')">🗑 Elimina</button>`;
   } else if(ord.stato === 'parziale'){
-    btns = `<button class="hbtn2 primary" onclick="event.stopPropagation();riceviParziale('${id}')">📦 Continua ricezione</button>
-            <button class="hbtn2 ok" onclick="event.stopPropagation();chiudiOrdine('${id}')">✓ Chiudi (anche se incompleto)</button>`;
+    btns = `<button class="hbtn2 primary" onclick="event.stopPropagation();_riceviPanel('${id}')">📦 Continua ricezione</button>
+            <button class="hbtn2" onclick="event.stopPropagation();editOrdine('${id}')">✏️ Modifica</button>
+            <button class="hbtn2 ok" onclick="event.stopPropagation();_chiudiPanel('${id}')">✓ Chiudi completato</button>
+            <button class="hbtn2 warn" onclick="event.stopPropagation();resetRicezione_panel('${id}')">↺ Reset ricezione</button>
+            <button class="hbtn2 danger" onclick="event.stopPropagation();deleteOrdine('${id}')">🗑 Elimina</button>`;
+  } else if(ord.stato === 'ricevuto'){
+    btns = `<button class="hbtn2" onclick="event.stopPropagation();riapreOrdine('${id}')">↩ Riapri</button>
+            <button class="hbtn2 danger" onclick="event.stopPropagation();deleteOrdine('${id}')">🗑 Elimina</button>`;
   }
 
   let righeHTML = '';
-  (ord.righe||[]).forEach(r => {
-    const rPct = r.qta > 0 ? Math.round((r.qtyRicevuta||0)/r.qta * 100) : 0;
+  (ord.righe||[]).forEach((r,i) => {
+    const qty = parseFloat(r.qty)||0;
+    const rRic = parseFloat(r.qtyRicevuta)||0;
+    const rPct = qty > 0 ? Math.round(rRic/qty * 100) : 0;
     const rColor = rPct >= 100 ? 'var(--green)' : (rPct > 0 ? 'var(--orange)' : 'var(--blue)');
-    righeHTML += `<tr><td>${esc(r.nome||'—')}</td><td>${r.qta||0}</td><td>${r.qtyRicevuta||0}</td><td><div style="display:flex;align-items:center;gap:6px"><div style="width:60px;height:4px;background:var(--border);border-radius:99px;overflow:hidden"><div style="width:${rPct}%;height:100%;background:${rColor};border-radius:99px"></div></div><span class="mono" style="font-size:10px">${rPct}%</span></div></td><td class="mono" style="font-size:10px">${(r.ddtList||[]).map(d => d.numero || '—').join(', ') || '—'}</td></tr>`;
+    const ddtLabel = (r.ricezioni||[]).map(rc => rc.ddt ? `<span style="font-size:10px;background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.3);border-radius:3px;padding:1px 5px">+${rc.qty} ${rc.ddt}</span>` : '').filter(Boolean).join(' ') || '—';
+    righeHTML += `<tr>
+      <td>${esc(r.nome||'—')}</td>
+      <td class="mono">${qty} ${r.unita||''}</td>
+      <td class="mono" style="color:${rColor};font-weight:600">${rRic}</td>
+      <td><div style="display:flex;align-items:center;gap:6px"><div style="width:50px;height:5px;background:var(--border);border-radius:99px;overflow:hidden"><div style="width:${rPct}%;height:100%;background:${rColor};border-radius:99px"></div></div><span class="mono" style="font-size:10px">${rPct}%</span></div></td>
+      <td style="font-size:10px">${ddtLabel}</td>
+      <td><button class="btn btn-sm" onclick="editRigaRicezione('${id}',${i})" title="Modifica qtà">✎</button></td>
+    </tr>`;
   });
 
   panel.innerHTML = `
@@ -8741,15 +9027,131 @@ function renderOrdineDetailPanel(id){
     </div>
     <div style="overflow-x:auto">
       <table class="tbl">
-        <thead><tr><th>Prodotto</th><th>Qtà ord.</th><th>Qtà ric.</th><th>%</th><th>DDT</th></tr></thead>
-        <tbody>${righeHTML || '<tr><td colspan="5" style="text-align:center;color:var(--text3)">Nessuna riga</td></tr>'}</tbody>
+        <thead><tr><th>Prodotto</th><th>Ord.</th><th>Ric.</th><th>%</th><th>DDT</th><th></th></tr></thead>
+        <tbody>${righeHTML || '<tr><td colspan="6" style="text-align:center;color:var(--text3)">Nessuna riga</td></tr>'}</tbody>
       </table>
     </div>
-    <div style="padding:14px 20px;border-top:1px solid var(--border);font-size:11px;color:var(--text3)">
-      ${ord.note ? '<div><b>Note:</b> ' + esc(ord.note) + '</div>' : ''}
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+    <div style="padding:12px 16px;border-top:1px solid var(--border)">
+      ${ord.note ? '<div style="font-size:12px;color:var(--text2);margin-bottom:8px"><b>Note:</b> ' + esc(ord.note) + '</div>' : ''}
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
         <button class="hbtn2" onclick="allegaScanOrdine('${id}')">📎 Allega ordine</button>
         <button class="hbtn2" onclick="allegaScanDdt('${id}')">📎 Allega DDT</button>
+      </div>
+    </div>`;
+}
+
+// ─── Azioni rapide nel pannello (no modal, aggiornano lo stato direttamente) ───
+
+window.deleteOrdine = function(id){
+  const ord = loadOrd().find(x => x.id === id);
+  if(!ord) return;
+  const msg = ord.stato === 'ricevuto' || ord.stato === 'parziale'
+    ? `⚠️ Questo ordine ha già ricezioni registrate.\n\nEliminare comunque "${ord.num||'—'}" (${ord.fornitore||'—'})?\n\nATTENZIONE: i movimenti di magazzino già creati NON verranno annullati.`
+    : `Eliminare l'ordine "${ord.num||'—'}" (${ord.fornitore||'—'})?`;
+  if(!confirm(msg)) return;
+  _takeSnapshot('Elimina ordine ' + (ord.num||id));
+  const ords = loadOrd().filter(x => x.id !== id);
+  saveOrd(ords);
+  renderOrdiniPreview();
+  toast('Ordine eliminato','info');
+};
+
+function _inviaOrdinePanel(id){
+  if(!confirm('Segnare questo ordine come inviato?')) return;
+  _takeSnapshot('Invia ordine');
+  const ords = loadOrd();
+  const o = ords.find(x => x.id === id); if(!o) return;
+  o.stato = 'inviato';
+  o.data_invio = new Date().toISOString();
+  saveOrd(ords);
+  renderOrdiniPreview();
+  toast('Ordine segnato come inviato','info');
+}
+
+function _approvaPanel(id){
+  if(!confirm('Approvare questo ordine?')) return;
+  _takeSnapshot('Approva ordine');
+  const ords = loadOrd();
+  const o = ords.find(x => x.id === id); if(!o) return;
+  o.stato = 'approvato';
+  o.dataApprovazione = new Date().toISOString();
+  saveOrd(ords);
+  renderOrdiniPreview();
+  toast('Ordine approvato','ok');
+}
+
+function _chiudiPanel(id){
+  if(!confirm('Chiudere l\'ordine come completamente ricevuto anche se la ricezione non è al 100%?')) return;
+  _takeSnapshot('Chiudi ordine');
+  const ords = loadOrd();
+  const o = ords.find(x => x.id === id); if(!o) return;
+  o.stato = 'ricevuto';
+  o.dataRicezione = o.dataRicezione || new Date().toISOString();
+  saveOrd(ords);
+  renderOrdiniPreview();
+  toast('Ordine chiuso','ok');
+}
+
+function resetRicezione_panel(id){
+  if(!confirm('Azzerare tutte le ricezioni? I movimenti di magazzino già creati NON verranno annullati.')) return;
+  _takeSnapshot('Reset ricezione ordine');
+  const ords = loadOrd();
+  const o = ords.find(x => x.id === id); if(!o) return;
+  (o.righe||[]).forEach(r => { r.qtyRicevuta = 0; r.ricezioni = []; });
+  o.ddtList = [];
+  o.stato = 'approvato';
+  delete o.dataRicezione;
+  saveOrd(ords);
+  renderOrdiniPreview();
+  toast('Ricezione azzerata','info');
+}
+
+// ─── riceviPanel: form ricezione nel pannello (non nel modal) ───
+function _riceviPanel(id){
+  const panel = document.getElementById('ordine-detail');
+  if(!panel) return;
+  const ords = loadOrd();
+  const o = ords.find(x => x.id === id); if(!o) return;
+
+  const righeHTML = o.righe.map((r, i) => {
+    const ricevuta = parseFloat(r.qtyRicevuta)||0;
+    const restante = Math.max(0, (parseFloat(r.qty)||0) - ricevuta);
+    const storHtml = (r.ricezioni||[]).map(rc =>
+      `<span style="font-size:10px;background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.3);border-radius:3px;padding:1px 5px">+${rc.qty}${rc.ddt?' · '+rc.ddt:''}</span>`
+    ).join(' ');
+    return `<div style="padding:10px 0;border-bottom:1px solid var(--border)">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="flex:1">
+          <div style="font-weight:600;font-size:13px">${esc(r.nome)}</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:2px">Ord: ${r.qty} · Ric: ${ricevuta} · Restano: ${restante}</div>
+          ${storHtml ? '<div style="margin-top:4px;display:flex;flex-wrap:wrap;gap:3px">'+storHtml+'</div>' : ''}
+        </div>
+        <div>
+          <label style="font-size:10px;color:var(--text3);display:block;margin-bottom:3px">Arrivo</label>
+          <input type="number" class="recv-parz-qty" data-idx="${i}" value="${restante}" min="0" max="${r.qty}" style="width:70px;text-align:center;font-family:DM Mono,monospace;font-weight:600" ${restante<=0?'disabled':''}>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  panel.innerHTML = `
+    <div style="padding:16px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+        <div style="font-weight:700;font-size:15px">📦 Registra Ricezione</div>
+        <div style="font-size:12px;color:var(--text3)">${esc(o.num||'')} · ${esc(o.fornitore||'')}</div>
+      </div>
+      ${righeHTML}
+      <div style="margin-top:12px;background:var(--bg3);border-radius:var(--r);padding:10px">
+        <div style="font-size:11px;font-weight:600;color:var(--text3);margin-bottom:6px">Riferimento DDT</div>
+        <input type="text" id="recv-parz-ddt" placeholder="es. DDT n. 12345 del 10/05/2026" style="width:100%;font-family:DM Mono,monospace">
+      </div>
+      <div style="margin-top:8px;background:var(--bg3);border-radius:var(--r);padding:10px">
+        <div style="font-size:11px;font-weight:600;color:var(--text3);margin-bottom:6px">📷 Scan DDT (opzionale)</div>
+        <input type="file" id="recv-parz-scan" accept="image/*" style="font-size:12px">
+      </div>
+      <div style="display:flex;gap:8px;margin-top:14px;justify-content:flex-end">
+        <button class="btn" onclick="renderOrdineDetailPanel('${id}')">Annulla</button>
+        <button class="btn btn-primary" onclick="confirmRicezioneParziale('${id}')">📦 Conferma</button>
       </div>
     </div>`;
 }
@@ -8954,178 +9356,15 @@ if (_origRenderColor) {
 
 
 
-/* ─── Override renderArchivio → split panel + dettaglio docs ─── */
-let _selArchOrdineId = null;
-window.renderArchivio = function(){
-  const list = document.getElementById('archivio-list');
-  const sel = document.getElementById('arch-year');
-  if(!list || typeof loadArch !== 'function') return;
-  const arch = loadArch();
-  // popola anni
-  if(sel && !sel.children.length){
-    const years = [...new Set(arch.map(o => (o.data_ricezione||o.data_creazione||'').slice(0,4)).filter(Boolean))].sort().reverse();
-    sel.innerHTML = '<option value="all">Tutti gli anni</option>' + years.map(y => `<option value="${y}">${y}</option>`).join('');
-  }
-  const yr = sel ? sel.value : 'all';
-  let visible = yr === 'all' ? arch : arch.filter(o => (o.data_ricezione||o.data_creazione||'').startsWith(yr));
-  visible = visible.slice().sort((a,b) => (b.data_ricezione||b.data_creazione||'').localeCompare(a.data_ricezione||a.data_creazione||''));
-  if(!visible.length){
-    list.innerHTML = '<div class="empty-state"><div class="ico">🗂</div><div>Archivio vuoto</div></div>';
-    document.getElementById('archivio-detail').innerHTML = '<div class="empty-state"><div class="ico">👈</div><div>Seleziona un ordine archiviato</div></div>';
-    return;
-  }
-  list.innerHTML = visible.map(o => {
-    const dr = o.data_ricezione ? new Date(o.data_ricezione).toLocaleDateString('it-IT') : '—';
-    const tot = (o.righe||[]).length;
-    const isActive = o.id === _selArchOrdineId ? 'active-ord' : '';
-    return `<div class="ord-card ${isActive}" data-id="${o.id}" onclick="selectArchOrdineDetail('${o.id}')">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-        <span class="mono" style="font-weight:700;color:var(--accent)">${esc(o.num||'—')}</span>
-        <span class="badge bg-green">Chiuso</span>
-      </div>
-      <div style="font-size:12px;color:var(--text2);margin-bottom:2px">${esc(o.fornitore||'—')} — ${tot} prodotti</div>
-      <div style="font-size:10px;color:var(--text3);font-family:'DM Mono',monospace">Ricevuto ${dr}</div>
-    </div>`;
-  }).join('');
-  if(!_selArchOrdineId || !visible.find(o => o.id === _selArchOrdineId)){
-    selectArchOrdineDetail(visible[0].id);
-  } else {
-    renderArchOrdineDetailPanel(_selArchOrdineId);
-  }
-};
-window.selectArchOrdineDetail = function(id){
-  _selArchOrdineId = id;
-  document.querySelectorAll('#archivio-list .ord-card').forEach(c => c.classList.remove('active-ord'));
-  const card = document.querySelector(`#archivio-list .ord-card[data-id="${id}"]`);
-  if(card) card.classList.add('active-ord');
-  renderArchOrdineDetailPanel(id);
-};
-function renderArchOrdineDetailPanel(id){
-  const panel = document.getElementById('archivio-detail');
-  if(!panel || typeof loadArch !== 'function') return;
-  const ord = loadArch().find(o => o.id === id);
-  if(!ord){ panel.innerHTML = '<div class="empty-state"><div class="ico">⚠️</div><div>Ordine non trovato</div></div>'; return; }
-  const totQ = (ord.righe||[]).reduce((s,r) => s + (parseFloat(r.qta)||0), 0);
-  const ricQ = (ord.righe||[]).reduce((s,r) => s + (parseFloat(r.qtyRicevuta)||0), 0);
-  const dCre = ord.data_creazione ? new Date(ord.data_creazione).toLocaleDateString('it-IT') : '—';
-  const dInv = ord.data_invio ? new Date(ord.data_invio).toLocaleDateString('it-IT') : '—';
-  const dRic = ord.data_ricezione ? new Date(ord.data_ricezione).toLocaleDateString('it-IT') : '—';
-  let righeHTML = '';
-  (ord.righe||[]).forEach(r => {
-    righeHTML += `<tr><td>${esc(r.nome||'—')}</td><td>${r.qta||0}</td><td>${r.qtyRicevuta||0}</td><td class="mono" style="font-size:10px">${(r.ddtList||[]).map(d => d.numero||'—').join(', ')||'—'}</td></tr>`;
-  });
-  // documenti allegati
-  let docsHTML = '';
-  if(ord.scanOrdineImg) docsHTML += `<div class="ddt-tile"><div class="ddt-icon">📄</div><div style="flex:1"><div style="font-weight:600;font-size:12px">Ordine originale</div><div style="font-size:10px;color:var(--text3)">${dCre}</div><button class="hbtn2" style="margin-top:6px;font-size:11px" onclick="if(typeof viewScanOrdine==='function')viewScanOrdine('${id}')">Visualizza</button></div></div>`;
-  // tutti i DDT da righe
-  const ddtMap = new Map();
-  (ord.righe||[]).forEach(r => (r.ddtList||[]).forEach(d => {
-    if(!ddtMap.has(d.numero)) ddtMap.set(d.numero, d);
-  }));
-  ddtMap.forEach(d => {
-    docsHTML += `<div class="ddt-tile"><div class="ddt-icon green">📋</div><div style="flex:1"><div style="font-weight:600;font-size:12px">DDT ${esc(d.numero||'—')}</div><div style="font-size:10px;color:var(--text3)">${d.data ? new Date(d.data).toLocaleDateString('it-IT') : '—'}</div>${d.imageData?`<button class="hbtn2" style="margin-top:6px;font-size:11px" onclick="if(typeof viewScanDdt===\'function\')viewScanDdt(\'${id}\',\'${d.numero}\')">Visualizza</button>`:''}</div></div>`;
-  });
-  if(!docsHTML) docsHTML = '<div style="color:var(--text3);font-size:11px;padding:8px">Nessun documento allegato</div>';
+/* ─── Archivio Ordini: usiamo renderArchivio del logic file ─────────────────
+   La view ha: arch-filter-mese, arch-filter-forn, arch-filter-stato, archivio-list
+   renderArchivio() originale popola quei filtri e scrive le card in archivio-list. ─── */
 
-  panel.innerHTML = `
-    <div class="hero-pct">
-      <div class="hero-pct-meta">${esc(ord.num||'—')} · ${esc(ord.fornitore||'—')}</div>
-      <div class="hero-pct-val" style="color:var(--green)">100%</div>
-      <div class="hero-pct-sub">${ricQ} / ${totQ} pz · Chiuso ${dRic}</div>
-    </div>
-    <dl class="report-kv" style="padding:14px 20px;margin:0">
-      <dt>N° ordine</dt><dd>${esc(ord.num||'—')}</dd>
-      <dt>Fornitore</dt><dd>${esc(ord.fornitore||'—')}</dd>
-      <dt>Creato il</dt><dd>${dCre}</dd>
-      <dt>Inviato il</dt><dd>${dInv}</dd>
-      <dt>Ricevuto il</dt><dd>${dRic}</dd>
-      <dt>Note</dt><dd>${esc(ord.note||'—')}</dd>
-    </dl>
-    <div style="overflow-x:auto;border-top:1px solid var(--border)">
-      <table class="tbl">
-        <thead><tr><th>Prodotto</th><th>Qtà ord.</th><th>Qtà ric.</th><th>DDT</th></tr></thead>
-        <tbody>${righeHTML || '<tr><td colspan="4" style="text-align:center;color:var(--text3)">Nessuna riga</td></tr>'}</tbody>
-      </table>
-    </div>
-    <div style="padding:14px 20px;border-top:1px solid var(--border)">
-      <div style="font-weight:700;font-size:11px;text-transform:uppercase;color:var(--text3);margin-bottom:10px">📎 Documenti allegati</div>
-      ${docsHTML}
-    </div>`;
-}
 
-/* ─── Override renderRifiuti → 4 KPI + 4 cer-big + log ─── */
-window.renderRifiuti = function(){
-  if(typeof loadW !== 'function') return;
-  const w = loadW();
-  // KPI
-  const sP = (w.solidi_pieni||[]).length;
-  const sV = (w.solidi_vuoti||[]).length;
-  const lP = (w.liquidi_pieni||[]).length;
-  const lV = (w.liquidi_vuoti||[]).length;
-  const set = (id, v) => { const e = document.getElementById(id); if(e) e.textContent = v; };
-  set('rif-sol-pieni', sP);
-  set('rif-sol-vuoti', sV);
-  set('rif-liq-pieni', lP);
-  set('rif-liq-vuoti', lV);
 
-  // Group by CER
-  const grid = document.getElementById('rif-cer-grid');
-  if(grid){
-    const byCer = {};
-    (w.solidi_pieni||[]).forEach(b => {
-      const cer = b.cer || '180103';
-      byCer[cer] = byCer[cer] || {cer, pieni:0, vuoti:0, tipo:'solido', desc:'Rifiuto solido sanitario'};
-      byCer[cer].pieni++;
-    });
-    (w.solidi_vuoti||[]).forEach(b => {
-      const cer = b.cer || '180103';
-      byCer[cer] = byCer[cer] || {cer, pieni:0, vuoti:0, tipo:'solido', desc:'Rifiuto solido sanitario'};
-      byCer[cer].vuoti++;
-    });
-    (w.liquidi_pieni||[]).forEach(b => {
-      const cer = b.cer || '150110';
-      byCer[cer] = byCer[cer] || {cer, pieni:0, vuoti:0, tipo:'liquido', desc:'Rifiuto liquido di laboratorio'};
-      byCer[cer].pieni++;
-    });
-    (w.liquidi_vuoti||[]).forEach(b => {
-      const cer = b.cer || '150110';
-      byCer[cer] = byCer[cer] || {cer, pieni:0, vuoti:0, tipo:'liquido', desc:'Rifiuto liquido di laboratorio'};
-      byCer[cer].vuoti++;
-    });
-    const cerKeys = Object.keys(byCer).sort();
-    if(!cerKeys.length){
-      grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1"><div class="ico">✅</div><div>Nessun rifiuto registrato</div></div>';
-    } else {
-      const cerColors = {'180103':'red','180108':'red','150110':'yellow','150202':'gray'};
-      grid.innerHTML = cerKeys.map(c => {
-        const r = byCer[c];
-        const cls = cerColors[c] || 'gray';
-        return `<div class="cer-big ${cls}">
-          <div class="cer-code">CER ${c}</div>
-          <div class="cer-desc">${esc(r.desc)}</div>
-          <div class="cer-counts">
-            <div style="display:flex;justify-content:space-between"><span>Pieni</span><b style="color:var(--${cls==='gray'?'text2':cls})">${r.pieni}</b></div>
-            <div style="display:flex;justify-content:space-between"><span style="color:var(--text3)">Vuoti</span><span style="color:var(--text3)">${r.vuoti}</span></div>
-          </div>
-        </div>`;
-      }).join('');
-    }
-  }
-  // log smaltimenti
-  const log = (typeof loadWL === 'function') ? loadWL() : [];
-  const logBody = document.getElementById('rif-log-tbody');
-  const logYr = document.getElementById('rif-log-year');
-  if(logBody){
-    if(!log.length) logBody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text3);padding:14px">Nessuno smaltimento registrato</td></tr>';
-    else logBody.innerHTML = log.slice().sort((a,b) => (b.data||'').localeCompare(a.data||'')).map(l =>
-      `<tr><td class="mono">${l.data ? new Date(l.data).toLocaleDateString('it-IT') : '—'}</td><td class="mono">${esc(l.cer||'—')}</td><td>${esc(l.tipo||'—')}</td><td>${l.n_contenitori||0}</td><td>${esc(l.ditta||'—')}</td><td class="mono">${esc(l.formulario||'—')}</td></tr>`
-    ).join('');
-  }
-  if(logYr){
-    const years = [...new Set(log.map(l => (l.data||'').slice(0,4)).filter(Boolean))];
-    logYr.textContent = years.length ? 'Anno ' + years[0] : '—';
-  }
-};
+/* ─── Rifiuti: usiamo renderRifiuti del logic file (waste-grid + waste-log-tbody) ─── */
+
+
 
 /* ─── Movimenti: usiamo renderMovimenti del logic file ─── */
 
@@ -9135,126 +9374,142 @@ window.renderRifiuti = function(){
 
 
 
-/* ─── Override renderReport → 5 metriche + 2 tabelle + line ─── */
+/* ─── Override renderReport ─── */
 window.renderReport = function(){
-  if(typeof loadCampioni !== 'function') return;
+  // ── Selettore mesi: popola da coloratore + processatore ──
   const sel = document.getElementById('report-month-sel');
-  if(sel && !sel.children.length){
-    const months = [];
-    const camps = loadCampioni();
+  if(sel){
     const ms = new Set();
-    camps.forEach(c => { if(c.data) ms.add(c.data.slice(0,7)); });
+    const now = new Date();
+    // Mese corrente sempre presente
+    ms.add(now.toISOString().slice(0,7));
+    if(typeof loadColoratore === 'function')
+      loadColoratore().forEach(r => { if(r.data) ms.add(r.data.slice(0,7)); });
+    if(typeof loadProc === 'function')
+      loadProc().forEach(r => { if(r.data) ms.add(r.data.slice(0,7)); });
     const sortedMs = [...ms].sort().reverse();
-    sortedMs.forEach(m => {
+    const curVal = sel.value;
+    sel.innerHTML = sortedMs.map(m => {
       const [y,mo] = m.split('-');
-      const dt = new Date(parseInt(y), parseInt(mo)-1, 1);
-      months.push({key:m, label:dt.toLocaleDateString('it-IT',{month:'long',year:'numeric'})});
-    });
-    if(!months.length){
-      const now = new Date();
-      months.push({key:now.toISOString().slice(0,7), label:now.toLocaleDateString('it-IT',{month:'long',year:'numeric'})});
-    }
-    sel.innerHTML = months.map(m => `<option value="${m.key}">${m.label}</option>`).join('');
+      const lbl = new Date(parseInt(y),parseInt(mo)-1,1).toLocaleDateString('it-IT',{month:'long',year:'numeric'});
+      return `<option value="${m}" ${m===curVal?'selected':''}>${lbl}</option>`;
+    }).join('');
+    if(!sel.value && sortedMs.length) sel.value = sortedMs[0];
   }
-  const monthKey = sel ? sel.value : new Date().toISOString().slice(0,7);
+
+  const monthKey = (sel ? sel.value : null) || new Date().toISOString().slice(0,7);
   const [y, mo] = monthKey.split('-').map(x => parseInt(x));
   const ms = new Date(y, mo-1, 1);
   const me = new Date(y, mo, 1);
 
-  // titolo
-  const t = document.getElementById('report-title');
-  if(t) t.textContent = 'Report mensile — ' + new Date(y, mo-1).toLocaleDateString('it-IT',{month:'long',year:'numeric'});
+  // Titolo
+  const tEl = document.getElementById('report-title');
+  if(tEl) tEl.textContent = 'Report mensile — ' + new Date(y, mo-1).toLocaleDateString('it-IT',{month:'long',year:'numeric'});
 
-  const camps = loadCampioni().filter(c => c.data && new Date(c.data) >= ms && new Date(c.data) < me);
-  const ords = (typeof loadOrd === 'function') ? loadOrd().filter(o => o.data_creazione && new Date(o.data_creazione) >= ms && new Date(o.data_creazione) < me) : [];
-  const proc = (typeof loadProc === 'function') ? loadProc().filter(r => r.data && new Date(r.data) >= ms && new Date(r.data) < me) : [];
-  const movs = (typeof loadM === 'function') ? loadM().filter(m => m.ts && new Date(m.ts) >= ms && new Date(m.ts) < me) : [];
+  // ── Dati del mese ──
+  // Campioni: usiamo _derivedCampioni (da coloratore/processatore) come il dashboard
+  const allCamp = (typeof _derivedCampioni === 'function') ? _derivedCampioni() : [];
+  const camps = allCamp.filter(c => c.data && new Date(c.data) >= ms && new Date(c.data) < me);
 
-  // 5 metriche
-  const metrics = document.getElementById('report-metrics');
-  if(metrics){
-    const istN = camps.filter(c => (c.tipo||'').toLowerCase() === 'istologia').length;
-    const citN = camps.filter(c => (c.tipo||'').toLowerCase() === 'citologia').length;
-    const papN = camps.filter(c => (c.tipo||'').toLowerCase().includes('pap')).length;
-    metrics.innerHTML = `
+  const proc  = (typeof loadProc === 'function') ? loadProc().filter(r => r.data && new Date(r.data) >= ms && new Date(r.data) < me) : [];
+  const color = (typeof loadColoratore === 'function') ? loadColoratore().filter(r => r.data && new Date(r.data) >= ms && new Date(r.data) < me) : [];
+  const movs  = (typeof loadM === 'function') ? loadM().filter(m => m.ts && new Date(m.ts) >= ms && new Date(m.ts) < me) : [];
+  const ords  = (typeof loadOrd === 'function') ? loadOrd().filter(o => {
+    const d = o.data || o.creato || o.data_creazione || '';
+    return d && new Date(d) >= ms && new Date(d) < me;
+  }) : [];
+
+  // ── 5 metriche ──
+  const metricsEl = document.getElementById('report-metrics');
+  if(metricsEl){
+    const istN = camps.filter(c => (c.tipo||'') === 'istologia').length;
+    const citN = camps.filter(c => (c.tipo||'') === 'citologia').length;
+    const papN = camps.filter(c => (c.tipo||'') === 'pap').length;
+    const cicliProc  = proc.reduce((s,r) => s + (r.casi?.length || r.n_cassette || 0), 0);
+    const cicliColor = color.reduce((s,r) => s + (r.cicli_ee||0) + (r.cicli_ee_cit||0) + (r.cicli_pap||0), 0);
+    const vetriTot   = color.reduce((s,r) => s + (r.vetri_ist||0) + (r.vetri_cit||0) + (r.vetri_pap||0), 0);
+    metricsEl.innerHTML = `
       <div class="cnt-card"><div class="cnt-lbl">Casi totali</div><div class="cnt-val" style="color:var(--accent)">${camps.length}</div></div>
       <div class="cnt-card"><div class="cnt-lbl">Istologia</div><div class="cnt-val" style="color:var(--blue)">${istN}</div></div>
       <div class="cnt-card"><div class="cnt-lbl">Citologia</div><div class="cnt-val" style="color:var(--teal)">${citN}</div></div>
       <div class="cnt-card"><div class="cnt-lbl">PAP</div><div class="cnt-val" style="color:var(--purple)">${papN}</div></div>
-      <div class="cnt-card"><div class="cnt-lbl">Cicli proc.</div><div class="cnt-val" style="color:var(--orange)">${proc.length}</div></div>`;
+      <div class="cnt-card"><div class="cnt-lbl">Cicli proc.</div><div class="cnt-val" style="color:var(--orange)">${proc.length}</div></div>
+      <div class="cnt-card"><div class="cnt-lbl">Cicli color.</div><div class="cnt-val" style="color:var(--blue)">${cicliColor}</div></div>
+      ${vetriTot > 0 ? `<div class="cnt-card"><div class="cnt-lbl">Vetrini</div><div class="cnt-val" style="color:var(--text2)">${vetriTot}</div></div>` : ''}
+      <div class="cnt-card"><div class="cnt-lbl">Ordini</div><div class="cnt-val" style="color:var(--accent2)">${ords.length}</div></div>
+      <div class="cnt-card"><div class="cnt-lbl">Movim.</div><div class="cnt-val" style="color:var(--text2)">${movs.length}</div></div>`;
   }
 
-  // Consumo reagenti (top 10 da movimenti scarico)
+  // ── Consumo reagenti dal magazzino ──
   const ct = document.getElementById('report-consumo-tbl');
   if(ct){
     const consumo = {};
     movs.filter(m => m.tipo === 'scarico').forEach(m => {
-      const k = m.prodotto_nome || '—';
-      consumo[k] = (consumo[k] || 0) + (parseFloat(m.qta) || 0);
+      const k = m.prod || m.prodotto_nome || '—';
+      consumo[k] = (consumo[k]||0) + (parseFloat(m.qty||m.qta)||0);
     });
-    const sorted = Object.entries(consumo).sort((a,b) => b[1] - a[1]).slice(0,10);
-    if(!sorted.length) ct.innerHTML = '<div style="padding:14px;color:var(--text3);font-size:12px">Nessun consumo registrato</div>';
-    else {
-      let html = '<table class="tbl"><thead><tr><th>Prodotto</th><th style="text-align:right">Quantità</th></tr></thead><tbody>';
-      sorted.forEach(([n,q]) => html += `<tr><td>${esc(n)}</td><td class="mono" style="text-align:right">${q}</td></tr>`);
-      html += '</tbody></table>';
-      ct.innerHTML = html;
+    const sorted = Object.entries(consumo).sort((a,b) => b[1]-a[1]).slice(0,10);
+    if(!sorted.length){
+      ct.innerHTML = '<div style="padding:14px;color:var(--text3);font-size:12px;text-align:center">Nessun scarico registrato nel mese</div>';
+    } else {
+      ct.innerHTML = '<table class="tbl"><thead><tr><th>Prodotto</th><th style="text-align:right">Qtà scaricata</th></tr></thead><tbody>' +
+        sorted.map(([n,q]) => `<tr><td>${esc(n)}</td><td class="mono" style="text-align:right">${q}</td></tr>`).join('') +
+        '</tbody></table>';
     }
   }
 
-  // Ordini per fornitore
+  // ── Ordini per fornitore ──
   const ot = document.getElementById('report-ord-tbl');
   if(ot){
     const byForn = {};
     ords.forEach(o => {
       const k = o.fornitore || '—';
-      byForn[k] = (byForn[k] || 0) + 1;
+      byForn[k] = (byForn[k]||0) + 1;
     });
-    const sorted = Object.entries(byForn).sort((a,b) => b[1] - a[1]);
-    if(!sorted.length) ot.innerHTML = '<div style="padding:14px;color:var(--text3);font-size:12px">Nessun ordine</div>';
-    else {
-      let html = '<table class="tbl"><thead><tr><th>Fornitore</th><th style="text-align:right">N° ordini</th></tr></thead><tbody>';
-      sorted.forEach(([n,c]) => html += `<tr><td>${esc(n)}</td><td class="mono" style="text-align:right">${c}</td></tr>`);
-      html += '</tbody></table>';
-      ot.innerHTML = html;
+    const sorted = Object.entries(byForn).sort((a,b) => b[1]-a[1]);
+    if(!sorted.length){
+      ot.innerHTML = '<div style="padding:14px;color:var(--text3);font-size:12px;text-align:center">Nessun ordine nel mese</div>';
+    } else {
+      ot.innerHTML = '<table class="tbl"><thead><tr><th>Fornitore</th><th style="text-align:right">N° ordini</th></tr></thead><tbody>' +
+        sorted.map(([n,c]) => `<tr><td>${esc(n)}</td><td class="mono" style="text-align:right">${c}</td></tr>`).join('') +
+        '</tbody></table>';
     }
   }
 
-  // Line chart dei giorni del mese
-  const svg = document.getElementById('report-line');
-  if(svg){
-    svg.innerHTML = '';
-    const days = me.getDate() === 1 ? new Date(y, mo, 0).getDate() : 30;
+  // ── Line chart casi per giorno ──
+  const svgEl = document.getElementById('report-line');
+  if(svgEl){
     const lastDay = new Date(y, mo, 0).getDate();
     const data = {ist:[], cit:[], pap:[]};
     for(let d=1; d<=lastDay; d++){
       const ds = new Date(y, mo-1, d).toISOString().slice(0,10);
-      data.ist.push(camps.filter(c => c.data === ds && (c.tipo||'').toLowerCase() === 'istologia').length);
-      data.cit.push(camps.filter(c => c.data === ds && (c.tipo||'').toLowerCase() === 'citologia').length);
-      data.pap.push(camps.filter(c => c.data === ds && (c.tipo||'').toLowerCase().includes('pap')).length);
+      data.ist.push(camps.filter(c => c.data === ds && c.tipo === 'istologia').length);
+      data.cit.push(camps.filter(c => c.data === ds && c.tipo === 'citologia').length);
+      data.pap.push(camps.filter(c => c.data === ds && c.tipo === 'pap').length);
     }
     const W=600, H=100, pad={t:8,r:8,b:14,l:24};
-    const max = Math.max(1, ...data.ist, ...data.cit, ...data.pap);
-    const xStep = (W-pad.l-pad.r)/(lastDay-1);
-    const yScale = v => pad.t + (H-pad.t-pad.b)*(1 - v/max);
-    // grid
-    for(let i=0;i<=4;i++){
-      const yv = pad.t + (H-pad.t-pad.b)*i/4;
-      svg.appendChild(svgEl('line', {x1:pad.l, x2:W-pad.r, y1:yv, y2:yv, stroke:'#eef2f7'}));
-      svgText(svg, pad.l-4, yv+3, Math.round(max*(1-i/4)), {'text-anchor':'end','font-size':'8'});
-    }
-    // x labels (5 e 10 e 15 etc)
-    for(let d=1; d<=lastDay; d+=Math.max(1,Math.floor(lastDay/8))){
-      const x = pad.l + (d-1)*xStep;
-      svgText(svg, x, H-2, d, {'text-anchor':'middle','font-size':'8'});
-    }
-    const drawLine = (arr, color) => {
-      const pts = arr.map((v,i) => (pad.l + i*xStep) + ',' + yScale(v)).join(' ');
-      svg.appendChild(svgEl('polyline', {points:pts, fill:'none', stroke:color, 'stroke-width':2}));
-    };
-    drawLine(data.ist, '#2563eb');
-    drawLine(data.cit, '#0891b2');
-    drawLine(data.pap, '#7c3aed');
+    const maxV = Math.max(1, ...data.ist, ...data.cit, ...data.pap);
+    const xStep = (W-pad.l-pad.r)/(lastDay-1||1);
+    const yScale = v => pad.t + (H-pad.t-pad.b)*(1 - v/maxV);
+    const path = arr => arr.map((v,i) => (i?'L':'M')+(pad.l+i*xStep).toFixed(1)+' '+yScale(v).toFixed(1)).join(' ');
+    const grid = [0,.5,1].map(t => {
+      const yy = pad.t + t*(H-pad.t-pad.b);
+      return `<line x1="${pad.l}" x2="${W-pad.r}" y1="${yy}" y2="${yy}" stroke="var(--border-faint)" stroke-width=".5"/>`;
+    }).join('');
+    // Label giorni (ogni 5)
+    const xLabels = Array.from({length:Math.ceil(lastDay/5)}, (_,i) => {
+      const d = i*5+1; if(d>lastDay) return '';
+      return `<text x="${(pad.l+(d-1)*xStep).toFixed(1)}" y="${H}" text-anchor="middle" font-size="8" fill="var(--text3)" font-family="DM Mono,monospace">${d}</text>`;
+    }).join('');
+    svgEl.setAttribute('viewBox', `0 0 ${W} ${H}`);
+    svgEl.setAttribute('width', '100%');
+    svgEl.innerHTML = grid + xLabels +
+      `<path d="${path(data.ist)}" fill="none" stroke="var(--blue)" stroke-width="1.5"/>` +
+      `<path d="${path(data.cit)}" fill="none" stroke="var(--teal)" stroke-width="1.5"/>` +
+      `<path d="${path(data.pap)}" fill="none" stroke="#a855f7" stroke-width="1.5"/>` +
+      data.ist.map((v,i) => v>0 ? `<circle cx="${(pad.l+i*xStep).toFixed(1)}" cy="${yScale(v).toFixed(1)}" r="2" fill="var(--blue)"/>` : '').join('') +
+      data.cit.map((v,i) => v>0 ? `<circle cx="${(pad.l+i*xStep).toFixed(1)}" cy="${yScale(v).toFixed(1)}" r="2" fill="var(--teal)"/>` : '').join('') +
+      data.pap.map((v,i) => v>0 ? `<circle cx="${(pad.l+i*xStep).toFixed(1)}" cy="${yScale(v).toFixed(1)}" r="2" fill="#a855f7"/>` : '').join('');
   }
 };
 
