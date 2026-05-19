@@ -3778,6 +3778,7 @@ function saveProduct(){
   const prods=loadP();
   if(id){ const i=prods.findIndex(x=>x.id===id); if(i>=0)prods[i]=p; else prods.push(p); } else prods.push(p);
   saveP(prods); closeProductModal();
+  if(typeof buildProdDatalist === 'function') buildProdDatalist();
   if(currentView==='inventario') renderInv();
   if(currentView==='dashboard') renderDashboard();
   toast(id?'Prodotto aggiornato':'Prodotto aggiunto','success');
@@ -5977,6 +5978,11 @@ function renderOrdini(){
 let ordineEditId = null;
 function openOrdineModal(mode='new', prodId=null){
   ordineEditId = null;
+  // Invalida cache prodotti per assicurarsi che legga i dati più recenti
+  if (typeof _invalidateCache === 'function') _invalidateCache('ls_products');
+  else if (typeof _cache !== 'undefined') delete _cache['ls_products'];
+  // Ricostruisce datalist con tutti i prodotti aggiornati
+  buildProdDatalist();
   document.getElementById('ordine-modal-title').textContent = 'Nuovo Ordine';
   document.getElementById('o-num').value = 'ORD-' + new Date().getFullYear() + '-' + String(loadOrd().length+1).padStart(3,'0');
   document.getElementById('o-fornitore').value = '';
@@ -9858,6 +9864,8 @@ if(_origSetCache){
 }
 
 console.log('[LupoLab AP v5] glue layer ready');
+// Costruisce il datalist prodotti subito dopo il boot
+if (typeof buildProdDatalist === 'function') buildProdDatalist();
 </script>
 </body>
 </html>
