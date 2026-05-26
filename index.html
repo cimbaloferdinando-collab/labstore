@@ -7880,7 +7880,7 @@ function renderDashAnalytics(){
     }
   }
 
-  // ── 5. PREVISIONE ESAURIMENTO — top 6 prodotti per giorni residui ──
+  // ── 5. PREVISIONE ESAURIMENTO — raggruppa per alias, somma giacenze ──
   const prevTbl=document.getElementById('dash-prev-table');
   if(prevTbl){
     const consumiDay={};
@@ -7898,37 +7898,54 @@ function renderDashAnalytics(){
         consumiDay[b.prod_id] = (consumiDay[b.prod_id]||0) + 1;
       });
     }
-    const hasConsumi = Object.keys(consumiDay).length > 0;
+
+    // Raggruppa per alias: somma giacenza e consumo di tutti i lotti dello stesso prodotto
+    const aliasGrp = (typeof _aliasGroup === 'function') ? _aliasGroup : (n => n);
+    const gruppi = {};
+    prods.forEach(p => {
+      const alias = aliasGrp(p.nome || '');
+      if (!gruppi[alias]) gruppi[alias] = {alias, qty:0, consumo:0, min:0};
+      gruppi[alias].qty += (p.qty||0);
+      gruppi[alias].consumo += (consumiDay[p.id]||consumiDay[p.nome]||0);
+      gruppi[alias].min = Math.max(gruppi[alias].min, p.min||0);
+    });
+
+    const hasConsumi = Object.values(gruppi).some(g => g.consumo > 0);
     let forecast;
+
     if (hasConsumi) {
-      forecast=prods.map(p=>{
-        const tot=consumiDay[p.id]||consumiDay[p.nome]||0;
-        const perDay=tot/90;
-        const giorni=perDay>0?Math.floor((p.qty||0)/perDay):null;
-        return {p, giorni, perDay, modo:'consumo'};
-      }).filter(f=>f.giorni!==null&&f.giorni<180).sort((a,b)=>a.giorni-b.giorni).slice(0,6);
+      forecast = Object.values(gruppi).map(g => {
+        const perDay = g.consumo / 90;
+        const giorni = perDay > 0 ? Math.floor(g.qty / perDay) : null;
+        return {nome: g.alias, qty: g.qty, giorni, modo:'consumo'};
+      }).filter(f => f.giorni !== null && f.giorni < 180)
+        .sort((a,b) => a.giorni - b.giorni)
+        .slice(0,6);
     } else {
-      // Fallback: mostra i prodotti con scorta bassa o al minimo
-      forecast=prods.filter(p=>(p.min||0)>0&&(p.qty||0)<=p.min).map(p=>({
-        p, giorni:null, perDay:0, modo:'scorta'
-      })).sort((a,b)=>(a.p.qty||0)-(b.p.qty||0)).slice(0,6);
+      // Fallback: gruppi con giacenza totale <= scorta minima
+      forecast = Object.values(gruppi)
+        .filter(g => g.min > 0 && g.qty <= g.min)
+        .map(g => ({nome: g.alias, qty: g.qty, giorni: null, modo:'scorta', min: g.min}))
+        .sort((a,b) => a.qty - b.qty)
+        .slice(0,6);
     }
+
     if(!forecast.length){
       prevTbl.innerHTML='<div style="padding:16px;text-align:center;color:var(--text3);font-size:12px">'+(hasConsumi?'Nessun prodotto in esaurimento':'Nessun prodotto sotto scorta minima')+'</div>';
     } else {
       prevTbl.innerHTML='<div style="display:flex;flex-direction:column">'+forecast.map(f=>{
         let col, lbl;
         if (f.modo === 'scorta') {
-          col = (f.p.qty||0)===0 ? 'var(--red)' : 'var(--yellow)';
-          lbl = (f.p.qty||0)===0 ? 'Esaurito' : 'Scorta min';
+          col = f.qty === 0 ? 'var(--red)' : 'var(--yellow)';
+          lbl = f.qty === 0 ? 'Esaurito' : 'Scorta min';
         } else {
-          col=f.giorni<=14?'var(--red)':f.giorni<=30?'var(--yellow)':'var(--green)';
-          lbl=f.giorni===0?'oggi':f.giorni+' gg';
+          col = f.giorni<=14?'var(--red)':f.giorni<=30?'var(--yellow)':'var(--green)';
+          lbl = f.giorni===0?'oggi':f.giorni+' gg';
         }
-        const nameS=f.p.nome.length>22?f.p.nome.slice(0,21)+'…':f.p.nome;
-        return '<div onclick="openSchedaProdotto(\''+f.p.id+'\')" style="display:flex;align-items:center;gap:8px;padding:7px 10px;border-bottom:1px solid var(--border-faint);cursor:pointer;font-size:12px">'+
+        const nameS = f.nome.length>22 ? f.nome.slice(0,21)+'…' : f.nome;
+        return '<div style="display:flex;align-items:center;gap:8px;padding:7px 10px;border-bottom:1px solid var(--border-faint);font-size:12px">'+
           '<span style="flex:1;color:var(--text);font-weight:500">'+esc(nameS)+'</span>'+
-          '<span style="font-family:DM Mono,monospace;font-size:10px;color:var(--text3)">'+(f.p.qty||0)+' pz</span>'+
+          '<span style="font-family:DM Mono,monospace;font-size:10px;color:var(--text3)">'+f.qty+' pz</span>'+
           '<span style="font-family:DM Mono,monospace;font-size:11px;font-weight:700;color:'+col+';min-width:60px;text-align:right">'+lbl+'</span>'+
         '</div>';
       }).join('')+'</div>';
