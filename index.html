@@ -3637,74 +3637,135 @@ function clearMovimenti(){ if(!confirm('Svuotare lo storico?')) return; saveM([]
 function renderRifiuti(){
   const W=loadW();
   const grid=document.getElementById('waste-grid');
-  // Shared pool banner
+  if(!grid) return;
+
+  // Pool condiviso 150110 + 150202
   const pool = W['bidoni_solidi_comuni']||{vuoti:0};
   const poolAlert = pool.vuoti===0
-    ? '<span class="badge bg-red" style="font-size:11px">⚠ Esauriti</span>'
-    : pool.vuoti<=1
-      ? '<span class="badge bg-yellow" style="font-size:11px">⚠ Ultimo</span>'
-      : '';
-  const poolBanner = `<div style="grid-column:1/-1;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
-    <div>
-      <div style="font-weight:600;font-size:13px;margin-bottom:2px">🗑 Bidoni plastica condivisi — 150110* + 150202*</div>
-      <div style="font-size:11px;color:var(--text3)">Un unico stock di bidoni vuoti usato da entrambi i codici CER</div>
-    </div>
-    <div style="display:flex;align-items:center;gap:12px">
-      <div style="text-align:center">
-        <div style="font-size:26px;font-family:'DM Mono',monospace;color:var(--green)">${pool.vuoti}</div>
-        <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.7px">Vuoti disponibili ${poolAlert}</div>
-      </div>
-      <div style="display:flex;gap:5px">
-        <button class="btn btn-sm btn-ok" onclick="adjustPool(1)" title="Aggiunta bidoni vuoti">+ Vuoto</button>
-        <button class="btn btn-sm btn-danger" onclick="adjustPool(-1)" title="Rimuovi bidone vuoto" ${pool.vuoti===0?'disabled':''}>− Vuoto</button>
-      </div>
-    </div>
-  </div>`;
+    ? '<span class="badge bg-red" style="font-size:10px">⚠ Esauriti</span>'
+    : pool.vuoti<=1 ? '<span class="badge bg-yellow" style="font-size:10px">⚠ Ultimo</span>' : '';
 
-  grid.innerHTML = poolBanner + Object.entries(WASTE_CONFIG).map(([key,cfg])=>{
-    const w=W[key]||{pieni:0,smaltiti:0};
-    const vuotiDisp = getVuotiDisp(W,key);
-    const isShared = !!cfg.sharedPool;
-    const vuotiAlert = vuotiDisp===0
-      ? `<span class="badge bg-red" style="font-size:10px;margin-bottom:8px;display:inline-flex">⚠ ${cfg.contenitoreLabel} esaurit${cfg.contenitore==='scatola'?'e':'i'}</span>`
-      : vuotiDisp<=1
-        ? `<span class="badge bg-yellow" style="font-size:10px;margin-bottom:8px;display:inline-flex">⚠ Ultim${cfg.contenitore==='scatola'?'e':'i'} ${cfg.contenitoreLabel}</span>`
-        : '';
-    const tipoBadge=cfg.tipo==='Liquido'
-      ? `<span class="badge bg-blue" style="font-size:10px">💧 Liquido</span>`
-      : `<span class="badge bg-orange" style="font-size:10px">⬛ Solido</span>`;
-    const sharedNote = isShared
-      ? `<div style="font-size:11px;background:rgba(251,146,60,.08);border:1px solid rgba(251,146,60,.2);border-radius:4px;padding:4px 8px;margin-bottom:8px;color:var(--orange)">🗑 Usa bidoni plastica condivisi — ${vuotiDisp} disponibili</div>`
-      : '';
-    const vuotiBox = isShared ? '' : `<div class="wc-box"><div class="wc-num" style="color:var(--green)">${vuotiDisp}</div><div class="wc-lbl">${cfg.contenitoreIcon} ${cfg.contenitoreLabel}</div></div>`;
+  // Helper: wc-box singolo
+  const box = (num, lbl, color='var(--text)') =>
+    `<div class="wc-box"><div class="wc-num" style="color:${color}">${num}</div><div class="wc-lbl">${lbl}</div></div>`;
 
-    return `<div class="waste-card ${cfg.cls}">
+  // ── 1. CER 180103* — Solidi infetti, scatole dedicate ──
+  const c180103 = WASTE_CONFIG.cer_180103;
+  const w180103 = W['cer_180103']||{pieni:0,smaltiti:0,vuoti:0};
+  const vuoti180103 = w180103.vuoti||0;
+  const card180103 = `
+    <div class="waste-card ${c180103.cls}" style="grid-column:1">
       <div class="waste-card-title">
-        <span class="waste-type-icon">${cfg.icon}</span>
+        <span class="waste-type-icon">${c180103.icon}</span>
         <div style="flex:1">
-          <div style="display:flex;align-items:center;gap:6px">${cfg.label} ${tipoBadge}</div>
-          <div style="font-size:11px;color:var(--text3);font-weight:400;margin-top:2px">${cfg.sub}</div>
+          <div style="display:flex;align-items:center;gap:6px;font-weight:700">${c180103.label}
+            <span class="badge bg-orange" style="font-size:10px">⬛ Solido</span>
+          </div>
+          <div style="font-size:11px;color:var(--text3);margin-top:2px">${c180103.sub}</div>
         </div>
       </div>
-      <div style="font-size:11px;color:var(--text3);margin-bottom:8px;line-height:1.4">${cfg.desc}</div>
-      ${sharedNote}
-      ${vuotiAlert ? `<div style="margin-bottom:8px">${vuotiAlert}</div>` : ''}
       <div class="waste-counters">
-        <div class="wc-box"><div class="wc-num" style="color:${cfg.color}">${w.pieni}</div><div class="wc-lbl">Pieni</div></div>
-        ${vuotiBox}
-        <div class="wc-box"><div class="wc-num" style="color:var(--text2)">${w.smaltiti}</div><div class="wc-lbl">Smaltiti tot.</div></div>
+        ${box(w180103.pieni,'Pieni',c180103.color)}
+        ${box(vuoti180103,'📦 Scatole vuote','var(--green)')}
+        ${box(w180103.smaltiti,'Smaltiti','var(--text2)')}
       </div>
       <div class="waste-btns">
-        <button class="btn btn-sm btn-waste" onclick="quickWaste('${key}','pieno',1)">+ Pieno</button>
-        <button class="btn btn-sm btn-ok" onclick="quickWaste('${key}','smaltito',1)" ${w.pieni===0?'disabled':''}>✓ Smaltito</button>
-        ${!isShared?`<button class="btn btn-sm" onclick="quickWaste('${key}','vuoto',1)">+ ${cfg.contenitoreLabel.slice(0,-1)}</button>
-        <button class="btn btn-sm btn-danger" onclick="quickWaste('${key}','vuoto_sub',1)" ${vuotiDisp===0?'disabled':''}>− ${cfg.contenitoreLabel.slice(0,-1)}</button>`:''}
+        <button class="btn btn-sm btn-waste" onclick="quickWaste('cer_180103','pieno',1)">+ Piena</button>
+        <button class="btn btn-sm btn-ok" onclick="quickWaste('cer_180103','smaltito',1)" ${w180103.pieni===0?'disabled':''}>✓ Smaltita</button>
+        <button class="btn btn-sm" onclick="quickWaste('cer_180103','vuoto',1)">+ Scatola</button>
+        <button class="btn btn-sm btn-danger" onclick="quickWaste('cer_180103','vuoto_sub',1)" ${vuoti180103===0?'disabled':''}>− Scatola</button>
       </div>
     </div>`;
-  }).join('');
+
+  // ── 2. CER 150110* + 150202* — Solidi condivisi, pool bidoni plastica ──
+  const c150110 = WASTE_CONFIG.cer_150110;
+  const c150202 = WASTE_CONFIG.cer_150202;
+  const w150110 = W['cer_150110']||{pieni:0,smaltiti:0};
+  const w150202 = W['cer_150202']||{pieni:0,smaltiti:0};
+  const cardSolidiCondivisi = `
+    <div class="waste-card wc-orange" style="grid-column:2">
+      <div class="waste-card-title">
+        <span class="waste-type-icon">🗑</span>
+        <div style="flex:1">
+          <div style="display:flex;align-items:center;gap:6px;font-weight:700">CER 150110* + 150202*
+            <span class="badge bg-orange" style="font-size:10px">⬛ Solido</span>
+          </div>
+          <div style="font-size:11px;color:var(--text3);margin-top:2px">Imballaggi + DPI contaminati — bidoni plastica condivisi</div>
+        </div>
+      </div>
+      <!-- Pool bidoni condivisi -->
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:8px 10px;margin-bottom:8px">
+        <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">🗑 Bidoni plastica — stock condiviso</div>
+        <div style="display:flex;align-items:center;gap:12px">
+          <div style="font-family:'DM Mono',monospace;font-size:28px;font-weight:700;color:var(--green)">${pool.vuoti}</div>
+          <div style="font-size:11px;color:var(--text3)">vuoti disponibili ${poolAlert}</div>
+          <div style="margin-left:auto;display:flex;gap:5px">
+            <button class="btn btn-sm btn-ok" onclick="adjustPool(1)">+ Vuoto</button>
+            <button class="btn btn-sm btn-danger" onclick="adjustPool(-1)" ${pool.vuoti===0?'disabled':''}>− Vuoto</button>
+          </div>
+        </div>
+      </div>
+      <!-- 150110 -->
+      <div style="border-left:3px solid var(--orange);padding:6px 10px;margin-bottom:6px;background:var(--bg3);border-radius:0 5px 5px 0">
+        <div style="font-size:11px;font-weight:600;color:var(--orange);margin-bottom:4px">${c150110.icon} ${c150110.label}</div>
+        <div class="waste-counters" style="margin:0">
+          ${box(w150110.pieni,'Pieni',c150110.color)}
+          ${box(w150110.smaltiti,'Smaltiti','var(--text2)')}
+        </div>
+        <div class="waste-btns" style="margin-top:6px">
+          <button class="btn btn-sm btn-waste" onclick="quickWaste('cer_150110','pieno',1)">+ Pieno</button>
+          <button class="btn btn-sm btn-ok" onclick="quickWaste('cer_150110','smaltito',1)" ${w150110.pieni===0?'disabled':''}>✓ Smaltito</button>
+        </div>
+      </div>
+      <!-- 150202 -->
+      <div style="border-left:3px solid var(--red);padding:6px 10px;background:var(--bg3);border-radius:0 5px 5px 0">
+        <div style="font-size:11px;font-weight:600;color:var(--red);margin-bottom:4px">${c150202.icon} ${c150202.label}</div>
+        <div class="waste-counters" style="margin:0">
+          ${box(w150202.pieni,'Pieni',c150202.color)}
+          ${box(w150202.smaltiti,'Smaltiti','var(--text2)')}
+        </div>
+        <div class="waste-btns" style="margin-top:6px">
+          <button class="btn btn-sm btn-waste" onclick="quickWaste('cer_150202','pieno',1)">+ Pieno</button>
+          <button class="btn btn-sm btn-ok" onclick="quickWaste('cer_150202','smaltito',1)" ${w150202.pieni===0?'disabled':''}>✓ Smaltito</button>
+        </div>
+      </div>
+    </div>`;
+
+  // ── 3. CER 180106* — Liquidi chimici, taniche dedicate ──
+  const c180106 = WASTE_CONFIG.cer_180106;
+  const w180106 = W['cer_180106']||{pieni:0,smaltiti:0,vuoti:0};
+  const vuoti180106 = w180106.vuoti||0;
+  const card180106 = `
+    <div class="waste-card ${c180106.cls}" style="grid-column:3">
+      <div class="waste-card-title">
+        <span class="waste-type-icon">${c180106.icon}</span>
+        <div style="flex:1">
+          <div style="display:flex;align-items:center;gap:6px;font-weight:700">${c180106.label}
+            <span class="badge bg-blue" style="font-size:10px">💧 Liquido</span>
+          </div>
+          <div style="font-size:11px;color:var(--text3);margin-top:2px">${c180106.sub}</div>
+        </div>
+      </div>
+      <div class="waste-counters">
+        ${box(w180106.pieni,'Piene',c180106.color)}
+        ${box(vuoti180106,'🧪 Taniche vuote','var(--green)')}
+        ${box(w180106.smaltiti,'Smaltite','var(--text2)')}
+      </div>
+      <div class="waste-btns">
+        <button class="btn btn-sm btn-waste" onclick="quickWaste('cer_180106','pieno',1)">+ Piena</button>
+        <button class="btn btn-sm btn-ok" onclick="quickWaste('cer_180106','smaltito',1)" ${w180106.pieni===0?'disabled':''}>✓ Smaltita</button>
+        <button class="btn btn-sm" onclick="quickWaste('cer_180106','vuoto',1)">+ Tanica</button>
+        <button class="btn btn-sm btn-danger" onclick="quickWaste('cer_180106','vuoto_sub',1)" ${vuoti180106===0?'disabled':''}>− Tanica</button>
+      </div>
+    </div>`;
+
+  grid.innerHTML = `<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+    ${card180103}${cardSolidiCondivisi}${card180106}
+  </div>`;
 
   // Log
   const wl=loadWL(), tb=document.getElementById('waste-log-tbody');
+  if(!tb) return;
   if(!wl.length){ tb.innerHTML=`<tr><td colspan="5"><div class="empty"><div class="e-ico">🗑</div><p>Nessun movimento rifiuti registrato</p></div></td></tr>`; return; }
   tb.innerHTML=wl.slice(0,100).map(e=>{
     const cfg=WASTE_CONFIG[e.tipo]||{icon:'📌',label:e.tipo};
