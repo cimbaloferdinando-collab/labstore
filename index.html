@@ -1044,6 +1044,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
           <div class="page-sub" id="bidoni-stats">—</div>
         </div>
         <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+          <button class="btn btn-sm btn-warn" onclick="sistemaScarichiOggi()" title="Sistema gli scarichi di oggi che non hanno chiuso il bidone aperto">🔧 Sistema scarichi oggi</button>
           <div class="search-wrap">
             <span class="s-ico">🔍</span>
             <input type="text" class="search-inp" id="bidoni-search" placeholder="Cerca prodotto, lotto…" oninput="renderBidoniView()">
@@ -4143,6 +4144,42 @@ function scaricaSelProd(){
   document.getElementById('sc-man-qty-wrap').style.display='none';
   document.getElementById('sc-man-confirm-btn').style.display='none';
 }
+// Helper: se il prodotto è tracciato a bidoni e ha un bidone aperto, lo smaltisce
+// e chiede se aprirne uno nuovo. Restituisce true se ha gestito il bidone.
+async function _gestisciBidoneInScarico(prodId){
+  if(typeof isBidoneTracked!=='function') return false;
+  const prod = loadP().find(p=>p.id===prodId);
+  if(!prod || !isBidoneTracked(prod)) return false;
+  const aperto = getBidoneAperto(prodId);
+  if(!aperto) return false;
+  // Smaltisci il bidone aperto (segna chiusura/smaltimento)
+  const all = loadBidoni();
+  const idx = all.findIndex(b=>b.id===aperto.id);
+  if(idx>=0){
+    all[idx].stato='smaltito';
+    all[idx].data_smaltimento=new Date().toISOString().slice(0,10);
+    await saveBidoniArr(all);
+    toast('🔒 Bidone aperto (lotto '+(aperto.lotto||'—')+') segnato come terminato','info');
+  }
+  // Chiedi se aprire un nuovo bidone
+  const chiusi = loadBidoni().filter(b=>b.prod_id===prodId && b.stato==='chiuso')
+    .sort((a,b)=>{
+      const ds=(a.data_carico||'').localeCompare(b.data_carico||'');
+      if(ds!==0) return ds;
+      return (a.scadenza||'').localeCompare(b.scadenza||'');
+    });
+  if(chiusi.length){
+    const target = chiusi[0];
+    const msg = `Hai terminato il bidone aperto di ${prod.nome}.\n\nVuoi aprire un nuovo bidone?\n\nProssimo (FIFO):\nLotto: ${target.lotto||'—'}\nScadenza: ${target.scadenza?new Date(target.scadenza).toLocaleDateString('it-IT'):'—'}`;
+    if(confirm(msg)){
+      await openBidone(target.id);
+    }
+  } else {
+    toast('Nessun altro bidone chiuso disponibile da aprire','warn');
+  }
+  return true;
+}
+
 function confirmScaricaManuale(){
   if(!scaricaSelectedId){ toast('Seleziona un lotto','error'); return; }
   const qty=parseFloat(document.getElementById('sc-man-qty').value)||1;
@@ -4154,9 +4191,12 @@ function confirmScaricaManuale(){
   p.qty-=qty; saveP(prods);
   const movs=loadM(); movs.unshift({id:genId(),ts:new Date().toISOString(),tipo:'scarico',prod:p.nome,prodId:p.id,qty,lotto:p.lotto||'',note:note||'Scarico manuale'}); saveM(movs);
   closeScaricaModal();
-  if(currentView==='inventario') renderInv();
-  if(currentView==='dashboard') renderDashboard();
-  if(currentView==='movimenti') renderMovimenti();
+  // Gestione bidone aperto (smaltimento + eventuale apertura nuovo)
+  _gestisciBidoneInScarico(p.id).then(()=>{
+    if(currentView==='inventario') renderInv();
+    if(currentView==='dashboard') renderDashboard();
+    if(currentView==='movimenti') renderMovimenti();
+  });
   toast('Scarico: '+p.nome+' −'+qty,'info');
 }
 function closeScaricaModal(){ if(codeReader){ try{codeReader.reset();}catch(e){} codeReader=null; } closeModal('modal-scarica'); }
@@ -4209,9 +4249,11 @@ function confirmBarcodeScario(){
   p.qty-=qty; saveP(prods);
   const movs=loadM(); movs.unshift({id:genId(),ts:new Date().toISOString(),tipo:'scarico',prod:p.nome,prodId:p.id,qty,lotto:p.lotto||'',note:document.getElementById('bc-note').value||'Scarico barcode'}); saveM(movs);
   closeBarcodeModal();
-  if(currentView==='inventario') renderInv();
-  if(currentView==='dashboard') renderDashboard();
-  if(currentView==='movimenti') renderMovimenti();
+  _gestisciBidoneInScarico(p.id).then(()=>{
+    if(currentView==='inventario') renderInv();
+    if(currentView==='dashboard') renderDashboard();
+    if(currentView==='movimenti') renderMovimenti();
+  });
   toast(`Scarico: ${p.nome} −${qty}`,'info');
 }
 function addFromBarcode(){ closeBarcodeModal(); document.getElementById('f-barcode').value=lastCode||''; openAddModal(); }
@@ -7451,6 +7493,52 @@ window.smaltisciBidoneAperto = async function(prodId) {
   }
 };
 
+
+// ─── UTILITÀ: sistema gli scarichi di oggi che non hanno chiuso il bidone aperto ───
+// Da lanciare una volta dalla console o da un bottone temporaneo.
+window.sistemaScarichiOggi = async function(){
+  const oggi = new Date().toISOString().slice(0,10);
+  const movs = loadM();
+  const scarichiOggi = movs.filter(m=>m.tipo==='scarico' && m.ts && m.ts.slice(0,10)===oggi);
+  if(!scarichiOggi.length){ toast('Nessuno scarico registrato oggi','info'); return; }
+  const prodIdsScaricati = [...new Set(scarichiOggi.map(m=>m.prodId).filter(Boolean))];
+  let sistemati = 0;
+  const report = [];
+  for(const prodId of prodIdsScaricati){
+    const prod = loadP().find(p=>p.id===prodId);
+    if(!prod || !isBidoneTracked(prod)) continue;
+    const aperto = getBidoneAperto(prodId);
+    if(!aperto) continue;
+    // Smaltisci il bidone aperto
+    const all = loadBidoni();
+    const idx = all.findIndex(b=>b.id===aperto.id);
+    if(idx>=0){
+      all[idx].stato='smaltito';
+      all[idx].data_smaltimento=oggi;
+      await saveBidoniArr(all);
+      sistemati++;
+      report.push(prod.nome+' (lotto '+(aperto.lotto||'—')+')');
+    }
+  }
+  if(sistemati){
+    let msg = sistemati+' bidone/i chiuso/i:\n\n'+report.join('\n')+'\n\nVuoi aprire i nuovi bidoni FIFO per questi prodotti?';
+    if(confirm(msg)){
+      for(const prodId of prodIdsScaricati){
+        const prod = loadP().find(p=>p.id===prodId);
+        if(!prod || !isBidoneTracked(prod)) continue;
+        if(getBidoneAperto(prodId)) continue;
+        const chiusi = loadBidoni().filter(b=>b.prod_id===prodId && b.stato==='chiuso')
+          .sort((a,b)=>(a.data_carico||'').localeCompare(b.data_carico||'')||(a.scadenza||'').localeCompare(b.scadenza||''));
+        if(chiusi.length) await openBidone(chiusi[0].id);
+      }
+    }
+    if(typeof renderInv==='function') renderInv();
+    if(typeof renderBidoniView==='function') renderBidoniView();
+    toast('✅ '+sistemati+' bidone/i sistemato/i','success');
+  } else {
+    toast('Nessun bidone aperto da sistemare tra gli scarichi di oggi','info');
+  }
+};
 
 // FIX [INFRASTRUTTURA]: LS_CAMP dichiarata in cima al file
 
