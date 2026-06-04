@@ -2640,7 +2640,19 @@ function _getCache(key,fallback='[]'){
   }
   return _cache[key];
 }
-function _setCache(key,val){ _cache[key]=val; localStorage.setItem(key,JSON.stringify(val)); }
+function _setCache(key,val){
+  _cache[key]=val;
+  try{
+    localStorage.setItem(key,JSON.stringify(val));
+  }catch(e){
+    if(e && (e.name==='QuotaExceededError' || e.code===22 || e.code===1014)){
+      console.warn('[STORAGE FULL] localStorage pieno, impossibile salvare '+key);
+      try{ toast('⚠ Memoria locale piena. Sincronizza con il cloud e riprova.','error'); }catch(_){}
+    } else {
+      console.warn('[_setCache] errore salvataggio '+key, e);
+    }
+  }
+}
 // Helper: aggiunge/aggiorna il campo 'modificato' a ogni record di un array prima del save
 function _stampMod(arr){ const now=new Date().toISOString(); return (arr||[]).map(item=>({...item, modificato:now})); }
 function _invalidateAll(){ Object.keys(_cache).forEach(k=>delete _cache[k]); }
@@ -7331,7 +7343,7 @@ function migrateProductsToBidoni() {
   });
   if (nuoviTot > 0) {
     _setCache(LS_BIDONI, _stampMod(bidoni));
-    console.log('[migrateProductsToBidoni] creati ' + nuoviTot + ' bidoni dai prodotti esistenti');
+    // [migrateProductsToBidoni] creati 'nuoviTot' bidoni dai prodotti esistenti
     toast('Migrazione: ' + nuoviTot + ' bidoni creati da prodotti esistenti', 'ok');
   }
 }
@@ -8754,7 +8766,7 @@ function svgText(parent, x, y, txt, attrs){
 // ─── Toast container preview-style (override su quello del logic file) ───
 function toast(msg, type){
   const c = document.getElementById('toast-container');
-  if(!c) { console.log('[toast]', msg); return; }
+  if(!c) { return; }
   const t = document.createElement('div');
   t.className = 'toast' + (type ? ' t-'+type : '');
   t.textContent = msg;
@@ -10410,19 +10422,18 @@ document.addEventListener('DOMContentLoaded', () => {
     item.addEventListener('click', () => _railClick(item));
   });
 
-  // 5.3 Elimina ordini di test A-F1 e B-F2
-  try {
+  // 5.3 Elimina ordini di test A-F1 e B-F2 (una tantum)
+  try { if(!localStorage.getItem('ls_mig_v5_test_ord')){
     const ords = loadOrd();
     const filtered = ords.filter(o => o.num !== 'A-F1' && o.num !== 'B-F2');
     if (filtered.length !== ords.length) {
       _setCache('ls_ordini', filtered);
-      localStorage.setItem('ls_ordini', JSON.stringify(filtered));
-      console.log('[migrate] rimossi ordini test A-F1/B-F2');
+      // [migrate] rimossi ordini test A-F1/B-F2
     }
-  } catch(e) { console.warn('[migrate ordini test]', e); }
+  localStorage.setItem('ls_mig_v5_test_ord','1'); } } catch(e) { console.warn('[migrate ordini test]', e); }
 
-  // 5.4 Migrazione: rinomina "P.O. Blu" → "P.O. Bianchi" e riclassifica vetrini bianchi
-  try {
+  // 5.4 Migrazione: rinomina "P.O. Blu" → "P.O. Bianchi" e riclassifica vetrini bianchi (una tantum)
+  try { if(!localStorage.getItem('ls_mig_v5_po_bianchi')){
     const prods = loadP();
     let changed = false;
     prods.forEach(p => {
@@ -10433,8 +10444,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const isWhite = n.includes('bianco') || n.includes('bianchi') || n.includes('white');
       if (isPO && isWhite && p.cat !== 'Vetrini') { p.cat = 'Vetrini'; changed = true; }
     });
-    if (changed) { _setCache('ls_products', prods); localStorage.setItem('ls_products', JSON.stringify(prods)); }
-  } catch(e) { console.warn('[migrate PO Bianchi]', e); }
+    if (changed) { _setCache('ls_products', prods); }
+  localStorage.setItem('ls_mig_v5_po_bianchi','1'); } } catch(e) { console.warn('[migrate PO Bianchi]', e); }
 
   // 5.5 Migrazione bidoni (reagenti/coloranti esistenti → bidoni chiusi)
   try {
@@ -10467,7 +10478,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     if (fixedCol > 0) {
       _setCache(LS_COLOR_REG, _stampMod(fixedColArr));
-      console.log('[migrate color] ripristinati casi_xxx per ' + fixedCol + ' record');
+      // [migrate color] ripristinati casi_xxx
     }
   } catch(e) { console.warn('[migrate color]', e); }
   // (salvati con versione vecchia del save che non espandeva il range in casi[])
@@ -10489,7 +10500,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     if (fixedCount > 0) {
       _setCache(LS_PROC, _stampMod(fixed));
-      console.log('[migrate proc] ripristinati casi[] per ' + fixedCount + ' record');
+      // [migrate proc] ripristinati casi[]
     }
   } catch(e) { console.warn('[migrate proc]', e); }
 
@@ -10533,7 +10544,7 @@ if(_origSetCache){
   };
 }
 
-console.log('[LupoLab AP v5] glue layer ready');
+// [LupoLab AP v5] glue layer ready
 // Costruisce il datalist prodotti subito dopo il boot
 if (typeof buildProdDatalist === 'function') buildProdDatalist();
 </script>
