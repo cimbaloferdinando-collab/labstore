@@ -10906,22 +10906,28 @@ const _IMPX_NORM_DEN = {
 };
 
 // Parole chiave forti per CITOLOGIA (riconoscimento automatico)
+// CITOLOGIA: solo se la descrizione contiene STRISCI, LIQUIDI o AGOASPIRATI
+// Tutto il resto è ISTOLOGIA.
 const _IMPX_CITO_KEYWORDS = [
-  'urine', 'urinari', 'urinaria', 'urinario',
-  'pleurico', 'pleurica', 'liquido pleur',
-  'ascitico', 'ascitica', 'liquido ascit',
-  'agoasp', 'agoaspirato', 'agoaspirati',
-  'fnac', 'fna ',
+  // STRISCI
+  'striscio', 'strisciato', 'strisciati', 'strisciata',
+  'vetrini strisciati', 'vetrino strisciato',
+  // LIQUIDI organici
+  'urine', 'urina',
+  'liquido pleurico', 'liquido pleurica', 'liq pleur', 'versamento pleur',
+  'liquido ascitico', 'liquido ascitica', 'liq ascit', 'versamento ascit',
+  'liquido cefalorachidiano', 'liquor',
+  'liquido pericardico', 'versamento pericard',
   'espettorato', 'espettorati',
-  'broncoasp', 'broncolavaggio', 'lavaggio bronchi', 'bal ',
-  'striscio', 'strisciato', 'strisciati', 'vetrini strisciati',
-  'tampone',
-  'cisti tiroide.*aspirato',
-  'liquido cefalorachidiano', 'liquor'
+  'broncolavaggio', 'lavaggio bronchi', 'bronco lavaggio', 'broncoaspirato',
+  'lba ', 'bal ', 'bal-', 'lba-',
+  // AGOASPIRATI
+  'agoaspirato', 'agoaspirati', 'agoasp ', 'agoasp.',
+  'fna ', 'fnac', 'fna-', 'fna,'
 ];
 
-// Parole "borderline" — potrebbero essere isto o cito
-const _IMPX_BORDERLINE = ['tir ', 'tiroide ', 'cisti', 'agoaspirato tir'];
+// Non servono più borderline: la logica è binaria
+const _IMPX_BORDERLINE = [];
 
 function _impxNormalizeDenominazione(s) {
   if (!s) return '';
@@ -10949,31 +10955,19 @@ function _impxParseQta(val) {
 }
 
 function _impxDetectTipo(descRaw, anno) {
-  // Ritorna {tipo: 'Istologia'|'Citologia'|'Ambiguo', conf: 'high'|'low'}
-  if (!descRaw) return { tipo: 'Istologia', conf: 'low' };
+  // Ritorna {tipo: 'istologia'|'citologia', conf: 'high'|'low'}
+  // REGOLA: tutto è ISTOLOGIA tranne quando la descrizione contiene
+  // parole chiave di CITOLOGIA (strisci, liquidi, agoaspirati).
+  if (!descRaw) return { tipo: 'istologia', conf: 'low' };
   const d = String(descRaw).toLowerCase();
-  // Match forte → Citologia
+  // Match parola chiave citologia
   for (const kw of _IMPX_CITO_KEYWORDS) {
-    try {
-      if (new RegExp('\\b' + kw + '\\b').test(d) || d.includes(kw)) {
-        return { tipo: 'Citologia', conf: 'high' };
-      }
-    } catch(_) {
-      if (d.includes(kw)) return { tipo: 'Citologia', conf: 'high' };
-    }
-  }
-  // Borderline (es. solo "tir") → ambiguo
-  for (const kw of _IMPX_BORDERLINE) {
     if (d.includes(kw)) {
-      return { tipo: 'Istologia', conf: 'low' };
+      return { tipo: 'citologia', conf: 'high' };
     }
   }
-  // Default Istologia (alta confidenza, ci sono parole chiare di istologia)
-  const istoKeywords = ['bio ', 'biopsia', 'neof', 'polipo', 'turp', 'mioma', 'cisti', 'cute', 'prostata', 'utero', 'colon', 'vescica', 'cv', 'cc', 'leep', 'frustoli', 'tessuto', 'fibroma', 'nevo', 'linfonodo', 'colecisti'];
-  for (const kw of istoKeywords) {
-    if (d.includes(kw)) return { tipo: 'Istologia', conf: 'high' };
-  }
-  return { tipo: 'Istologia', conf: 'low' };
+  // Default: istologia, alta confidenza
+  return { tipo: 'istologia', conf: 'high' };
 }
 
 function _impxExcelDateToISO(val) {
@@ -11031,13 +11025,13 @@ function _impxOnFileSelected(event) {
         return;
       }
       const data = new Uint8Array(e.target.result);
-      const wb = XLSX.read(data, { type: 'array', cellDates: true });
+      const wb = XLSX.read(data, { type: 'array', cellDates: true, cellNF: false, cellText: false });
       // Cerca il foglio "Registro Istologia"
       let sheetName = wb.SheetNames.find(n => /registro\s*istologi/i.test(n));
       if (!sheetName) sheetName = wb.SheetNames[0];
       const sheet = wb.Sheets[sheetName];
-      // Header sulla riga 5 (Excel) = indice 4 (0-based)
-      const rawRows = XLSX.utils.sheet_to_json(sheet, { header: 1, raw: false, defval: '' });
+      // raw:true = mantiene Date objects e numeri (necessario per PROGR. + ACCETTAZIONE)
+      const rawRows = XLSX.utils.sheet_to_json(sheet, { header: 1, raw: true, defval: '' });
       _impxProcessRows(rawRows, sheetName);
     } catch(err) {
       console.warn('[IMPORT EXCEL] errore parsing', err);
@@ -11069,13 +11063,13 @@ function _impxProcessRows(rawRows, sheetName) {
     return;
   }
   const header = (rawRows[headerIdx] || []).map(c => String(c || '').toUpperCase().trim());
-  // Indici colonne
-  const idxDate    = header.findIndex(h => h.includes('ACCETTAZIONE'));
-  const idxProgr   = header.findIndex(h => h === 'PROGR.' || h === 'PROGR');
-  const idxTip     = header.findIndex(h => h === 'TIPOLOGIA');
-  const idxDen     = header.findIndex(h => h === 'DENOMINAZIONE');
-  const idxQta     = header.findIndex(h => h.includes('Q.TA') || h.includes('QTA'));
-  const idxDesc    = header.findIndex(h => h === 'DESCRIZIONE');
+  // Indici colonne (matching più robusto)
+  const idxDate    = header.findIndex(h => h.includes('ACCETTAZIONE') || h.includes('DATA'));
+  const idxProgr   = header.findIndex(h => h.includes('PROGR'));
+  const idxTip     = header.findIndex(h => h.includes('TIPOLOGIA') || h.includes('UTENZA') || h.includes('UTENTE'));
+  const idxDen     = header.findIndex(h => h.includes('DENOMINAZIONE') || h.includes('RICHIEDENTE'));
+  const idxQta     = header.findIndex(h => h.includes('Q.TA') || h.includes('QTA') || h.includes('QUANT'));
+  const idxDesc    = header.findIndex(h => h.includes('DESCRIZIONE') || h.includes('MATERIALE'));
 
   if (idxProgr === -1 || idxDen === -1) {
     document.getElementById('impx-status').innerHTML = '❌ Colonne PROGR. o DENOMINAZIONE non trovate.';
@@ -11086,9 +11080,9 @@ function _impxProcessRows(rawRows, sheetName) {
   // Anno corrente (presumibilmente l'anno della maggior parte delle date)
   const annoCorrente = new Date().getFullYear();
 
-  // Carico campioni già presenti per dedup
+  // Carico campioni già presenti per dedup (uso campione_id come "ID del caso")
   const existing = loadCampioni();
-  const existingIds = new Set(existing.map(c => c.id));
+  const existingIds = new Set(existing.map(c => c.campione_id).filter(Boolean));
 
   const parsed = [];
   const newOnly = [];
@@ -11098,7 +11092,9 @@ function _impxProcessRows(rawRows, sheetName) {
     const row = rawRows[r] || [];
     const progrRaw = row[idxProgr];
     if (progrRaw == null || progrRaw === '') continue;
-    const progr = parseInt(progrRaw, 10);
+    // Estrae il numero PROGR. anche se la cella è "1", 1, " 1 ", "1.0"
+    const progrStr = String(progrRaw).trim().replace(/[^\d]/g, '');
+    const progr = parseInt(progrStr, 10);
     if (isNaN(progr) || progr <= 0) continue;
 
     const dataIso = idxDate >= 0 ? _impxExcelDateToISO(row[idxDate]) : '';
@@ -11108,7 +11104,7 @@ function _impxProcessRows(rawRows, sheetName) {
       anno = parseInt(dataIso.slice(0, 4), 10);
     }
     const annoSuffix = String(anno).slice(-2);
-    const idCaso = progr + '/' + annoSuffix;
+    const campioneId = progr + '/' + annoSuffix;
 
     const denRaw = idxDen >= 0 ? row[idxDen] : '';
     const denominazione = _impxNormalizeDenominazione(denRaw);
@@ -11127,26 +11123,25 @@ function _impxProcessRows(rawRows, sheetName) {
     const tipoDet = _impxDetectTipo(descrizione, anno);
 
     const provenienza = denominazione + (tipologia ? ' (' + tipologia + ')' : '');
+    const alreadyExists = existingIds.has(campioneId);
 
     const item = {
       _excelRow: r + 1,
-      id: idCaso,
+      campione_id: campioneId,
       data: dataIso,
-      tipo: tipoDet.tipo,
+      tipo: tipoDet.tipo,           // 'istologia' o 'citologia' (lowercase, modello app)
       tipo_conf: tipoDet.conf,
       provenienza,
       provenienza_short: denominazione,
       n_pezzi: qtaParsed.n,
       desc: descrizione,
-      _alreadyExists: existingIds.has(idCaso)
+      _alreadyExists: alreadyExists
     };
 
     parsed.push(item);
-    if (!item._alreadyExists) {
+    if (!alreadyExists) {
       newOnly.push(item);
-      if (tipoDet.conf === 'low' || /tir\b/i.test(descrizione)) {
-        ambiguous.push(item);
-      }
+      // Niente più "ambigui": la logica è binaria. Lasciamo l'array vuoto per compatibilità.
     }
   }
 
@@ -11171,32 +11166,16 @@ function _impxProcessRows(rawRows, sheetName) {
 }
 
 function _impxRenderAmbiguousList() {
+  // La logica isto/cito è ora binaria — sezione ambigui non più usata.
   const sec = document.getElementById('impx-amb-section');
-  const list = document.getElementById('impx-amb-list');
-  if (_impxState.ambiguous.length === 0) {
-    sec.style.display = 'none';
-    return;
-  }
-  sec.style.display = '';
-  list.innerHTML = _impxState.ambiguous.map(item => {
-    const decided = _impxState.ambDecisions[item.id] || item.tipo;
-    return `<div class="impx-amb-row">
-      <span class="impx-id">${esc(item.id)}</span>
-      <span class="impx-desc">${esc(item.desc || '(senza descrizione)')}</span>
-      <div class="impx-pick">
-        <button class="${decided === 'Istologia' ? 'active' : ''}" onclick="_impxSetAmbDecision('${item.id}','Istologia')">Isto</button>
-        <button class="${decided === 'Citologia' ? 'active' : ''}" onclick="_impxSetAmbDecision('${item.id}','Citologia')">Cito</button>
-      </div>
-    </div>`;
-  }).join('');
+  if (sec) sec.style.display = 'none';
 }
 
-function _impxSetAmbDecision(id, tipo) {
-  _impxState.ambDecisions[id] = tipo;
-  // Aggiorna anche nell'array newRows
-  const item = _impxState.newRows.find(x => x.id === id);
-  if (item) item.tipo = tipo;
-  _impxRenderAmbiguousList();
+function _impxSetAmbDecision(campioneId, tipo) {
+  // Mantenuta per backward compat: cambia il tipo di un caso nella preview
+  _impxState.ambDecisions[campioneId] = tipo;
+  const item = _impxState.newRows.find(x => x.campione_id === campioneId);
+  if (item) item.tipo = tipo.toLowerCase();
   _impxRenderPreviewTable();
 }
 
@@ -11209,14 +11188,15 @@ function _impxRenderPreviewTable() {
     return;
   }
   tbody.innerHTML = rows.map(r => {
-    const tipoColor = r.tipo === 'Citologia' ? 'var(--teal)' :
-                     r.tipo === 'Istologia' ? 'var(--blue)' : 'var(--text2)';
-    const ambBadge = (_impxState.ambiguous.some(a => a.id === r.id))
-      ? ' <span style="background:#fef3c7;color:#92400e;padding:1px 4px;border-radius:3px;font-size:9px">amb</span>' : '';
+    const tipoLow = String(r.tipo || '').toLowerCase();
+    const tipoColor = tipoLow === 'citologia' ? 'var(--teal)' :
+                     tipoLow === 'istologia' ? 'var(--blue)' : 'var(--text2)';
+    const tipoLabel = tipoLow === 'citologia' ? 'Citologia' :
+                     tipoLow === 'istologia' ? 'Istologia' : (r.tipo || '');
     return `<tr>
-      <td style="font-family:DM Mono,monospace;font-weight:700">${esc(r.id)}</td>
+      <td style="font-family:DM Mono,monospace;font-weight:700">${esc(r.campione_id)}</td>
       <td style="font-size:12px;color:var(--text2)">${esc(r.data || '—')}</td>
-      <td style="color:${tipoColor};font-weight:500">${esc(r.tipo)}${ambBadge}</td>
+      <td style="color:${tipoColor};font-weight:500">${esc(tipoLabel)}</td>
       <td>${esc(r.provenienza_short || '—')}</td>
       <td style="font-family:DM Mono,monospace">${r.n_pezzi}</td>
       <td style="font-size:11px;color:var(--text2);max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(r.desc || '—')}</td>
@@ -11234,23 +11214,27 @@ async function impxConfirmImport() {
   try { _takeSnapshot('Import Excel: ' + toImport.length + ' casi'); } catch(_){}
   const now = new Date().toISOString();
   const existing = loadCampioni();
-  const existingIds = new Set(existing.map(c => c.id));
+  const existingIds = new Set(existing.map(c => c.campione_id).filter(Boolean));
   const toAdd = [];
   for (const item of toImport) {
-    if (existingIds.has(item.id)) continue;
+    if (existingIds.has(item.campione_id)) continue;
     toAdd.push({
-      id: item.id,
+      id: (typeof genId === 'function') ? genId() : ('imp_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8)),
+      campione_id: item.campione_id,
+      tipo: item.tipo,                                  // 'istologia' o 'citologia' (lowercase)
+      sottotipo: '',
       data: item.data || new Date().toISOString().slice(0, 10),
-      tipo: _impxState.ambDecisions[item.id] || item.tipo,
       provenienza: item.provenienza || '',
+      desc_accettazione: item.desc || '',
       n_pezzi: item.n_pezzi || 1,
-      desc: item.desc || '',
+      pezzi: [],
+      colorazioni: [],
       note: '',
-      stato: 'in_lavorazione',
       origine: 'excel_import',
       creato: now,
       modificato: now
     });
+    existingIds.add(item.campione_id); // evita duplicati interni allo stesso import
   }
   if (toAdd.length === 0) {
     toast('Nessun caso nuovo da importare', 'info');
@@ -11262,7 +11246,8 @@ async function impxConfirmImport() {
     closeModal('modal-import-excel');
     toast('✅ Importati ' + toAdd.length + ' nuovi casi', 'success');
     try { renderTracciabilita(); } catch(_){}
-    try { renderHome(); } catch(_){}
+    try { if (typeof renderDashboard === 'function') renderDashboard(); } catch(_){}
+    try { if (typeof renderDashboardPreview === 'function') renderDashboardPreview(); } catch(_){}
   } catch(e) {
     console.warn('[IMPORT EXCEL] errore salvataggio', e);
     toast('❌ Errore durante l\'importazione: ' + (e.message || e), 'error');
