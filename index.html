@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/@zxing/library@0.19.1/umd/index.min.js"></script>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 <style>
 :root {
   --accent:   #1a2f5e;
@@ -726,6 +727,26 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
 
       </div><!-- /grafici campioni -->
 
+      <!-- WIDGET CLIENTI: Top 5 + Nuovi -->
+      <div style="margin-bottom:8px;display:flex;align-items:center;gap:10px">
+        <div style="font-family:'Libre Baskerville',serif;font-size:16px;font-weight:700;color:var(--accent)">Clienti / Richiedenti</div>
+        <div style="flex:1;height:1px;background:var(--border)"></div>
+        <span style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em">Ultimi 30 giorni</span>
+      </div>
+      <div style="display:grid;grid-template-columns:2fr 1fr;gap:12px;margin-bottom:24px">
+
+        <div class="card">
+          <div class="card-hdr"><span class="card-title">Top 5 clienti del mese</span><span class="card-sub" id="dash-cli-top-sub">—</span></div>
+          <div id="dash-cli-top-list" style="padding:8px 14px 12px"></div>
+        </div>
+
+        <div class="card">
+          <div class="card-hdr"><span class="card-title">🆕 Nuovi clienti</span><span class="card-sub">Mai visti prima</span></div>
+          <div id="dash-cli-new-list" style="padding:8px 14px 12px"></div>
+        </div>
+
+      </div><!-- /widget clienti -->
+
       <!-- GRAFICI MAGAZZINO / ORDINI -->
       <div style="margin-bottom:8px;display:flex;align-items:center;gap:10px">
         <div style="font-family:'Libre Baskerville',serif;font-size:16px;font-weight:700;color:var(--accent)">Magazzino &amp; Ordini</div>
@@ -763,6 +784,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
           <button class="hbtn2 primary" onclick="openAddModal('Istologia')">＋ Campione</button>
           <button class="hbtn2 pap-l" onclick="openAddModal('PAP test')">＋ Pap L</button>
           <button class="hbtn2 pap-p" onclick="openAddModal('PAP privato')">＋ Pap Priv.</button>
+          <button class="hbtn2" onclick="openImportExcelModal()" title="Importa casi dal file Excel di accettazione">📥 Importa Excel</button>
         </div>
       </div>
 
@@ -1322,6 +1344,139 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
       <div class="card">
         <div class="card-hdr"><span class="card-title">Riepilogo mensile</span></div>
         <div style="overflow-x:auto" id="report-annual-table"></div>
+      </div>
+
+      <!-- ═════════════════════════════════════════════════
+           SEZIONE TRACCIABILITÀ AVANZATA (T1, T3, T4, T5, T6)
+           ═════════════════════════════════════════════════ -->
+      <div style="display:flex;align-items:center;gap:12px;margin:32px 0 16px">
+        <div style="font-family:'Libre Baskerville',serif;font-size:16px;font-weight:700;color:var(--accent)">🔬 Tracciabilità avanzata</div>
+        <div style="flex:1;height:1px;background:var(--border)"></div>
+        <span style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em">Audit & ricerca</span>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:16px">
+        <button class="card" style="border:none;padding:14px;cursor:pointer;text-align:left;background:var(--surface)" onclick="openTracSchedaCasoModal()">
+          <div style="font-size:22px;margin-bottom:4px">🩺</div>
+          <div style="font-weight:700;font-size:13px;color:var(--accent)">Scheda Caso</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:2px">Tutto su un singolo caso (T1)</div>
+        </button>
+        <button class="card" style="border:none;padding:14px;cursor:pointer;text-align:left;background:var(--surface)" onclick="openTracLottoModal()">
+          <div style="font-size:22px;margin-bottom:4px">🔍</div>
+          <div style="font-weight:700;font-size:13px;color:var(--accent)">Cerca Lotto</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:2px">Casi colorati con un lotto (T3)</div>
+        </button>
+        <button class="card" style="border:none;padding:14px;cursor:pointer;text-align:left;background:var(--surface)" onclick="openTracAuditDataModal()">
+          <div style="font-size:22px;margin-bottom:4px">📅</div>
+          <div style="font-weight:700;font-size:13px;color:var(--accent)">Audit Giornata</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:2px">Tutti casi e lotti di una data (T4)</div>
+        </button>
+        <button class="card" style="border:none;padding:14px;cursor:pointer;text-align:left;background:var(--surface)" onclick="openTracReagModal()">
+          <div style="font-size:22px;margin-bottom:4px">🧪</div>
+          <div style="font-weight:700;font-size:13px;color:var(--accent)">Cerca Reagente</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:2px">Casi con un reagente (T5)</div>
+        </button>
+        <button class="card" style="border:none;padding:14px;cursor:pointer;text-align:left;background:var(--surface)" onclick="openTracDiagModal()">
+          <div style="font-size:22px;margin-bottom:4px">🩹</div>
+          <div style="font-weight:700;font-size:13px;color:var(--accent)">Diagnostica</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:2px">Cosa hanno in comune (T6)</div>
+        </button>
+      </div>
+
+      <!-- ═════════════════════════════════════════════════
+           SEZIONE TAT (TURNAROUND TIME) — S3
+           ═════════════════════════════════════════════════ -->
+      <div style="display:flex;align-items:center;gap:12px;margin:32px 0 16px">
+        <div style="font-family:'Libre Baskerville',serif;font-size:16px;font-weight:700;color:var(--accent)">⏱ Tempi di lavorazione (TAT)</div>
+        <div style="flex:1;height:1px;background:var(--border)"></div>
+        <span style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em" id="tat-period-lbl">Anno corrente</span>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:24px">
+        <div class="card" style="padding:14px">
+          <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em">Accettazione → Processazione</div>
+          <div style="font-family:'Libre Baskerville',serif;font-size:24px;font-weight:700;color:var(--accent);margin-top:4px" id="tat-acc-proc">— gg</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:2px" id="tat-acc-proc-n">media su N casi</div>
+        </div>
+        <div class="card" style="padding:14px">
+          <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em">Processazione → Colorazione</div>
+          <div style="font-family:'Libre Baskerville',serif;font-size:24px;font-weight:700;color:var(--blue);margin-top:4px" id="tat-proc-color">— gg</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:2px" id="tat-proc-color-n">media su N casi</div>
+        </div>
+        <div class="card" style="padding:14px">
+          <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em">TAT Totale (acc → color)</div>
+          <div style="font-family:'Libre Baskerville',serif;font-size:24px;font-weight:700;color:var(--green);margin-top:4px" id="tat-tot">— gg</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:2px" id="tat-tot-n">media su N casi</div>
+        </div>
+        <div class="card" style="padding:14px">
+          <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em">Casi entro 3gg</div>
+          <div style="font-family:'Libre Baskerville',serif;font-size:24px;font-weight:700;color:var(--accent);margin-top:4px" id="tat-pct3">—%</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:2px">% TAT ≤ 3 giorni</div>
+        </div>
+      </div>
+
+      <!-- ═════════════════════════════════════════════════
+           SEZIONE CLIENTI (C1, C2, C3, C4, C5, C7)
+           ═════════════════════════════════════════════════ -->
+      <div style="display:flex;align-items:center;gap:12px;margin:32px 0 16px">
+        <div style="font-family:'Libre Baskerville',serif;font-size:16px;font-weight:700;color:var(--accent)">👥 Analisi Clienti / Richiedenti</div>
+        <div style="flex:1;height:1px;background:var(--border)"></div>
+        <select class="search-inp" style="width:auto;padding:6px 10px" id="cli-period-sel" onchange="renderClientiSection()">
+          <option value="1m">Ultimo mese</option>
+          <option value="3m">Ultimi 3 mesi</option>
+          <option value="6m" selected>Ultimi 6 mesi</option>
+          <option value="12m">Ultimo anno</option>
+          <option value="all">Tutto</option>
+        </select>
+      </div>
+
+      <!-- Alert clienti nuovi (C7) -->
+      <div id="cli-nuovi-alert" style="margin-bottom:14px"></div>
+
+      <!-- C1: Top clienti per volume -->
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-hdr"><span class="card-title">Top clienti per volume</span><span class="card-sub" id="cli-c1-sub">—</span></div>
+        <div id="cli-c1-content" style="padding:14px"></div>
+      </div>
+
+      <!-- C2: Mix per cliente / C5: TAT per cliente -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+        <div class="card">
+          <div class="card-hdr"><span class="card-title">Mix campioni per cliente</span><span class="card-sub">Top 5 + dettaglio</span></div>
+          <div style="padding:6px 14px 14px">
+            <select class="search-inp" id="cli-c2-sel" onchange="renderClienteMix()" style="margin-bottom:10px;font-size:12px"></select>
+            <div id="cli-c2-content"></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-hdr"><span class="card-title">TAT medio per cliente</span><span class="card-sub">Tempo medio lavorazione</span></div>
+          <div id="cli-c5-content" style="padding:14px"></div>
+        </div>
+      </div>
+
+      <!-- C3: Tendenza nel tempo -->
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-hdr"><span class="card-title">Tendenza nel tempo</span><span class="card-sub">Andamento dei top 5 clienti</span></div>
+        <div style="padding:14px">
+          <svg id="cli-c3-chart" width="100%" viewBox="0 0 600 140" style="overflow:visible"></svg>
+          <div id="cli-c3-legend" style="display:flex;flex-wrap:wrap;gap:12px;margin-top:8px;font-size:10px"></div>
+        </div>
+      </div>
+
+      <!-- C4: Stagionalità (heatmap) -->
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-hdr"><span class="card-title">Stagionalità — Heatmap cliente × mese</span><span class="card-sub">Intensità volumi nel periodo</span></div>
+        <div id="cli-c4-heatmap" style="padding:14px;overflow-x:auto"></div>
+      </div>
+
+      <!-- S5: Top descrizioni -->
+      <div style="display:flex;align-items:center;gap:12px;margin:32px 0 16px">
+        <div style="font-family:'Libre Baskerville',serif;font-size:16px;font-weight:700;color:var(--accent)">📋 Top tipologie campioni</div>
+        <div style="flex:1;height:1px;background:var(--border)"></div>
+      </div>
+      <div class="card" style="margin-bottom:32px">
+        <div class="card-hdr"><span class="card-title">Top 10 tipi campione più frequenti</span><span class="card-sub" id="top-desc-sub">—</span></div>
+        <div id="top-desc-content" style="padding:14px"></div>
       </div>
 
     </div><!-- /view-report -->
@@ -2364,6 +2519,157 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
       <button class="btn" onclick="closeModal('modal-ihc')">Annulla</button>
       <button class="btn btn-primary" onclick="saveIHC()">💾 Salva</button>
     </div>
+  </div>
+</div>
+
+<!-- ─── MODAL IMPORT EXCEL ACCETTAZIONE ─── -->
+<div class="modal-overlay" id="modal-import-excel">
+  <div class="modal" style="width:760px;max-width:95vw">
+    <div class="modal-title">📥 Importa Campioni da Excel</div>
+
+    <!-- STEP 1: Upload -->
+    <div id="impx-step-upload">
+      <p style="color:var(--text2);font-size:13px;margin-bottom:12px">
+        Seleziona il file Excel di Accettazione (es. <code>Laboratorio_-_Accettazione_2026.xls</code>).
+        L'app leggerà il foglio <strong>Registro Istologia</strong> e identificherà i nuovi casi
+        non ancora presenti nell'app.
+      </p>
+      <div style="background:var(--bg2);border:1px dashed var(--border);border-radius:10px;padding:24px;text-align:center;cursor:pointer" onclick="document.getElementById('impx-file').click()">
+        <div style="font-size:32px;margin-bottom:8px">📁</div>
+        <div style="font-weight:600;margin-bottom:4px">Clicca per scegliere il file</div>
+        <div style="color:var(--text3);font-size:12px">Supporta .xls e .xlsx</div>
+        <input type="file" id="impx-file" accept=".xls,.xlsx" style="display:none" onchange="_impxOnFileSelected(event)">
+      </div>
+      <div id="impx-status" style="margin-top:12px;font-size:13px;color:var(--text2)"></div>
+    </div>
+
+    <!-- STEP 2: Preview -->
+    <div id="impx-step-preview" style="display:none">
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px">
+        <div class="cnt-card"><div class="cnt-lbl">Letti dal file</div><div class="cnt-val" id="impx-c-tot">0</div></div>
+        <div class="cnt-card"><div class="cnt-lbl">Già presenti</div><div class="cnt-val" style="color:var(--text3)" id="impx-c-exist">0</div></div>
+        <div class="cnt-card"><div class="cnt-lbl">Da importare</div><div class="cnt-val" style="color:var(--green)" id="impx-c-new">0</div></div>
+        <div class="cnt-card"><div class="cnt-lbl">Ambigui</div><div class="cnt-val" style="color:var(--yellow)" id="impx-c-amb">0</div></div>
+      </div>
+
+      <div id="impx-amb-section" style="display:none;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:12px;margin-bottom:14px">
+        <div style="font-weight:600;color:#92400e;margin-bottom:8px">⚠️ Casi ambigui — scegli il tipo</div>
+        <div id="impx-amb-list"></div>
+      </div>
+
+      <div style="max-height:260px;overflow-y:auto;border:1px solid var(--border);border-radius:8px">
+        <table class="tbl" style="margin:0">
+          <thead style="position:sticky;top:0;background:var(--surface);z-index:1">
+            <tr><th>ID</th><th>Data</th><th>Tipo</th><th>Provenienza</th><th>Pezzi</th><th>Descrizione</th></tr>
+          </thead>
+          <tbody id="impx-preview-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('modal-import-excel')">Annulla</button>
+      <button class="btn btn-primary" id="impx-import-btn" onclick="impxConfirmImport()" style="display:none">✅ Importa <span id="impx-import-count">0</span> casi</button>
+    </div>
+  </div>
+</div>
+
+<style>
+.impx-amb-row { display:flex; align-items:center; gap:8px; padding:6px 0; border-bottom:1px solid #fde68a; font-size:12px; }
+.impx-amb-row:last-child { border-bottom:none; }
+.impx-amb-row .impx-id { font-family:'DM Mono',monospace; font-weight:700; min-width:60px; color:#78350f; }
+.impx-amb-row .impx-desc { flex:1; color:#451a03; }
+.impx-amb-row .impx-pick { display:flex; gap:4px; }
+.impx-amb-row .impx-pick button { padding:3px 10px; font-size:11px; border:1px solid #d97706; background:#fff; border-radius:4px; cursor:pointer; }
+.impx-amb-row .impx-pick button.active { background:#d97706; color:#fff; }
+
+/* Modal tracciabilità avanzata */
+.trac-result { max-height:480px; overflow-y:auto; }
+.trac-section { margin-bottom:18px; }
+.trac-section-title { font-family:'Libre Baskerville',serif; font-size:14px; font-weight:700; color:var(--accent); margin-bottom:8px; display:flex; align-items:center; gap:6px; padding-bottom:6px; border-bottom:1px solid var(--border); }
+.trac-row { display:flex; gap:10px; align-items:center; padding:8px 10px; border-radius:6px; margin-bottom:4px; font-size:12px; background:var(--bg2); }
+.trac-row:hover { background:var(--bg3); }
+.trac-row .trac-id { font-family:'DM Mono',monospace; font-weight:700; min-width:60px; color:var(--accent); }
+.trac-row .trac-info { flex:1; color:var(--text); }
+.trac-row .trac-meta { font-size:11px; color:var(--text3); }
+.trac-empty { padding:20px; text-align:center; color:var(--text3); }
+.trac-lotto-chip { display:inline-block; background:var(--bg3); border:1px solid var(--border); border-radius:4px; padding:2px 6px; font-family:'DM Mono',monospace; font-size:10px; margin:2px; }
+</style>
+
+<!-- ─── MODAL T1: SCHEDA CASO COMPLETA ─── -->
+<div class="modal-overlay" id="modal-trac-caso">
+  <div class="modal" style="width:760px;max-width:95vw">
+    <div class="modal-title">🩺 Scheda Caso — Tracciabilità completa</div>
+    <div style="display:flex;gap:8px;margin-bottom:14px">
+      <input type="text" id="trac-caso-input" placeholder="ID caso (es. 1747/26)" style="font-family:'DM Mono',monospace;font-weight:700;flex:1" onkeydown="if(event.key==='Enter')cercaSchedaCaso()">
+      <button class="btn btn-primary" onclick="cercaSchedaCaso()">🔍 Cerca</button>
+      <button class="btn" onclick="stampaSchedaCaso()" id="trac-caso-print-btn" style="display:none">🖨 Stampa</button>
+    </div>
+    <div id="trac-caso-result" class="trac-result"></div>
+    <div class="modal-footer"><button class="btn" onclick="closeModal('modal-trac-caso')">Chiudi</button></div>
+  </div>
+</div>
+
+<!-- ─── MODAL T3: RICERCA PER LOTTO ─── -->
+<div class="modal-overlay" id="modal-trac-lotto">
+  <div class="modal" style="width:720px;max-width:95vw">
+    <div class="modal-title">🔍 Tracciabilità inversa — Cerca per lotto</div>
+    <p style="color:var(--text2);font-size:12px;margin-bottom:10px">Inserisci un lotto: l'app mostrerà tutti i cicli (processatore + coloratore) e tutti i casi che hanno usato quel lotto.</p>
+    <div style="display:flex;gap:8px;margin-bottom:14px">
+      <input type="text" id="trac-lotto-input" placeholder="Lotto da cercare (es. EX12345)" style="font-family:'DM Mono',monospace;flex:1" onkeydown="if(event.key==='Enter')cercaLottoAvanzato()">
+      <button class="btn btn-primary" onclick="cercaLottoAvanzato()">🔍 Cerca</button>
+    </div>
+    <div id="trac-lotto-result" class="trac-result"></div>
+    <div class="modal-footer"><button class="btn" onclick="closeModal('modal-trac-lotto')">Chiudi</button></div>
+  </div>
+</div>
+
+<!-- ─── MODAL T4: AUDIT GIORNATA ─── -->
+<div class="modal-overlay" id="modal-trac-data">
+  <div class="modal" style="width:760px;max-width:95vw">
+    <div class="modal-title">📅 Audit giornata — Cosa è passato in quel giorno</div>
+    <p style="color:var(--text2);font-size:12px;margin-bottom:10px">Inserisci una data: vedrai tutti i casi processati/colorati quel giorno e tutti i lotti utilizzati.</p>
+    <div style="display:flex;gap:8px;margin-bottom:14px">
+      <input type="date" id="trac-data-input" style="flex:1" onchange="auditDataAvanzato()">
+      <button class="btn btn-primary" onclick="auditDataAvanzato()">🔍 Cerca</button>
+      <button class="btn" onclick="stampaAuditData()" id="trac-data-print-btn" style="display:none">🖨 Stampa</button>
+    </div>
+    <div id="trac-data-result" class="trac-result"></div>
+    <div class="modal-footer"><button class="btn" onclick="closeModal('modal-trac-data')">Chiudi</button></div>
+  </div>
+</div>
+
+<!-- ─── MODAL T5: CERCA REAGENTE GENERICO ─── -->
+<div class="modal-overlay" id="modal-trac-reag">
+  <div class="modal" style="width:720px;max-width:95vw">
+    <div class="modal-title">🧪 Tracciabilità per reagente (tutti i lotti)</div>
+    <p style="color:var(--text2);font-size:12px;margin-bottom:10px">Es. "tutti i casi processati con formalina nell'ultimo mese". Seleziona reagente e periodo.</p>
+    <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+      <select id="trac-reag-input" style="flex:1;min-width:200px"></select>
+      <select id="trac-reag-period" style="width:140px">
+        <option value="30">Ultimi 30gg</option>
+        <option value="60">Ultimi 60gg</option>
+        <option value="90" selected>Ultimi 90gg</option>
+        <option value="180">Ultimi 6 mesi</option>
+        <option value="365">Ultimo anno</option>
+        <option value="0">Tutto</option>
+      </select>
+      <button class="btn btn-primary" onclick="cercaReagenteAvanzato()">🔍 Cerca</button>
+    </div>
+    <div id="trac-reag-result" class="trac-result"></div>
+    <div class="modal-footer"><button class="btn" onclick="closeModal('modal-trac-reag')">Chiudi</button></div>
+  </div>
+</div>
+
+<!-- ─── MODAL T6: DIAGNOSTICA (cosa hanno in comune) ─── -->
+<div class="modal-overlay" id="modal-trac-diag">
+  <div class="modal" style="width:760px;max-width:95vw">
+    <div class="modal-title">🩹 Diagnostica problemi — Cosa hanno in comune</div>
+    <p style="color:var(--text2);font-size:12px;margin-bottom:10px">Inserisci due o più ID caso problematici (uno per riga): l'app mostrerà tutto ciò che hanno in comune (lotti, cicli, programmi, date).</p>
+    <textarea id="trac-diag-input" placeholder="1747/26&#10;1748/26&#10;1762/26" rows="5" style="font-family:'DM Mono',monospace;width:100%;margin-bottom:10px"></textarea>
+    <button class="btn btn-primary" onclick="diagnosticaCasi()">🔍 Trova somiglianze</button>
+    <div id="trac-diag-result" class="trac-result" style="margin-top:14px"></div>
+    <div class="modal-footer"><button class="btn" onclick="closeModal('modal-trac-diag')">Chiudi</button></div>
   </div>
 </div>
 
@@ -4783,11 +5089,16 @@ function getReagentiList(containerId){
 }
 
 // Recupera i reagenti dell'ultimo ciclo salvato (per auto-fill nuovo ciclo)
-function _getLastCycleReagenti(loader) {
+function _getLastCycleReagenti(loader, beforeDate) {
   const arr = (typeof loader === 'function') ? loader() : [];
   if (!arr.length) return [];
-  // Il primo elemento è il più recente (unshift al salvataggio)
-  return arr[0].reagenti || [];
+  // Cerca il ciclo con la data più recente (non solo arr[0])
+  // Se beforeDate è specificato, prende il ciclo con data <= beforeDate (escluso)
+  const sorted = arr
+    .filter(c => c && c.data && (!beforeDate || c.data < beforeDate))
+    .sort((a, b) => (b.data || '').localeCompare(a.data || ''));
+  if (!sorted.length) return [];
+  return sorted[0].reagenti || [];
 }
 
 function _preloadReagentiProc(preset) {
@@ -9114,6 +9425,9 @@ function renderDashboardPreview(){
     try { renderDashAnalytics(); } catch(e) { console.warn('[dashAnalytics]', e); }
   }
 
+  // Widget clienti
+  try { if (typeof renderDashClienti === 'function') renderDashClienti(); } catch(e) { console.warn('[dashClienti]', e); }
+
   updateRailBadges();
 }
 window.renderDashboard = renderDashboardPreview;
@@ -10543,6 +10857,1461 @@ if(_origSetCache){
     return r;
   };
 }
+
+// ════════════════════════════════════════════════════════════════
+// IMPORT EXCEL ACCETTAZIONE — modulo completo
+// Legge il foglio "Registro Istologia" del file di accettazione
+// e importa solo i casi NON ancora presenti nell'app
+// ════════════════════════════════════════════════════════════════
+
+// Stato modulo
+const _impxState = {
+  parsedRows: [],   // tutte le righe parsate dal file
+  newRows: [],      // solo i nuovi (non già presenti)
+  ambiguous: [],    // righe con tipo ambiguo (decisione utente)
+  ambDecisions: {} // { ROW_ID: 'Istologia' | 'Citologia' }
+};
+
+// Dizionario normalizzazione DENOMINAZIONI (refusi e maiuscole)
+const _IMPX_NORM_DEN = {
+  'falcidia': 'Falcidia',
+  'faclidia': 'Falcidia',
+  'vidimura': 'Vidimura',
+  'ccmc': 'CCMC',
+  'gibiino': 'Gibiino',
+  'giglio': 'Giglio',
+  'lab riuniti': 'Lab Riuniti',
+  'lab. riuniti': 'Lab Riuniti',
+  'laboratori riuniti': 'Lab Riuniti',
+  'torrisi': 'Torrisi',
+  'marchi': 'Marchi',
+  'g2': 'G2',
+  'lamantea': 'Lamantea',
+  'h7': 'H7',
+  'class': 'Class',
+  'vaccaro': 'Vaccaro',
+  'oasi': 'Oasi',
+  'caragliano': 'Caragliano',
+  'privato': 'Privato',
+  'medisan': 'Medisan',
+  'cra': 'CRA',
+  'perdichizzi': 'Perdichizzi',
+  'cortesia': 'Cortesia',
+  'curatolo': 'Curatolo',
+  'bartolo': 'Bartolo',
+  'mangano': 'Mangano',
+  'ragusa': 'Ragusa',
+  'lupolab': 'Lupolab',
+  'gentile': 'Gentile'
+};
+
+// Parole chiave forti per CITOLOGIA (riconoscimento automatico)
+const _IMPX_CITO_KEYWORDS = [
+  'urine', 'urinari', 'urinaria', 'urinario',
+  'pleurico', 'pleurica', 'liquido pleur',
+  'ascitico', 'ascitica', 'liquido ascit',
+  'agoasp', 'agoaspirato', 'agoaspirati',
+  'fnac', 'fna ',
+  'espettorato', 'espettorati',
+  'broncoasp', 'broncolavaggio', 'lavaggio bronchi', 'bal ',
+  'striscio', 'strisciato', 'strisciati', 'vetrini strisciati',
+  'tampone',
+  'cisti tiroide.*aspirato',
+  'liquido cefalorachidiano', 'liquor'
+];
+
+// Parole "borderline" — potrebbero essere isto o cito
+const _IMPX_BORDERLINE = ['tir ', 'tiroide ', 'cisti', 'agoaspirato tir'];
+
+function _impxNormalizeDenominazione(s) {
+  if (!s) return '';
+  const key = String(s).trim().toLowerCase();
+  return _IMPX_NORM_DEN[key] || String(s).trim();
+}
+
+function _impxParseQta(val) {
+  // Ritorna {n: numero, extraDesc: testo eventuale estratto}
+  if (val == null || val === '') return { n: 1, extraDesc: '' };
+  const s = String(val).trim();
+  // Numero puro
+  const pure = parseInt(s, 10);
+  if (!isNaN(pure) && String(pure) === s.replace(/\s+$/, '').replace(/^0+/, '') ||
+      /^\d+$/.test(s)) {
+    return { n: parseInt(s, 10), extraDesc: '' };
+  }
+  // Numero seguito da testo
+  const m = s.match(/^\s*(\d+)\s+(.+)$/);
+  if (m) {
+    return { n: parseInt(m[1], 10), extraDesc: m[2].trim() };
+  }
+  // Solo testo → quantità 1, salva testo
+  return { n: 1, extraDesc: s };
+}
+
+function _impxDetectTipo(descRaw, anno) {
+  // Ritorna {tipo: 'Istologia'|'Citologia'|'Ambiguo', conf: 'high'|'low'}
+  if (!descRaw) return { tipo: 'Istologia', conf: 'low' };
+  const d = String(descRaw).toLowerCase();
+  // Match forte → Citologia
+  for (const kw of _IMPX_CITO_KEYWORDS) {
+    try {
+      if (new RegExp('\\b' + kw + '\\b').test(d) || d.includes(kw)) {
+        return { tipo: 'Citologia', conf: 'high' };
+      }
+    } catch(_) {
+      if (d.includes(kw)) return { tipo: 'Citologia', conf: 'high' };
+    }
+  }
+  // Borderline (es. solo "tir") → ambiguo
+  for (const kw of _IMPX_BORDERLINE) {
+    if (d.includes(kw)) {
+      return { tipo: 'Istologia', conf: 'low' };
+    }
+  }
+  // Default Istologia (alta confidenza, ci sono parole chiare di istologia)
+  const istoKeywords = ['bio ', 'biopsia', 'neof', 'polipo', 'turp', 'mioma', 'cisti', 'cute', 'prostata', 'utero', 'colon', 'vescica', 'cv', 'cc', 'leep', 'frustoli', 'tessuto', 'fibroma', 'nevo', 'linfonodo', 'colecisti'];
+  for (const kw of istoKeywords) {
+    if (d.includes(kw)) return { tipo: 'Istologia', conf: 'high' };
+  }
+  return { tipo: 'Istologia', conf: 'low' };
+}
+
+function _impxExcelDateToISO(val) {
+  // Excel data può essere: stringa "yyyy-mm-dd", oggetto Date, numero seriale Excel
+  if (!val && val !== 0) return '';
+  if (val instanceof Date) {
+    return val.toISOString().slice(0, 10);
+  }
+  if (typeof val === 'number') {
+    // Excel serial date → JS
+    const d = new Date(Math.round((val - 25569) * 86400 * 1000));
+    return d.toISOString().slice(0, 10);
+  }
+  const s = String(val).trim();
+  // ISO già pronto
+  const m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (m) return `${m[1]}-${m[2]}-${m[3]}`;
+  // Formato DD/MM/YYYY
+  const m2 = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  if (m2) {
+    const dd = m2[1].padStart(2, '0');
+    const mm = m2[2].padStart(2, '0');
+    return `${m2[3]}-${mm}-${dd}`;
+  }
+  return s;
+}
+
+function openImportExcelModal() {
+  // Reset stato
+  _impxState.parsedRows = [];
+  _impxState.newRows = [];
+  _impxState.ambiguous = [];
+  _impxState.ambDecisions = {};
+  document.getElementById('impx-step-upload').style.display = '';
+  document.getElementById('impx-step-preview').style.display = 'none';
+  document.getElementById('impx-import-btn').style.display = 'none';
+  document.getElementById('impx-status').textContent = '';
+  document.getElementById('impx-file').value = '';
+  document.getElementById('modal-import-excel').classList.add('open');
+}
+
+function _impxOnFileSelected(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const statusEl = document.getElementById('impx-status');
+  statusEl.textContent = '⏳ Lettura del file in corso…';
+  statusEl.style.color = 'var(--text2)';
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      if (typeof XLSX === 'undefined') {
+        statusEl.textContent = '❌ Libreria XLSX non caricata. Ricarica la pagina e riprova.';
+        statusEl.style.color = 'var(--red)';
+        return;
+      }
+      const data = new Uint8Array(e.target.result);
+      const wb = XLSX.read(data, { type: 'array', cellDates: true });
+      // Cerca il foglio "Registro Istologia"
+      let sheetName = wb.SheetNames.find(n => /registro\s*istologi/i.test(n));
+      if (!sheetName) sheetName = wb.SheetNames[0];
+      const sheet = wb.Sheets[sheetName];
+      // Header sulla riga 5 (Excel) = indice 4 (0-based)
+      const rawRows = XLSX.utils.sheet_to_json(sheet, { header: 1, raw: false, defval: '' });
+      _impxProcessRows(rawRows, sheetName);
+    } catch(err) {
+      console.warn('[IMPORT EXCEL] errore parsing', err);
+      statusEl.textContent = '❌ Errore lettura file: ' + (err.message || err);
+      statusEl.style.color = 'var(--red)';
+    }
+  };
+  reader.onerror = function() {
+    statusEl.textContent = '❌ Impossibile leggere il file';
+    statusEl.style.color = 'var(--red)';
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function _impxProcessRows(rawRows, sheetName) {
+  // Trova la riga dell'header (cerca "PROGR." e "COGNOME E NOME")
+  let headerIdx = -1;
+  for (let i = 0; i < Math.min(rawRows.length, 20); i++) {
+    const r = rawRows[i] || [];
+    const joined = r.map(c => String(c || '').toUpperCase()).join('|');
+    if (joined.includes('PROGR') && (joined.includes('COGNOME') || joined.includes('TIPOLOGIA'))) {
+      headerIdx = i;
+      break;
+    }
+  }
+  if (headerIdx === -1) {
+    document.getElementById('impx-status').innerHTML = '❌ Header non trovato nel foglio "' + esc(sheetName) + '". Verifica che il file abbia la struttura corretta.';
+    document.getElementById('impx-status').style.color = 'var(--red)';
+    return;
+  }
+  const header = (rawRows[headerIdx] || []).map(c => String(c || '').toUpperCase().trim());
+  // Indici colonne
+  const idxDate    = header.findIndex(h => h.includes('ACCETTAZIONE'));
+  const idxProgr   = header.findIndex(h => h === 'PROGR.' || h === 'PROGR');
+  const idxTip     = header.findIndex(h => h === 'TIPOLOGIA');
+  const idxDen     = header.findIndex(h => h === 'DENOMINAZIONE');
+  const idxQta     = header.findIndex(h => h.includes('Q.TA') || h.includes('QTA'));
+  const idxDesc    = header.findIndex(h => h === 'DESCRIZIONE');
+
+  if (idxProgr === -1 || idxDen === -1) {
+    document.getElementById('impx-status').innerHTML = '❌ Colonne PROGR. o DENOMINAZIONE non trovate.';
+    document.getElementById('impx-status').style.color = 'var(--red)';
+    return;
+  }
+
+  // Anno corrente (presumibilmente l'anno della maggior parte delle date)
+  const annoCorrente = new Date().getFullYear();
+
+  // Carico campioni già presenti per dedup
+  const existing = loadCampioni();
+  const existingIds = new Set(existing.map(c => c.id));
+
+  const parsed = [];
+  const newOnly = [];
+  const ambiguous = [];
+
+  for (let r = headerIdx + 1; r < rawRows.length; r++) {
+    const row = rawRows[r] || [];
+    const progrRaw = row[idxProgr];
+    if (progrRaw == null || progrRaw === '') continue;
+    const progr = parseInt(progrRaw, 10);
+    if (isNaN(progr) || progr <= 0) continue;
+
+    const dataIso = idxDate >= 0 ? _impxExcelDateToISO(row[idxDate]) : '';
+    // Determina anno dalla data (fallback: anno corrente)
+    let anno = annoCorrente;
+    if (dataIso && /^\d{4}-/.test(dataIso)) {
+      anno = parseInt(dataIso.slice(0, 4), 10);
+    }
+    const annoSuffix = String(anno).slice(-2);
+    const idCaso = progr + '/' + annoSuffix;
+
+    const denRaw = idxDen >= 0 ? row[idxDen] : '';
+    const denominazione = _impxNormalizeDenominazione(denRaw);
+    const tipologia = idxTip >= 0 ? String(row[idxTip] || '').trim() : '';
+
+    const qtaRaw = idxQta >= 0 ? row[idxQta] : '';
+    const qtaParsed = _impxParseQta(qtaRaw);
+
+    const descRaw = idxDesc >= 0 ? String(row[idxDesc] || '').trim() : '';
+    // Se Q.TA' aveva testo, lo concateniamo alla descrizione
+    let descrizione = descRaw;
+    if (qtaParsed.extraDesc) {
+      descrizione = descrizione ? (qtaParsed.extraDesc + ' — ' + descrizione) : qtaParsed.extraDesc;
+    }
+
+    const tipoDet = _impxDetectTipo(descrizione, anno);
+
+    const provenienza = denominazione + (tipologia ? ' (' + tipologia + ')' : '');
+
+    const item = {
+      _excelRow: r + 1,
+      id: idCaso,
+      data: dataIso,
+      tipo: tipoDet.tipo,
+      tipo_conf: tipoDet.conf,
+      provenienza,
+      provenienza_short: denominazione,
+      n_pezzi: qtaParsed.n,
+      desc: descrizione,
+      _alreadyExists: existingIds.has(idCaso)
+    };
+
+    parsed.push(item);
+    if (!item._alreadyExists) {
+      newOnly.push(item);
+      if (tipoDet.conf === 'low' || /tir\b/i.test(descrizione)) {
+        ambiguous.push(item);
+      }
+    }
+  }
+
+  _impxState.parsedRows = parsed;
+  _impxState.newRows = newOnly;
+  _impxState.ambiguous = ambiguous;
+  _impxState.ambDecisions = {};
+
+  // Mostra step preview
+  document.getElementById('impx-step-upload').style.display = 'none';
+  document.getElementById('impx-step-preview').style.display = '';
+  document.getElementById('impx-c-tot').textContent = parsed.length;
+  document.getElementById('impx-c-exist').textContent = parsed.length - newOnly.length;
+  document.getElementById('impx-c-new').textContent = newOnly.length;
+  document.getElementById('impx-c-amb').textContent = ambiguous.length;
+
+  _impxRenderAmbiguousList();
+  _impxRenderPreviewTable();
+
+  document.getElementById('impx-import-btn').style.display = newOnly.length > 0 ? '' : 'none';
+  document.getElementById('impx-import-count').textContent = newOnly.length;
+}
+
+function _impxRenderAmbiguousList() {
+  const sec = document.getElementById('impx-amb-section');
+  const list = document.getElementById('impx-amb-list');
+  if (_impxState.ambiguous.length === 0) {
+    sec.style.display = 'none';
+    return;
+  }
+  sec.style.display = '';
+  list.innerHTML = _impxState.ambiguous.map(item => {
+    const decided = _impxState.ambDecisions[item.id] || item.tipo;
+    return `<div class="impx-amb-row">
+      <span class="impx-id">${esc(item.id)}</span>
+      <span class="impx-desc">${esc(item.desc || '(senza descrizione)')}</span>
+      <div class="impx-pick">
+        <button class="${decided === 'Istologia' ? 'active' : ''}" onclick="_impxSetAmbDecision('${item.id}','Istologia')">Isto</button>
+        <button class="${decided === 'Citologia' ? 'active' : ''}" onclick="_impxSetAmbDecision('${item.id}','Citologia')">Cito</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function _impxSetAmbDecision(id, tipo) {
+  _impxState.ambDecisions[id] = tipo;
+  // Aggiorna anche nell'array newRows
+  const item = _impxState.newRows.find(x => x.id === id);
+  if (item) item.tipo = tipo;
+  _impxRenderAmbiguousList();
+  _impxRenderPreviewTable();
+}
+
+function _impxRenderPreviewTable() {
+  const tbody = document.getElementById('impx-preview-tbody');
+  // Mostra solo i nuovi (primi 100)
+  const rows = _impxState.newRows.slice(0, 100);
+  if (rows.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text3);padding:20px">Nessun nuovo caso da importare</td></tr>';
+    return;
+  }
+  tbody.innerHTML = rows.map(r => {
+    const tipoColor = r.tipo === 'Citologia' ? 'var(--teal)' :
+                     r.tipo === 'Istologia' ? 'var(--blue)' : 'var(--text2)';
+    const ambBadge = (_impxState.ambiguous.some(a => a.id === r.id))
+      ? ' <span style="background:#fef3c7;color:#92400e;padding:1px 4px;border-radius:3px;font-size:9px">amb</span>' : '';
+    return `<tr>
+      <td style="font-family:DM Mono,monospace;font-weight:700">${esc(r.id)}</td>
+      <td style="font-size:12px;color:var(--text2)">${esc(r.data || '—')}</td>
+      <td style="color:${tipoColor};font-weight:500">${esc(r.tipo)}${ambBadge}</td>
+      <td>${esc(r.provenienza_short || '—')}</td>
+      <td style="font-family:DM Mono,monospace">${r.n_pezzi}</td>
+      <td style="font-size:11px;color:var(--text2);max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(r.desc || '—')}</td>
+    </tr>`;
+  }).join('') + (_impxState.newRows.length > 100 ? `<tr><td colspan="6" style="text-align:center;color:var(--text3);padding:8px;font-size:11px">… e altri ${_impxState.newRows.length - 100} casi</td></tr>` : '');
+}
+
+async function impxConfirmImport() {
+  const toImport = _impxState.newRows;
+  if (toImport.length === 0) {
+    closeModal('modal-import-excel');
+    return;
+  }
+  // Snapshot per undo
+  try { _takeSnapshot('Import Excel: ' + toImport.length + ' casi'); } catch(_){}
+  const now = new Date().toISOString();
+  const existing = loadCampioni();
+  const existingIds = new Set(existing.map(c => c.id));
+  const toAdd = [];
+  for (const item of toImport) {
+    if (existingIds.has(item.id)) continue;
+    toAdd.push({
+      id: item.id,
+      data: item.data || new Date().toISOString().slice(0, 10),
+      tipo: _impxState.ambDecisions[item.id] || item.tipo,
+      provenienza: item.provenienza || '',
+      n_pezzi: item.n_pezzi || 1,
+      desc: item.desc || '',
+      note: '',
+      stato: 'in_lavorazione',
+      origine: 'excel_import',
+      creato: now,
+      modificato: now
+    });
+  }
+  if (toAdd.length === 0) {
+    toast('Nessun caso nuovo da importare', 'info');
+    return;
+  }
+  const merged = existing.concat(toAdd);
+  try {
+    await saveCampioni(merged);
+    closeModal('modal-import-excel');
+    toast('✅ Importati ' + toAdd.length + ' nuovi casi', 'success');
+    try { renderTracciabilita(); } catch(_){}
+    try { renderHome(); } catch(_){}
+  } catch(e) {
+    console.warn('[IMPORT EXCEL] errore salvataggio', e);
+    toast('❌ Errore durante l\'importazione: ' + (e.message || e), 'error');
+  }
+}
+
+// Esporta come globali
+window.openImportExcelModal = openImportExcelModal;
+window._impxOnFileSelected = _impxOnFileSelected;
+window._impxSetAmbDecision = _impxSetAmbDecision;
+window.impxConfirmImport = impxConfirmImport;
+
+// ════════════════════════════════════════════════════════════════
+// TRACCIABILITÀ AVANZATA & STATISTICHE — modulo completo
+// 14 feature: T1, T3, T4, T5, T6, S1, S3, S4, S5, C1, C2, C3, C4, C5, C7
+// ════════════════════════════════════════════════════════════════
+
+// ─── HELPERS CONDIVISI ───
+function _trc_norm(s) {
+  return String(s || '').trim().toLowerCase().replace(/\s+/g, ' ');
+}
+function _trc_diffDays(d1, d2) {
+  if (!d1 || !d2) return null;
+  const a = new Date(d1), b = new Date(d2);
+  if (isNaN(a) || isNaN(b)) return null;
+  return Math.round((b - a) / 86400000);
+}
+function _trc_extractCasi(reg, prefisso) {
+  // Estrae casi da un ciclo coloratore/processatore
+  if (!reg) return [];
+  const all = new Set();
+  // Processatore: campo "casi" (array)
+  if (Array.isArray(reg.casi)) reg.casi.forEach(c => c && all.add(String(c)));
+  // Coloratore: casi_ist, casi_cit, casi_pap
+  ['ist', 'cit', 'pap'].forEach(t => {
+    const arr = reg['casi_' + t];
+    if (Array.isArray(arr)) arr.forEach(c => c && all.add(String(c)));
+  });
+  return Array.from(all);
+}
+
+function _trc_caseInRegister(reg, idCaso) {
+  const lista = _trc_extractCasi(reg);
+  return lista.includes(idCaso);
+}
+
+function _trc_richiedente(c) {
+  // Estrae richiedente "pulito" da campo provenienza
+  if (!c) return '';
+  const p = c.provenienza_short || c.provenienza || '';
+  // Rimuovi parte tra parentesi (es. "Falcidia (Casa di Cura)")
+  return String(p).split('(')[0].trim();
+}
+
+// ════════════════════════════════════════════════════════════════
+// T1 — SCHEDA CASO COMPLETA
+// ════════════════════════════════════════════════════════════════
+function openTracSchedaCasoModal() {
+  document.getElementById('trac-caso-input').value = '';
+  document.getElementById('trac-caso-result').innerHTML = '';
+  document.getElementById('trac-caso-print-btn').style.display = 'none';
+  document.getElementById('modal-trac-caso').classList.add('open');
+}
+
+function cercaSchedaCaso() {
+  const id = (document.getElementById('trac-caso-input').value || '').trim();
+  if (!id) { toast('Inserisci un ID caso', 'error'); return; }
+  const camp = loadCampioni().find(c => c.id === id);
+  const procCicli = loadProc().filter(p => _trc_caseInRegister(p, id));
+  const colorCicli = loadColoratore().filter(r => _trc_caseInRegister(r, id));
+  let ihcList = [];
+  try { ihcList = (loadIHC ? loadIHC() : []).filter(i => (i.campione || '').trim() === id); } catch(_){}
+
+  let html = '<div id="trac-caso-print-area">';
+  html += `<div style="background:linear-gradient(135deg,var(--accent),#0a1e4a);color:#fff;padding:16px;border-radius:10px;margin-bottom:14px">
+    <div style="font-size:11px;opacity:.7;text-transform:uppercase;letter-spacing:.08em">ID Caso</div>
+    <div style="font-family:'Libre Baskerville',serif;font-size:28px;font-weight:700">${esc(id)}</div>
+    ${camp ? `<div style="font-size:12px;opacity:.85;margin-top:6px">${esc(camp.tipo||'')} · ${esc(_trc_richiedente(camp)||'')} · ${esc(camp.data||'')}</div>` : ''}
+  </div>`;
+
+  // 1. Accettazione
+  html += '<div class="trac-section"><div class="trac-section-title">📋 Accettazione</div>';
+  if (camp) {
+    html += `<div class="report-kv"><span>Data</span><span class="mono">${esc(camp.data || '—')}</span></div>
+      <div class="report-kv"><span>Tipo</span><span>${esc(camp.tipo || '—')}</span></div>
+      <div class="report-kv"><span>Struttura richiedente</span><span>${esc(_trc_richiedente(camp) || '—')}</span></div>
+      <div class="report-kv"><span>N° campioni</span><span class="mono">${camp.n_pezzi || 1}</span></div>
+      <div class="report-kv"><span>Descrizione</span><span>${esc(camp.desc || '—')}</span></div>
+      <div class="report-kv"><span>Stato</span><span>${esc(camp.stato || '—')}</span></div>`;
+  } else {
+    html += '<div class="trac-empty">⚠️ Caso non registrato in anagrafica campioni</div>';
+  }
+  html += '</div>';
+
+  // 2. Processatore
+  html += '<div class="trac-section"><div class="trac-section-title">⚗️ Processatore</div>';
+  if (procCicli.length) {
+    procCicli.forEach(c => {
+      const reag = (c.reagenti || []).map(r =>
+        `<span class="trac-lotto-chip">${esc(r.nome || '?')} · ${esc(r.lotto || '—')}</span>`
+      ).join('');
+      html += `<div style="background:var(--bg2);padding:10px;border-radius:6px;margin-bottom:6px">
+        <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+          <strong>${fmtDate(c.data)}</strong>
+          <span style="font-size:11px;color:var(--text3)">${esc(c.protocollo || 'Standard')} · ${(c.casi||[]).length} casi</span>
+        </div>
+        <div style="font-size:11px">${reag || '<em style="color:var(--text3)">nessun reagente registrato</em>'}</div>
+      </div>`;
+    });
+  } else {
+    html += '<div class="trac-empty">Nessun ciclo processatore trovato</div>';
+  }
+  html += '</div>';
+
+  // 3. Coloratore
+  html += '<div class="trac-section"><div class="trac-section-title">🎨 Coloratore</div>';
+  if (colorCicli.length) {
+    colorCicli.forEach(reg => {
+      const reag = (reg.reagenti || []).map(r =>
+        `<span class="trac-lotto-chip">${esc(r.nome || '?')} · ${esc(r.lotto || '—')} ${r.stato === 'cambiato' ? '🔄' : r.stato === 'rabboccato' ? '➕' : '✅'}</span>`
+      ).join('');
+      const tipoCit = (reg.casi_ist||[]).includes(id) ? 'EE Istologia' :
+                      (reg.casi_cit||[]).includes(id) ? 'EE Citologia' :
+                      (reg.casi_pap||[]).includes(id) ? 'PAP' : '?';
+      html += `<div style="background:var(--bg2);padding:10px;border-radius:6px;margin-bottom:6px">
+        <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+          <strong>${fmtDate(reg.data)}</strong>
+          <span style="font-size:11px;color:var(--text3)">${esc(tipoCit)}</span>
+        </div>
+        <div style="font-size:11px">${reag || '<em style="color:var(--text3)">nessun reagente registrato</em>'}</div>
+      </div>`;
+    });
+  } else {
+    html += '<div class="trac-empty">Nessun ciclo coloratore trovato</div>';
+  }
+  html += '</div>';
+
+  // 4. IHC
+  html += '<div class="trac-section"><div class="trac-section-title">🔬 Immunoistochimica</div>';
+  if (ihcList.length) {
+    ihcList.forEach(i => {
+      const statoIcon = i.stato === 'completata' ? '✅' : i.stato === 'in_lavorazione' ? '⏳' : '🔵';
+      html += `<div style="background:var(--bg2);padding:10px;border-radius:6px;margin-bottom:6px;font-size:12px">
+        ${statoIcon} <strong>${esc(i.anticorpo || '?')}</strong> · ${esc(i.patologo || '—')} · ${fmtDate(i.data)} · stato: ${esc(i.stato || '—')}
+      </div>`;
+    });
+  } else {
+    html += '<div class="trac-empty">Nessuna IHC richiesta per questo caso</div>';
+  }
+  html += '</div>';
+
+  // 5. TAT calcolato
+  if (camp && procCicli.length) {
+    const tatAccProc = _trc_diffDays(camp.data, procCicli[0].data);
+    const colorFirst = colorCicli.length ? colorCicli.sort((a,b) => (a.data||'').localeCompare(b.data||''))[0] : null;
+    const tatProcColor = colorFirst ? _trc_diffDays(procCicli[0].data, colorFirst.data) : null;
+    const tatTot = colorFirst ? _trc_diffDays(camp.data, colorFirst.data) : null;
+    html += `<div class="trac-section"><div class="trac-section-title">⏱ Tempi (TAT)</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+        <div style="background:var(--bg2);padding:10px;border-radius:6px;text-align:center">
+          <div style="font-size:10px;color:var(--text3);text-transform:uppercase">Acc → Proc</div>
+          <div style="font-family:'Libre Baskerville',serif;font-size:18px;font-weight:700;color:var(--accent)">${tatAccProc != null ? tatAccProc + ' gg' : '—'}</div>
+        </div>
+        <div style="background:var(--bg2);padding:10px;border-radius:6px;text-align:center">
+          <div style="font-size:10px;color:var(--text3);text-transform:uppercase">Proc → Color</div>
+          <div style="font-family:'Libre Baskerville',serif;font-size:18px;font-weight:700;color:var(--blue)">${tatProcColor != null ? tatProcColor + ' gg' : '—'}</div>
+        </div>
+        <div style="background:var(--bg2);padding:10px;border-radius:6px;text-align:center">
+          <div style="font-size:10px;color:var(--text3);text-transform:uppercase">Totale</div>
+          <div style="font-family:'Libre Baskerville',serif;font-size:18px;font-weight:700;color:var(--green)">${tatTot != null ? tatTot + ' gg' : '—'}</div>
+        </div>
+      </div></div>`;
+  }
+
+  html += '</div>';
+  document.getElementById('trac-caso-result').innerHTML = html;
+  document.getElementById('trac-caso-print-btn').style.display = '';
+}
+
+function stampaSchedaCaso() {
+  const area = document.getElementById('trac-caso-print-area');
+  if (!area) return;
+  const idCaso = (document.getElementById('trac-caso-input').value || '').trim();
+  const w = window.open('', '_blank', 'width=900,height=700');
+  w.document.write(`<!DOCTYPE html><html><head><title>Scheda Caso ${esc(idCaso)}</title>
+    <style>
+      body { font-family: 'Libre Baskerville', Georgia, serif; padding:24px; color:#1e293b; }
+      .mono { font-family: 'DM Mono', monospace; }
+      .trac-section { margin-bottom:18px; }
+      .trac-section-title { font-weight:700; font-size:14px; color:#1a2f5e; margin-bottom:8px; padding-bottom:6px; border-bottom:1px solid #ddd; }
+      .trac-lotto-chip { display:inline-block; background:#f1f5f9; border:1px solid #cbd5e1; border-radius:4px; padding:2px 6px; font-family:'DM Mono',monospace; font-size:10px; margin:2px; }
+      .report-kv { display:flex; justify-content:space-between; padding:4px 0; border-bottom:1px solid #f1f5f9; font-size:13px; }
+      .trac-empty { padding:10px; text-align:center; color:#94a3b8; font-style:italic; font-size:12px; }
+    </style></head><body>${area.innerHTML}<script>window.onload=()=>window.print()<\/script></body></html>`);
+  w.document.close();
+}
+
+// ════════════════════════════════════════════════════════════════
+// T3 — RICERCA PER LOTTO (avanzata)
+// ════════════════════════════════════════════════════════════════
+function openTracLottoModal() {
+  document.getElementById('trac-lotto-input').value = '';
+  document.getElementById('trac-lotto-result').innerHTML = '';
+  document.getElementById('modal-trac-lotto').classList.add('open');
+}
+
+function cercaLottoAvanzato() {
+  const lotto = (document.getElementById('trac-lotto-input').value || '').trim();
+  if (!lotto) { toast('Inserisci un lotto', 'error'); return; }
+  const lottoL = lotto.toLowerCase();
+  const procArr = loadProc();
+  const colorArr = loadColoratore();
+  const procMatch = procArr.filter(c => (c.reagenti||[]).some(r => (r.lotto||'').toLowerCase().includes(lottoL)));
+  const colorMatch = colorArr.filter(r => (r.reagenti||[]).some(re => (re.lotto||'').toLowerCase().includes(lottoL)));
+
+  // Estrai tutti i casi coinvolti
+  const casiCoinvolti = new Set();
+  procMatch.forEach(c => _trc_extractCasi(c).forEach(id => casiCoinvolti.add(id)));
+  colorMatch.forEach(r => _trc_extractCasi(r).forEach(id => casiCoinvolti.add(id)));
+
+  let html = `<div style="background:var(--accent);color:#fff;padding:12px;border-radius:8px;margin-bottom:14px;display:flex;justify-content:space-between">
+    <div><div style="font-size:11px;opacity:.7">Lotto cercato</div><div style="font-family:'DM Mono',monospace;font-weight:700;font-size:16px">${esc(lotto)}</div></div>
+    <div style="text-align:right"><div style="font-size:11px;opacity:.7">Casi coinvolti</div><div style="font-family:'Libre Baskerville',serif;font-weight:700;font-size:22px">${casiCoinvolti.size}</div></div>
+  </div>`;
+
+  if (procMatch.length) {
+    html += `<div class="trac-section-title">⚗️ Processatore — ${procMatch.length} cicli</div>`;
+    procMatch.forEach(c => {
+      const reag = (c.reagenti||[]).filter(r => (r.lotto||'').toLowerCase().includes(lottoL));
+      const casi = _trc_extractCasi(c);
+      html += `<div class="trac-row">
+        <span class="trac-id">${fmtDate(c.data)}</span>
+        <span class="trac-info">${esc(reag.map(r => r.nome).join(', '))} · ${casi.length} casi</span>
+        <span class="trac-meta">${casi.slice(0, 3).map(esc).join(', ')}${casi.length > 3 ? '…' : ''}</span>
+      </div>`;
+    });
+  }
+  if (colorMatch.length) {
+    html += `<div class="trac-section-title" style="margin-top:14px">🎨 Coloratore — ${colorMatch.length} registri</div>`;
+    colorMatch.forEach(reg => {
+      const reag = (reg.reagenti||[]).filter(r => (r.lotto||'').toLowerCase().includes(lottoL));
+      const casi = _trc_extractCasi(reg);
+      html += `<div class="trac-row">
+        <span class="trac-id">${fmtDate(reg.data)}</span>
+        <span class="trac-info">${esc(reag.map(r => r.nome + ' ('+(r.stato||'?')+')').join(', '))} · ${casi.length} casi</span>
+        <span class="trac-meta">${casi.slice(0, 3).map(esc).join(', ')}${casi.length > 3 ? '…' : ''}</span>
+      </div>`;
+    });
+  }
+  if (!procMatch.length && !colorMatch.length) {
+    html += '<div class="trac-empty">🔍 Nessun ciclo trovato con questo lotto</div>';
+  } else {
+    // Lista completa casi coinvolti
+    html += `<div class="trac-section-title" style="margin-top:14px">📋 Tutti i casi coinvolti (${casiCoinvolti.size})</div>
+      <div style="background:var(--bg3);padding:10px;border-radius:6px;font-family:'DM Mono',monospace;font-size:11px;line-height:1.6">
+        ${Array.from(casiCoinvolti).sort().map(esc).join(', ')}
+      </div>`;
+  }
+  document.getElementById('trac-lotto-result').innerHTML = html;
+}
+
+// ════════════════════════════════════════════════════════════════
+// T4 — AUDIT GIORNATA
+// ════════════════════════════════════════════════════════════════
+function openTracAuditDataModal() {
+  document.getElementById('trac-data-input').value = new Date().toISOString().slice(0, 10);
+  document.getElementById('trac-data-result').innerHTML = '';
+  document.getElementById('trac-data-print-btn').style.display = 'none';
+  document.getElementById('modal-trac-data').classList.add('open');
+}
+
+function auditDataAvanzato() {
+  const data = (document.getElementById('trac-data-input').value || '').trim();
+  if (!data) return;
+  const camp = loadCampioni().filter(c => c.data === data);
+  const procDay = loadProc().filter(p => p.data === data);
+  const colorDay = loadColoratore().filter(r => r.data === data);
+
+  const allLotti = new Map(); // nome → set di lotti
+  [...procDay, ...colorDay].forEach(reg => {
+    (reg.reagenti||[]).forEach(r => {
+      if (!r.nome) return;
+      if (!allLotti.has(r.nome)) allLotti.set(r.nome, new Set());
+      if (r.lotto) allLotti.get(r.nome).add(r.lotto);
+    });
+  });
+
+  let html = `<div id="trac-data-print-area">`;
+  html += `<div style="background:var(--accent);color:#fff;padding:14px;border-radius:10px;margin-bottom:14px">
+    <div style="font-size:11px;opacity:.7;text-transform:uppercase">Audit giornata</div>
+    <div style="font-family:'Libre Baskerville',serif;font-size:24px;font-weight:700">${fmtDate(data)}</div>
+    <div style="display:flex;gap:18px;margin-top:8px;font-size:12px">
+      <span>📋 ${camp.length} accettazioni</span>
+      <span>⚗️ ${procDay.length} cicli processatore</span>
+      <span>🎨 ${colorDay.length} registri coloratore</span>
+    </div>
+  </div>`;
+
+  // Accettazioni
+  if (camp.length) {
+    html += '<div class="trac-section-title">📋 Casi accettati</div>';
+    camp.forEach(c => {
+      html += `<div class="trac-row">
+        <span class="trac-id">${esc(c.id)}</span>
+        <span class="trac-info">${esc(c.tipo || '?')} · ${esc(_trc_richiedente(c) || '?')}</span>
+        <span class="trac-meta">${esc(c.desc || '—').slice(0, 60)}</span>
+      </div>`;
+    });
+  }
+
+  // Processatore
+  if (procDay.length) {
+    html += '<div class="trac-section-title" style="margin-top:14px">⚗️ Cicli processatore</div>';
+    procDay.forEach(c => {
+      const casi = _trc_extractCasi(c);
+      html += `<div style="background:var(--bg2);padding:10px;border-radius:6px;margin-bottom:6px">
+        <strong>Protocollo: ${esc(c.protocollo || 'Standard')}</strong> · ${casi.length} casi
+        <div style="font-size:11px;color:var(--text2);margin-top:4px">Casi: ${esc(casi.join(', '))}</div>
+        <div style="margin-top:6px">${(c.reagenti||[]).map(r => `<span class="trac-lotto-chip">${esc(r.nome)} · ${esc(r.lotto||'—')}</span>`).join('')}</div>
+      </div>`;
+    });
+  }
+
+  // Coloratore
+  if (colorDay.length) {
+    html += '<div class="trac-section-title" style="margin-top:14px">🎨 Registri coloratore</div>';
+    colorDay.forEach(reg => {
+      const ist = (reg.casi_ist||[]).length, cit = (reg.casi_cit||[]).length, pap = (reg.casi_pap||[]).length;
+      html += `<div style="background:var(--bg2);padding:10px;border-radius:6px;margin-bottom:6px">
+        <strong>EE Ist: ${ist} · EE Cit: ${cit} · PAP: ${pap}</strong>
+        <div style="margin-top:6px">${(reg.reagenti||[]).map(r => `<span class="trac-lotto-chip">${esc(r.nome)} · ${esc(r.lotto||'—')} ${r.stato==='cambiato'?'🔄':r.stato==='rabboccato'?'➕':'✅'}</span>`).join('')}</div>
+      </div>`;
+    });
+  }
+
+  // Tutti i lotti utilizzati
+  if (allLotti.size) {
+    html += '<div class="trac-section-title" style="margin-top:14px">🧪 Tutti i lotti utilizzati nella giornata</div>';
+    Array.from(allLotti.entries()).forEach(([nome, lottiSet]) => {
+      html += `<div class="trac-row">
+        <span class="trac-info"><strong>${esc(nome)}</strong></span>
+        <span style="font-family:'DM Mono',monospace;font-size:11px">${Array.from(lottiSet).map(esc).join(', ')}</span>
+      </div>`;
+    });
+  }
+
+  if (!camp.length && !procDay.length && !colorDay.length) {
+    html += '<div class="trac-empty">Nessuna attività registrata in questa data</div>';
+  }
+  html += '</div>';
+  document.getElementById('trac-data-result').innerHTML = html;
+  document.getElementById('trac-data-print-btn').style.display = (camp.length || procDay.length || colorDay.length) ? '' : 'none';
+}
+
+function stampaAuditData() {
+  const area = document.getElementById('trac-data-print-area');
+  if (!area) return;
+  const data = (document.getElementById('trac-data-input').value || '').trim();
+  const w = window.open('', '_blank', 'width=900,height=700');
+  w.document.write(`<!DOCTYPE html><html><head><title>Audit ${esc(data)}</title>
+    <style>
+      body { font-family: 'Libre Baskerville', Georgia, serif; padding:24px; color:#1e293b; }
+      .trac-section-title { font-weight:700; font-size:14px; color:#1a2f5e; margin:14px 0 8px; padding-bottom:6px; border-bottom:1px solid #ddd; }
+      .trac-lotto-chip { display:inline-block; background:#f1f5f9; border:1px solid #cbd5e1; border-radius:4px; padding:2px 6px; font-family:'DM Mono',monospace; font-size:10px; margin:2px; }
+      .trac-row { display:flex; gap:10px; padding:6px 8px; border-bottom:1px solid #f1f5f9; font-size:12px; }
+      .trac-id { font-family:'DM Mono',monospace; font-weight:700; min-width:60px; color:#1a2f5e; }
+      .trac-info { flex:1; }
+      .trac-meta { font-size:11px; color:#64748b; }
+      .trac-empty { padding:14px; text-align:center; color:#94a3b8; font-style:italic; }
+    </style></head><body>${area.innerHTML}<script>window.onload=()=>window.print()<\/script></body></html>`);
+  w.document.close();
+}
+
+// ════════════════════════════════════════════════════════════════
+// T5 — CERCA REAGENTE GENERICO (tutti i lotti)
+// ════════════════════════════════════════════════════════════════
+function openTracReagModal() {
+  // Popola select con tutti i reagenti disponibili
+  const sel = document.getElementById('trac-reag-input');
+  // Estrai nomi reagenti unici da processatore + coloratore
+  const allNames = new Set();
+  loadProc().forEach(c => (c.reagenti||[]).forEach(r => r.nome && allNames.add(r.nome)));
+  loadColoratore().forEach(c => (c.reagenti||[]).forEach(r => r.nome && allNames.add(r.nome)));
+  const opts = Array.from(allNames).sort().map(n => `<option value="${esc(n)}">${esc(n)}</option>`).join('');
+  sel.innerHTML = '<option value="">— Seleziona reagente —</option>' + opts;
+  document.getElementById('trac-reag-result').innerHTML = '';
+  document.getElementById('modal-trac-reag').classList.add('open');
+}
+
+function cercaReagenteAvanzato() {
+  const nome = document.getElementById('trac-reag-input').value;
+  if (!nome) { toast('Seleziona un reagente', 'error'); return; }
+  const period = parseInt(document.getElementById('trac-reag-period').value, 10) || 0;
+  const cutoff = period > 0 ? new Date(Date.now() - period * 86400000).toISOString().slice(0, 10) : '';
+
+  const procArr = loadProc().filter(c => c.data >= cutoff && (c.reagenti||[]).some(r => r.nome === nome));
+  const colorArr = loadColoratore().filter(r => r.data >= cutoff && (r.reagenti||[]).some(re => re.nome === nome));
+
+  // Conta lotti unici e casi
+  const lottiUsati = new Set();
+  const casiCoinvolti = new Set();
+  procArr.forEach(c => {
+    (c.reagenti||[]).filter(r => r.nome === nome).forEach(r => r.lotto && lottiUsati.add(r.lotto));
+    _trc_extractCasi(c).forEach(id => casiCoinvolti.add(id));
+  });
+  colorArr.forEach(r => {
+    (r.reagenti||[]).filter(re => re.nome === nome).forEach(re => re.lotto && lottiUsati.add(re.lotto));
+    _trc_extractCasi(r).forEach(id => casiCoinvolti.add(id));
+  });
+
+  let html = `<div style="background:var(--accent);color:#fff;padding:12px;border-radius:8px;margin-bottom:14px;display:flex;gap:16px">
+    <div><div style="font-size:10px;opacity:.7">Reagente</div><div style="font-weight:700">${esc(nome)}</div></div>
+    <div><div style="font-size:10px;opacity:.7">Lotti diversi</div><div style="font-family:'Libre Baskerville',serif;font-size:20px;font-weight:700">${lottiUsati.size}</div></div>
+    <div><div style="font-size:10px;opacity:.7">Casi coinvolti</div><div style="font-family:'Libre Baskerville',serif;font-size:20px;font-weight:700">${casiCoinvolti.size}</div></div>
+    <div><div style="font-size:10px;opacity:.7">Cicli</div><div style="font-family:'Libre Baskerville',serif;font-size:20px;font-weight:700">${procArr.length + colorArr.length}</div></div>
+  </div>`;
+
+  if (lottiUsati.size) {
+    html += '<div class="trac-section-title">🏷 Lotti utilizzati nel periodo</div>';
+    Array.from(lottiUsati).sort().forEach(l => {
+      const occorrenze = procArr.filter(c => (c.reagenti||[]).some(r => r.nome === nome && r.lotto === l)).length +
+                         colorArr.filter(r => (r.reagenti||[]).some(re => re.nome === nome && re.lotto === l)).length;
+      html += `<div class="trac-row">
+        <span class="trac-id">${esc(l)}</span>
+        <span class="trac-info">utilizzato in ${occorrenze} cicli</span>
+        <button class="btn btn-sm" onclick="document.getElementById('trac-lotto-input').value='${esc(l)}';closeModal('modal-trac-reag');document.getElementById('modal-trac-lotto').classList.add('open');cercaLottoAvanzato()">🔍 Dettagli lotto</button>
+      </div>`;
+    });
+  }
+
+  if (!procArr.length && !colorArr.length) {
+    html += '<div class="trac-empty">Nessun ciclo trovato con questo reagente nel periodo selezionato</div>';
+  }
+  document.getElementById('trac-reag-result').innerHTML = html;
+}
+
+// ════════════════════════════════════════════════════════════════
+// T6 — DIAGNOSTICA (cosa hanno in comune)
+// ════════════════════════════════════════════════════════════════
+function openTracDiagModal() {
+  document.getElementById('trac-diag-input').value = '';
+  document.getElementById('trac-diag-result').innerHTML = '';
+  document.getElementById('modal-trac-diag').classList.add('open');
+}
+
+function diagnosticaCasi() {
+  const raw = (document.getElementById('trac-diag-input').value || '').trim();
+  if (!raw) { toast('Inserisci almeno 2 ID caso', 'error'); return; }
+  const ids = raw.split(/[\n,;]+/).map(s => s.trim()).filter(Boolean);
+  if (ids.length < 2) { toast('Inserisci almeno 2 ID caso', 'error'); return; }
+
+  // Per ogni caso, raccogli: ciclo proc + lotti proc + ciclo color + lotti color
+  const dati = ids.map(id => {
+    const proc = loadProc().filter(p => _trc_caseInRegister(p, id));
+    const color = loadColoratore().filter(r => _trc_caseInRegister(r, id));
+    const lottiProc = new Set();
+    const lottiColor = new Set();
+    const dateProc = new Set();
+    const dateColor = new Set();
+    const protocolli = new Set();
+    proc.forEach(c => {
+      (c.reagenti||[]).forEach(r => r.lotto && lottiProc.add(r.nome + ':' + r.lotto));
+      if (c.data) dateProc.add(c.data);
+      if (c.protocollo) protocolli.add(c.protocollo);
+    });
+    color.forEach(r => {
+      (r.reagenti||[]).forEach(re => re.lotto && lottiColor.add(re.nome + ':' + re.lotto));
+      if (r.data) dateColor.add(r.data);
+    });
+    return { id, lottiProc, lottiColor, dateProc, dateColor, protocolli };
+  });
+
+  // Calcola intersezioni
+  const intersect = (sets) => {
+    if (!sets.length) return new Set();
+    let result = new Set(sets[0]);
+    for (let i = 1; i < sets.length; i++) {
+      result = new Set([...result].filter(x => sets[i].has(x)));
+    }
+    return result;
+  };
+
+  const lottiProcComuni = intersect(dati.map(d => d.lottiProc));
+  const lottiColorComuni = intersect(dati.map(d => d.lottiColor));
+  const dateProcComuni = intersect(dati.map(d => d.dateProc));
+  const dateColorComuni = intersect(dati.map(d => d.dateColor));
+  const protocolliComuni = intersect(dati.map(d => d.protocolli));
+
+  let html = `<div style="background:var(--accent);color:#fff;padding:12px;border-radius:8px;margin-bottom:14px">
+    <div style="font-size:11px;opacity:.7;text-transform:uppercase">Casi analizzati</div>
+    <div style="font-family:'DM Mono',monospace;font-weight:700">${esc(ids.join(', '))}</div>
+  </div>`;
+
+  if (lottiProcComuni.size) {
+    html += '<div class="trac-section-title">⚗️ Lotti processatore IN COMUNE</div>';
+    Array.from(lottiProcComuni).forEach(item => {
+      const [nome, lotto] = item.split(':');
+      html += `<div class="trac-row" style="background:#fef2f2;border-left:3px solid var(--red)"><strong>${esc(nome)}</strong> · <span class="mono">${esc(lotto)}</span></div>`;
+    });
+  }
+  if (lottiColorComuni.size) {
+    html += '<div class="trac-section-title" style="margin-top:14px">🎨 Lotti coloratore IN COMUNE</div>';
+    Array.from(lottiColorComuni).forEach(item => {
+      const [nome, lotto] = item.split(':');
+      html += `<div class="trac-row" style="background:#fef2f2;border-left:3px solid var(--red)"><strong>${esc(nome)}</strong> · <span class="mono">${esc(lotto)}</span></div>`;
+    });
+  }
+  if (dateProcComuni.size) {
+    html += '<div class="trac-section-title" style="margin-top:14px">📅 Date processatore comuni</div>';
+    Array.from(dateProcComuni).forEach(d => {
+      html += `<div class="trac-row">${fmtDate(d)}</div>`;
+    });
+  }
+  if (dateColorComuni.size) {
+    html += '<div class="trac-section-title" style="margin-top:14px">📅 Date coloratore comuni</div>';
+    Array.from(dateColorComuni).forEach(d => {
+      html += `<div class="trac-row">${fmtDate(d)}</div>`;
+    });
+  }
+  if (protocolliComuni.size) {
+    html += '<div class="trac-section-title" style="margin-top:14px">⚙️ Protocolli comuni</div>';
+    Array.from(protocolliComuni).forEach(p => {
+      html += `<div class="trac-row">${esc(p)}</div>`;
+    });
+  }
+  if (!lottiProcComuni.size && !lottiColorComuni.size && !dateProcComuni.size && !dateColorComuni.size && !protocolliComuni.size) {
+    html += '<div class="trac-empty">Nessun elemento in comune trovato tra i casi selezionati</div>';
+  } else {
+    html += '<div style="background:#fef9c3;border:1px solid #fbbf24;padding:10px;border-radius:6px;margin-top:14px;font-size:12px"><strong>💡 Possibile causa:</strong> gli elementi in rosso sono condivisi da TUTTI i casi e meritano indagine prioritaria.</div>';
+  }
+  document.getElementById('trac-diag-result').innerHTML = html;
+}
+
+// ════════════════════════════════════════════════════════════════
+// S3 — TAT (Turnaround Time) + S5 — Top descrizioni
+// Vengono renderizzati nel Report
+// ════════════════════════════════════════════════════════════════
+function renderTATSection() {
+  const camp = loadCampioni();
+  const proc = loadProc();
+  const color = loadColoratore();
+
+  // Indice rapido: id caso → primo ciclo proc/color
+  const procByCaso = new Map();
+  proc.forEach(c => _trc_extractCasi(c).forEach(id => {
+    const existing = procByCaso.get(id);
+    if (!existing || (c.data && c.data < existing.data)) procByCaso.set(id, c);
+  }));
+  const colorByCaso = new Map();
+  color.forEach(r => _trc_extractCasi(r).forEach(id => {
+    const existing = colorByCaso.get(id);
+    if (!existing || (r.data && r.data < existing.data)) colorByCaso.set(id, r);
+  }));
+
+  // Calcola TAT
+  const tats = [];
+  camp.forEach(c => {
+    if (!c.id || !c.data) return;
+    const p = procByCaso.get(c.id);
+    const col = colorByCaso.get(c.id);
+    const tatAccProc = p ? _trc_diffDays(c.data, p.data) : null;
+    const tatProcColor = (p && col) ? _trc_diffDays(p.data, col.data) : null;
+    const tatTot = col ? _trc_diffDays(c.data, col.data) : null;
+    tats.push({ id: c.id, tatAccProc, tatProcColor, tatTot });
+  });
+
+  const avg = (arr) => {
+    const filtered = arr.filter(x => x != null && !isNaN(x) && x >= 0);
+    if (!filtered.length) return null;
+    return (filtered.reduce((a, b) => a + b, 0) / filtered.length);
+  };
+
+  const accProc = avg(tats.map(t => t.tatAccProc));
+  const procColor = avg(tats.map(t => t.tatProcColor));
+  const tot = avg(tats.map(t => t.tatTot));
+  const validTot = tats.filter(t => t.tatTot != null && t.tatTot >= 0);
+  const within3 = validTot.filter(t => t.tatTot <= 3).length;
+  const pct3 = validTot.length ? Math.round(within3 / validTot.length * 100) : 0;
+
+  document.getElementById('tat-acc-proc').textContent = accProc != null ? accProc.toFixed(1) + ' gg' : '— gg';
+  document.getElementById('tat-acc-proc-n').textContent = 'media su ' + tats.filter(t => t.tatAccProc != null).length + ' casi';
+  document.getElementById('tat-proc-color').textContent = procColor != null ? procColor.toFixed(1) + ' gg' : '— gg';
+  document.getElementById('tat-proc-color-n').textContent = 'media su ' + tats.filter(t => t.tatProcColor != null).length + ' casi';
+  document.getElementById('tat-tot').textContent = tot != null ? tot.toFixed(1) + ' gg' : '— gg';
+  document.getElementById('tat-tot-n').textContent = 'media su ' + validTot.length + ' casi';
+  document.getElementById('tat-pct3').textContent = pct3 + '%';
+}
+
+// S5 — Top descrizioni
+function renderTopDescrizioni() {
+  const camp = loadCampioni();
+  // Estrai keyword principali dalle descrizioni
+  const counter = new Map();
+  camp.forEach(c => {
+    const d = String(c.desc || '').toLowerCase();
+    if (!d) return;
+    // Categorie principali da contare
+    const cats = [
+      { pat: /bio\s+endo|biopsia\s+endometr|endometri/, label: 'Biopsia endometrio' },
+      { pat: /polipo|polipi/, label: 'Polipi' },
+      { pat: /neof|neoformazione|neoplasia/, label: 'Neoformazioni' },
+      { pat: /turp|prostata/, label: 'Prostata / TURP' },
+      { pat: /urin/, label: 'Urine (cito)' },
+      { pat: /mioma|fibroma/, label: 'Miomi/Fibromi' },
+      { pat: /cute|nevo|nei/, label: 'Cute / nevi' },
+      { pat: /vesc/, label: 'Vescica' },
+      { pat: /tiroide|tir\s|agoasp\s*tir/, label: 'Tiroide' },
+      { pat: /colon|sigma|retto|rettale|anale/, label: 'Colon / retto' },
+      { pat: /espett/, label: 'Espettorato' },
+      { pat: /pleur|ascit/, label: 'Liquidi pleurici/ascitici' },
+      { pat: /colecist/, label: 'Colecisti' },
+      { pat: /utero|portio|cervice|cerv/, label: 'Utero / cervice' },
+      { pat: /linfonodo|linf/, label: 'Linfonodi' },
+      { pat: /leep/, label: 'LEEP cervice' },
+      { pat: /ovaio|ov\s|ovari/, label: 'Ovaio' },
+    ];
+    cats.forEach(c => {
+      if (c.pat.test(d)) counter.set(c.label, (counter.get(c.label) || 0) + 1);
+    });
+  });
+  const sorted = Array.from(counter.entries()).sort((a, b) => b[1] - a[1]).slice(0, 10);
+  const max = sorted.length ? sorted[0][1] : 1;
+
+  document.getElementById('top-desc-sub').textContent = camp.length + ' campioni analizzati';
+  let html = '';
+  if (sorted.length === 0) {
+    html = '<div class="trac-empty">Nessun dato sufficiente</div>';
+  } else {
+    sorted.forEach(([label, count], i) => {
+      const w = Math.round(count / max * 100);
+      const color = i < 3 ? 'var(--accent)' : i < 6 ? 'var(--blue)' : 'var(--teal)';
+      html += `<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;font-size:12px">
+        <span style="min-width:160px;text-align:right;color:var(--text2)">${esc(label)}</span>
+        <div style="flex:1;height:18px;background:var(--bg3);border-radius:3px;position:relative">
+          <div style="width:${w}%;height:100%;background:${color};border-radius:3px"></div>
+        </div>
+        <span class="mono" style="min-width:40px;font-weight:700">${count}</span>
+      </div>`;
+    });
+  }
+  document.getElementById('top-desc-content').innerHTML = html;
+}
+
+// ════════════════════════════════════════════════════════════════
+// CLIENTI — C1, C2, C3, C4, C5, C7
+// ════════════════════════════════════════════════════════════════
+function _cli_getPeriodCutoff() {
+  const sel = document.getElementById('cli-period-sel');
+  const v = sel ? sel.value : '6m';
+  const map = { '1m': 30, '3m': 90, '6m': 180, '12m': 365, 'all': 0 };
+  const days = map[v] || 180;
+  if (!days) return '';
+  return new Date(Date.now() - days * 86400000).toISOString().slice(0, 10);
+}
+
+function renderClientiSection() {
+  const cutoff = _cli_getPeriodCutoff();
+  const camp = loadCampioni().filter(c => c.data && c.data >= cutoff);
+
+  // C7 — Clienti nuovi (mai visti prima del cutoff)
+  if (cutoff) {
+    const oldClients = new Set();
+    loadCampioni().filter(c => c.data && c.data < cutoff).forEach(c => {
+      const r = _trc_richiedente(c);
+      if (r) oldClients.add(r.toLowerCase());
+    });
+    const newClients = new Map();
+    camp.forEach(c => {
+      const r = _trc_richiedente(c);
+      if (!r) return;
+      if (!oldClients.has(r.toLowerCase())) {
+        newClients.set(r, (newClients.get(r) || 0) + 1);
+      }
+    });
+    const newArr = Array.from(newClients.entries()).sort((a, b) => b[1] - a[1]);
+    const alertEl = document.getElementById('cli-nuovi-alert');
+    if (newArr.length) {
+      alertEl.innerHTML = `<div style="background:#dbeafe;border-left:4px solid var(--accent2);padding:10px 14px;border-radius:6px;font-size:13px">
+        <strong>🆕 Nuovi clienti nel periodo:</strong>
+        ${newArr.slice(0, 8).map(([n, c]) => `<span style="display:inline-block;background:#fff;padding:3px 8px;border-radius:4px;margin:2px 4px;font-size:12px">${esc(n)} <strong>(${c})</strong></span>`).join('')}
+        ${newArr.length > 8 ? `<span style="font-size:11px;color:var(--text3);margin-left:4px">+${newArr.length - 8} altri</span>` : ''}
+      </div>`;
+    } else {
+      alertEl.innerHTML = '';
+    }
+  } else {
+    document.getElementById('cli-nuovi-alert').innerHTML = '';
+  }
+
+  // C1 — Top clienti per volume
+  const volByCli = new Map();
+  camp.forEach(c => {
+    const r = _trc_richiedente(c);
+    if (r) volByCli.set(r, (volByCli.get(r) || 0) + 1);
+  });
+  const topCli = Array.from(volByCli.entries()).sort((a, b) => b[1] - a[1]);
+  const totCli = topCli.reduce((a, b) => a + b[1], 0);
+
+  document.getElementById('cli-c1-sub').textContent = topCli.length + ' clienti · ' + totCli + ' campioni';
+  let c1Html = '';
+  const c1Top = topCli.slice(0, 15);
+  const c1Max = c1Top.length ? c1Top[0][1] : 1;
+  c1Top.forEach(([nome, count], i) => {
+    const w = Math.round(count / c1Max * 100);
+    const pct = totCli ? (count / totCli * 100).toFixed(1) : 0;
+    c1Html += `<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;font-size:12px">
+      <span style="min-width:120px;text-align:right;font-weight:${i<3?'700':'400'};color:${i<3?'var(--accent)':'var(--text2)'}">${esc(nome)}</span>
+      <div style="flex:1;height:18px;background:var(--bg3);border-radius:3px;position:relative">
+        <div style="width:${w}%;height:100%;background:${i<3?'var(--accent)':i<6?'var(--blue)':'var(--teal)'};border-radius:3px"></div>
+      </div>
+      <span class="mono" style="min-width:50px;font-weight:700">${count}</span>
+      <span style="min-width:42px;font-size:11px;color:var(--text3)">${pct}%</span>
+    </div>`;
+  });
+  document.getElementById('cli-c1-content').innerHTML = c1Html || '<div class="trac-empty">Nessun dato nel periodo</div>';
+
+  // C2 — Mix per cliente (popola select)
+  const c2Sel = document.getElementById('cli-c2-sel');
+  c2Sel.innerHTML = '<option value="">— Seleziona cliente —</option>' +
+    topCli.slice(0, 30).map(([n]) => `<option value="${esc(n)}">${esc(n)}</option>`).join('');
+  if (topCli.length > 0) {
+    c2Sel.value = topCli[0][0];
+    renderClienteMix();
+  }
+
+  // C3 — Tendenza nel tempo (top 5)
+  renderC3TendenzaTempo(topCli.slice(0, 5).map(([n]) => n), cutoff);
+
+  // C4 — Heatmap stagionalità
+  renderC4Heatmap(topCli.slice(0, 12).map(([n]) => n), cutoff);
+
+  // C5 — TAT medio per cliente
+  renderC5TATCliente(topCli.slice(0, 10), cutoff);
+}
+
+function renderClienteMix() {
+  const cliente = document.getElementById('cli-c2-sel').value;
+  const el = document.getElementById('cli-c2-content');
+  if (!cliente) { el.innerHTML = '<div class="trac-empty">Seleziona un cliente</div>'; return; }
+  const cutoff = _cli_getPeriodCutoff();
+  const camp = loadCampioni().filter(c => c.data && c.data >= cutoff && _trc_richiedente(c) === cliente);
+  if (!camp.length) { el.innerHTML = '<div class="trac-empty">Nessun dato per ' + esc(cliente) + '</div>'; return; }
+
+  // Conta per categoria di descrizione
+  const cats = [
+    { pat: /bio\s+endo|biopsia\s+endometr|endometri/, label: 'Bio endometrio' },
+    { pat: /polipo|polipi/, label: 'Polipi' },
+    { pat: /neof|neoformazione/, label: 'Neoformazioni' },
+    { pat: /turp|prostata/, label: 'Prostata' },
+    { pat: /urin/, label: 'Urine' },
+    { pat: /mioma|fibroma/, label: 'Miomi' },
+    { pat: /cute|nevo/, label: 'Cute/nevi' },
+    { pat: /vesc/, label: 'Vescica' },
+    { pat: /tiroide|tir\s/, label: 'Tiroide' },
+    { pat: /colon|retto/, label: 'Colon/retto' },
+    { pat: /espett/, label: 'Espettorato' },
+    { pat: /pleur|ascit/, label: 'Liquidi cito' },
+    { pat: /colecist/, label: 'Colecisti' },
+    { pat: /utero|portio|cerv/, label: 'Utero/cervice' },
+    { pat: /linf/, label: 'Linfonodi' },
+    { pat: /leep/, label: 'LEEP' },
+  ];
+  const counter = new Map();
+  camp.forEach(c => {
+    const d = String(c.desc || '').toLowerCase();
+    let matched = false;
+    cats.forEach(ct => {
+      if (ct.pat.test(d)) { counter.set(ct.label, (counter.get(ct.label) || 0) + 1); matched = true; }
+    });
+    if (!matched) counter.set('Altri', (counter.get('Altri') || 0) + 1);
+  });
+  const sorted = Array.from(counter.entries()).sort((a, b) => b[1] - a[1]).slice(0, 8);
+  const max = sorted.length ? sorted[0][1] : 1;
+
+  let html = `<div style="font-size:11px;color:var(--text3);margin-bottom:8px">${camp.length} campioni nel periodo</div>`;
+  sorted.forEach(([label, count]) => {
+    const w = Math.round(count / max * 100);
+    html += `<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;font-size:11px">
+      <span style="min-width:90px;text-align:right">${esc(label)}</span>
+      <div style="flex:1;height:14px;background:var(--bg3);border-radius:2px"><div style="width:${w}%;height:100%;background:var(--accent2);border-radius:2px"></div></div>
+      <span class="mono" style="min-width:30px;font-weight:600">${count}</span>
+    </div>`;
+  });
+  el.innerHTML = html;
+}
+
+// Widget Dashboard: Top 5 clienti del mese + Nuovi clienti
+function renderDashClienti() {
+  const topEl = document.getElementById('dash-cli-top-list');
+  const newEl = document.getElementById('dash-cli-new-list');
+  const subEl = document.getElementById('dash-cli-top-sub');
+  if (!topEl || !newEl) return;
+
+  const camp = loadCampioni();
+  if (!camp.length) {
+    topEl.innerHTML = '<div style="color:var(--text3);font-size:12px">Nessun dato</div>';
+    newEl.innerHTML = '<div style="color:var(--text3);font-size:12px">—</div>';
+    return;
+  }
+
+  // Ultimi 30 giorni
+  const today = new Date();
+  const cutoff = new Date(today);
+  cutoff.setDate(cutoff.getDate() - 30);
+  const cutoffIso = cutoff.toISOString().slice(0, 10);
+  const recent = camp.filter(c => c.data && c.data >= cutoffIso);
+
+  // Top 5 per volume
+  const volByCli = new Map();
+  recent.forEach(c => {
+    const r = _trc_richiedente(c);
+    if (r) volByCli.set(r, (volByCli.get(r) || 0) + 1);
+  });
+  const top = Array.from(volByCli.entries()).sort((a, b) => b[1] - a[1]).slice(0, 5);
+  const totRecent = recent.length;
+  if (subEl) subEl.textContent = totRecent + ' casi totali';
+
+  if (top.length === 0) {
+    topEl.innerHTML = '<div style="color:var(--text3);font-size:12px">Nessun cliente</div>';
+  } else {
+    const maxN = top[0][1];
+    topEl.innerHTML = top.map(([nome, n], i) => {
+      const pct = totRecent ? Math.round(n * 100 / totRecent) : 0;
+      const barPct = maxN ? Math.round(n * 100 / maxN) : 0;
+      const medalColors = ['#ca8a04', '#94a3b8', '#b45309', 'var(--text3)', 'var(--text3)'];
+      return `<div style="display:flex;align-items:center;gap:8px;padding:4px 0;font-size:12px">
+        <span style="font-family:'DM Mono',monospace;font-weight:700;color:${medalColors[i]};min-width:14px">${i + 1}</span>
+        <span style="flex:1;font-weight:500">${esc(nome)}</span>
+        <div style="flex:0 0 80px;height:4px;background:var(--border);border-radius:99px;overflow:hidden">
+          <div style="height:100%;width:${barPct}%;background:var(--accent2);border-radius:99px"></div>
+        </div>
+        <span style="font-family:'DM Mono',monospace;font-weight:700;color:var(--accent);min-width:28px;text-align:right">${n}</span>
+        <span style="font-family:'DM Mono',monospace;font-size:10px;color:var(--text3);min-width:32px;text-align:right">${pct}%</span>
+      </div>`;
+    }).join('');
+  }
+
+  // Nuovi clienti: nel periodo recente ma NON nei 90gg precedenti
+  const cutoffOld = new Date(today);
+  cutoffOld.setDate(cutoffOld.getDate() - 120); // 90gg prima del periodo recente
+  const cutoffOldIso = cutoffOld.toISOString().slice(0, 10);
+  const olderClients = new Set();
+  camp.forEach(c => {
+    if (c.data && c.data >= cutoffOldIso && c.data < cutoffIso) {
+      const r = _trc_richiedente(c);
+      if (r) olderClients.add(r);
+    }
+  });
+  const newClients = new Map();
+  recent.forEach(c => {
+    const r = _trc_richiedente(c);
+    if (r && !olderClients.has(r)) {
+      newClients.set(r, (newClients.get(r) || 0) + 1);
+    }
+  });
+  const newArr = Array.from(newClients.entries()).sort((a, b) => b[1] - a[1]).slice(0, 5);
+  if (newArr.length === 0) {
+    newEl.innerHTML = '<div style="color:var(--text3);font-size:12px;padding:4px 0">Nessuno nuovo nel periodo</div>';
+  } else {
+    newEl.innerHTML = newArr.map(([nome, n]) => `
+      <div style="display:flex;align-items:center;gap:6px;padding:3px 0;font-size:12px">
+        <span style="background:#dbeafe;color:var(--accent2);padding:2px 8px;border-radius:99px;font-weight:600;flex:1">${esc(nome)}</span>
+        <span style="font-family:'DM Mono',monospace;font-weight:700;color:var(--accent);font-size:11px">${n}</span>
+      </div>`).join('');
+  }
+}
+window.renderDashClienti = renderDashClienti;
+
+function renderC3TendenzaTempo(topClients, cutoff) {
+  const svg = document.getElementById('cli-c3-chart');
+  const legend = document.getElementById('cli-c3-legend');
+  if (!topClients.length) { svg.innerHTML = ''; legend.innerHTML = ''; return; }
+
+  // Genera mesi nel periodo
+  const today = new Date();
+  const start = cutoff ? new Date(cutoff) : new Date(today.getFullYear() - 1, today.getMonth(), 1);
+  const months = [];
+  const cur = new Date(start.getFullYear(), start.getMonth(), 1);
+  while (cur <= today) {
+    months.push(cur.toISOString().slice(0, 7));
+    cur.setMonth(cur.getMonth() + 1);
+  }
+
+  const camp = loadCampioni();
+  const colors = ['#2563eb', '#0891b2', '#059669', '#d97706', '#dc2626'];
+
+  // Conta per cliente × mese
+  const data = topClients.map(cli => {
+    const counts = months.map(m =>
+      camp.filter(c => c.data && c.data.slice(0, 7) === m && _trc_richiedente(c) === cli).length
+    );
+    return { cli, counts };
+  });
+
+  const maxV = Math.max(1, ...data.flatMap(d => d.counts));
+  const W = 600, H = 140, padL = 30, padR = 10, padT = 10, padB = 25;
+  const cw = W - padL - padR, ch = H - padT - padB;
+
+  let lines = '';
+  data.forEach((d, i) => {
+    if (!d.counts.length) return;
+    const pts = d.counts.map((v, idx) => {
+      const x = padL + (idx / Math.max(1, months.length - 1)) * cw;
+      const y = padT + ch - (v / maxV) * ch;
+      return x + ',' + y;
+    }).join(' ');
+    lines += `<polyline points="${pts}" fill="none" stroke="${colors[i % colors.length]}" stroke-width="2" stroke-linejoin="round"/>`;
+    d.counts.forEach((v, idx) => {
+      const x = padL + (idx / Math.max(1, months.length - 1)) * cw;
+      const y = padT + ch - (v / maxV) * ch;
+      lines += `<circle cx="${x}" cy="${y}" r="2.5" fill="${colors[i % colors.length]}"/>`;
+    });
+  });
+
+  let xLabels = '';
+  months.forEach((m, i) => {
+    if (i % Math.max(1, Math.ceil(months.length / 8)) !== 0 && i !== months.length - 1) return;
+    const x = padL + (i / Math.max(1, months.length - 1)) * cw;
+    const lbl = m.slice(5) + '/' + m.slice(2, 4);
+    xLabels += `<text x="${x}" y="${H - 5}" font-size="9" fill="var(--text3)" text-anchor="middle">${lbl}</text>`;
+  });
+
+  const ySteps = 4;
+  let yLabels = '';
+  for (let i = 0; i <= ySteps; i++) {
+    const y = padT + ch - (i / ySteps) * ch;
+    const v = Math.round(maxV * i / ySteps);
+    yLabels += `<text x="${padL - 4}" y="${y + 3}" font-size="9" fill="var(--text3)" text-anchor="end">${v}</text>`;
+    yLabels += `<line x1="${padL}" y1="${y}" x2="${W - padR}" y2="${y}" stroke="var(--bg3)" stroke-width="0.5"/>`;
+  }
+
+  svg.innerHTML = yLabels + lines + xLabels;
+  legend.innerHTML = data.map((d, i) =>
+    `<span style="display:flex;align-items:center;gap:4px"><span style="width:12px;height:2px;background:${colors[i % colors.length]};display:inline-block"></span>${esc(d.cli)}</span>`
+  ).join('');
+}
+
+function renderC4Heatmap(topClients, cutoff) {
+  const el = document.getElementById('cli-c4-heatmap');
+  if (!topClients.length) { el.innerHTML = '<div class="trac-empty">Nessun dato</div>'; return; }
+  const today = new Date();
+  const start = cutoff ? new Date(cutoff) : new Date(today.getFullYear() - 1, today.getMonth(), 1);
+  const months = [];
+  const cur = new Date(start.getFullYear(), start.getMonth(), 1);
+  while (cur <= today) {
+    months.push(cur.toISOString().slice(0, 7));
+    cur.setMonth(cur.getMonth() + 1);
+  }
+  const camp = loadCampioni();
+  const data = topClients.map(cli => {
+    const counts = months.map(m =>
+      camp.filter(c => c.data && c.data.slice(0, 7) === m && _trc_richiedente(c) === cli).length
+    );
+    return { cli, counts };
+  });
+  const maxV = Math.max(1, ...data.flatMap(d => d.counts));
+
+  let html = `<table style="border-collapse:collapse;font-size:11px;width:100%">
+    <thead><tr><th style="padding:4px 8px;text-align:left">Cliente</th>`;
+  months.forEach(m => {
+    const lbl = m.slice(5) + '/' + m.slice(2, 4);
+    html += `<th style="padding:4px;font-size:9px;color:var(--text3);text-align:center;font-weight:400">${lbl}</th>`;
+  });
+  html += '</tr></thead><tbody>';
+  data.forEach(d => {
+    html += `<tr><td style="padding:4px 8px;font-weight:600">${esc(d.cli)}</td>`;
+    d.counts.forEach(v => {
+      const intensity = v / maxV;
+      const bg = v === 0 ? 'var(--bg2)' : `rgba(37, 99, 235, ${Math.max(0.08, intensity)})`;
+      const fg = intensity > 0.5 ? '#fff' : 'var(--text)';
+      html += `<td style="padding:6px 4px;text-align:center;background:${bg};color:${fg};font-family:'DM Mono',monospace;font-weight:${intensity>0.3?'700':'400'};font-size:10px;border:1px solid var(--surface)">${v || ''}</td>`;
+    });
+    html += '</tr>';
+  });
+  html += '</tbody></table>';
+  el.innerHTML = html;
+}
+
+function renderC5TATCliente(topCli, cutoff) {
+  const camp = loadCampioni().filter(c => c.data && c.data >= cutoff);
+  const proc = loadProc();
+  const procByCaso = new Map();
+  proc.forEach(c => _trc_extractCasi(c).forEach(id => {
+    const existing = procByCaso.get(id);
+    if (!existing || (c.data && c.data < existing.data)) procByCaso.set(id, c);
+  }));
+
+  const tatByCli = new Map();
+  camp.forEach(c => {
+    const r = _trc_richiedente(c);
+    if (!r) return;
+    const p = procByCaso.get(c.id);
+    if (!p) return;
+    const tat = _trc_diffDays(c.data, p.data);
+    if (tat == null || tat < 0) return;
+    if (!tatByCli.has(r)) tatByCli.set(r, []);
+    tatByCli.get(r).push(tat);
+  });
+
+  const rows = topCli.map(([cli, vol]) => {
+    const arr = tatByCli.get(cli) || [];
+    if (!arr.length) return null;
+    const avg = arr.reduce((a, b) => a + b, 0) / arr.length;
+    return { cli, vol, avg, n: arr.length };
+  }).filter(Boolean).sort((a, b) => a.avg - b.avg);
+
+  if (!rows.length) {
+    document.getElementById('cli-c5-content').innerHTML = '<div class="trac-empty">Dati TAT insufficienti</div>';
+    return;
+  }
+
+  let html = '';
+  rows.forEach(r => {
+    const color = r.avg < 1.5 ? 'var(--green)' : r.avg < 3 ? 'var(--accent)' : r.avg < 5 ? 'var(--yellow)' : 'var(--red)';
+    html += `<div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px">
+      <span style="flex:1;font-weight:600">${esc(r.cli)}</span>
+      <span style="font-size:11px;color:var(--text3)">${r.n} casi</span>
+      <span class="mono" style="font-weight:700;color:${color};min-width:50px;text-align:right">${r.avg.toFixed(1)} gg</span>
+    </div>`;
+  });
+  document.getElementById('cli-c5-content').innerHTML = html;
+}
+
+// ════════════════════════════════════════════════════════════════
+// HOOK: aggiungi rendering al renderReport
+// ════════════════════════════════════════════════════════════════
+const _origRenderReport_v2 = (typeof renderReport === 'function') ? renderReport : null;
+window.renderReport = function() {
+  try { if (_origRenderReport_v2) _origRenderReport_v2(); } catch(e){ console.warn('[renderReport orig]', e); }
+  try { renderTATSection(); } catch(e){ console.warn('[TAT]', e); }
+  try { renderTopDescrizioni(); } catch(e){ console.warn('[TopDesc]', e); }
+  try { renderClientiSection(); } catch(e){ console.warn('[Clienti]', e); }
+};
+
+// Esporta come globali tutte le funzioni invocate da onclick
+window.openTracSchedaCasoModal = openTracSchedaCasoModal;
+window.cercaSchedaCaso = cercaSchedaCaso;
+window.stampaSchedaCaso = stampaSchedaCaso;
+window.openTracLottoModal = openTracLottoModal;
+window.cercaLottoAvanzato = cercaLottoAvanzato;
+window.openTracAuditDataModal = openTracAuditDataModal;
+window.auditDataAvanzato = auditDataAvanzato;
+window.stampaAuditData = stampaAuditData;
+window.openTracReagModal = openTracReagModal;
+window.cercaReagenteAvanzato = cercaReagenteAvanzato;
+window.openTracDiagModal = openTracDiagModal;
+window.diagnosticaCasi = diagnosticaCasi;
+window.renderClientiSection = renderClientiSection;
+window.renderClienteMix = renderClienteMix;
 
 // [LupoLab AP v5] glue layer ready
 // Costruisce il datalist prodotti subito dopo il boot
