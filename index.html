@@ -50,6 +50,13 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:99px}
 
+/* Scrollbar più visibile per la tabella campioni e ordini */
+#camp-tbody, #camp-counters ~ .card > div[style*="overflow-y"]{scrollbar-width:thin;scrollbar-color:var(--accent2) var(--bg2)}
+.card > div[style*="overflow-y:auto"]::-webkit-scrollbar{width:12px}
+.card > div[style*="overflow-y:auto"]::-webkit-scrollbar-track{background:var(--bg2);border-radius:99px}
+.card > div[style*="overflow-y:auto"]::-webkit-scrollbar-thumb{background:var(--accent2);border-radius:99px;border:2px solid var(--bg2)}
+.card > div[style*="overflow-y:auto"]::-webkit-scrollbar-thumb:hover{background:var(--accent)}
+
 /* LAYOUT */
 .app{display:grid;grid-template-rows:52px 1fr;
   grid-template-columns:48px 1fr;min-height:100vh}
@@ -788,13 +795,12 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
         </div>
       </div>
 
-      <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-bottom:16px" id="camp-counters">
+      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:16px" id="camp-counters">
         <div class="cnt-card"><div class="cnt-lbl">Totale oggi</div><div class="cnt-val" style="color:var(--accent)" id="camp-c-tot">0</div></div>
         <div class="cnt-card" data-tip="Campioni di tessuto solido: biopsie, pezzi operatori"><div class="cnt-lbl">Istologia</div><div class="cnt-val" style="color:var(--blue)" id="camp-c-ist">0</div></div>
         <div class="cnt-card" data-tip="Campioni liquidi: brushing, agoaspirati, BAL, versamenti"><div class="cnt-lbl">Citologia</div><div class="cnt-val" style="color:var(--teal)" id="camp-c-cit">0</div></div>
         <div class="cnt-card"><div class="cnt-lbl">PAP test</div><div class="cnt-val" style="color:var(--purple)" id="camp-c-pap">0</div></div>
         <div class="cnt-card"><div class="cnt-lbl">PAP privato</div><div class="cnt-val" style="color:var(--orange)" id="camp-c-papp">0</div></div>
-        <div class="cnt-card"><div class="cnt-lbl">In attesa</div><div class="cnt-val" style="color:var(--yellow)" id="camp-c-att">0</div></div>
       </div>
 
       <div class="filter-bar">
@@ -811,9 +817,9 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
       </div>
 
       <div class="card">
-        <div style="overflow-x:auto">
+        <div style="overflow-x:auto;max-height:calc(100vh - 320px);overflow-y:auto">
           <table class="tbl">
-            <thead><tr><th>ID Caso</th><th>Data</th><th>Tipo</th><th>Provenienza</th><th>Pezzi</th><th>Stato</th><th></th></tr></thead>
+            <thead><tr><th>ID Caso</th><th>Data</th><th>Tipo</th><th>Provenienza</th><th>Pezzi</th><th>Descrizione</th><th></th></tr></thead>
             <tbody id="camp-tbody"></tbody>
           </table>
         </div>
@@ -5586,7 +5592,14 @@ async function saveCampioni(arr, deletedId){
   if(!IS_ONLINE){ enqueue({type:'campioni'}); return; }
   try{
     if(deletedId) await supaFetch('campioni','DELETE',null,'?id=eq.'+deletedId);
-    if(arr.length) await supaFetch('campioni','POST',arr,'?on_conflict=id');
+    if(arr.length){
+      // Invio in batch per evitare payload troppo grandi (Supabase ~1MB limit)
+      const BATCH = 100;
+      for(let i=0; i<arr.length; i+=BATCH){
+        const slice = arr.slice(i, i+BATCH);
+        await supaFetch('campioni','POST',slice,'?on_conflict=id');
+      }
+    }
   }catch(e){ enqueue({type:'campioni'}); }
 }
 
@@ -5880,23 +5893,24 @@ function renderTracciabilita(){
   const protLabel = {EE:'EE',EE_CIT:'EE-Cit',PAP:'PAP',IHC:'IHC',GIEM:'Giemsa',PAS:'PAS',RET:'Reticolo',ALTRO:'Altro'};
 
   container.innerHTML = campioni.map(camp=>{
-    const nPezzi = (camp.pezzi||[]).length;
+    const nPezzi = (camp.pezzi||[]).length || (parseInt(camp.n_pezzi,10) || 0);
     const nFram = (camp.pezzi||[]).reduce((s,p)=>s+(p.frammenti||[]).length,0);
     const colStr = (camp.colorazioni||[]).map(c=>protLabel[c.protocollo]||c.protocollo).join(', ');
-    return `<div class="campione-card" onclick="openDetailCampione('${camp.id}')">
+    const safeId = String(camp.id||'').replace(/'/g, "\\'");
+    return `<div class="campione-card" onclick="openDetailCampione('${safeId}')">
       <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
         <div>
-          <div class="campione-id">${camp.campione_id}</div>
-          <div class="campione-tipo" style="color:${tipoColor[camp.tipo]||'var(--text3)'}">${tipoLabel[camp.tipo]||camp.tipo}${camp.sottotipo?' · '+camp.sottotipo:''}</div>
-          ${camp.provenienza?`<div style="font-size:12px;color:var(--text2);margin-top:3px">📍 ${camp.provenienza}</div>`:''}
+          <div class="campione-id">${esc(camp.campione_id||'—')}</div>
+          <div class="campione-tipo" style="color:${tipoColor[camp.tipo]||'var(--text3)'}">${esc(tipoLabel[camp.tipo]||camp.tipo||'')}${camp.sottotipo?' · '+esc(camp.sottotipo):''}</div>
+          ${camp.provenienza?`<div style="font-size:12px;color:var(--text2);margin-top:3px">📍 ${esc(camp.provenienza)}</div>`:''}
         </div>
         <div style="text-align:right">
-          <div style="font-size:12px;color:var(--text3)">${fmtDate(camp.data)}</div>
-          <div style="font-size:11px;color:var(--text3);margin-top:3px">${nPezzi} pezz${nPezzi===1?'o':'i'} · ${nFram} frammenti</div>
-          ${colStr?`<div style="font-size:11px;color:var(--accent2);margin-top:2px">${colStr}</div>`:''}
+          <div style="font-size:12px;color:var(--text3)">${camp.data?fmtDate(camp.data):'—'}</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:3px">${nPezzi} pezz${nPezzi===1?'o':'i'}${nFram?' · '+nFram+' frammenti':''}</div>
+          ${colStr?`<div style="font-size:11px;color:var(--accent2);margin-top:2px">${esc(colStr)}</div>`:''}
         </div>
       </div>
-      ${camp.desc_accettazione?`<div style="font-size:12px;color:var(--text2);margin-top:7px;border-top:1px solid var(--border);padding-top:7px">${camp.desc_accettazione}</div>`:''}
+      ${camp.desc_accettazione?`<div style="font-size:12px;color:var(--text2);margin-top:7px;border-top:1px solid var(--border);padding-top:7px">${esc(camp.desc_accettazione)}</div>`:''}
     </div>`;
   }).join('');
 }
@@ -6438,7 +6452,25 @@ function setOrdiniFilter(f,btn){
 
 function renderOrdini(){
   let ords = loadOrd();
+  // Rimuovi gli ordini fantasma A-F1 e B-F2 dalla lista (e dalla cache)
+  const cleaned = ords.filter(o => o && o.num !== 'A-F1' && o.num !== 'B-F2');
+  if(cleaned.length !== ords.length){
+    try{ _setCache('ls_ordini', cleaned); }catch(_){}
+    ords = cleaned;
+  }
   if(ordiniFilter!=='all') ords = ords.filter(o=>o.stato===ordiniFilter);
+
+  // Ordine DECRESCENTE: prima per data (più recenti prima), poi per numero
+  ords.sort((a,b) => {
+    const da = String(a.data||'');
+    const db = String(b.data||'');
+    if(da !== db) return db.localeCompare(da);
+    // Confronto per numero ordine (es. "5/BIO/2026" vs "3/BIO/2026")
+    const na = parseInt(String(a.num||'').split(/[\/\-_]/)[0], 10) || 0;
+    const nb = parseInt(String(b.num||'').split(/[\/\-_]/)[0], 10) || 0;
+    return nb - na;
+  });
+
   document.getElementById('ordini-count').textContent = ords.length + ' ordine/i';
   const tb = document.getElementById('ordini-tbody');
   if(!ords.length){
@@ -9979,8 +10011,26 @@ window.setOrdFilter = function(f, btn){
 function renderOrdiniPreview(){
   const list = document.getElementById('ordini-list');
   if(!list || typeof loadOrd !== 'function') return;
-  let ords = loadOrd().filter(o => o.stato !== 'ricevuto' && o.stato !== 'annullato');
+  let ords = loadOrd();
+  // Pulizia A-F1 e B-F2 ad ogni render (in caso ricompaiano da sync)
+  const cleaned = ords.filter(o => o && o.num !== 'A-F1' && o.num !== 'B-F2');
+  if(cleaned.length !== ords.length){
+    try{ _setCache('ls_ordini', cleaned); }catch(_){}
+    ords = cleaned;
+  }
+  ords = ords.filter(o => o.stato !== 'ricevuto' && o.stato !== 'annullato');
   if(_ordFilter !== 'all') ords = ords.filter(o => o.stato === _ordFilter);
+
+  // Ordine DECRESCENTE per data invio/creazione, poi per numero
+  ords.sort((a,b) => {
+    const da = a.data_invio || a.data_creazione || a.data || '';
+    const db = b.data_invio || b.data_creazione || b.data || '';
+    if(da !== db) return String(db).localeCompare(String(da));
+    const na = parseInt(String(a.num||'').split(/[\/\-_]/)[0], 10) || 0;
+    const nb = parseInt(String(b.num||'').split(/[\/\-_]/)[0], 10) || 0;
+    return nb - na;
+  });
+
   if(!ords.length){
     list.innerHTML = '<div class="empty-state"><div class="ico">📦</div><div>Nessun ordine</div></div>';
     document.getElementById('ordine-detail').innerHTML = '<div class="empty-state"><div class="ico">👈</div><div>Seleziona un ordine</div></div>';
@@ -10275,22 +10325,49 @@ window.renderTracciabilita = function(){
   const tbody = document.getElementById('camp-tbody');
   if(!tbody || typeof loadCampioni !== 'function') return;
   let camps = loadCampioni();
-  // Filtri
-  if(_campFilter !== 'all') camps = camps.filter(c => (c.tipo||'').toLowerCase().replace('citologia','Citologia').replace('istologia','Istologia') === _campFilter || c.tipo === _campFilter);
+
+  // Filtri tipo (case-insensitive con mapping lowercase)
+  if(_campFilter !== 'all'){
+    const flt = _campFilter.toLowerCase();
+    camps = camps.filter(c => {
+      const t = (c.tipo||'').toLowerCase();
+      if(flt === 'istologia') return t === 'istologia';
+      if(flt === 'citologia') return t === 'citologia';
+      if(flt === 'pap test')   return t === 'pap test' || t === 'pap';
+      if(flt === 'pap privato')return t === 'pap privato' || t === 'pap_priv';
+      return t === flt;
+    });
+  }
+
+  // Filtro ricerca testo (su campione_id, provenienza, descrizione)
   const q = (document.getElementById('camp-search')?.value || '').toLowerCase().trim();
   if(q){
-    camps = camps.filter(c => (c.id_caso||'').toLowerCase().includes(q) || (c.provenienza||'').toLowerCase().includes(q));
+    camps = camps.filter(c =>
+      (c.campione_id||'').toLowerCase().includes(q) ||
+      (c.provenienza||'').toLowerCase().includes(q) ||
+      (c.desc_accettazione||'').toLowerCase().includes(q)
+    );
   }
-  // Counters
+
+  // Ordine DECRESCENTE per ID numerico del caso (es. 200/26 prima di 1/26)
+  camps.sort((a,b) => {
+    const na = parseInt(String(a.campione_id||'').split('/')[0], 10) || 0;
+    const nb = parseInt(String(b.campione_id||'').split('/')[0], 10) || 0;
+    if(nb !== na) return nb - na;
+    // a parità, ordina per data più recente prima
+    return String(b.data||'').localeCompare(String(a.data||''));
+  });
+
+  // Counters per oggi (dal totale, non filtrato)
   const today = new Date().toISOString().slice(0,10);
-  const todayC = (typeof loadCampioni === 'function') ? loadCampioni().filter(c => c.data === today) : [];
+  const all = (typeof loadCampioni === 'function') ? loadCampioni() : [];
+  const todayC = all.filter(c => c.data === today);
   const set = (id, n) => { const e = document.getElementById(id); if(e) e.textContent = n; };
   set('camp-c-tot', todayC.length);
   set('camp-c-ist', todayC.filter(c => (c.tipo||'').toLowerCase() === 'istologia').length);
   set('camp-c-cit', todayC.filter(c => (c.tipo||'').toLowerCase() === 'citologia').length);
-  set('camp-c-pap', todayC.filter(c => c.tipo === 'PAP test').length);
-  set('camp-c-papp', todayC.filter(c => c.tipo === 'PAP privato').length);
-  set('camp-c-att', todayC.filter(c => !c.processato_at).length);
+  set('camp-c-pap', todayC.filter(c => { const t=(c.tipo||'').toLowerCase(); return t==='pap test'||t==='pap'; }).length);
+  set('camp-c-papp', todayC.filter(c => { const t=(c.tipo||'').toLowerCase(); return t==='pap privato'||t==='pap_priv'; }).length);
 
   if(!camps.length){
     tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text3);padding:20px">Nessun campione</td></tr>';
@@ -10300,26 +10377,28 @@ window.renderTracciabilita = function(){
     const tl = (t||'').toLowerCase();
     if(tl === 'istologia') return '<span class="badge bg-blue">Istologia</span>';
     if(tl === 'citologia') return '<span class="badge bg-teal">Citologia</span>';
-    if(t === 'PAP test') return '<span class="badge bg-orange">PAP test</span>';
-    if(t === 'PAP privato') return '<span class="badge bg-purple">PAP priv.</span>';
+    if(tl === 'pap test' || tl === 'pap') return '<span class="badge bg-orange">PAP test</span>';
+    if(tl === 'pap privato' || tl === 'pap_priv') return '<span class="badge bg-purple">PAP priv.</span>';
+    if(tl === 'pap_l') return '<span class="badge bg-purple">PAP LupoLab</span>';
     return '<span class="badge">' + esc(t||'—') + '</span>';
   };
-  const statoBadge = (c) => {
-    if(c.colorato_at) return '<span class="badge bg-green">Colorato</span>';
-    if(c.processato_at) return '<span class="badge bg-green">Processato</span>';
-    return '<span class="badge bg-yellow">In attesa</span>';
-  };
-  tbody.innerHTML = camps.slice(0,200).map(c => {
-    const data = c.data ? new Date(c.data).toLocaleDateString('it-IT',{day:'2-digit',month:'2-digit'}) : '—';
-    const pezzi = (c.pezzi||[]).reduce((s,p) => s + (p.frammenti||[]).length, 0) || (c.pezzi||[]).length || 0;
-    return `<tr onclick="if(typeof viewCampione==='function')viewCampione('${c.id}')">
-      <td class="mono">${esc(c.id_caso||'—')}</td>
+
+  // Mostra tutti i campioni (no slice). Se molti, lo scroll del contenitore gestisce.
+  tbody.innerHTML = camps.map(c => {
+    const data = c.data ? new Date(c.data).toLocaleDateString('it-IT',{day:'2-digit',month:'2-digit',year:'2-digit'}) : '—';
+    // Conta pezzi: prima conta i frammenti, se 0 conta gli elementi di pezzi[], altrimenti n_pezzi
+    const nFrammenti = (c.pezzi||[]).reduce((s,p) => s + (p.frammenti||[]).length, 0);
+    const pezzi = nFrammenti || (c.pezzi||[]).length || parseInt(c.n_pezzi,10) || 0;
+    const desc = c.desc_accettazione || '';
+    const safeId = String(c.id||'').replace(/'/g, "\\'");
+    return `<tr onclick="if(typeof viewCampione==='function')viewCampione('${safeId}')">
+      <td class="mono" style="font-weight:700">${esc(c.campione_id||'—')}</td>
       <td class="mono">${data}</td>
       <td>${tipoBadge(c.tipo)}</td>
       <td>${esc(c.provenienza||'—')}</td>
-      <td>${pezzi}</td>
-      <td>${statoBadge(c)}</td>
-      <td class="act-cell"><button class="act-btn" onclick="event.stopPropagation();editCampione('${c.id}')">✏️</button></td>
+      <td class="mono">${pezzi}</td>
+      <td style="font-size:12px;color:var(--text2);max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(desc)}">${esc(desc||'—')}</td>
+      <td class="act-cell"><button class="act-btn" onclick="event.stopPropagation();editCampione('${safeId}')">✏️</button></td>
     </tr>`;
   }).join('');
 };
@@ -11217,35 +11296,51 @@ async function impxConfirmImport() {
   const existingIds = new Set(existing.map(c => c.campione_id).filter(Boolean));
   const toAdd = [];
   for (const item of toImport) {
+    if (!item.campione_id) continue;
     if (existingIds.has(item.campione_id)) continue;
+
+    // Costruisce l'array `pezzi` con N elementi placeholder
+    // (la UI usa pezzi.length per il contatore, quindi n_pezzi deve corrispondere)
+    const nPezzi = Math.max(1, parseInt(item.n_pezzi, 10) || 1);
+    const pezziArr = [];
+    for (let i = 0; i < nPezzi; i++) {
+      pezziArr.push({
+        id: (typeof genId === 'function') ? genId() : ('pz_' + Date.now() + '_' + i + '_' + Math.random().toString(36).slice(2, 6)),
+        desc: '',
+        frammenti: []
+      });
+    }
+
     toAdd.push({
       id: (typeof genId === 'function') ? genId() : ('imp_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8)),
       campione_id: item.campione_id,
-      tipo: item.tipo,                                  // 'istologia' o 'citologia' (lowercase)
+      tipo: (item.tipo || 'istologia').toLowerCase(),   // 'istologia' o 'citologia'
       sottotipo: '',
       data: item.data || new Date().toISOString().slice(0, 10),
       provenienza: item.provenienza || '',
       desc_accettazione: item.desc || '',
-      n_pezzi: item.n_pezzi || 1,
-      pezzi: [],
+      pezzi: pezziArr,
       colorazioni: [],
       note: '',
       origine: 'excel_import',
       creato: now,
       modificato: now
     });
-    existingIds.add(item.campione_id); // evita duplicati interni allo stesso import
+    existingIds.add(item.campione_id);
   }
   if (toAdd.length === 0) {
     toast('Nessun caso nuovo da importare', 'info');
     return;
   }
-  const merged = existing.concat(toAdd);
+
+  // I nuovi casi vanno in cima alla lista (più recenti prima = comportamento standard app)
+  const merged = toAdd.concat(existing);
+
   try {
     await saveCampioni(merged);
     closeModal('modal-import-excel');
     toast('✅ Importati ' + toAdd.length + ' nuovi casi', 'success');
-    try { renderTracciabilita(); } catch(_){}
+    try { if (typeof renderTracciabilita === 'function') renderTracciabilita(); } catch(_){}
     try { if (typeof renderDashboard === 'function') renderDashboard(); } catch(_){}
     try { if (typeof renderDashboardPreview === 'function') renderDashboardPreview(); } catch(_){}
   } catch(e) {
