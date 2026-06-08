@@ -9271,21 +9271,26 @@ function renderDashboardPreview(){
       if (!camps.length && typeof _derivedCampioni === 'function') camps = _derivedCampioni();
       const now = new Date(); now.setHours(0,0,0,0);
       const ms = new Date(now.getFullYear(), now.getMonth(), 1);
-      const monthCamps = camps.filter(c => c.data && new Date(c.data) >= ms);
+      const curYm = ms.toISOString().slice(0,7);
+      // Confronto mese basato su YYYY-MM (evita problemi di timezone)
+      const monthCamps = camps.filter(c => c.data && String(c.data).slice(0,7) === curYm);
       const tl = t => (t||'').toLowerCase();
       const cIst = monthCamps.filter(c => tl(c.tipo) === 'istologia').length;
       const cCit = monthCamps.filter(c => tl(c.tipo) === 'citologia').length;
-      // PAP: contati direttamente dai cicli coloratore (vetri_pap del mese)
+      // PAP: contati dai cicli coloratore — usa "vetri_pap" (vetrini PAP colorati nel mese)
       let cPap = 0;
       try {
         if (typeof loadColoratore === 'function') {
           const colReg = loadColoratore();
-          const monthColor = colReg.filter(r => r.data && new Date(r.data) >= ms);
-          // Priorità casi_pap.length (se presente), fallback vetri_pap (numero vetrini PAP colorati)
-          cPap = monthColor.reduce((s,r) => {
-            const nCasi = Array.isArray(r.casi_pap) ? r.casi_pap.length : 0;
-            return s + (nCasi || parseInt(r.vetri_pap,10) || 0);
-          }, 0);
+          const monthColor = colReg.filter(r => {
+            if (!r.data) return false;
+            // Confronto stringa YYYY-MM più sicuro di new Date()
+            const ym = String(r.data).slice(0,7);
+            const curYm = ms.toISOString().slice(0,7);
+            return ym === curYm;
+          });
+          // Somma dei vetrini PAP colorati nel mese
+          cPap = monthColor.reduce((s,r) => s + (parseInt(r.vetri_pap,10) || 0), 0);
         }
       } catch(_) { cPap = monthCamps.filter(c => tl(c.tipo).includes('pap')).length; }
 
@@ -9311,23 +9316,20 @@ function renderDashboardPreview(){
       });
       // Delta per tipo vs mese precedente
       const prevMs = new Date(now.getFullYear(), now.getMonth()-1, 1);
-      const prevCamps = camps.filter(c => c.data && new Date(c.data) >= prevMs && new Date(c.data) < ms);
+      const prevYm = prevMs.toISOString().slice(0,7);
+      const prevCamps = camps.filter(c => c.data && String(c.data).slice(0,7) === prevYm);
       const tlD = t => (t||'').toLowerCase();
       const pIstPrev = prevCamps.filter(c => tlD(c.tipo) === 'istologia').length;
       const pCitPrev = prevCamps.filter(c => tlD(c.tipo) === 'citologia').length;
-      // PAP precedente dai cicli coloratore
+      // PAP precedente dai cicli coloratore (vetri_pap del mese scorso)
       let pPapPrev = 0;
       try {
         if (typeof loadColoratore === 'function') {
           const colRegPrev = loadColoratore().filter(r => {
             if (!r.data) return false;
-            const d = new Date(r.data);
-            return d >= prevMs && d < ms;
+            return String(r.data).slice(0,7) === prevYm;
           });
-          pPapPrev = colRegPrev.reduce((s,r) => {
-            const nCasi = Array.isArray(r.casi_pap) ? r.casi_pap.length : 0;
-            return s + (nCasi || parseInt(r.vetri_pap,10) || 0);
-          }, 0);
+          pPapPrev = colRegPrev.reduce((s,r) => s + (parseInt(r.vetri_pap,10) || 0), 0);
         }
       } catch(_){}
       const fmtDelta = (cur, prev) => {
