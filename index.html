@@ -702,7 +702,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:18px">
 
         <div class="card">
-          <div class="card-hdr"><span class="card-title">Andamento campioni</span><span class="card-sub" id="dash-line-sub">ultimi 8 mesi</span></div>
+          <div class="card-hdr"><span class="card-title">Andamento campioni</span><span class="card-sub" id="dash-line-sub">5 mesi precedenti + settimane corr.</span></div>
           <div style="padding:12px 14px">
             <svg id="dash-chart-line" width="100%" viewBox="0 0 280 140" style="overflow:visible"></svg>
             <div style="display:flex;gap:12px;margin-top:8px;font-size:10px">
@@ -6163,6 +6163,12 @@ function renderArchivio(){
   if(!document.getElementById('archivio-list')) return;
   // UNIFICATO: l'archivio è una vista filtrata degli ordini
   let arch=loadOrd();
+  // Pulizia ordini fantasma A-F1/B-F2
+  const cleaned = arch.filter(o => o && o.num !== 'A-F1' && o.num !== 'B-F2');
+  if(cleaned.length !== arch.length){
+    try{ _setCache('ls_ordini', cleaned); }catch(_){}
+    arch = cleaned;
+  }
   // Popola filtri
   const mesi=[...new Set(arch.map(o=>o.data?o.data.slice(0,7):'').filter(Boolean))].sort().reverse();
   const forn=[...new Set(arch.map(o=>o.fornitore).filter(Boolean))].sort();
@@ -6176,6 +6182,14 @@ function renderArchivio(){
   if(fMese) arch=arch.filter(o=>o.data&&o.data.startsWith(fMese));
   if(fForn) arch=arch.filter(o=>o.fornitore===fForn);
   if(fStato) arch=arch.filter(o=>o.stato===fStato);
+  // Ordine DECRESCENTE per data
+  arch.sort((a,b) => {
+    const da = String(a.data||''), db = String(b.data||'');
+    if(da !== db) return db.localeCompare(da);
+    const na = parseInt(String(a.num||'').split(/[\/\-_]/)[0], 10) || 0;
+    const nb = parseInt(String(b.num||'').split(/[\/\-_]/)[0], 10) || 0;
+    return nb - na;
+  });
   const container=document.getElementById('archivio-list');
   if(!arch.length){ container.innerHTML='<div class="empty"><div class="e-ico">🗂</div><p>Nessun ordine trovato</p></div>'; return; }
   const statoCol={bozza:'var(--text3)',inviato:'var(--blue)',approvato:'var(--green)',parziale:'var(--yellow)',ricevuto:'var(--teal)',annullato:'var(--red)'};
@@ -8131,15 +8145,17 @@ function renderDashAnalytics(){
     return arr; // ordine cronologico
   })();
   // Costruisco i punti: ognuno ha {key, label, ist, cit, pap, isMonth}
+  const tl = t => (t||'').toLowerCase();
+  const isPap = t => { const x = tl(t); return x === 'pap' || x === 'pap_priv' || x === 'pap_l' || x === 'pap test' || x === 'pap privato'; };
   const points = [];
   prev5Months.forEach(ym => {
     const lbl = fmtMese(ym).slice(0,3);
     const f = c => ymOf(c.data) === ym;
     points.push({
       key: ym, label: lbl, isMonth: true,
-      ist: campioni.filter(c => f(c) && c.tipo === 'istologia').length,
-      cit: campioni.filter(c => f(c) && c.tipo === 'citologia').length,
-      pap: campioni.filter(c => f(c) && (c.tipo === 'pap' || c.tipo === 'pap_priv' || c.tipo === 'pap_l')).length,
+      ist: campioni.filter(c => f(c) && tl(c.tipo) === 'istologia').length,
+      cit: campioni.filter(c => f(c) && tl(c.tipo) === 'citologia').length,
+      pap: campioni.filter(c => f(c) && isPap(c.tipo)).length,
     });
   });
   currentMonthWeeks.forEach((wk, idx) => {
@@ -8147,9 +8163,9 @@ function renderDashAnalytics(){
     const f = c => { if (!c.data) return false; try { return isoWeek(new Date(c.data)) === wk; } catch(e) { return false; } };
     points.push({
       key: wk, label: lbl, isMonth: false,
-      ist: campioni.filter(c => f(c) && c.tipo === 'istologia').length,
-      cit: campioni.filter(c => f(c) && c.tipo === 'citologia').length,
-      pap: campioni.filter(c => f(c) && (c.tipo === 'pap' || c.tipo === 'pap_priv' || c.tipo === 'pap_l')).length,
+      ist: campioni.filter(c => f(c) && tl(c.tipo) === 'istologia').length,
+      cit: campioni.filter(c => f(c) && tl(c.tipo) === 'citologia').length,
+      pap: campioni.filter(c => f(c) && isPap(c.tipo)).length,
     });
   });
   // Index dello switch mese→settimane (per disegnare divisore verticale)
@@ -8177,12 +8193,12 @@ function renderDashAnalytics(){
       return '<text x="'+(pad.l+i*xStep).toFixed(1)+'" y="'+(H-6)+'" text-anchor="middle" font-size="8" fill="'+col+'" font-family="DM Mono,monospace">'+esc(p.label)+'</text>';
     }).join('');
     const yLabels=[0,.5,1].map(t=>{ const v=Math.round(max*(1-t)); const y=pad.t+t*(H-pad.t-pad.b); return '<text x="'+(pad.l-4)+'" y="'+(y+3)+'" text-anchor="end" font-size="8" fill="var(--text3)" font-family="DM Mono,monospace">'+v+'</text>'; }).join('');
-    const dots=(arr,col)=>arr.map((v,i)=>'<circle cx="'+(pad.l+i*xStep).toFixed(1)+'" cy="'+yScale(v).toFixed(1)+'" r="2.2" fill="'+col+'"/>').join('');
+    const dots=(arr,col,serieName)=>arr.map((v,i)=>'<circle cx="'+(pad.l+i*xStep).toFixed(1)+'" cy="'+yScale(v).toFixed(1)+'" r="2.2" fill="'+col+'"><title>'+esc(points[i].label)+' — '+serieName+': '+v+'</title></circle>').join('');
     lineSvg.innerHTML=grid+divisor+yLabels+xLabels+
       '<path d="'+path(istSerie)+'" fill="none" stroke="var(--blue)" stroke-width="1.6"/>'+
       '<path d="'+path(citSerie)+'" fill="none" stroke="var(--teal)" stroke-width="1.6"/>'+
       '<path d="'+path(papSerie)+'" fill="none" stroke="#a855f7" stroke-width="1.6"/>'+
-      dots(istSerie,'var(--blue)')+dots(citSerie,'var(--teal)')+dots(papSerie,'#a855f7');
+      dots(istSerie,'var(--blue)','Ist')+dots(citSerie,'var(--teal)','Cit')+dots(papSerie,'#a855f7','PAP');
   }
   const lineLeg=document.getElementById('dash-line-legend');
   if(lineLeg) lineLeg.innerHTML=
@@ -8190,7 +8206,12 @@ function renderDashAnalytics(){
     '<span class="leg-item"><span class="leg-dot" style="background:var(--teal)"></span>Citologia</span>'+
     '<span class="leg-item"><span class="leg-dot" style="background:#a855f7"></span>PAP</span>';
   const lineSub=document.getElementById('dash-line-sub');
-  if(lineSub) lineSub.textContent = '5 mesi precedenti + ' + currentMonthWeeks.length + ' settimane corr.';
+  if(lineSub) {
+    const firstMonthLbl = fmtMese(prev5Months[0]).slice(0,3);
+    const lastMonthLbl = fmtMese(prev5Months[prev5Months.length-1]).slice(0,3);
+    const curMonthLbl = fmtMese(ymCur).slice(0,3);
+    lineSub.textContent = firstMonthLbl + '→' + lastMonthLbl + ' + ' + currentMonthWeeks.length + ' settimane ' + curMonthLbl;
+  }
 
   // ── 2. DONUT — Mix tipologie mese corrente (3 categorie) ──
   const mixCur={
@@ -9251,20 +9272,33 @@ function renderDashboardPreview(){
       const now = new Date(); now.setHours(0,0,0,0);
       const ms = new Date(now.getFullYear(), now.getMonth(), 1);
       const monthCamps = camps.filter(c => c.data && new Date(c.data) >= ms);
-      set('kpi-casi-val', monthCamps.length);
       const tl = t => (t||'').toLowerCase();
       const cIst = monthCamps.filter(c => tl(c.tipo) === 'istologia').length;
       const cCit = monthCamps.filter(c => tl(c.tipo) === 'citologia').length;
-      const cPap = monthCamps.filter(c => tl(c.tipo).includes('pap')).length;
+      // PAP: contati direttamente dai cicli coloratore (vetri_pap del mese)
+      let cPap = 0;
+      try {
+        if (typeof loadColoratore === 'function') {
+          const colReg = loadColoratore();
+          const monthColor = colReg.filter(r => r.data && new Date(r.data) >= ms);
+          // Priorità casi_pap.length (se presente), fallback vetri_pap (numero vetrini PAP colorati)
+          cPap = monthColor.reduce((s,r) => {
+            const nCasi = Array.isArray(r.casi_pap) ? r.casi_pap.length : 0;
+            return s + (nCasi || parseInt(r.vetri_pap,10) || 0);
+          }, 0);
+        }
+      } catch(_) { cPap = monthCamps.filter(c => tl(c.tipo).includes('pap')).length; }
+
+      // Totale casi processati = istologia + citologia (anagrafica) + PAP (coloratore)
+      set('kpi-casi-val', cIst + cCit + cPap);
       set('kpi-casi-ist', cIst);
       set('kpi-casi-cit', cCit);
       set('kpi-casi-pap', cPap);
-      // Numero effettivo per tipo
       set('kpi-n-ist', cIst);
       set('kpi-n-cit', cCit);
       set('kpi-n-pap', cPap);
       // Percentuali con barre
-      const tot = monthCamps.length || 1;
+      const tot = (cIst + cCit + cPap) || 1;
       const pIst = Math.round(cIst/tot*100);
       const pCit = Math.round(cCit/tot*100);
       const pPap = Math.round(cPap/tot*100);
@@ -9281,7 +9315,21 @@ function renderDashboardPreview(){
       const tlD = t => (t||'').toLowerCase();
       const pIstPrev = prevCamps.filter(c => tlD(c.tipo) === 'istologia').length;
       const pCitPrev = prevCamps.filter(c => tlD(c.tipo) === 'citologia').length;
-      const pPapPrev = prevCamps.filter(c => tlD(c.tipo).includes('pap')).length;
+      // PAP precedente dai cicli coloratore
+      let pPapPrev = 0;
+      try {
+        if (typeof loadColoratore === 'function') {
+          const colRegPrev = loadColoratore().filter(r => {
+            if (!r.data) return false;
+            const d = new Date(r.data);
+            return d >= prevMs && d < ms;
+          });
+          pPapPrev = colRegPrev.reduce((s,r) => {
+            const nCasi = Array.isArray(r.casi_pap) ? r.casi_pap.length : 0;
+            return s + (nCasi || parseInt(r.vetri_pap,10) || 0);
+          }, 0);
+        }
+      } catch(_){}
       const fmtDelta = (cur, prev) => {
         if (!prev) return '';
         const d = cur - prev;
@@ -10815,15 +10863,54 @@ document.addEventListener('DOMContentLoaded', () => {
     item.addEventListener('click', () => _railClick(item));
   });
 
-  // 5.3 Elimina ordini di test A-F1 e B-F2 (una tantum)
-  try { if(!localStorage.getItem('ls_mig_v5_test_ord')){
-    const ords = loadOrd();
-    const filtered = ords.filter(o => o.num !== 'A-F1' && o.num !== 'B-F2');
-    if (filtered.length !== ords.length) {
-      _setCache('ls_ordini', filtered);
-      // [migrate] rimossi ordini test A-F1/B-F2
-    }
-  localStorage.setItem('ls_mig_v5_test_ord','1'); } } catch(e) { console.warn('[migrate ordini test]', e); }
+  // 5.3 Elimina ordini di test A-F1 e B-F2 (DEFINITIVAMENTE da localStorage + Supabase)
+  // Forzo questa migrazione a rieseguire anche se già eseguita: gli ordini fantasma continuano
+  // a ricomparire da Supabase, quindi serve cancellarli da remoto una volta sola con DELETE.
+  (async () => {
+    try {
+      // Rimozione locale ordini attivi (sempre eseguita per safety)
+      const ords = loadOrd();
+      const ghosts = ords.filter(o => o && (o.num === 'A-F1' || o.num === 'B-F2'));
+      const filtered = ords.filter(o => o && o.num !== 'A-F1' && o.num !== 'B-F2');
+      if (filtered.length !== ords.length) {
+        _setCache('ls_ordini', filtered);
+      }
+      // Rimozione locale archivio ordini
+      try {
+        const archKey = (typeof LS_ARCH !== 'undefined') ? LS_ARCH : 'ls_archivio_ordini';
+        const arch = _getCache(archKey, '[]') || [];
+        const archGhosts = arch.filter(o => o && (o.num === 'A-F1' || o.num === 'B-F2'));
+        const archFiltered = arch.filter(o => o && o.num !== 'A-F1' && o.num !== 'B-F2');
+        if (archFiltered.length !== arch.length) {
+          _setCache(archKey, archFiltered);
+        }
+        // Aggiungo i ghost dell'archivio alla lista da cancellare da Supabase
+        ghosts.push(...archGhosts);
+      } catch(_){}
+
+      // Rimozione remota Supabase (una sola volta)
+      if (!localStorage.getItem('ls_mig_v5_test_ord_supa')) {
+        try {
+          if (typeof SUPA_OK !== 'undefined' && SUPA_OK && typeof supaFetch === 'function') {
+            // DELETE su Supabase usando il filtro su 'num' (per ordini attivi e archivio)
+            try { await supaFetch('ordini', 'DELETE', null, '?num=eq.A-F1'); } catch(_){}
+            try { await supaFetch('ordini', 'DELETE', null, '?num=eq.B-F2'); } catch(_){}
+            try { await supaFetch('archivio_ordini', 'DELETE', null, '?num=eq.A-F1'); } catch(_){}
+            try { await supaFetch('archivio_ordini', 'DELETE', null, '?num=eq.B-F2'); } catch(_){}
+            // Cancella anche per ID
+            for (const g of ghosts) {
+              if (g.id) {
+                try { await supaFetch('ordini', 'DELETE', null, '?id=eq.' + encodeURIComponent(g.id)); } catch(_){}
+                try { await supaFetch('archivio_ordini', 'DELETE', null, '?id=eq.' + encodeURIComponent(g.id)); } catch(_){}
+              }
+            }
+          }
+          localStorage.setItem('ls_mig_v5_test_ord_supa', '1');
+        } catch(e) { console.warn('[migrate ord supa]', e); }
+      }
+      localStorage.setItem('ls_mig_v5_test_ord', '1');
+    } catch(e) { console.warn('[migrate ordini test]', e); }
+  })();
 
   // 5.4 Migrazione: rinomina "P.O. Blu" → "P.O. Bianchi" e riclassifica vetrini bianchi (una tantum)
   try { if(!localStorage.getItem('ls_mig_v5_po_bianchi')){
