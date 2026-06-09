@@ -414,6 +414,23 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
 /* RESPONSIVE */
 @media(max-width:900px){.main{padding:14px}}
 @media(max-width:700px){.app{grid-template-columns:0 1fr}.rail{display:none}.hdr-btns .hbtn:not(.primary):not(.fc-btn-trigger){display:none}}
+
+/* ─── REPORT TABS ─── */
+.rpt-tabs{display:flex;gap:2px;border-bottom:2px solid var(--border);margin-bottom:24px;overflow-x:auto;scrollbar-width:none}
+.rpt-tabs::-webkit-scrollbar{display:none}
+.rpt-tab{display:flex;align-items:center;gap:6px;padding:11px 18px;background:transparent;border:none;border-bottom:2px solid transparent;margin-bottom:-2px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;color:var(--text2);transition:color .15s,border-color .15s;white-space:nowrap}
+.rpt-tab:hover{color:var(--accent2)}
+.rpt-tab.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:700}
+.rpt-tab span:last-child{font-family:'DM Sans',sans-serif}
+.rpt-tab-content{animation:fadeIn .2s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+
+/* ─── TRACCIABILITÀ ACTION CARDS ─── */
+.trac-action-card{display:flex;flex-direction:column;align-items:flex-start;gap:6px;padding:20px 18px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);cursor:pointer;text-align:left;transition:border-color .15s,box-shadow .15s,transform .15s;font-family:inherit}
+.trac-action-card:hover{border-color:var(--accent2);box-shadow:0 4px 12px rgba(0,0,0,.06);transform:translateY(-2px)}
+.trac-action-card .ta-icon{font-size:28px;margin-bottom:4px}
+.trac-action-card .ta-title{font-family:'Libre Baskerville',serif;font-weight:700;font-size:15px;color:var(--accent)}
+.trac-action-card .ta-desc{font-size:11px;color:var(--text3);line-height:1.4}
 /* ─── DASHBOARD STRIP (riepilogo orizzontale) ─── */
 .dash-strip{display:grid;grid-template-columns:1fr 1px 1.4fr 1px 1.6fr 1px 1fr;gap:0;margin-bottom:24px;padding:18px 0 24px;border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
 .strip-cell{padding:0 24px;cursor:pointer;display:flex;flex-direction:column;justify-content:flex-start;min-height:90px;transition:background .12s;border-radius:var(--r-sm)}
@@ -1296,198 +1313,240 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
          ══════════════════════════════════════════════════════════════ -->
     <div class="view" data-view="report" id="view-report">
       <div class="pg-hdr">
-        <div class="pg-title" id="report-title">Report mensile</div>
+        <div class="pg-title" id="report-title">Report & Analytics</div>
         <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+          <button class="hbtn2 primary" onclick="window.print()">🖨 Stampa</button>
+        </div>
+      </div>
+
+      <!-- TAB NAV -->
+      <div class="rpt-tabs" style="display:flex;gap:2px;border-bottom:2px solid var(--border);margin-bottom:24px;overflow-x:auto">
+        <button class="rpt-tab active" data-tab="mensile" onclick="switchRptTab('mensile')">
+          <span style="font-size:14px">📊</span> <span>Mensile</span>
+        </button>
+        <button class="rpt-tab" data-tab="annuale" onclick="switchRptTab('annuale')">
+          <span style="font-size:14px">📅</span> <span>Annuale</span>
+        </button>
+        <button class="rpt-tab" data-tab="tracciabilita" onclick="switchRptTab('tracciabilita')">
+          <span style="font-size:14px">🔬</span> <span>Tracciabilità</span>
+        </button>
+        <button class="rpt-tab" data-tab="clienti" onclick="switchRptTab('clienti')">
+          <span style="font-size:14px">👥</span> <span>Clienti</span>
+        </button>
+      </div>
+
+      <!-- ═══════════════════════════════════════════════════
+           TAB 1: MENSILE
+           ═══════════════════════════════════════════════════ -->
+      <div class="rpt-tab-content active" id="rpt-tab-mensile">
+
+        <!-- Selettore mese -->
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px">
+          <div style="font-family:'Libre Baskerville',serif;font-size:18px;font-weight:700;color:var(--accent)">Riepilogo del mese</div>
+          <div style="flex:1"></div>
           <select class="search-inp" style="width:auto;padding:6px 10px" id="report-month-sel" onchange="renderReport()"></select>
-          <button class="hbtn2 primary" onclick="window.print()">🖨 Salva PDF</button>
         </div>
-      </div>
 
-      <!-- REPORT MENSILE -->
-      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:20px" id="report-metrics"></div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
-        <div class="card">
-          <div class="card-hdr"><span class="card-title">Consumo reagenti principali</span><span class="card-sub" id="report-consumo-sub"></span></div>
-          <div id="report-consumo-tbl"></div>
-        </div>
-        <div class="card">
-          <div class="card-hdr"><span class="card-title">Ordini per fornitore</span><span class="card-sub" id="report-ord-sub"></span></div>
-          <div id="report-ord-tbl"></div>
-        </div>
-      </div>
-      <div class="card" style="margin-bottom:32px">
-        <div class="card-hdr"><span class="card-title">Andamento campioni nel mese</span><span class="card-sub" id="report-line-sub"></span></div>
-        <div style="padding:12px 16px">
-          <svg id="report-line" width="100%" viewBox="0 0 600 100" style="overflow:visible"></svg>
-          <div style="display:flex;gap:16px;margin-top:8px;font-size:10px">
-            <span class="leg-item"><span class="leg-dot" style="background:#2563eb"></span>Istologia</span>
-            <span class="leg-item"><span class="leg-dot" style="background:#0891b2"></span>Citologia</span>
-            <span class="leg-item"><span class="leg-dot" style="background:#7c3aed"></span>PAP</span>
+        <!-- KPI metrics (5 card top) -->
+        <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:20px" id="report-metrics"></div>
+
+        <!-- Grafico andamento + Top descrizioni affiancati -->
+        <div style="display:grid;grid-template-columns:1.6fr 1fr;gap:12px;margin-bottom:16px">
+          <div class="card">
+            <div class="card-hdr"><span class="card-title">Andamento campioni nel mese</span><span class="card-sub" id="report-line-sub"></span></div>
+            <div style="padding:12px 16px">
+              <svg id="report-line" width="100%" viewBox="0 0 600 140" style="overflow:visible"></svg>
+              <div style="display:flex;gap:16px;margin-top:8px;font-size:10px">
+                <span class="leg-item"><span class="leg-dot" style="background:#2563eb"></span>Istologia</span>
+                <span class="leg-item"><span class="leg-dot" style="background:#0891b2"></span>Citologia</span>
+                <span class="leg-item"><span class="leg-dot" style="background:#7c3aed"></span>PAP</span>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-hdr"><span class="card-title">Top tipi campione</span><span class="card-sub" id="top-desc-sub">Più frequenti</span></div>
+            <div id="top-desc-content" style="padding:14px"></div>
           </div>
         </div>
-      </div>
 
-      <!-- DIVISORE -->
-      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
-        <div style="font-family:'Libre Baskerville',serif;font-size:16px;font-weight:700;color:var(--accent)">Report Annuale</div>
-        <div style="flex:1;height:1px;background:var(--border)"></div>
-        <select class="search-inp" style="width:auto;padding:6px 10px" id="report-year-sel" onchange="renderReportAnnuale()"></select>
-      </div>
-
-      <!-- KPI annuali -->
-      <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-bottom:16px" id="report-annual-metrics"></div>
-
-      <!-- Line chart annuale (mese per mese) -->
-      <div class="card" style="margin-bottom:16px">
-        <div class="card-hdr"><span class="card-title">Andamento annuale campioni</span><span class="card-sub" id="report-annual-line-sub"></span></div>
-        <div style="padding:12px 16px">
-          <svg id="report-annual-line" width="100%" viewBox="0 0 600 120" style="overflow:visible"></svg>
-          <div style="display:flex;gap:16px;margin-top:8px;font-size:10px">
-            <span class="leg-item"><span class="leg-dot" style="background:#2563eb"></span>Istologia</span>
-            <span class="leg-item"><span class="leg-dot" style="background:#0891b2"></span>Citologia</span>
-            <span class="leg-item"><span class="leg-dot" style="background:#7c3aed"></span>PAP</span>
+        <!-- Consumi e Ordini -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+          <div class="card">
+            <div class="card-hdr"><span class="card-title">Consumo reagenti principali</span><span class="card-sub" id="report-consumo-sub"></span></div>
+            <div id="report-consumo-tbl"></div>
+          </div>
+          <div class="card">
+            <div class="card-hdr"><span class="card-title">Ordini per fornitore</span><span class="card-sub" id="report-ord-sub"></span></div>
+            <div id="report-ord-tbl"></div>
           </div>
         </div>
-      </div>
 
-      <!-- Tabella mensile riassuntiva dell'anno -->
-      <div class="card">
-        <div class="card-hdr"><span class="card-title">Riepilogo mensile</span></div>
-        <div style="overflow-x:auto" id="report-annual-table"></div>
-      </div>
+      </div><!-- /tab mensile -->
 
-      <!-- ═════════════════════════════════════════════════
-           SEZIONE TRACCIABILITÀ AVANZATA (T1, T3, T4, T5, T6)
-           ═════════════════════════════════════════════════ -->
-      <div style="display:flex;align-items:center;gap:12px;margin:32px 0 16px">
-        <div style="font-family:'Libre Baskerville',serif;font-size:16px;font-weight:700;color:var(--accent)">🔬 Tracciabilità avanzata</div>
-        <div style="flex:1;height:1px;background:var(--border)"></div>
-        <span style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em">Audit & ricerca</span>
-      </div>
+      <!-- ═══════════════════════════════════════════════════
+           TAB 2: ANNUALE
+           ═══════════════════════════════════════════════════ -->
+      <div class="rpt-tab-content" id="rpt-tab-annuale" style="display:none">
 
-      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:16px">
-        <button class="card" style="border:none;padding:14px;cursor:pointer;text-align:left;background:var(--surface)" onclick="openTracSchedaCasoModal()">
-          <div style="font-size:22px;margin-bottom:4px">🩺</div>
-          <div style="font-weight:700;font-size:13px;color:var(--accent)">Scheda Caso</div>
-          <div style="font-size:11px;color:var(--text3);margin-top:2px">Tutto su un singolo caso (T1)</div>
-        </button>
-        <button class="card" style="border:none;padding:14px;cursor:pointer;text-align:left;background:var(--surface)" onclick="openTracLottoModal()">
-          <div style="font-size:22px;margin-bottom:4px">🔍</div>
-          <div style="font-weight:700;font-size:13px;color:var(--accent)">Cerca Lotto</div>
-          <div style="font-size:11px;color:var(--text3);margin-top:2px">Casi colorati con un lotto (T3)</div>
-        </button>
-        <button class="card" style="border:none;padding:14px;cursor:pointer;text-align:left;background:var(--surface)" onclick="openTracAuditDataModal()">
-          <div style="font-size:22px;margin-bottom:4px">📅</div>
-          <div style="font-weight:700;font-size:13px;color:var(--accent)">Audit Giornata</div>
-          <div style="font-size:11px;color:var(--text3);margin-top:2px">Tutti casi e lotti di una data (T4)</div>
-        </button>
-        <button class="card" style="border:none;padding:14px;cursor:pointer;text-align:left;background:var(--surface)" onclick="openTracReagModal()">
-          <div style="font-size:22px;margin-bottom:4px">🧪</div>
-          <div style="font-weight:700;font-size:13px;color:var(--accent)">Cerca Reagente</div>
-          <div style="font-size:11px;color:var(--text3);margin-top:2px">Casi con un reagente (T5)</div>
-        </button>
-        <button class="card" style="border:none;padding:14px;cursor:pointer;text-align:left;background:var(--surface)" onclick="openTracDiagModal()">
-          <div style="font-size:22px;margin-bottom:4px">🩹</div>
-          <div style="font-weight:700;font-size:13px;color:var(--accent)">Diagnostica</div>
-          <div style="font-size:11px;color:var(--text3);margin-top:2px">Cosa hanno in comune (T6)</div>
-        </button>
-      </div>
-
-      <!-- ═════════════════════════════════════════════════
-           SEZIONE TAT (TURNAROUND TIME) — S3
-           ═════════════════════════════════════════════════ -->
-      <div style="display:flex;align-items:center;gap:12px;margin:32px 0 16px">
-        <div style="font-family:'Libre Baskerville',serif;font-size:16px;font-weight:700;color:var(--accent)">⏱ Tempi di lavorazione (TAT)</div>
-        <div style="flex:1;height:1px;background:var(--border)"></div>
-        <span style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em" id="tat-period-lbl">Anno corrente</span>
-      </div>
-
-      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:24px">
-        <div class="card" style="padding:14px">
-          <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em">Accettazione → Processazione</div>
-          <div style="font-family:'Libre Baskerville',serif;font-size:24px;font-weight:700;color:var(--accent);margin-top:4px" id="tat-acc-proc">— gg</div>
-          <div style="font-size:11px;color:var(--text3);margin-top:2px" id="tat-acc-proc-n">media su N casi</div>
+        <!-- Selettore anno -->
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px">
+          <div style="font-family:'Libre Baskerville',serif;font-size:18px;font-weight:700;color:var(--accent)">Panoramica annuale</div>
+          <div style="flex:1"></div>
+          <select class="search-inp" style="width:auto;padding:6px 10px" id="report-year-sel" onchange="renderReportAnnuale()"></select>
         </div>
-        <div class="card" style="padding:14px">
-          <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em">Processazione → Colorazione</div>
-          <div style="font-family:'Libre Baskerville',serif;font-size:24px;font-weight:700;color:var(--blue);margin-top:4px" id="tat-proc-color">— gg</div>
-          <div style="font-size:11px;color:var(--text3);margin-top:2px" id="tat-proc-color-n">media su N casi</div>
-        </div>
-        <div class="card" style="padding:14px">
-          <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em">TAT Totale (acc → color)</div>
-          <div style="font-family:'Libre Baskerville',serif;font-size:24px;font-weight:700;color:var(--green);margin-top:4px" id="tat-tot">— gg</div>
-          <div style="font-size:11px;color:var(--text3);margin-top:2px" id="tat-tot-n">media su N casi</div>
-        </div>
-        <div class="card" style="padding:14px">
-          <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em">Casi entro 3gg</div>
-          <div style="font-family:'Libre Baskerville',serif;font-size:24px;font-weight:700;color:var(--accent);margin-top:4px" id="tat-pct3">—%</div>
-          <div style="font-size:11px;color:var(--text3);margin-top:2px">% TAT ≤ 3 giorni</div>
-        </div>
-      </div>
 
-      <!-- ═════════════════════════════════════════════════
-           SEZIONE CLIENTI (C1, C2, C3, C4, C5, C7)
-           ═════════════════════════════════════════════════ -->
-      <div style="display:flex;align-items:center;gap:12px;margin:32px 0 16px">
-        <div style="font-family:'Libre Baskerville',serif;font-size:16px;font-weight:700;color:var(--accent)">👥 Analisi Clienti / Richiedenti</div>
-        <div style="flex:1;height:1px;background:var(--border)"></div>
-        <select class="search-inp" style="width:auto;padding:6px 10px" id="cli-period-sel" onchange="renderClientiSection()">
-          <option value="1m">Ultimo mese</option>
-          <option value="3m">Ultimi 3 mesi</option>
-          <option value="6m" selected>Ultimi 6 mesi</option>
-          <option value="12m">Ultimo anno</option>
-          <option value="all">Tutto</option>
-        </select>
-      </div>
+        <!-- KPI annuali -->
+        <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-bottom:20px" id="report-annual-metrics"></div>
 
-      <!-- Alert clienti nuovi (C7) -->
-      <div id="cli-nuovi-alert" style="margin-bottom:14px"></div>
-
-      <!-- C1: Top clienti per volume -->
-      <div class="card" style="margin-bottom:16px">
-        <div class="card-hdr"><span class="card-title">Top clienti per volume</span><span class="card-sub" id="cli-c1-sub">—</span></div>
-        <div id="cli-c1-content" style="padding:14px"></div>
-      </div>
-
-      <!-- C2: Mix per cliente / C5: TAT per cliente -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
-        <div class="card">
-          <div class="card-hdr"><span class="card-title">Mix campioni per cliente</span><span class="card-sub">Top 5 + dettaglio</span></div>
-          <div style="padding:6px 14px 14px">
-            <select class="search-inp" id="cli-c2-sel" onchange="renderClienteMix()" style="margin-bottom:10px;font-size:12px"></select>
-            <div id="cli-c2-content"></div>
+        <!-- Line chart annuale -->
+        <div class="card" style="margin-bottom:16px">
+          <div class="card-hdr"><span class="card-title">Andamento mensile</span><span class="card-sub" id="report-annual-line-sub"></span></div>
+          <div style="padding:12px 16px">
+            <svg id="report-annual-line" width="100%" viewBox="0 0 600 140" style="overflow:visible"></svg>
+            <div style="display:flex;gap:16px;margin-top:8px;font-size:10px">
+              <span class="leg-item"><span class="leg-dot" style="background:#2563eb"></span>Istologia</span>
+              <span class="leg-item"><span class="leg-dot" style="background:#0891b2"></span>Citologia</span>
+              <span class="leg-item"><span class="leg-dot" style="background:#7c3aed"></span>PAP</span>
+            </div>
           </div>
         </div>
+
+        <!-- Tabella mensile riassuntiva -->
         <div class="card">
-          <div class="card-hdr"><span class="card-title">TAT medio per cliente</span><span class="card-sub">Tempo medio lavorazione</span></div>
-          <div id="cli-c5-content" style="padding:14px"></div>
+          <div class="card-hdr"><span class="card-title">Riepilogo mensile</span><span class="card-sub">Dettaglio per ogni mese dell'anno</span></div>
+          <div style="overflow-x:auto" id="report-annual-table"></div>
         </div>
-      </div>
 
-      <!-- C3: Tendenza nel tempo -->
-      <div class="card" style="margin-bottom:16px">
-        <div class="card-hdr"><span class="card-title">Tendenza nel tempo</span><span class="card-sub">Andamento dei top 5 clienti</span></div>
-        <div style="padding:14px">
-          <svg id="cli-c3-chart" width="100%" viewBox="0 0 600 140" style="overflow:visible"></svg>
-          <div id="cli-c3-legend" style="display:flex;flex-wrap:wrap;gap:12px;margin-top:8px;font-size:10px"></div>
+      </div><!-- /tab annuale -->
+
+      <!-- ═══════════════════════════════════════════════════
+           TAB 3: TRACCIABILITÀ
+           ═══════════════════════════════════════════════════ -->
+      <div class="rpt-tab-content" id="rpt-tab-tracciabilita" style="display:none">
+
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">
+          <div style="font-family:'Libre Baskerville',serif;font-size:18px;font-weight:700;color:var(--accent)">Strumenti di tracciabilità</div>
         </div>
-      </div>
+        <div style="font-size:12px;color:var(--text2);margin-bottom:20px">Audit, ricerca caso/lotto/reagente, diagnostica problemi sistematici</div>
 
-      <!-- C4: Stagionalità (heatmap) -->
-      <div class="card" style="margin-bottom:16px">
-        <div class="card-hdr"><span class="card-title">Stagionalità — Heatmap cliente × mese</span><span class="card-sub">Intensità volumi nel periodo</span></div>
-        <div id="cli-c4-heatmap" style="padding:14px;overflow-x:auto"></div>
-      </div>
+        <!-- 5 card grandi -->
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-bottom:24px">
+          <button class="trac-action-card" onclick="openTracSchedaCasoModal()">
+            <div class="ta-icon">🩺</div>
+            <div class="ta-title">Scheda Caso</div>
+            <div class="ta-desc">Storia completa di un singolo caso: data, lotti, reagenti, IHC</div>
+          </button>
+          <button class="trac-action-card" onclick="openTracLottoModal()">
+            <div class="ta-icon">🔍</div>
+            <div class="ta-title">Cerca per Lotto</div>
+            <div class="ta-desc">Tutti i casi colorati con un lotto specifico</div>
+          </button>
+          <button class="trac-action-card" onclick="openTracAuditDataModal()">
+            <div class="ta-icon">📅</div>
+            <div class="ta-title">Audit Giornata</div>
+            <div class="ta-desc">Tutti i casi e lotti utilizzati in una data</div>
+          </button>
+          <button class="trac-action-card" onclick="openTracReagModal()">
+            <div class="ta-icon">🧪</div>
+            <div class="ta-title">Cerca Reagente</div>
+            <div class="ta-desc">Casi processati con un reagente specifico</div>
+          </button>
+          <button class="trac-action-card" onclick="openTracDiagModal()">
+            <div class="ta-icon">🩹</div>
+            <div class="ta-title">Diagnostica</div>
+            <div class="ta-desc">Cosa hanno in comune più casi con problemi</div>
+          </button>
+        </div>
 
-      <!-- S5: Top descrizioni -->
-      <div style="display:flex;align-items:center;gap:12px;margin:32px 0 16px">
-        <div style="font-family:'Libre Baskerville',serif;font-size:16px;font-weight:700;color:var(--accent)">📋 Top tipologie campioni</div>
-        <div style="flex:1;height:1px;background:var(--border)"></div>
-      </div>
-      <div class="card" style="margin-bottom:32px">
-        <div class="card-hdr"><span class="card-title">Top 10 tipi campione più frequenti</span><span class="card-sub" id="top-desc-sub">—</span></div>
-        <div id="top-desc-content" style="padding:14px"></div>
-      </div>
+        <!-- TAT (Turnaround Time) -->
+        <div style="display:flex;align-items:center;gap:12px;margin:24px 0 16px">
+          <div style="font-family:'Libre Baskerville',serif;font-size:16px;font-weight:700;color:var(--accent)">⏱ Tempi di lavorazione (TAT)</div>
+          <div style="flex:1;height:1px;background:var(--border)"></div>
+          <span style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em" id="tat-period-lbl">Anno corrente</span>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:24px">
+          <div class="card" style="padding:14px">
+            <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em">Accettazione → Processazione</div>
+            <div style="font-family:'Libre Baskerville',serif;font-size:24px;font-weight:700;color:var(--accent);margin-top:4px" id="tat-acc-proc">— gg</div>
+            <div style="font-size:11px;color:var(--text3);margin-top:2px" id="tat-acc-proc-n">media su N casi</div>
+          </div>
+          <div class="card" style="padding:14px">
+            <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em">Processazione → Colorazione</div>
+            <div style="font-family:'Libre Baskerville',serif;font-size:24px;font-weight:700;color:var(--blue);margin-top:4px" id="tat-proc-color">— gg</div>
+            <div style="font-size:11px;color:var(--text3);margin-top:2px" id="tat-proc-color-n">media su N casi</div>
+          </div>
+          <div class="card" style="padding:14px">
+            <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em">TAT Totale (acc → color)</div>
+            <div style="font-family:'Libre Baskerville',serif;font-size:24px;font-weight:700;color:var(--green);margin-top:4px" id="tat-tot">— gg</div>
+            <div style="font-size:11px;color:var(--text3);margin-top:2px" id="tat-tot-n">media su N casi</div>
+          </div>
+          <div class="card" style="padding:14px">
+            <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em">Casi entro 3gg</div>
+            <div style="font-family:'Libre Baskerville',serif;font-size:24px;font-weight:700;color:var(--accent);margin-top:4px" id="tat-pct3">—%</div>
+            <div style="font-size:11px;color:var(--text3);margin-top:2px">% TAT ≤ 3 giorni</div>
+          </div>
+        </div>
+
+      </div><!-- /tab tracciabilita -->
+
+      <!-- ═══════════════════════════════════════════════════
+           TAB 4: CLIENTI
+           ═══════════════════════════════════════════════════ -->
+      <div class="rpt-tab-content" id="rpt-tab-clienti" style="display:none">
+
+        <!-- Selettore periodo -->
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px">
+          <div style="font-family:'Libre Baskerway',serif;font-size:18px;font-weight:700;color:var(--accent)">Analisi clienti e richiedenti</div>
+          <div style="flex:1"></div>
+          <select class="search-inp" style="width:auto;padding:6px 10px" id="cli-period-sel" onchange="renderClientiSection()">
+            <option value="1m">Ultimo mese</option>
+            <option value="3m">Ultimi 3 mesi</option>
+            <option value="6m" selected>Ultimi 6 mesi</option>
+            <option value="12m">Ultimo anno</option>
+            <option value="all">Tutto</option>
+          </select>
+        </div>
+
+        <!-- Alert clienti nuovi (C7) -->
+        <div id="cli-nuovi-alert" style="margin-bottom:14px"></div>
+
+        <!-- C1: Top clienti (full width per visibilità) -->
+        <div class="card" style="margin-bottom:16px">
+          <div class="card-hdr"><span class="card-title">Top clienti per volume</span><span class="card-sub" id="cli-c1-sub">—</span></div>
+          <div id="cli-c1-content" style="padding:14px"></div>
+        </div>
+
+        <!-- C2 + C5: Mix per cliente e TAT (affiancati) -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+          <div class="card">
+            <div class="card-hdr"><span class="card-title">Mix campioni per cliente</span><span class="card-sub">Cosa manda ciascun cliente</span></div>
+            <div style="padding:6px 14px 14px">
+              <select class="search-inp" id="cli-c2-sel" onchange="renderClienteMix()" style="margin-bottom:10px;font-size:12px"></select>
+              <div id="cli-c2-content"></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-hdr"><span class="card-title">TAT medio per cliente</span><span class="card-sub">Tempo medio di lavorazione</span></div>
+            <div id="cli-c5-content" style="padding:14px"></div>
+          </div>
+        </div>
+
+        <!-- C3: Tendenza nel tempo -->
+        <div class="card" style="margin-bottom:16px">
+          <div class="card-hdr"><span class="card-title">Tendenza nel tempo</span><span class="card-sub">Andamento dei top 5 clienti</span></div>
+          <div style="padding:14px">
+            <svg id="cli-c3-chart" width="100%" viewBox="0 0 600 140" style="overflow:visible"></svg>
+            <div id="cli-c3-legend" style="display:flex;flex-wrap:wrap;gap:12px;margin-top:8px;font-size:10px"></div>
+          </div>
+        </div>
+
+        <!-- C4: Stagionalità -->
+        <div class="card" style="margin-bottom:16px">
+          <div class="card-hdr"><span class="card-title">Stagionalità — Heatmap cliente × mese</span><span class="card-sub">Intensità volumi nel periodo</span></div>
+          <div id="cli-c4-heatmap" style="padding:14px;overflow-x:auto"></div>
+        </div>
+
+      </div><!-- /tab clienti -->
 
     </div><!-- /view-report -->
 
@@ -7039,7 +7098,8 @@ const _patchedRenderReport = function(){
   if(!container) return;
 
   const oggi = new Date();
-  const mese = oggi.toISOString().slice(0,7);
+  // FIX timezone: usa componenti LOCALI per il mese corrente
+  const mese = `${oggi.getFullYear()}-${String(oggi.getMonth()+1).padStart(2,'0')}`;
   const meseLabel = oggi.toLocaleDateString('it-IT',{month:'long',year:'numeric'});
 
   // Dati processatore
@@ -7052,7 +7112,8 @@ const _patchedRenderReport = function(){
   const colorMese = colorArr.filter(x=>x.data&&x.data.slice(0,7)===mese);
   const totEE = colorMese.reduce((s,x)=>s+(x.cicli_ee||0),0);
   const totCit = colorMese.reduce((s,x)=>s+(x.cicli_ee_cit||0),0);
-  const totPap = colorMese.reduce((s,x)=>s+(x.cicli_pap||0),0);
+  // PAP: somma di vetri_pap (vetrini colorati) — coerente con dashboard
+  const totPap = colorMese.reduce((s,x)=>s+(parseInt(x.vetri_pap,10)||0),0);
 
   // Consumi reagenti (movimenti scarico del mese)
   const movs = loadM();
@@ -7071,10 +7132,16 @@ const _patchedRenderReport = function(){
   const wlog = loadWL().filter(l=>l.ts&&l.ts.slice(0,7)===mese);
   const smaltiti = wlog.filter(l=>l.azione==='smaltito').reduce((s,l)=>s+(l.qty||0),0);
 
-  // Campioni del mese
-  const campMese = loadCampioni().filter(c=>c.data&&c.data.slice(0,7)===mese);
-  const campPerTipo = {};
-  campMese.forEach(c=>{ campPerTipo[c.tipo] = (campPerTipo[c.tipo]||0)+1; });
+  // Campioni del mese — TUTTO dai cicli coloratore (fonte unica fedele)
+  const _vetri = (tipo) => colorMese.reduce((s,r) => s + (parseInt(r['vetri_' + tipo], 10) || 0), 0);
+  const campPerTipo = {
+    'istologia': _vetri('ist'),
+    'citologia': _vetri('cit'),
+    'pap': _vetri('pap')
+  };
+  const totVetrini = campPerTipo.istologia + campPerTipo.citologia + campPerTipo.pap;
+  // Per coerenza visiva, mostriamo nella card "Campioni" il totale vetrini del mese
+  const campMese = { length: totVetrini };
 
   let analyticsHtml = `
   <div class="report-sec" style="margin-top:24px">
@@ -7099,12 +7166,13 @@ const _patchedRenderReport = function(){
       </div>
     </div>`;
 
-  // Campioni per tipo
-  if(Object.keys(campPerTipo).length){
-    const tipoLabel={istologia:'Istologia',citologia:'Citologia',pap:'Pap',pap_l:'Pap LupoLab',pap_priv:'Pap Privato'};
-    analyticsHtml += `<div style="margin-bottom:16px"><div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:8px">Campioni per tipo</div>`;
-    Object.entries(campPerTipo).forEach(([tipo,n])=>{
-      const pct = Math.round(n/campMese.length*100);
+  // Campioni per tipo (dai cicli coloratore)
+  const tipiNonZero = Object.entries(campPerTipo).filter(([_,n]) => n > 0);
+  if(tipiNonZero.length){
+    const tipoLabel={istologia:'Istologia',citologia:'Citologia',pap:'PAP',pap_l:'PAP LupoLab',pap_priv:'PAP Privato'};
+    analyticsHtml += `<div style="margin-bottom:16px"><div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:8px">Vetrini colorati per tipo</div>`;
+    tipiNonZero.forEach(([tipo,n])=>{
+      const pct = totVetrini > 0 ? Math.round(n/totVetrini*100) : 0;
       analyticsHtml += `<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
         <span style="font-size:12px;min-width:100px">${tipoLabel[tipo]||tipo}</span>
         <div style="flex:1;height:18px;background:var(--border);border-radius:9px;overflow:hidden"><div style="height:100%;background:var(--accent2);border-radius:9px;width:${pct}%"></div></div>
@@ -8074,27 +8142,68 @@ function renderDashAnalytics(){
   if (!campioni.length) campioni = _derivedCampioni();
   const prods=loadP(), movs=loadM(), ords=loadOrd();
   const today=new Date(); today.setHours(0,0,0,0);
-  const isoDay=d=>d.toISOString().slice(0,10);
+  // Helper date con componenti LOCALI (evita bug timezone)
+  const isoDay=d=>{
+    const y=d.getFullYear();
+    const m=String(d.getMonth()+1).padStart(2,'0');
+    const dd=String(d.getDate()).padStart(2,'0');
+    return `${y}-${m}-${dd}`;
+  };
   const ymOf=s=>(s||'').slice(0,7);
   const monthLbl=['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'];
 
-  // Helper: ultimi N mesi (YYYY-MM) in ordine cronologico
+  // Helper: ultimi N mesi (YYYY-MM) in ordine cronologico — usa componenti locali
   const lastMonths=(n)=>{
     const arr=[]; const d=new Date(today.getFullYear(),today.getMonth(),1);
-    for(let i=0;i<n;i++){ arr.unshift(d.toISOString().slice(0,7)); d.setMonth(d.getMonth()-1); }
+    for(let i=0;i<n;i++){
+      const y=d.getFullYear();
+      const m=String(d.getMonth()+1).padStart(2,'0');
+      arr.unshift(`${y}-${m}`);
+      d.setMonth(d.getMonth()-1);
+    }
     return arr;
   };
   const fmtMese=ym=>{ const[y,m]=ym.split('-'); return monthLbl[parseInt(m)-1]+' '+y.slice(2); };
 
   // ── KPI ROW ──
   const ymCur=isoDay(today).slice(0,7);
+  // FIX timezone: ymPrev usando componenti locali
   const dPrev=new Date(today.getFullYear(),today.getMonth()-1,1);
-  const ymPrev=dPrev.toISOString().slice(0,7);
+  const ymPrev=`${dPrev.getFullYear()}-${String(dPrev.getMonth()+1).padStart(2,'0')}`;
+
+  // Helper: somma vetri_X dei cicli coloratore di un mese YYYY-MM
+  // tipo: 'ist' | 'cit' | 'pap'
+  const _vetriniDelMese = (ym, tipo) => {
+    try {
+      if (typeof loadColoratore !== 'function') return 0;
+      const field = 'vetri_' + tipo;
+      return loadColoratore()
+        .filter(r => r.data && String(r.data).slice(0,7) === ym)
+        .reduce((s, r) => s + (parseInt(r[field], 10) || 0), 0);
+    } catch(_) { return 0; }
+  };
+  // Helper: somma vetri_X dei cicli coloratore per una settimana ISO (es. "2026-W23")
+  const _vetriniDellaSettimana = (wk, tipo) => {
+    try {
+      if (typeof loadColoratore !== 'function') return 0;
+      const field = 'vetri_' + tipo;
+      return loadColoratore()
+        .filter(r => { if (!r.data) return false; try { return isoWeek(new Date(r.data)) === wk; } catch(e) { return false; } })
+        .reduce((s, r) => s + (parseInt(r[field], 10) || 0), 0);
+    } catch(_) { return 0; }
+  };
+  // Alias retrocompat (PAP only)
+  const _papDelMese = (ym) => _vetriniDelMese(ym, 'pap');
+
   const campCur=campioni.filter(c=>ymOf(c.data)===ymCur).length;
   const campPrevTot=campioni.filter(c=>ymOf(c.data)===ymPrev).length;
-  const istCur=campioni.filter(c=>ymOf(c.data)===ymCur&&c.tipo==='istologia').length;
-  const citCur=campioni.filter(c=>ymOf(c.data)===ymCur&&c.tipo==='citologia').length;
-  const papCur=campioni.filter(c=>ymOf(c.data)===ymCur&&(c.tipo==='pap'||c.tipo==='pap_priv'||c.tipo==='pap_l')).length;
+  // Conteggi del mese: TUTTI dai cicli coloratore (più fedele alla realtà)
+  const istCur = _vetriniDelMese(ymCur, 'ist');
+  const citCur = _vetriniDelMese(ymCur, 'cit');
+  const papCur = _vetriniDelMese(ymCur, 'pap');
+  const istPrev = _vetriniDelMese(ymPrev, 'ist');
+  const citPrev = _vetriniDelMese(ymPrev, 'cit');
+  const papPrev = _vetriniDelMese(ymPrev, 'pap');
   const trend=campPrevTot>0?Math.round((campCur-campPrevTot)/campPrevTot*100):(campCur>0?100:0);
   const ordAperti=ords.filter(o=>o.stato!=='ricevuto'&&o.stato!=='annullato').length;
   const allerteCount=prods.filter(p=>(p.min>0&&p.qty<=p.min)||daysUntil(p.scadenza)<0||(daysUntil(p.scadenza)>=0&&daysUntil(p.scadenza)<=30)).length;
@@ -8128,11 +8237,17 @@ function renderDashAnalytics(){
     const weekNo = Math.ceil((((dt-yearStart)/86400000)+1)/7);
     return dt.getUTCFullYear() + '-W' + String(weekNo).padStart(2,'0');
   };
+  // Helper: format Date come "YYYY-MM" usando componenti LOCALI (evita bug timezone)
+  const _ymLocal = (d) => {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    return `${y}-${m}`;
+  };
   // 5 mesi precedenti (escluso mese corrente)
   const prev5Months = (()=>{
     const arr=[]; const d=new Date(today.getFullYear(),today.getMonth(),1);
     d.setMonth(d.getMonth()-1); // parte dal mese precedente
-    for(let i=0;i<5;i++){ arr.unshift(d.toISOString().slice(0,7)); d.setMonth(d.getMonth()-1); }
+    for(let i=0;i<5;i++){ arr.unshift(_ymLocal(d)); d.setMonth(d.getMonth()-1); }
     return arr; // ordine cronologico
   })();
   // Settimane del mese corrente
@@ -8149,27 +8264,24 @@ function renderDashAnalytics(){
     return arr; // ordine cronologico
   })();
   // Costruisco i punti: ognuno ha {key, label, ist, cit, pap, isMonth}
-  const tl = t => (t||'').toLowerCase();
-  const isPap = t => { const x = tl(t); return x === 'pap' || x === 'pap_priv' || x === 'pap_l' || x === 'pap test' || x === 'pap privato'; };
+  // TUTTI i conteggi vengono dai cicli coloratore (fonte unica)
   const points = [];
   prev5Months.forEach(ym => {
     const lbl = fmtMese(ym).slice(0,3);
-    const f = c => ymOf(c.data) === ym;
     points.push({
       key: ym, label: lbl, isMonth: true,
-      ist: campioni.filter(c => f(c) && tl(c.tipo) === 'istologia').length,
-      cit: campioni.filter(c => f(c) && tl(c.tipo) === 'citologia').length,
-      pap: campioni.filter(c => f(c) && isPap(c.tipo)).length,
+      ist: _vetriniDelMese(ym, 'ist'),
+      cit: _vetriniDelMese(ym, 'cit'),
+      pap: _vetriniDelMese(ym, 'pap'),
     });
   });
   currentMonthWeeks.forEach((wk, idx) => {
     const lbl = 'S' + (idx+1);
-    const f = c => { if (!c.data) return false; try { return isoWeek(new Date(c.data)) === wk; } catch(e) { return false; } };
     points.push({
       key: wk, label: lbl, isMonth: false,
-      ist: campioni.filter(c => f(c) && tl(c.tipo) === 'istologia').length,
-      cit: campioni.filter(c => f(c) && tl(c.tipo) === 'citologia').length,
-      pap: campioni.filter(c => f(c) && isPap(c.tipo)).length,
+      ist: _vetriniDellaSettimana(wk, 'ist'),
+      cit: _vetriniDellaSettimana(wk, 'cit'),
+      pap: _vetriniDellaSettimana(wk, 'pap'),
     });
   });
   // Index dello switch mese→settimane (per disegnare divisore verticale)
@@ -8217,11 +8329,11 @@ function renderDashAnalytics(){
     lineSub.textContent = firstMonthLbl + '→' + lastMonthLbl + ' + ' + currentMonthWeeks.length + ' settimane ' + curMonthLbl;
   }
 
-  // ── 2. DONUT — Mix tipologie mese corrente (3 categorie) ──
+  // ── 2. DONUT — Mix tipologie mese corrente (3 categorie) — TUTTO dai cicli coloratore ──
   const mixCur={
-    'Istologia':campioni.filter(c=>ymOf(c.data)===ymCur&&c.tipo==='istologia').length,
-    'Citologia':campioni.filter(c=>ymOf(c.data)===ymCur&&c.tipo==='citologia').length,
-    'PAP':      campioni.filter(c=>ymOf(c.data)===ymCur&&(c.tipo==='pap'||c.tipo==='pap_priv'||c.tipo==='pap_l')).length
+    'Istologia': istCur,
+    'Citologia': citCur,
+    'PAP':       papCur
   };
   const mixCols={'Istologia':'var(--blue)','Citologia':'var(--teal)','PAP':'#a855f7'};
   const mixTot=Object.values(mixCur).reduce((s,v)=>s+v,0);
@@ -8263,9 +8375,9 @@ function renderDashAnalytics(){
   if(barSvg){
     const W=280,H=120,pad={l:28,r:8,t:10,b:22};
     const cats=[
-      {lbl:'Ist.',cur:istCur,prev:campioni.filter(c=>ymOf(c.data)===ymPrev&&c.tipo==='istologia').length,col:'var(--blue)'},
-      {lbl:'Cit.',cur:campioni.filter(c=>ymOf(c.data)===ymCur&&c.tipo==='citologia').length,prev:campioni.filter(c=>ymOf(c.data)===ymPrev&&c.tipo==='citologia').length,col:'var(--teal)'},
-      {lbl:'PAP',cur:campioni.filter(c=>ymOf(c.data)===ymCur&&(c.tipo==='pap'||c.tipo==='pap_priv'||c.tipo==='pap_l')).length,prev:campioni.filter(c=>ymOf(c.data)===ymPrev&&(c.tipo==='pap'||c.tipo==='pap_priv'||c.tipo==='pap_l')).length,col:'#a855f7'}
+      {lbl:'Ist.',cur:istCur,prev:istPrev,col:'var(--blue)'},
+      {lbl:'Cit.',cur:citCur,prev:citPrev,col:'var(--teal)'},
+      {lbl:'PAP',cur:papCur,prev:papPrev,col:'#a855f7'}
     ];
     const max=Math.max(1,...cats.flatMap(c=>[c.cur,c.prev]));
     const groupW=(W-pad.l-pad.r)/cats.length;
@@ -9269,31 +9381,29 @@ function renderDashboardPreview(){
   const setHTML = (id, v) => { const e = document.getElementById(id); if(e) e.innerHTML = v; };
 
   // ─── KPI 1: Casi processati ───
+  // Conteggi presi dai cicli COLORATORE (fonte fedele alla lavorazione reale)
   try {
-    if (typeof loadCampioni === 'function') {
-      let camps = loadCampioni();
-      if (!camps.length && typeof _derivedCampioni === 'function') camps = _derivedCampioni();
+    if (typeof loadColoratore === 'function') {
       const now = new Date(); now.setHours(0,0,0,0);
-      const ms = new Date(now.getFullYear(), now.getMonth(), 1);
-      const monthCamps = camps.filter(c => c.data && new Date(c.data) >= ms);
-      const tl = t => (t||'').toLowerCase();
-      const cIst = monthCamps.filter(c => tl(c.tipo) === 'istologia').length;
-      const cCit = monthCamps.filter(c => tl(c.tipo) === 'citologia').length;
-      // PAP: contati direttamente dai cicli coloratore (vetri_pap del mese)
-      let cPap = 0;
-      try {
-        if (typeof loadColoratore === 'function') {
-          const colReg = loadColoratore();
-          const monthColor = colReg.filter(r => r.data && new Date(r.data) >= ms);
-          // Priorità casi_pap.length (se presente), fallback vetri_pap (numero vetrini PAP colorati)
-          cPap = monthColor.reduce((s,r) => {
-            const nCasi = Array.isArray(r.casi_pap) ? r.casi_pap.length : 0;
-            return s + (nCasi || parseInt(r.vetri_pap,10) || 0);
-          }, 0);
-        }
-      } catch(_) { cPap = monthCamps.filter(c => tl(c.tipo).includes('pap')).length; }
+      const curYm = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+      const dPrev = new Date(now.getFullYear(), now.getMonth()-1, 1);
+      const prevYm = `${dPrev.getFullYear()}-${String(dPrev.getMonth()+1).padStart(2,'0')}`;
 
-      // Totale casi processati = istologia + citologia (anagrafica) + PAP (coloratore)
+      // Helper: somma vetri_X dei cicli coloratore di un mese
+      const _vetri = (ym, tipo) => {
+        try {
+          const field = 'vetri_' + tipo;
+          return loadColoratore()
+            .filter(r => r.data && String(r.data).slice(0,7) === ym)
+            .reduce((s, r) => s + (parseInt(r[field], 10) || 0), 0);
+        } catch(_) { return 0; }
+      };
+
+      const cIst = _vetri(curYm, 'ist');
+      const cCit = _vetri(curYm, 'cit');
+      const cPap = _vetri(curYm, 'pap');
+
+      // Totale casi processati = isto + cito + pap
       set('kpi-casi-val', cIst + cCit + cPap);
       set('kpi-casi-ist', cIst);
       set('kpi-casi-cit', cCit);
@@ -9313,27 +9423,11 @@ function renderDashboardPreview(){
         const bar = document.getElementById('kpi-pct-'+t+'-bar');
         if (bar) bar.style.width = ({ist:pIst,cit:pCit,pap:pPap}[t]) + '%';
       });
+
       // Delta per tipo vs mese precedente
-      const prevMs = new Date(now.getFullYear(), now.getMonth()-1, 1);
-      const prevCamps = camps.filter(c => c.data && new Date(c.data) >= prevMs && new Date(c.data) < ms);
-      const tlD = t => (t||'').toLowerCase();
-      const pIstPrev = prevCamps.filter(c => tlD(c.tipo) === 'istologia').length;
-      const pCitPrev = prevCamps.filter(c => tlD(c.tipo) === 'citologia').length;
-      // PAP precedente dai cicli coloratore
-      let pPapPrev = 0;
-      try {
-        if (typeof loadColoratore === 'function') {
-          const colRegPrev = loadColoratore().filter(r => {
-            if (!r.data) return false;
-            const d = new Date(r.data);
-            return d >= prevMs && d < ms;
-          });
-          pPapPrev = colRegPrev.reduce((s,r) => {
-            const nCasi = Array.isArray(r.casi_pap) ? r.casi_pap.length : 0;
-            return s + (nCasi || parseInt(r.vetri_pap,10) || 0);
-          }, 0);
-        }
-      } catch(_){}
+      const pIstPrev = _vetri(prevYm, 'ist');
+      const pCitPrev = _vetri(prevYm, 'cit');
+      const pPapPrev = _vetri(prevYm, 'pap');
       const fmtDelta = (cur, prev) => {
         if (!prev) return '';
         const d = cur - prev;
@@ -10998,6 +11092,38 @@ document.addEventListener('DOMContentLoaded', () => {
     if (typeof recomputeAllBidoniQty === 'function') recomputeAllBidoniQty();
   } catch(e) { console.warn('[migrate bidoni]', e); }
 
+  // 5.8 Fix date campioni importati da Excel: shift +1 giorno per bug timezone
+  // I casi con origine='excel_import' hanno data salvata 1 giorno indietro per via
+  // del bug toISOString() su Date locale midnight. Applico shift una sola volta.
+  (async () => {
+    try {
+      if (localStorage.getItem('ls_mig_v5_fix_excel_dates')) return;
+      if (typeof loadCampioni !== 'function') return;
+      const camps = loadCampioni();
+      let fixed = 0;
+      camps.forEach(c => {
+        if (c && c.origine === 'excel_import' && c.data) {
+          // Sposta data di +1 giorno
+          const m = String(c.data).match(/^(\d{4})-(\d{2})-(\d{2})/);
+          if (m) {
+            const d = new Date(parseInt(m[1]), parseInt(m[2])-1, parseInt(m[3]));
+            d.setDate(d.getDate() + 1);
+            const y = d.getFullYear();
+            const mm = String(d.getMonth() + 1).padStart(2, '0');
+            const dd = String(d.getDate()).padStart(2, '0');
+            c.data = `${y}-${mm}-${dd}`;
+            c.modificato = new Date().toISOString();
+            fixed++;
+          }
+        }
+      });
+      if (fixed > 0 && typeof saveCampioni === 'function') {
+        await saveCampioni(camps);
+      }
+      localStorage.setItem('ls_mig_v5_fix_excel_dates', '1');
+    } catch(e) { console.warn('[migrate fix excel dates]', e); }
+  })();
+
   // 5.7 Migrazione coloratore: record con solo range_xxx ma senza casi_xxx
   // (salvati prima del fix che ha introdotto casi_ist/cit/pap)
   try {
@@ -11204,13 +11330,26 @@ function _impxDetectTipo(descRaw, anno) {
 function _impxExcelDateToISO(val) {
   // Excel data può essere: stringa "yyyy-mm-dd", oggetto Date, numero seriale Excel
   if (!val && val !== 0) return '';
+  // Helper: estrae YYYY-MM-DD da un oggetto Date usando componenti LOCALI
+  // (evita il bug del timezone: toISOString() converte in UTC e in Italia
+  //  midnight locale del 21/6 diventa 22:00 UTC del 20/6 → giorno indietro)
+  const _localISO = (d) => {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${dd}`;
+  };
   if (val instanceof Date) {
-    return val.toISOString().slice(0, 10);
+    return _localISO(val);
   }
   if (typeof val === 'number') {
-    // Excel serial date → JS
+    // Excel serial date → JS (interpretato come UTC midnight)
+    // Per il display, leggiamo i componenti UTC per essere consistenti col foglio
     const d = new Date(Math.round((val - 25569) * 86400 * 1000));
-    return d.toISOString().slice(0, 10);
+    const y = d.getUTCFullYear();
+    const m = String(d.getUTCMonth() + 1).padStart(2, '0');
+    const dd = String(d.getUTCDate()).padStart(2, '0');
+    return `${y}-${m}-${dd}`;
   }
   const s = String(val).trim();
   // ISO già pronto
@@ -12362,6 +12501,46 @@ function renderDashClienti() {
   }
 }
 window.renderDashClienti = renderDashClienti;
+
+// ─── Report Tab switcher ───
+function switchRptTab(name) {
+  // Update tab buttons
+  document.querySelectorAll('.rpt-tab').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.tab === name);
+  });
+  // Update content panels
+  document.querySelectorAll('.rpt-tab-content').forEach(panel => {
+    const id = panel.id; // es. "rpt-tab-mensile"
+    const tabName = id.replace('rpt-tab-', '');
+    panel.style.display = (tabName === name) ? '' : 'none';
+    panel.classList.toggle('active', tabName === name);
+  });
+  // Trigger re-render delle sezioni se necessario
+  try {
+    if (name === 'clienti' && typeof renderClientiSection === 'function') renderClientiSection();
+    if (name === 'tracciabilita' && typeof renderTATSection === 'function') renderTATSection();
+    if (name === 'annuale' && typeof renderReportAnnuale === 'function') renderReportAnnuale();
+    if (name === 'mensile' && typeof renderReport === 'function') renderReport();
+  } catch(e) { console.warn('[switchRptTab]', e); }
+  // Salva tab scelto (UX: torna sullo stesso tab al prossimo accesso)
+  try { localStorage.setItem('ls_rpt_active_tab', name); } catch(_){}
+}
+window.switchRptTab = switchRptTab;
+
+// Al caricamento report, ripristina ultimo tab
+document.addEventListener('DOMContentLoaded', function(){
+  try {
+    const last = localStorage.getItem('ls_rpt_active_tab');
+    if (last && ['mensile','annuale','tracciabilita','clienti'].includes(last)) {
+      // Aspetta che la view-report sia disponibile
+      setTimeout(() => {
+        if (document.getElementById('rpt-tab-' + last)) {
+          switchRptTab(last);
+        }
+      }, 300);
+    }
+  } catch(_){}
+});
 
 function renderC3TendenzaTempo(topClients, cutoff) {
   const svg = document.getElementById('cli-c3-chart');
