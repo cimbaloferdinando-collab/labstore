@@ -12426,44 +12426,58 @@ function renderClienteMix() {
   const camp = loadCampioni().filter(c => c.data && c.data >= cutoff && _trc_richiedente(c) === cliente);
   if (!camp.length) { el.innerHTML = '<div class="trac-empty">Nessun dato per ' + esc(cliente) + '</div>'; return; }
 
-  // Conta per categoria di descrizione
+  // Categorie ordinate per priorità (più specifiche prima): se un caso matcha più pattern,
+  // viene assegnato SOLO alla prima categoria (no doppio conteggio).
   const cats = [
-    { pat: /bio\s+endo|biopsia\s+endometr|endometri/, label: 'Bio endometrio' },
-    { pat: /polipo|polipi/, label: 'Polipi' },
-    { pat: /neof|neoformazione/, label: 'Neoformazioni' },
-    { pat: /turp|prostata/, label: 'Prostata' },
-    { pat: /urin/, label: 'Urine' },
-    { pat: /mioma|fibroma/, label: 'Miomi' },
-    { pat: /cute|nevo/, label: 'Cute/nevi' },
-    { pat: /vesc/, label: 'Vescica' },
-    { pat: /tiroide|tir\s/, label: 'Tiroide' },
-    { pat: /colon|retto/, label: 'Colon/retto' },
-    { pat: /espett/, label: 'Espettorato' },
-    { pat: /pleur|ascit/, label: 'Liquidi cito' },
-    { pat: /colecist/, label: 'Colecisti' },
-    { pat: /utero|portio|cerv/, label: 'Utero/cervice' },
-    { pat: /linf/, label: 'Linfonodi' },
-    { pat: /leep/, label: 'LEEP' },
+    { pat: /\bbio\s+endo|biopsia\s+endometr|\bendometri/i, label: 'Bio endometrio' },
+    { pat: /\bpolip/i, label: 'Polipi' },
+    { pat: /\bturp\b|prostata/i, label: 'Prostata' },
+    { pat: /\burin/i, label: 'Urine' },
+    { pat: /espett|broncoasp|broncolavag|\blba\b|\bbal\b/i, label: 'Liquidi resp.' },
+    { pat: /pleur|ascit|liquor|liquido (cefalo|peric)/i, label: 'Liquidi org.' },
+    { pat: /agoasp|\bfna\b|fnac/i, label: 'Agoaspirati' },
+    { pat: /strisci/i, label: 'Strisci' },
+    { pat: /tiroide|\btir\b/i, label: 'Tiroide' },
+    { pat: /mioma|fibroma/i, label: 'Miomi/fibromi' },
+    { pat: /cute|\bnev[oi]\b/i, label: 'Cute/nevi' },
+    { pat: /vesc/i, label: 'Vescica' },
+    { pat: /colon|\bretto\b/i, label: 'Colon/retto' },
+    { pat: /utero|portio|cervic|cerv\b|leep/i, label: 'Utero/cervice' },
+    { pat: /linfonod|\blinf\b/i, label: 'Linfonodi' },
+    { pat: /colecist/i, label: 'Colecisti' },
+    { pat: /\bcv\b|corda voc/i, label: 'Corde vocali' },
+    { pat: /\bovai|\bann\b|annessi/i, label: 'Annessi/ovaio' },
+    { pat: /\bfn\b|fossa nasal/i, label: 'Fossa nasale' },
+    { pat: /\bneof|neoformaz/i, label: 'Neoformazioni' },
+    { pat: /\bbio\b|biopsia/i, label: 'Biopsie' },
   ];
   const counter = new Map();
   camp.forEach(c => {
-    const d = String(c.desc || '').toLowerCase();
+    // Modello app: il campo è desc_accettazione (non desc!)
+    const d = String(c.desc_accettazione || c.desc || '').toLowerCase();
     let matched = false;
-    cats.forEach(ct => {
-      if (ct.pat.test(d)) { counter.set(ct.label, (counter.get(ct.label) || 0) + 1); matched = true; }
-    });
+    for (const ct of cats) {
+      if (ct.pat.test(d)) {
+        counter.set(ct.label, (counter.get(ct.label) || 0) + 1);
+        matched = true;
+        break;  // SOLO la prima cat. (no doppio conteggio)
+      }
+    }
     if (!matched) counter.set('Altri', (counter.get('Altri') || 0) + 1);
   });
-  const sorted = Array.from(counter.entries()).sort((a, b) => b[1] - a[1]).slice(0, 8);
+  const sorted = Array.from(counter.entries()).sort((a, b) => b[1] - a[1]).slice(0, 10);
   const max = sorted.length ? sorted[0][1] : 1;
+  const tot = camp.length;
 
-  let html = `<div style="font-size:11px;color:var(--text3);margin-bottom:8px">${camp.length} campioni nel periodo</div>`;
+  let html = `<div style="font-size:11px;color:var(--text3);margin-bottom:8px">${tot} cas${tot===1?'o':'i'} nel periodo</div>`;
   sorted.forEach(([label, count]) => {
     const w = Math.round(count / max * 100);
-    html += `<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;font-size:11px">
-      <span style="min-width:90px;text-align:right">${esc(label)}</span>
-      <div style="flex:1;height:14px;background:var(--bg3);border-radius:2px"><div style="width:${w}%;height:100%;background:var(--accent2);border-radius:2px"></div></div>
-      <span class="mono" style="min-width:30px;font-weight:600">${count}</span>
+    const pct = tot ? Math.round(count / tot * 100) : 0;
+    html += `<div style="display:flex;align-items:center;gap:8px;margin-bottom:5px;font-size:11px">
+      <span style="min-width:110px;text-align:right;color:var(--text2)">${esc(label)}</span>
+      <div style="flex:1;height:14px;background:var(--bg3);border-radius:2px;overflow:hidden"><div style="width:${w}%;height:100%;background:var(--accent2);border-radius:2px"></div></div>
+      <span class="mono" style="min-width:28px;font-weight:700;color:var(--accent)">${count}</span>
+      <span class="mono" style="min-width:34px;font-size:10px;color:var(--text3);text-align:right">${pct}%</span>
     </div>`;
   });
   el.innerHTML = html;
