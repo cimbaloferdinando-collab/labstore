@@ -7133,14 +7133,27 @@ const _patchedRenderReport = function(){
   const smaltiti = wlog.filter(l=>l.azione==='smaltito').reduce((s,l)=>s+(l.qty||0),0);
 
   // Campioni del mese — TUTTO dai cicli coloratore (fonte unica fedele)
-  const _vetri = (tipo) => colorMese.reduce((s,r) => s + (parseInt(r['vetri_' + tipo], 10) || 0), 0);
+  // - isto/cito: dedup su ID (stesso ID in più cicli = ricampionamento, 1 caso)
+  // - pap: 1 vetrino = 1 caso, sommo vetri_pap
+  const _vetri = (tipo) => {
+    if (tipo === 'pap') {
+      return colorMese.reduce((s,r) => s + (parseInt(r.vetri_pap, 10) || 0), 0);
+    }
+    const field = (tipo === 'ist') ? 'casi_ist' : 'casi_cit';
+    const set = new Set();
+    colorMese.forEach(r => {
+      const arr = Array.isArray(r[field]) ? r[field] : [];
+      arr.forEach(id => { if (id) set.add(String(id).trim()); });
+    });
+    return set.size;
+  };
   const campPerTipo = {
     'istologia': _vetri('ist'),
     'citologia': _vetri('cit'),
     'pap': _vetri('pap')
   };
   const totVetrini = campPerTipo.istologia + campPerTipo.citologia + campPerTipo.pap;
-  // Per coerenza visiva, mostriamo nella card "Campioni" il totale vetrini del mese
+  // Per coerenza visiva, mostriamo nella card "Campioni" il totale del mese
   const campMese = { length: totVetrini };
 
   let analyticsHtml = `
@@ -7170,7 +7183,7 @@ const _patchedRenderReport = function(){
   const tipiNonZero = Object.entries(campPerTipo).filter(([_,n]) => n > 0);
   if(tipiNonZero.length){
     const tipoLabel={istologia:'Istologia',citologia:'Citologia',pap:'PAP',pap_l:'PAP LupoLab',pap_priv:'PAP Privato'};
-    analyticsHtml += `<div style="margin-bottom:16px"><div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:8px">Vetrini colorati per tipo</div>`;
+    analyticsHtml += `<div style="margin-bottom:16px"><div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:8px">Casi colorati per tipo</div>`;
     tipiNonZero.forEach(([tipo,n])=>{
       const pct = totVetrini > 0 ? Math.round(n/totVetrini*100) : 0;
       analyticsHtml += `<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
@@ -8171,29 +8184,49 @@ function renderDashAnalytics(){
   const dPrev=new Date(today.getFullYear(),today.getMonth()-1,1);
   const ymPrev=`${dPrev.getFullYear()}-${String(dPrev.getMonth()+1).padStart(2,'0')}`;
 
-  // Helper: somma vetri_X dei cicli coloratore di un mese YYYY-MM
-  // tipo: 'ist' | 'cit' | 'pap'
-  const _vetriniDelMese = (ym, tipo) => {
+  // Helper: numero di CASI UNICI per tipo dai cicli coloratore di un mese YYYY-MM
+  // Logica:
+  // - isto/cito: lo stesso ID che appare in più cicli = ricampionamento (vetrini aggiuntivi),
+  //   conta SEMPRE come 1 caso. Quindi dedup su casi_ist / casi_cit.
+  // - pap: 1 vetrino = 1 caso, sommo vetri_pap (no dedup possibile, non ci sono ID).
+  const _casiUniciMese = (ym, tipo) => {
     try {
       if (typeof loadColoratore !== 'function') return 0;
-      const field = 'vetri_' + tipo;
-      return loadColoratore()
-        .filter(r => r.data && String(r.data).slice(0,7) === ym)
-        .reduce((s, r) => s + (parseInt(r[field], 10) || 0), 0);
+      const recs = loadColoratore().filter(r => r.data && String(r.data).slice(0,7) === ym);
+      if (tipo === 'pap') {
+        return recs.reduce((s, r) => s + (parseInt(r.vetri_pap, 10) || 0), 0);
+      }
+      const field = (tipo === 'ist') ? 'casi_ist' : 'casi_cit';
+      const set = new Set();
+      recs.forEach(r => {
+        const arr = Array.isArray(r[field]) ? r[field] : [];
+        arr.forEach(id => { if (id) set.add(String(id).trim()); });
+      });
+      return set.size;
     } catch(_) { return 0; }
   };
-  // Helper: somma vetri_X dei cicli coloratore per una settimana ISO (es. "2026-W23")
+  const _vetriniDelMese = _casiUniciMese; // alias per retrocompat (il nome è legacy)
+  // Settimana ISO con dedup
   const _vetriniDellaSettimana = (wk, tipo) => {
     try {
       if (typeof loadColoratore !== 'function') return 0;
-      const field = 'vetri_' + tipo;
-      return loadColoratore()
-        .filter(r => { if (!r.data) return false; try { return isoWeek(new Date(r.data)) === wk; } catch(e) { return false; } })
-        .reduce((s, r) => s + (parseInt(r[field], 10) || 0), 0);
+      const recs = loadColoratore().filter(r => {
+        if (!r.data) return false;
+        try { return isoWeek(new Date(r.data)) === wk; } catch(e) { return false; }
+      });
+      if (tipo === 'pap') {
+        return recs.reduce((s, r) => s + (parseInt(r.vetri_pap, 10) || 0), 0);
+      }
+      const field = (tipo === 'ist') ? 'casi_ist' : 'casi_cit';
+      const set = new Set();
+      recs.forEach(r => {
+        const arr = Array.isArray(r[field]) ? r[field] : [];
+        arr.forEach(id => { if (id) set.add(String(id).trim()); });
+      });
+      return set.size;
     } catch(_) { return 0; }
   };
-  // Alias retrocompat (PAP only)
-  const _papDelMese = (ym) => _vetriniDelMese(ym, 'pap');
+  const _papDelMese = (ym) => _casiUniciMese(ym, 'pap');
 
   const campCur=campioni.filter(c=>ymOf(c.data)===ymCur).length;
   const campPrevTot=campioni.filter(c=>ymOf(c.data)===ymPrev).length;
@@ -9389,13 +9422,20 @@ function renderDashboardPreview(){
       const dPrev = new Date(now.getFullYear(), now.getMonth()-1, 1);
       const prevYm = `${dPrev.getFullYear()}-${String(dPrev.getMonth()+1).padStart(2,'0')}`;
 
-      // Helper: somma vetri_X dei cicli coloratore di un mese
+      // Helper: numero di CASI UNICI per tipo dai cicli coloratore di un mese
+      // - isto/cito: dedup su ID (stesso ID = ricampionamento, 1 solo caso)
+      // - pap: sommo vetri_pap (1 vetrino = 1 caso, no dedup)
       const _vetri = (ym, tipo) => {
         try {
-          const field = 'vetri_' + tipo;
-          return loadColoratore()
-            .filter(r => r.data && String(r.data).slice(0,7) === ym)
-            .reduce((s, r) => s + (parseInt(r[field], 10) || 0), 0);
+          const recs = loadColoratore().filter(r => r.data && String(r.data).slice(0,7) === ym);
+          if (tipo === 'pap') return recs.reduce((s, r) => s + (parseInt(r.vetri_pap, 10) || 0), 0);
+          const field = (tipo === 'ist') ? 'casi_ist' : 'casi_cit';
+          const set = new Set();
+          recs.forEach(r => {
+            const arr = Array.isArray(r[field]) ? r[field] : [];
+            arr.forEach(id => { if (id) set.add(String(id).trim()); });
+          });
+          return set.size;
         } catch(_) { return 0; }
       };
 
