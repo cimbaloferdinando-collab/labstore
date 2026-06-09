@@ -651,6 +651,10 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
           <div class="kpi-lbl">IHC da fare</div>
           <div class="kpi-val red" id="kpi-ihc-val">—</div>
           <div style="font-size:11px;color:var(--text3);margin-top:4px" id="kpi-ihc-sub"></div>
+          <div style="margin-top:6px;padding-top:6px;border-top:1px solid var(--border);font-size:11px;color:var(--text2)">
+            <span style="color:var(--text3)">Vetrini:</span> <span id="kpi-ihc-vetrini" style="font-family:'DM Mono',monospace;font-weight:700;color:#a855f7">0</span>
+          </div>
+          <div id="kpi-ihc-antic" style="margin-top:5px;display:flex;flex-wrap:wrap;gap:3px;max-height:60px;overflow:hidden"></div>
         </div>
 
       </div><!-- /kpi -->
@@ -9271,26 +9275,21 @@ function renderDashboardPreview(){
       if (!camps.length && typeof _derivedCampioni === 'function') camps = _derivedCampioni();
       const now = new Date(); now.setHours(0,0,0,0);
       const ms = new Date(now.getFullYear(), now.getMonth(), 1);
-      const curYm = ms.toISOString().slice(0,7);
-      // Confronto mese basato su YYYY-MM (evita problemi di timezone)
-      const monthCamps = camps.filter(c => c.data && String(c.data).slice(0,7) === curYm);
+      const monthCamps = camps.filter(c => c.data && new Date(c.data) >= ms);
       const tl = t => (t||'').toLowerCase();
       const cIst = monthCamps.filter(c => tl(c.tipo) === 'istologia').length;
       const cCit = monthCamps.filter(c => tl(c.tipo) === 'citologia').length;
-      // PAP: contati dai cicli coloratore — usa "vetri_pap" (vetrini PAP colorati nel mese)
+      // PAP: contati direttamente dai cicli coloratore (vetri_pap del mese)
       let cPap = 0;
       try {
         if (typeof loadColoratore === 'function') {
           const colReg = loadColoratore();
-          const monthColor = colReg.filter(r => {
-            if (!r.data) return false;
-            // Confronto stringa YYYY-MM più sicuro di new Date()
-            const ym = String(r.data).slice(0,7);
-            const curYm = ms.toISOString().slice(0,7);
-            return ym === curYm;
-          });
-          // Somma dei vetrini PAP colorati nel mese
-          cPap = monthColor.reduce((s,r) => s + (parseInt(r.vetri_pap,10) || 0), 0);
+          const monthColor = colReg.filter(r => r.data && new Date(r.data) >= ms);
+          // Priorità casi_pap.length (se presente), fallback vetri_pap (numero vetrini PAP colorati)
+          cPap = monthColor.reduce((s,r) => {
+            const nCasi = Array.isArray(r.casi_pap) ? r.casi_pap.length : 0;
+            return s + (nCasi || parseInt(r.vetri_pap,10) || 0);
+          }, 0);
         }
       } catch(_) { cPap = monthCamps.filter(c => tl(c.tipo).includes('pap')).length; }
 
@@ -9316,20 +9315,23 @@ function renderDashboardPreview(){
       });
       // Delta per tipo vs mese precedente
       const prevMs = new Date(now.getFullYear(), now.getMonth()-1, 1);
-      const prevYm = prevMs.toISOString().slice(0,7);
-      const prevCamps = camps.filter(c => c.data && String(c.data).slice(0,7) === prevYm);
+      const prevCamps = camps.filter(c => c.data && new Date(c.data) >= prevMs && new Date(c.data) < ms);
       const tlD = t => (t||'').toLowerCase();
       const pIstPrev = prevCamps.filter(c => tlD(c.tipo) === 'istologia').length;
       const pCitPrev = prevCamps.filter(c => tlD(c.tipo) === 'citologia').length;
-      // PAP precedente dai cicli coloratore (vetri_pap del mese scorso)
+      // PAP precedente dai cicli coloratore
       let pPapPrev = 0;
       try {
         if (typeof loadColoratore === 'function') {
           const colRegPrev = loadColoratore().filter(r => {
             if (!r.data) return false;
-            return String(r.data).slice(0,7) === prevYm;
+            const d = new Date(r.data);
+            return d >= prevMs && d < ms;
           });
-          pPapPrev = colRegPrev.reduce((s,r) => s + (parseInt(r.vetri_pap,10) || 0), 0);
+          pPapPrev = colRegPrev.reduce((s,r) => {
+            const nCasi = Array.isArray(r.casi_pap) ? r.casi_pap.length : 0;
+            return s + (nCasi || parseInt(r.vetri_pap,10) || 0);
+          }, 0);
         }
       } catch(_){}
       const fmtDelta = (cur, prev) => {
@@ -9437,6 +9439,67 @@ function renderDashboardPreview(){
       if (sub) {
         if (!pending.length) sub.textContent = '';
         else sub.textContent = urg + ' urgent' + (urg===1?'e':'i') + ' · ' + prog + ' programmat' + (prog===1?'o':'i');
+      }
+
+      // ── Calcolo vetrini totali + anticorpi totali ──
+      // Logica:
+      // - campione_id può contenere blocchetti: "345/26 2, 3" → 2 blocchetti
+      // - anticorpo può contenere lista: "PanCK, P16, CD45" → 3 anticorpi
+      // - Vetrini per record = numero blocchetti × numero anticorpi
+      const _parseBlocchetti = (campioneId) => {
+        if (!campioneId) return 1;
+        // Cerca pattern dopo l'ID base "NUM/YY" - es. "345/26 2, 3" o "345/26-A,B"
+        const s = String(campioneId).trim();
+        // Tutto ciò che viene DOPO il primo /YY
+        const m = s.match(/^[\d]+\/\d{2}[A-Za-zLPp]*\s*(.*)$/);
+        if (!m || !m[1]) return 1;
+        const extra = m[1].trim();
+        if (!extra) return 1;
+        // Estrai numeri o lettere separati da spazi/virgole/trattini
+        const parts = extra.split(/[\s,;\-\/\+]+/).filter(Boolean);
+        // Conta gli identificatori validi (numeri, lettere singole o brevi)
+        const valid = parts.filter(p => /^[\d]+$/.test(p) || /^[A-Za-z]{1,3}$/.test(p));
+        return Math.max(1, valid.length);
+      };
+      const _parseAnticorpi = (anticorpoStr) => {
+        if (!anticorpoStr) return [];
+        const s = String(anticorpoStr).trim();
+        // Separa per virgola, punto e virgola, "+", " e ", " ed "
+        const parts = s.split(/[,;\+]|\s+e\s+|\s+ed\s+/i).map(x => x.trim()).filter(Boolean);
+        return parts.length ? parts : [s];
+      };
+      // Già escluse le completate (pending)
+      let vetriniTot = 0;
+      const anticBreakdown = new Map(); // anticorpo → numero vetrini totali
+      const anticNorm = (a) => String(a).trim().toUpperCase()
+        .replace(/PANCK|PANCITOCHERATINA/i, 'PANCK')
+        .replace(/\s+/g,' ').trim();
+      pending.forEach(r => {
+        const nBlocc = _parseBlocchetti(r.campione_id);
+        const anticorpi = _parseAnticorpi(r.anticorpo);
+        // Escludi anticorpi già completati per questo record
+        const done = Array.isArray(r.anticorpi_done) ? r.anticorpi_done.map(a => anticNorm(a)) : [];
+        const todo = anticorpi.filter(a => !done.includes(anticNorm(a)));
+        vetriniTot += nBlocc * todo.length;
+        todo.forEach(a => {
+          const key = anticNorm(a);
+          anticBreakdown.set(key, (anticBreakdown.get(key) || 0) + nBlocc);
+        });
+      });
+
+      const vetEl = document.getElementById('kpi-ihc-vetrini');
+      if (vetEl) vetEl.textContent = vetriniTot;
+      const antEl = document.getElementById('kpi-ihc-antic');
+      if (antEl) {
+        if (anticBreakdown.size === 0) {
+          antEl.innerHTML = '<span style="font-size:10px;color:var(--text3);font-style:italic">Nessun anticorpo</span>';
+        } else {
+          // Ordina per quantità decrescente
+          const sorted = Array.from(anticBreakdown.entries()).sort((a,b) => b[1] - a[1]);
+          antEl.innerHTML = sorted.map(([nome, n]) =>
+            `<span style="background:#f3e8ff;color:#7c3aed;padding:1px 6px;border-radius:99px;font-size:10px;font-family:'DM Mono',monospace;font-weight:600;white-space:nowrap" title="${esc(nome)} — ${n} vetrin${n===1?'o':'i'}">${esc(nome)} <b>${n}</b></span>`
+          ).join('');
+        }
       }
     }
   } catch(e) { console.warn('[KPI IHC]', e); }
