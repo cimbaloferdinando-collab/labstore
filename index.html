@@ -515,7 +515,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
     <div class="hdr-gap"></div>
     <div class="hdr-btns">
       <button class="hbtn undo" id="undo-btn" onclick="undoLastAction()" disabled title="Annulla ultima azione">↶ Undo</button>
-      <button class="hbtn primary" onclick="openAddModal('Istologia')">＋ Campione</button>
+      <button class="hbtn primary" onclick="openAddModal('Istologia')">＋ Caso</button>
       <button class="hbtn pap-l" onclick="openAddModal('PAP test')">＋ Pap L</button>
       <button class="hbtn pap-p" onclick="openAddModal('PAP privato')">＋ Pap Priv.</button>
       <div class="hdr-sep"></div>
@@ -534,7 +534,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
   <aside class="rail" id="rail">
     <div class="rail-item active" data-view="home" title="Dashboard">⌂</div>
     <div class="rail-div"></div>
-    <div class="rail-item" data-view="campioni"     title="Campioni">⌁</div>
+    <div class="rail-item" data-view="campioni"     title="Casi">⌁</div>
     <div class="rail-item" data-view="processatore" title="Processatore">◎</div>
     <div class="rail-item" data-view="coloratore"   title="Coloratore">◉</div>
     <div class="rail-item" data-view="ihc"          title="IHC">🔬</div>
@@ -718,12 +718,12 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
       <div style="margin-bottom:8px;display:flex;align-items:center;gap:10px">
         <div style="font-family:'Libre Baskerville',serif;font-size:16px;font-weight:700;color:var(--accent)">Statistiche</div>
         <div style="flex:1;height:1px;background:var(--border)"></div>
-        <span style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em">Campioni</span>
+        <span style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em">Casi</span>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:18px">
 
         <div class="card">
-          <div class="card-hdr"><span class="card-title">Andamento campioni</span><span class="card-sub" id="dash-line-sub">5 mesi precedenti + settimane corr.</span></div>
+          <div class="card-hdr"><span class="card-title">Andamento casi</span><span class="card-sub" id="dash-line-sub">5 mesi precedenti + settimane corr.</span></div>
           <div style="padding:12px 14px">
             <svg id="dash-chart-line" width="100%" viewBox="0 0 280 140" style="overflow:visible"></svg>
             <div style="display:flex;gap:12px;margin-top:8px;font-size:10px">
@@ -807,9 +807,9 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
          ══════════════════════════════════════════════════════════════ -->
     <div class="view" data-view="campioni" id="view-tracciabilita">
       <div class="pg-hdr">
-        <div class="pg-title">Campioni</div>
+        <div class="pg-title">Casi</div>
         <div style="display:flex;gap:6px;flex-wrap:wrap">
-          <button class="hbtn2 primary" onclick="openAddModal('Istologia')">＋ Campione</button>
+          <button class="hbtn2 primary" onclick="openAddModal('Istologia')">＋ Caso</button>
           <button class="hbtn2 pap-l" onclick="openAddModal('PAP test')">＋ Pap L</button>
           <button class="hbtn2 pap-p" onclick="openAddModal('PAP privato')">＋ Pap Priv.</button>
           <button class="hbtn2" onclick="openImportExcelModal()" title="Importa casi dal file Excel di accettazione">📥 Importa Excel</button>
@@ -988,7 +988,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
           <button class="hbtn2 primary" onclick="openNuovaIHC()">＋ Nuova richiesta</button>
           <div class="search-wrap">
             <span class="s-ico">🔍</span>
-            <input type="text" class="search-inp" id="ihc-search" placeholder="Cerca campione, patologo, anticorpo…" oninput="renderIHC()">
+            <input type="text" class="search-inp" id="ihc-search" placeholder="Cerca caso, patologo, anticorpo…" oninput="renderIHC()">
           </div>
         </div>
       </div>
@@ -1353,7 +1353,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
         <!-- Grafico andamento + Top descrizioni affiancati -->
         <div style="display:grid;grid-template-columns:1.6fr 1fr;gap:12px;margin-bottom:16px">
           <div class="card">
-            <div class="card-hdr"><span class="card-title">Andamento campioni nel mese</span><span class="card-sub" id="report-line-sub"></span></div>
+            <div class="card-hdr"><span class="card-title">Andamento casi nel mese</span><span class="card-sub" id="report-line-sub"></span></div>
             <div style="padding:12px 16px">
               <svg id="report-line" width="100%" viewBox="0 0 600 140" style="overflow:visible"></svg>
               <div style="display:flex;gap:16px;margin-top:8px;font-size:10px">
@@ -1364,7 +1364,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
             </div>
           </div>
           <div class="card">
-            <div class="card-hdr"><span class="card-title">Top tipi campione</span><span class="card-sub" id="top-desc-sub">Più frequenti</span></div>
+            <div class="card-hdr"><span class="card-title">Top tipi caso</span><span class="card-sub" id="top-desc-sub">Più frequenti</span></div>
             <div id="top-desc-content" style="padding:14px"></div>
           </div>
         </div>
@@ -1519,7 +1519,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
         <!-- C2 + C5: Mix per cliente e TAT (affiancati) -->
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
           <div class="card">
-            <div class="card-hdr"><span class="card-title">Mix campioni per cliente</span><span class="card-sub">Cosa manda ciascun cliente</span></div>
+            <div class="card-hdr"><span class="card-title">Mix casi per cliente</span><span class="card-sub">Cosa manda ciascun cliente</span></div>
             <div style="padding:6px 14px 14px">
               <select class="search-inp" id="cli-c2-sel" onchange="renderClienteMix()" style="margin-bottom:10px;font-size:12px"></select>
               <div id="cli-c2-content"></div>
@@ -2216,7 +2216,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
 <!-- MODAL: DETTAGLIO CAMPIONE -->
 <div class="modal-overlay" id="modal-campione-detail">
   <div class="modal" style="width:620px;max-height:92vh;overflow-y:auto">
-    <div class="modal-title" id="detail-title">Campione</div>
+    <div class="modal-title" id="detail-title">Caso</div>
     <div id="detail-content"></div>
     <div class="modal-footer">
       <button class="btn" onclick="closeModal('modal-campione-detail')">Chiudi</button>
@@ -2594,7 +2594,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
 <!-- ─── MODAL IMPORT EXCEL ACCETTAZIONE ─── -->
 <div class="modal-overlay" id="modal-import-excel">
   <div class="modal" style="width:760px;max-width:95vw">
-    <div class="modal-title">📥 Importa Campioni da Excel</div>
+    <div class="modal-title">📥 Importa Casi da Excel</div>
 
     <!-- STEP 1: Upload -->
     <div id="impx-step-upload">
@@ -5947,7 +5947,7 @@ function renderTracciabilita(){
 
   const container = document.getElementById('tracc-list');
   if(!campioni.length){
-    container.innerHTML = '<div class="empty"><div class="e-ico">🧬</div><p>Nessun campione trovato</p></div>';
+    container.innerHTML = '<div class="empty"><div class="e-ico">🧬</div><p>Nessun caso trovato</p></div>';
     return;
   }
 
@@ -7153,7 +7153,7 @@ const _patchedRenderReport = function(){
     'pap': _vetri('pap')
   };
   const totVetrini = campPerTipo.istologia + campPerTipo.citologia + campPerTipo.pap;
-  // Per coerenza visiva, mostriamo nella card "Campioni" il totale del mese
+  // Per coerenza visiva, mostriamo nella card "Casi" il totale del mese
   const campMese = { length: totVetrini };
 
   let analyticsHtml = `
@@ -7162,7 +7162,7 @@ const _patchedRenderReport = function(){
 
     <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px">
       <div style="background:var(--blue-bg);border-radius:var(--r);padding:14px;text-align:center">
-        <div style="font-size:10px;color:var(--blue);font-weight:600;text-transform:uppercase">Campioni</div>
+        <div style="font-size:10px;color:var(--blue);font-weight:600;text-transform:uppercase">Casi</div>
         <div style="font-family:'DM Mono',monospace;font-size:24px;font-weight:700;color:var(--blue)">${campMese.length}</div>
       </div>
       <div style="background:var(--green-bg);border-radius:var(--r);padding:14px;text-align:center">
@@ -8243,7 +8243,7 @@ function renderDashAnalytics(){
   const trendCol=trend>=0?'var(--green)':'var(--red)';
   const trendIco=trend>=0?'▲':'▼';
   const kpis=[
-    {label:'Campioni mese',val:campCur,sub:trendIco+' '+Math.abs(trend)+'% vs prec.',col:trendCol},
+    {label:'Casi mese',val:campCur,sub:trendIco+' '+Math.abs(trend)+'% vs prec.',col:trendCol},
     {label:'Istologia',val:istCur,sub:campCur>0?Math.round(istCur/campCur*100)+'% del totale':'—',col:'var(--blue)'},
     {label:'Citologia + PAP',val:citCur,sub:campCur>0?Math.round(citCur/campCur*100)+'% del totale':'—',col:'var(--teal)'},
     {label:'Ordini aperti',val:ordAperti,sub:'in lavorazione',col:'var(--accent2)'},
@@ -10617,7 +10617,7 @@ window.renderTracciabilita = function(){
   set('camp-c-papp', todayC.filter(c => { const t=(c.tipo||'').toLowerCase(); return t==='pap privato'||t==='pap_priv'; }).length);
 
   if(!camps.length){
-    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text3);padding:20px">Nessun campione</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text3);padding:20px">Nessun caso</td></tr>';
     return;
   }
   const tipoBadge = (t) => {
@@ -12365,20 +12365,29 @@ function renderClientiSection() {
 
   // C1 — Top clienti per volume
   const volByCli = new Map();
+  let totSenzaProv = 0;
   camp.forEach(c => {
     const r = _trc_richiedente(c);
-    if (r) volByCli.set(r, (volByCli.get(r) || 0) + 1);
+    if (r) {
+      volByCli.set(r, (volByCli.get(r) || 0) + 1);
+    } else {
+      totSenzaProv++;
+    }
   });
   const topCli = Array.from(volByCli.entries()).sort((a, b) => b[1] - a[1]);
-  const totCli = topCli.reduce((a, b) => a + b[1], 0);
+  // Totale = casi con provenienza + casi senza provenienza (per coerenza con pagina Casi)
+  const totCasi = camp.length;
+  const totConProv = topCli.reduce((a, b) => a + b[1], 0);
 
-  document.getElementById('cli-c1-sub').textContent = topCli.length + ' clienti · ' + totCli + ' campioni';
+  const subParts = [topCli.length + ' clienti · ' + totCasi + ' casi'];
+  if (totSenzaProv > 0) subParts.push(totSenzaProv + ' senza provenienza');
+  document.getElementById('cli-c1-sub').textContent = subParts.join(' · ');
   let c1Html = '';
   const c1Top = topCli.slice(0, 15);
   const c1Max = c1Top.length ? c1Top[0][1] : 1;
   c1Top.forEach(([nome, count], i) => {
     const w = Math.round(count / c1Max * 100);
-    const pct = totCli ? (count / totCli * 100).toFixed(1) : 0;
+    const pct = totConProv ? (count / totConProv * 100).toFixed(1) : 0;
     c1Html += `<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;font-size:12px">
       <span style="min-width:120px;text-align:right;font-weight:${i<3?'700':'400'};color:${i<3?'var(--accent)':'var(--text2)'}">${esc(nome)}</span>
       <div style="flex:1;height:18px;background:var(--bg3);border-radius:3px;position:relative">
