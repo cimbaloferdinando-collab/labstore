@@ -9443,6 +9443,28 @@ function renderDashboardPreview(){
       const cCit = _vetri(curYm, 'cit');
       const cPap = _vetri(curYm, 'pap');
 
+      // Helper: casi unici per tipo in un mese, ma solo fino al giorno `maxDay` incluso
+      // (per confronto "stesso periodo": es. 1–11 giugno vs 1–11 maggio)
+      const _vetriFinoAlGiorno = (ym, tipo, maxDay) => {
+        try {
+          const recs = loadColoratore().filter(r => {
+            if (!r.data) return false;
+            const s = String(r.data);
+            if (s.slice(0,7) !== ym) return false;
+            const giorno = parseInt(s.slice(8,10), 10) || 0;
+            return giorno <= maxDay;
+          });
+          if (tipo === 'pap') return recs.reduce((s, r) => s + (parseInt(r.vetri_pap, 10) || 0), 0);
+          const field = (tipo === 'ist') ? 'casi_ist' : 'casi_cit';
+          const set = new Set();
+          recs.forEach(r => {
+            const arr = Array.isArray(r[field]) ? r[field] : [];
+            arr.forEach(id => { if (id) set.add(String(id).trim()); });
+          });
+          return set.size;
+        } catch(_) { return 0; }
+      };
+
       // Totale casi processati = isto + cito + pap
       set('kpi-casi-val', cIst + cCit + cPap);
       set('kpi-casi-ist', cIst);
@@ -9464,75 +9486,43 @@ function renderDashboardPreview(){
         if (bar) bar.style.width = ({ist:pIst,cit:pCit,pap:pPap}[t]) + '%';
       });
 
-      // Helper: casi unici per tipo in un mese, MA solo fino al giorno `maxDay` incluso
-      // (per confronto "stesso periodo": es. 1-11 giugno vs 1-11 maggio)
-      const _vetriFinoAlGiorno = (ym, tipo, maxDay) => {
-        try {
-          const recs = loadColoratore().filter(r => {
-            if (!r.data) return false;
-            const s = String(r.data);
-            if (s.slice(0,7) !== ym) return false;
-            const giorno = parseInt(s.slice(8,10), 10) || 0;
-            return giorno <= maxDay;
-          });
-          if (tipo === 'pap') return recs.reduce((s, r) => s + (parseInt(r.vetri_pap, 10) || 0), 0);
-          const field = (tipo === 'ist') ? 'casi_ist' : 'casi_cit';
-          const set = new Set();
-          recs.forEach(r => {
-            const arr = Array.isArray(r[field]) ? r[field] : [];
-            arr.forEach(id => { if (id) set.add(String(id).trim()); });
-          });
-          return set.size;
-        } catch(_) { return 0; }
-      };
-
       // Delta per tipo vs mese precedente (totale intero mese)
       const pIstPrev = _vetri(prevYm, 'ist');
       const pCitPrev = _vetri(prevYm, 'cit');
       const pPapPrev = _vetri(prevYm, 'pap');
-      const fmtDelta = (cur, prev) => {
-        if (!prev) return '';
-        const d = cur - prev;
-        const pct = Math.round(d/prev*100);
-        if (d > 0) return `<span style="color:var(--green)">↑${pct}%</span>`;
-        if (d < 0) return `<span style="color:var(--red)">↓${Math.abs(pct)}%</span>`;
-        return `<span style="color:var(--text3)">→</span>`;
-      };
-      const dIst = document.getElementById('kpi-delta-ist'); if(dIst) dIst.innerHTML = fmtDelta(cIst, pIstPrev);
-      const dCit = document.getElementById('kpi-delta-cit'); if(dCit) dCit.innerHTML = fmtDelta(cCit, pCitPrev);
-      const dPap = document.getElementById('kpi-delta-pap'); if(dPap) dPap.innerHTML = fmtDelta(cPap, pPapPrev);
 
-      // ── Totali per i due confronti ──
-      const totCur = cIst + cCit + cPap;
-      const totPrevFull = pIstPrev + pCitPrev + pPapPrev;
-
-      // Confronto "stesso periodo": mese corrente fino a oggi vs mese scorso fino allo stesso giorno
+      // Stesso periodo (MTD): fino al giorno di oggi, per ogni tipo
       const oggiGiorno = now.getDate();
-      const totCurMTD = _vetriFinoAlGiorno(curYm, 'ist', oggiGiorno)
-                      + _vetriFinoAlGiorno(curYm, 'cit', oggiGiorno)
-                      + _vetriFinoAlGiorno(curYm, 'pap', oggiGiorno);
-      const totPrevMTD = _vetriFinoAlGiorno(prevYm, 'ist', oggiGiorno)
-                       + _vetriFinoAlGiorno(prevYm, 'cit', oggiGiorno)
-                       + _vetriFinoAlGiorno(prevYm, 'pap', oggiGiorno);
+      const cIstMTD = _vetriFinoAlGiorno(curYm, 'ist', oggiGiorno);
+      const cCitMTD = _vetriFinoAlGiorno(curYm, 'cit', oggiGiorno);
+      const cPapMTD = _vetriFinoAlGiorno(curYm, 'pap', oggiGiorno);
+      const pIstPrevMTD = _vetriFinoAlGiorno(prevYm, 'ist', oggiGiorno);
+      const pCitPrevMTD = _vetriFinoAlGiorno(prevYm, 'cit', oggiGiorno);
+      const pPapPrevMTD = _vetriFinoAlGiorno(prevYm, 'pap', oggiGiorno);
 
-      // delta totale: DUE righe — (1) totale mese vs totale mese scorso, (2) stesso periodo
+      // Mostra due percentuali per ogni tipo: vs totale mese | vs stesso periodo
+      const _pctTxt = (cur, prev) => {
+        if (!prev) return '<span style="color:var(--text3)">—</span>';
+        const pct = Math.round((cur - prev) / prev * 100);
+        if (pct > 0) return `<span style="color:var(--green)">↑${pct}%</span>`;
+        if (pct < 0) return `<span style="color:var(--red)">↓${Math.abs(pct)}%</span>`;
+        return `<span style="color:var(--text3)">=</span>`;
+      };
+      // Per ogni tipo: prima riga = vs totale mese, seconda = vs stesso periodo
+      const _deltaDual = (curFull, prevFull, curMTD, prevMTD) =>
+        `<span title="vs totale mese scorso">${_pctTxt(curFull, prevFull)}</span>` +
+        ` <span style="color:var(--text4,#cbd5e1)">·</span> ` +
+        `<span title="vs stesso periodo (1–${oggiGiorno}) mese scorso">${_pctTxt(curMTD, prevMTD)}</span>`;
+
+      const dIst = document.getElementById('kpi-delta-ist'); if(dIst) dIst.innerHTML = _deltaDual(cIst, pIstPrev, cIstMTD, pIstPrevMTD);
+      const dCit = document.getElementById('kpi-delta-cit'); if(dCit) dCit.innerHTML = _deltaDual(cCit, pCitPrev, cCitMTD, pCitPrevMTD);
+      const dPap = document.getElementById('kpi-delta-pap'); if(dPap) dPap.innerHTML = _deltaDual(cPap, pPapPrev, cPapMTD, pPapPrevMTD);
+
+      // Legenda sotto il riquadro: spiega le due percentuali
       const delta = document.getElementById('kpi-casi-delta');
       if (delta) {
-        const _fmtRiga = (cur, prev, etichetta) => {
-          if (!prev) return `<span style="color:var(--text3)">— ${etichetta}</span>`;
-          const pct = Math.round((cur - prev) / prev * 100);
-          let col = 'var(--text3)', arr = '→';
-          if (pct > 0) { col = 'var(--green)'; arr = '↑ +' + pct + '%'; }
-          else if (pct < 0) { col = 'var(--red)'; arr = '↓ ' + pct + '%'; }
-          else { arr = '= 0%'; }
-          return `<span style="color:${col};font-weight:600">${arr}</span> <span style="color:var(--text3)">${etichetta}</span>`;
-        };
         delta.className = 'kpi-delta';
-        delta.innerHTML =
-          `<div style="font-size:11px;line-height:1.6">
-             <div>${_fmtRiga(totCur, totPrevFull, 'vs totale mese scorso')}</div>
-             <div>${_fmtRiga(totCurMTD, totPrevMTD, 'vs 1–' + oggiGiorno + ' mese scorso')}</div>
-           </div>`;
+        delta.innerHTML = `<div style="font-size:9px;color:var(--text3);line-height:1.5">% = <b>vs totale mese scorso</b> · <b>vs 1–${oggiGiorno} mese scorso</b></div>`;
       }
     }
   } catch(e) { console.warn('[KPI casi]', e); }
