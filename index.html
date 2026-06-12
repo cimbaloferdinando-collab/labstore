@@ -2908,7 +2908,7 @@ async function forceSync(){
       supaFetch('waste_log','GET',null,'?order=ts.desc&limit=200'),
       supaFetch('ordini','GET',null,'?order=creato.desc&limit=200'),
       supaFetch('archivio_ordini','GET',null,'?order=creato.desc&limit=500'),
-      supaFetch('campioni','GET',null,'?order=data.desc&limit=1000'),
+      supaFetch('campioni','GET',null,'?order=data.desc&limit=5000'),
       supaFetch('processatore','GET',null,'?order=data.desc&limit=500'),
       supaFetch('coloratore_log','GET',null,'?order=data.desc&limit=500'),
       supaFetch('schede_tecniche','GET',null,'?order=data.desc&limit=200')
@@ -3117,7 +3117,7 @@ async function initialSync(){
       supaFetch('waste_log','GET',null,'?order=ts.desc&limit=200'),
       supaFetch('ordini','GET',null,'?order=creato.desc&limit=200'),
       supaFetch('archivio_ordini','GET',null,'?order=creato.desc&limit=500'),
-      supaFetch('campioni','GET',null,'?order=data.desc&limit=1000'),
+      supaFetch('campioni','GET',null,'?order=data.desc&limit=5000'),
       supaFetch('processatore','GET',null,'?order=data.desc&limit=500'),
       supaFetch('coloratore_log','GET',null,'?order=data.desc&limit=500'),
       supaFetch('schede_tecniche','GET',null,'?order=data.desc&limit=200')
@@ -3319,16 +3319,7 @@ function fmtTs(ts){
   const d=new Date(ts);
   return d.toLocaleDateString('it-IT',{day:'2-digit',month:'2-digit',year:'numeric'})+' '+d.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});
 }
-function toast(msg,type='info',duration=3200){
-  let el=document.getElementById('toast-container');
-  if(!el){ el=document.createElement('div'); el.id='toast-container'; document.body.appendChild(el); }
-  const icons={success:'✓',error:'✕',info:'ℹ',warn:'⚠'};
-  const t=document.createElement('div');
-  t.className=`toast ${type}`;
-  t.innerHTML=`<span style="font-size:14px;flex-shrink:0">${icons[type]||'ℹ'}</span><span>${msg}</span>`;
-  el.appendChild(t);
-  setTimeout(()=>{ t.style.cssText='opacity:0;transform:translateX(20px);transition:all .2s'; setTimeout(()=>t.remove(),200); },duration);
-}
+// toast() è definito più sotto in forma unificata (robusta + XSS-safe)
 function closeModal(id){ document.getElementById(id).classList.remove('open'); }
 
 // ══════════════════════════════════════════
@@ -9276,19 +9267,23 @@ function svgText(parent, x, y, txt, attrs){
   return el;
 }
 
-// ─── Toast container preview-style (override su quello del logic file) ───
-function toast(msg, type){
-  const c = document.getElementById('toast-container');
-  if(!c) { return; }
+// ─── Toast unificato: robusto (crea container se manca) + XSS-safe (textContent) ───
+function toast(msg, type='info', duration=3000){
+  let c = document.getElementById('toast-container');
+  if(!c){ c = document.createElement('div'); c.id='toast-container'; c.className='toast-container'; document.body.appendChild(c); }
+  const icons = {success:'✓', error:'✕', info:'ℹ', warn:'⚠'};
   const t = document.createElement('div');
-  t.className = 'toast' + (type ? ' t-'+type : '');
-  t.textContent = msg;
+  t.className = 'toast ' + (type||'info') + (type ? ' t-'+type : '');
+  // icona + testo, ma il testo va via textContent (no HTML injection)
+  const ico = document.createElement('span');
+  ico.style.cssText = 'font-size:14px;flex-shrink:0';
+  ico.textContent = icons[type] || 'ℹ';
+  const span = document.createElement('span');
+  span.textContent = msg;
+  t.appendChild(ico); t.appendChild(span);
   c.appendChild(t);
   requestAnimationFrame(() => t.classList.add('show'));
-  setTimeout(() => {
-    t.classList.remove('show');
-    setTimeout(() => t.remove(), 300);
-  }, 2800);
+  setTimeout(() => { t.classList.remove('show'); t.style.cssText='opacity:0;transform:translateX(20px);transition:all .25s'; setTimeout(() => t.remove(), 250); }, duration);
 }
 window.showToast = toast; // alias
 
@@ -9443,6 +9438,26 @@ function renderDashboardPreview(){
       const cCit = _vetri(curYm, 'cit');
       const cPap = _vetri(curYm, 'pap');
 
+      // Helper: TOTALE casi unici del mese across tutti i tipi.
+      // Un caso che ha sia istologia che citologia conta 1 sola volta nel totale
+      // (ma resta contato in entrambi i breakdown per tipo).
+      // PAP non ha ID caso → si somma vetri_pap a parte.
+      const _totaleCasiUnici = (ym) => {
+        try {
+          const recs = loadColoratore().filter(r => r.data && String(r.data).slice(0,7) === ym);
+          const setCasi = new Set();
+          let papCount = 0;
+          recs.forEach(r => {
+            ['casi_ist','casi_cit'].forEach(f => {
+              const arr = Array.isArray(r[f]) ? r[f] : [];
+              arr.forEach(id => { if (id) setCasi.add(String(id).trim()); });
+            });
+            papCount += (parseInt(r.vetri_pap, 10) || 0);
+          });
+          return setCasi.size + papCount;
+        } catch(_) { return 0; }
+      };
+
       // Helper: casi unici per tipo in un mese, ma solo fino al giorno `maxDay` incluso
       // (per confronto "stesso periodo": es. 1–11 giugno vs 1–11 maggio)
       const _vetriFinoAlGiorno = (ym, tipo, maxDay) => {
@@ -9465,8 +9480,8 @@ function renderDashboardPreview(){
         } catch(_) { return 0; }
       };
 
-      // Totale casi processati = isto + cito + pap
-      set('kpi-casi-val', cIst + cCit + cPap);
+      // Totale casi processati = casi UNICI (un caso isto+cito = 1) + PAP
+      set('kpi-casi-val', _totaleCasiUnici(curYm));
       set('kpi-casi-ist', cIst);
       set('kpi-casi-cit', cCit);
       set('kpi-casi-pap', cPap);
@@ -11795,9 +11810,8 @@ function cercaSchedaCaso() {
     html += `<div class="report-kv"><span>Data</span><span class="mono">${esc(camp.data || '—')}</span></div>
       <div class="report-kv"><span>Tipo</span><span>${esc(camp.tipo || '—')}</span></div>
       <div class="report-kv"><span>Struttura richiedente</span><span>${esc(_trc_richiedente(camp) || '—')}</span></div>
-      <div class="report-kv"><span>N° campioni</span><span class="mono">${camp.n_pezzi || 1}</span></div>
-      <div class="report-kv"><span>Descrizione</span><span>${esc(camp.desc || '—')}</span></div>
-      <div class="report-kv"><span>Stato</span><span>${esc(camp.stato || '—')}</span></div>`;
+      <div class="report-kv"><span>N° campioni</span><span class="mono">${camp.n_pezzi || (camp.pezzi||[]).length || 1}</span></div>
+      <div class="report-kv"><span>Descrizione</span><span>${esc(camp.desc_accettazione || camp.desc || '—')}</span></div>`;
   } else {
     html += '<div class="trac-empty">⚠️ Caso non registrato in anagrafica campioni</div>';
   }
@@ -12014,7 +12028,7 @@ function auditDataAvanzato() {
       html += `<div class="trac-row">
         <span class="trac-id">${esc(c.id)}</span>
         <span class="trac-info">${esc(c.tipo || '?')} · ${esc(_trc_richiedente(c) || '?')}</span>
-        <span class="trac-meta">${esc(c.desc || '—').slice(0, 60)}</span>
+        <span class="trac-meta">${esc(c.desc_accettazione || c.desc || '—').slice(0, 60)}</span>
       </div>`;
     });
   }
@@ -12303,7 +12317,7 @@ function renderTopDescrizioni() {
   // Estrai keyword principali dalle descrizioni
   const counter = new Map();
   camp.forEach(c => {
-    const d = String(c.desc || '').toLowerCase();
+    const d = String(c.desc_accettazione || c.desc || '').toLowerCase();
     if (!d) return;
     // Categorie principali da contare
     const cats = [
