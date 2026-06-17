@@ -598,6 +598,25 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
         <div id="dash-case-result" style="margin-top:8px"></div>
       </div>
 
+      <!-- WIDGET STATO CASI (3 stati a larghezza uguale) -->
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:18px">
+        <div onclick="_goToCasiConStato('aperto')" style="cursor:pointer;display:flex;align-items:center;justify-content:center;gap:9px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:10px 14px">
+          <span style="font-size:15px">🔵</span>
+          <span style="font-family:'DM Mono',monospace;font-size:20px;font-weight:700;color:#1e40af" id="stato-casi-aperti">0</span>
+          <span style="font-size:12px;color:#1e40af;font-weight:600">Aperti</span>
+        </div>
+        <div onclick="_goToCasiConStato('in_attesa_ihc')" style="cursor:pointer;display:flex;align-items:center;justify-content:center;gap:9px;background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;padding:10px 14px">
+          <span style="font-size:15px">🟡</span>
+          <span style="font-family:'DM Mono',monospace;font-size:20px;font-weight:700;color:#9a3412" id="stato-casi-attesa">0</span>
+          <span style="font-size:12px;color:#9a3412;font-weight:600">In attesa IHC</span>
+        </div>
+        <div onclick="_goToCasiConStato('chiuso')" style="cursor:pointer;display:flex;align-items:center;justify-content:center;gap:9px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:10px 14px">
+          <span style="font-size:15px">🟢</span>
+          <span style="font-family:'DM Mono',monospace;font-size:20px;font-weight:700;color:#166534" id="stato-casi-chiusi">0</span>
+          <span style="font-size:12px;color:#166534;font-weight:600">Chiusi (mese)</span>
+        </div>
+      </div>
+
       <!-- KPI 4-col -->
       <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px">
 
@@ -675,6 +694,8 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
         </div>
 
       </div><!-- /kpi -->
+
+
 
       <!-- STORICO CICLI: Processatore / Coloratore -->
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px">
@@ -830,6 +851,11 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
         <button class="chip" onclick="setCampFilter('Citologia',this)">Citologia</button>
         <button class="chip" onclick="setCampFilter('PAP test',this)">PAP test</button>
         <button class="chip" onclick="setCampFilter('PAP privato',this)">PAP privato</button>
+        <div style="width:1px;height:22px;background:var(--border);margin:0 4px"></div>
+        <button class="chip" onclick="setCampStatoFilter('all',this)" id="chip-stato-all" style="display:none">Stato: tutti</button>
+        <button class="chip" onclick="setCampStatoFilter('aperto',this)">🔵 Aperti</button>
+        <button class="chip" onclick="setCampStatoFilter('in_attesa_ihc',this)">🟡 In attesa IHC</button>
+        <button class="chip" onclick="setCampStatoFilter('chiuso',this)">🟢 Chiusi</button>
         <div style="flex:1"></div>
         <div class="search-wrap">
           <span class="s-ico">🔍</span>
@@ -840,7 +866,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
       <div class="card">
         <div style="overflow-x:auto;max-height:calc(100vh - 320px);overflow-y:auto">
           <table class="tbl">
-            <thead><tr><th>ID Caso</th><th>Data</th><th>Tipo</th><th>Provenienza</th><th>Pezzi</th><th>Descrizione</th><th></th></tr></thead>
+            <thead><tr><th>ID Caso</th><th>Data</th><th>Tipo</th><th>Stato</th><th>Provenienza</th><th>Pezzi</th><th>Descrizione</th><th></th></tr></thead>
             <tbody id="camp-tbody"></tbody>
           </table>
         </div>
@@ -1464,7 +1490,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
           <div style="flex:1;height:1px;background:var(--border)"></div>
           <span style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em" id="tat-period-lbl">Anno corrente</span>
         </div>
-        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:24px">
+        <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:24px">
           <div class="card" style="padding:14px">
             <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em">Accettazione → Processazione</div>
             <div style="font-family:'Libre Baskerville',serif;font-size:24px;font-weight:700;color:var(--accent);margin-top:4px" id="tat-acc-proc">— gg</div>
@@ -1476,9 +1502,14 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
             <div style="font-size:11px;color:var(--text3);margin-top:2px" id="tat-proc-color-n">media su N casi</div>
           </div>
           <div class="card" style="padding:14px">
-            <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em">TAT Totale (acc → color)</div>
+            <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em">TAT tecnico (acc → color)</div>
             <div style="font-family:'Libre Baskerville',serif;font-size:24px;font-weight:700;color:var(--green);margin-top:4px" id="tat-tot">— gg</div>
             <div style="font-size:11px;color:var(--text3);margin-top:2px" id="tat-tot-n">media su N casi</div>
+          </div>
+          <div class="card" style="padding:14px" title="Media tra accettazione e prima chiusura tecnica (lab). Solo casi chiusi o in attesa IHC.">
+            <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em">TAT chiusura tecnica</div>
+            <div style="font-family:'Libre Baskerville',serif;font-size:24px;font-weight:700;color:var(--purple);margin-top:4px" id="tat-chiusura">— gg</div>
+            <div style="font-size:11px;color:var(--text3);margin-top:2px" id="tat-chiusura-n">media su N casi</div>
           </div>
           <div class="card" style="padding:14px">
             <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em">Casi entro 3gg</div>
@@ -7467,7 +7498,11 @@ async function toggleIHCAnticorpo(id, item){
   const allDone = items.length > 0 && items.every(it => done.includes(it));
   const someDone = items.some(it => done.includes(it));
   const nuovoStato = allDone ? 'completata' : (someDone ? 'in_lavorazione' : 'da_fare');
-  arr[i]={...r, anticorpi_done:done, stato:nuovoStato, modificato:new Date().toISOString()};
+  // Stato ciclo vita: traccia quando l'IHC viene completata (per data_chiusura_finale)
+  let dataCompl = r.data_completamento || null;
+  if (nuovoStato === 'completata' && !dataCompl) dataCompl = new Date().toISOString();
+  else if (nuovoStato !== 'completata') dataCompl = null; // esce da completata → reset
+  arr[i]={...r, anticorpi_done:done, stato:nuovoStato, data_completamento:dataCompl, modificato:new Date().toISOString()};
   await saveIHCArr(arr);
   renderIHC();
   renderDashboard();
@@ -7546,6 +7581,11 @@ async function saveIHC(){
   const editId=document.getElementById('ihc-edit-id').value;
   const arr=loadIHC();
   const existing=editId?arr.find(x=>x.id===editId):null;
+  const statoSel = document.getElementById('ihc-stato').value;
+  // Stato ciclo vita: se completata, registra data_completamento (conserva se già presente)
+  let dataCompl = existing?.data_completamento || null;
+  if (statoSel === 'completata' && !dataCompl) dataCompl = new Date().toISOString();
+  else if (statoSel !== 'completata') dataCompl = null;
   const rec={
     id: editId||genId(),
     campione_id,
@@ -7553,8 +7593,9 @@ async function saveIHC(){
     anticorpo,
     anticorpi_done: existing?.anticorpi_done||[],
     priorita: document.getElementById('ihc-priorita').value,
-    stato: document.getElementById('ihc-stato').value,
+    stato: statoSel,
     data_richiesta: document.getElementById('ihc-data').value,
+    data_completamento: dataCompl,
     modificato: new Date().toISOString()
   };
   if(!editId) rec.creato=new Date().toISOString();
@@ -9757,6 +9798,9 @@ function renderDashboardPreview(){
   // Widget clienti
   try { if (typeof renderDashClienti === 'function') renderDashClienti(); } catch(e) { console.warn('[dashClienti]', e); }
 
+  // Widget stato casi (ciclo vita)
+  try { if (typeof renderStatoCasiWidget === 'function') renderStatoCasiWidget(); } catch(e) { console.warn('[statoCasi]', e); }
+
   updateRailBadges();
 }
 window.renderDashboard = renderDashboardPreview;
@@ -10583,6 +10627,7 @@ let _allFilter = 'all';
 let _archFilter = 'all';
 let _schFilter = 'all';
 let _campFilter = 'all';
+let _campStatoFilter = 'all';
 
 window.setMovFilter = function(f, btn){
   _movFilter = f;
@@ -10606,7 +10651,22 @@ window.setSchFilter = function(f, btn){
 };
 window.setCampFilter = function(f, btn){
   _campFilter = f;
-  if(btn){ btn.parentElement.querySelectorAll('.chip').forEach(c => c.classList.remove('active')); btn.classList.add('active'); }
+  // Disattiva solo i chip del gruppo TIPO (i primi 5), non quelli stato
+  if(btn){ btn.parentElement.querySelectorAll('.chip').forEach(c => {
+    const oc = c.getAttribute('onclick')||'';
+    if(oc.includes('setCampFilter')) c.classList.remove('active');
+  }); btn.classList.add('active'); }
+  if(typeof renderTracciabilita === 'function') renderTracciabilita();
+};
+window.setCampStatoFilter = function(f, btn){
+  _campStatoFilter = f;
+  if(btn){ btn.parentElement.querySelectorAll('.chip').forEach(c => {
+    const oc = c.getAttribute('onclick')||'';
+    if(oc.includes('setCampStatoFilter')) c.classList.remove('active');
+  }); btn.classList.add('active'); }
+  // Mostra il chip "Stato: tutti" solo quando un filtro stato è attivo
+  const allChip = document.getElementById('chip-stato-all');
+  if(allChip) allChip.style.display = (f === 'all') ? 'none' : '';
   if(typeof renderTracciabilita === 'function') renderTracciabilita();
 };
 
@@ -10655,6 +10715,19 @@ window.renderTracciabilita = function(){
     return String(b.data||'').localeCompare(String(a.data||''));
   });
 
+  // Cache per calcolo stato (evita loadXxx ripetuti nel loop)
+  const _coloratoreCache = (typeof loadColoratore === 'function') ? loadColoratore() : [];
+  const _ihcCache = (typeof loadIHC === 'function') ? loadIHC() : [];
+  // Pre-calcola lo stato di ogni caso una volta sola
+  const statoMap = new Map();
+  camps.forEach(c => {
+    statoMap.set(c.id, _computeStatoCaso(c, { coloratoreCache: _coloratoreCache, ihcCache: _ihcCache }));
+  });
+  // Applica filtro stato
+  if(_campStatoFilter !== 'all'){
+    camps = camps.filter(c => (statoMap.get(c.id) || {}).stato === _campStatoFilter);
+  }
+
   // Counters per oggi (dal totale, non filtrato)
   const today = new Date().toISOString().slice(0,10);
   const all = (typeof loadCampioni === 'function') ? loadCampioni() : [];
@@ -10667,7 +10740,7 @@ window.renderTracciabilita = function(){
   set('camp-c-papp', todayC.filter(c => { const t=(c.tipo||'').toLowerCase(); return t==='pap privato'||t==='pap_priv'; }).length);
 
   if(!camps.length){
-    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text3);padding:20px">Nessun caso</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--text3);padding:20px">Nessun caso</td></tr>';
     return;
   }
   const tipoBadge = (t) => {
@@ -10688,10 +10761,12 @@ window.renderTracciabilita = function(){
     const pezzi = nFrammenti || (c.pezzi||[]).length || parseInt(c.n_pezzi,10) || 0;
     const desc = c.desc_accettazione || '';
     const safeId = String(c.id||'').replace(/'/g, "\\'");
+    const statoInfo = statoMap.get(c.id) || { stato:'aperto', ihc_aperte_count:0 };
     return `<tr onclick="if(typeof viewCampione==='function')viewCampione('${safeId}')">
       <td class="mono" style="font-weight:700">${esc(c.campione_id||'—')}</td>
       <td class="mono">${data}</td>
       <td>${tipoBadge(c.tipo)}</td>
+      <td>${_statoCasoBadge(statoInfo)}</td>
       <td>${esc(c.provenienza||'—')}</td>
       <td class="mono">${pezzi}</td>
       <td style="font-size:12px;color:var(--text2);max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(desc)}">${esc(desc||'—')}</td>
@@ -11779,6 +11854,90 @@ function _trc_richiedente(c) {
 }
 
 // ════════════════════════════════════════════════════════════════
+// STATO CICLO VITA CASO (derivato — mai manuale)
+// ════════════════════════════════════════════════════════════════
+// Stati: 'aperto' (accettato, non colorato), 'chiuso' (colorato, nessuna IHC
+// o tutte completate), 'in_attesa_ihc' (colorato + almeno 1 IHC non completata).
+// data_chiusura_lab = data del PRIMO ciclo coloratore (mai sovrascritta).
+// data_chiusura_finale = data ultima IHC completata (o = data_chiusura_lab se no IHC).
+function _computeStatoCaso(campione, opts = {}) {
+  const out = {
+    stato: 'aperto',
+    data_chiusura_lab: null,
+    data_chiusura_finale: null,
+    primo_color_id: null,
+    ihc_aperte_count: 0,
+    ihc_totali_count: 0
+  };
+  if (!campione) return out;
+  // L'ID caso visibile è campione_id (es. "1747/26"); è ciò che compare nei cicli coloratore
+  const idCaso = String(campione.campione_id || '').trim();
+  if (!idCaso) return out;
+
+  // Cache opzionali per uso in loop
+  const colorReg = opts.coloratoreCache || (typeof loadColoratore === 'function' ? loadColoratore() : []);
+  const ihcReg   = opts.ihcCache        || (typeof loadIHC === 'function' ? loadIHC() : []);
+
+  // 1. Trova il primo ciclo coloratore (per data, tie-break: creato) che contiene il caso
+  let primoColor = null;
+  for (const r of colorReg) {
+    const casi = _trc_extractCasi(r).map(x => String(x).trim());
+    if (!casi.includes(idCaso)) continue;
+    if (!primoColor) { primoColor = r; continue; }
+    const dThis = String(r.data || '');
+    const dBest = String(primoColor.data || '');
+    if (dThis < dBest) primoColor = r;
+    else if (dThis === dBest && String(r.creato || '') < String(primoColor.creato || '')) primoColor = r;
+  }
+
+  // 2. IHC del caso (match su campione_id)
+  const ihcCaso = ihcReg.filter(i => String(i.campione_id || '').trim() === idCaso);
+  const ihcAperte = ihcCaso.filter(i => i.stato !== 'completata');
+  out.ihc_totali_count = ihcCaso.length;
+  out.ihc_aperte_count = ihcAperte.length;
+
+  // 3. Regole di transizione
+  if (!primoColor) {
+    out.stato = 'aperto';
+    return out;
+  }
+  out.primo_color_id = primoColor.id || null;
+  const dataColor = primoColor.data || null;
+  out.data_chiusura_lab = dataColor;  // MAI sovrascritta una volta colorato
+
+  if (ihcCaso.length === 0) {
+    out.stato = 'chiuso';
+    out.data_chiusura_finale = dataColor;
+    return out;
+  }
+  if (ihcAperte.length > 0) {
+    out.stato = 'in_attesa_ihc';
+    out.data_chiusura_finale = null;
+    return out;
+  }
+  // Tutte le IHC completate → chiuso, data finale = max data completamento
+  out.stato = 'chiuso';
+  let maxComp = null;
+  ihcCaso.forEach(i => {
+    // Proxy: data_completamento se presente, altrimenti modificato (fallback retrocompat)
+    const dc = i.data_completamento || i.modificato || null;
+    if (dc && (!maxComp || dc > maxComp)) maxComp = dc;
+  });
+  out.data_chiusura_finale = maxComp ? String(maxComp).slice(0,10) : dataColor;
+  return out;
+}
+
+// Badge HTML per uno stato (riusabile)
+function _statoCasoBadge(info) {
+  if (!info) return '';
+  if (info.stato === 'aperto')
+    return '<span class="badge" style="background:#eff6ff;color:#1e40af;border-color:#bfdbfe">🔵 Aperto</span>';
+  if (info.stato === 'in_attesa_ihc')
+    return `<span class="badge" style="background:#fff7ed;color:#9a3412;border-color:#fed7aa">🟡 In attesa IHC${info.ihc_aperte_count?' ('+info.ihc_aperte_count+')':''}</span>`;
+  return '<span class="badge bg-green">🟢 Chiuso</span>';
+}
+
+// ════════════════════════════════════════════════════════════════
 // T1 — SCHEDA CASO COMPLETA
 // ════════════════════════════════════════════════════════════════
 function openTracSchedaCasoModal() {
@@ -11791,11 +11950,16 @@ function openTracSchedaCasoModal() {
 function cercaSchedaCaso() {
   const id = (document.getElementById('trac-caso-input').value || '').trim();
   if (!id) { toast('Inserisci un ID caso', 'error'); return; }
-  const camp = loadCampioni().find(c => c.id === id);
+  // Match sull'ID caso visibile (campione_id), con fallback su id GUID
+  const camp = loadCampioni().find(c => String(c.campione_id||'').trim() === id) || loadCampioni().find(c => c.id === id);
   const procCicli = loadProc().filter(p => _trc_caseInRegister(p, id));
   const colorCicli = loadColoratore().filter(r => _trc_caseInRegister(r, id));
   let ihcList = [];
-  try { ihcList = (loadIHC ? loadIHC() : []).filter(i => (i.campione || '').trim() === id); } catch(_){}
+  try { ihcList = (loadIHC ? loadIHC() : []).filter(i => (i.campione_id || i.campione || '').trim() === id); } catch(_){}
+
+  // Calcolo stato ciclo vita
+  let statoInfo = null;
+  try { statoInfo = _computeStatoCaso(camp || { campione_id: id }); } catch(_){}
 
   let html = '<div id="trac-caso-print-area">';
   html += `<div style="background:linear-gradient(135deg,var(--accent),#0a1e4a);color:#fff;padding:16px;border-radius:10px;margin-bottom:14px">
@@ -11803,6 +11967,21 @@ function cercaSchedaCaso() {
     <div style="font-family:'Libre Baskerville',serif;font-size:28px;font-weight:700">${esc(id)}</div>
     ${camp ? `<div style="font-size:12px;opacity:.85;margin-top:6px">${esc(camp.tipo||'')} · ${esc(_trc_richiedente(camp)||'')} · ${esc(camp.data||'')}</div>` : ''}
   </div>`;
+
+  // Stato ciclo vita del caso (badge + date)
+  if (statoInfo) {
+    const dl = statoInfo.data_chiusura_lab ? fmtDate(statoInfo.data_chiusura_lab) : '—';
+    const df = statoInfo.data_chiusura_finale ? fmtDate(statoInfo.data_chiusura_finale) : '—';
+    html += `<div class="trac-section" style="margin-bottom:14px">
+      <div class="trac-section-title">🔄 Stato ciclo vita</div>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px">
+        ${_statoCasoBadge(statoInfo)}
+        ${statoInfo.ihc_totali_count ? `<span style="font-size:11px;color:var(--text3)">${statoInfo.ihc_aperte_count}/${statoInfo.ihc_totali_count} IHC aperte</span>` : ''}
+      </div>
+      <div class="report-kv"><span>Chiusura tecnica (lab)</span><span class="mono">${dl}</span></div>
+      <div class="report-kv"><span>Chiusura finale</span><span class="mono">${df}</span></div>
+    </div>`;
+  }
 
   // 1. Accettazione
   html += '<div class="trac-section"><div class="trac-section-title">📋 Accettazione</div>';
@@ -12264,29 +12443,40 @@ function renderTATSection() {
   const camp = loadCampioni();
   const proc = loadProc();
   const color = loadColoratore();
+  const ihc = (typeof loadIHC === 'function') ? loadIHC() : [];
 
-  // Indice rapido: id caso → primo ciclo proc/color
+  // Indice rapido: id caso (campione_id) → primo ciclo proc/color
   const procByCaso = new Map();
   proc.forEach(c => _trc_extractCasi(c).forEach(id => {
-    const existing = procByCaso.get(id);
-    if (!existing || (c.data && c.data < existing.data)) procByCaso.set(id, c);
+    const k = String(id).trim();
+    const existing = procByCaso.get(k);
+    if (!existing || (c.data && c.data < existing.data)) procByCaso.set(k, c);
   }));
   const colorByCaso = new Map();
   color.forEach(r => _trc_extractCasi(r).forEach(id => {
-    const existing = colorByCaso.get(id);
-    if (!existing || (r.data && r.data < existing.data)) colorByCaso.set(id, r);
+    const k = String(id).trim();
+    const existing = colorByCaso.get(k);
+    if (!existing || (r.data && r.data < existing.data)) colorByCaso.set(k, r);
   }));
 
-  // Calcola TAT
+  // Calcola TAT (match su campione_id, non su id GUID)
   const tats = [];
+  const tatChiusura = []; // acc → data_chiusura_lab (solo chiuso/in_attesa_ihc)
   camp.forEach(c => {
-    if (!c.id || !c.data) return;
-    const p = procByCaso.get(c.id);
-    const col = colorByCaso.get(c.id);
+    const idCaso = String(c.campione_id || '').trim();
+    if (!idCaso || !c.data) return;
+    const p = procByCaso.get(idCaso);
+    const col = colorByCaso.get(idCaso);
     const tatAccProc = p ? _trc_diffDays(c.data, p.data) : null;
     const tatProcColor = (p && col) ? _trc_diffDays(p.data, col.data) : null;
     const tatTot = col ? _trc_diffDays(c.data, col.data) : null;
-    tats.push({ id: c.id, tatAccProc, tatProcColor, tatTot });
+    tats.push({ id: idCaso, tatAccProc, tatProcColor, tatTot });
+    // TAT chiusura tecnica
+    const st = _computeStatoCaso(c, { coloratoreCache: color, ihcCache: ihc });
+    if ((st.stato === 'chiuso' || st.stato === 'in_attesa_ihc') && st.data_chiusura_lab) {
+      const d = _trc_diffDays(c.data, st.data_chiusura_lab);
+      if (d != null && d >= 0) tatChiusura.push(d);
+    }
   });
 
   const avg = (arr) => {
@@ -12298,17 +12488,21 @@ function renderTATSection() {
   const accProc = avg(tats.map(t => t.tatAccProc));
   const procColor = avg(tats.map(t => t.tatProcColor));
   const tot = avg(tats.map(t => t.tatTot));
+  const chiusura = avg(tatChiusura);
   const validTot = tats.filter(t => t.tatTot != null && t.tatTot >= 0);
   const within3 = validTot.filter(t => t.tatTot <= 3).length;
   const pct3 = validTot.length ? Math.round(within3 / validTot.length * 100) : 0;
 
-  document.getElementById('tat-acc-proc').textContent = accProc != null ? accProc.toFixed(1) + ' gg' : '— gg';
-  document.getElementById('tat-acc-proc-n').textContent = 'media su ' + tats.filter(t => t.tatAccProc != null).length + ' casi';
-  document.getElementById('tat-proc-color').textContent = procColor != null ? procColor.toFixed(1) + ' gg' : '— gg';
-  document.getElementById('tat-proc-color-n').textContent = 'media su ' + tats.filter(t => t.tatProcColor != null).length + ' casi';
-  document.getElementById('tat-tot').textContent = tot != null ? tot.toFixed(1) + ' gg' : '— gg';
-  document.getElementById('tat-tot-n').textContent = 'media su ' + validTot.length + ' casi';
-  document.getElementById('tat-pct3').textContent = pct3 + '%';
+  const setTxt = (id, v) => { const e = document.getElementById(id); if(e) e.textContent = v; };
+  setTxt('tat-acc-proc', accProc != null ? accProc.toFixed(1) + ' gg' : '— gg');
+  setTxt('tat-acc-proc-n', 'media su ' + tats.filter(t => t.tatAccProc != null).length + ' casi');
+  setTxt('tat-proc-color', procColor != null ? procColor.toFixed(1) + ' gg' : '— gg');
+  setTxt('tat-proc-color-n', 'media su ' + tats.filter(t => t.tatProcColor != null).length + ' casi');
+  setTxt('tat-tot', tot != null ? tot.toFixed(1) + ' gg' : '— gg');
+  setTxt('tat-tot-n', 'media su ' + validTot.length + ' casi');
+  setTxt('tat-chiusura', chiusura != null ? chiusura.toFixed(1) + ' gg' : '— gg');
+  setTxt('tat-chiusura-n', 'media su ' + tatChiusura.length + ' casi chiusi/attesa');
+  setTxt('tat-pct3', pct3 + '%');
 }
 
 // S5 — Top descrizioni
@@ -12613,6 +12807,54 @@ function renderDashClienti() {
   }
 }
 window.renderDashClienti = renderDashClienti;
+
+// ─── Widget "Stato casi" in dashboard ───
+function renderStatoCasiWidget() {
+  try {
+    if (typeof loadCampioni !== 'function') return;
+    const camps = loadCampioni();
+    const colCache = (typeof loadColoratore === 'function') ? loadColoratore() : [];
+    const ihcCache = (typeof loadIHC === 'function') ? loadIHC() : [];
+    const now = new Date();
+    const curYm = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+    let aperti = 0, attesa = 0, chiusiMese = 0;
+    camps.forEach(c => {
+      const s = _computeStatoCaso(c, { coloratoreCache: colCache, ihcCache: ihcCache });
+      if (s.stato === 'aperto') aperti++;
+      else if (s.stato === 'in_attesa_ihc') attesa++;
+      else if (s.stato === 'chiuso') {
+        // "Chiusi nel mese": data_chiusura_finale (o lab) nel mese corrente
+        const d = s.data_chiusura_finale || s.data_chiusura_lab || '';
+        if (String(d).slice(0,7) === curYm) chiusiMese++;
+      }
+    });
+    const set = (id, v) => { const e = document.getElementById(id); if(e) e.textContent = v; };
+    set('stato-casi-aperti', aperti);
+    set('stato-casi-attesa', attesa);
+    set('stato-casi-chiusi', chiusiMese);
+  } catch(e) { console.warn('[statoCasiWidget]', e); }
+}
+window.renderStatoCasiWidget = renderStatoCasiWidget;
+
+// Navigazione: vai alla vista casi filtrata per stato
+window._goToCasiConStato = function(stato){
+  try {
+    if (typeof showView === 'function') showView('campioni');
+    _campStatoFilter = stato;
+    // Aggiorna i chip visivamente
+    setTimeout(() => {
+      document.querySelectorAll('.chip').forEach(c => {
+        const oc = c.getAttribute('onclick')||'';
+        if(oc.includes('setCampStatoFilter')){
+          c.classList.toggle('active', oc.includes("'"+stato+"'"));
+        }
+      });
+      const allChip = document.getElementById('chip-stato-all');
+      if(allChip) allChip.style.display = '';
+      if(typeof renderTracciabilita === 'function') renderTracciabilita();
+    }, 60);
+  } catch(e) { console.warn('[goToCasiConStato]', e); }
+};
 
 // ─── Report Tab switcher ───
 function switchRptTab(name) {
