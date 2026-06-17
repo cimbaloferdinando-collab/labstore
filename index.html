@@ -11894,6 +11894,12 @@ function _normCasoId(id) {
 // lavorato fuori dal sistema). Modificabile se serve.
 const _APERTO_MAX_GIORNI = 30;
 
+// Data di "go-live" del ciclo vita: tutti i casi accettati PRIMA di questa data,
+// se non colorati, sono considerati già lavorati (chiuso presunto) — il sistema di
+// tracciamento parte da qui. Solo i casi accettati da questa data in poi seguono
+// il ciclo vita reale (aperto finché non colorati).
+const _LIFECYCLE_GOLIVE = '2026-06-17';
+
 // Epoca di inizio tracciamento = data del PRIMO ciclo coloratore registrato.
 // Prima di questa data il sistema non c'era: i casi non colorati sono "storici", non "aperti".
 function _getTrackingEpoch(colorReg) {
@@ -11948,23 +11954,32 @@ function _computeStatoCaso(campione, opts = {}) {
   // 3. Regole di transizione
   if (!primoColor) {
     const dataAcc = String(campione.data || '').slice(0,10);
-    // Prima dell'epoca → storico
-    if (epoch && (!dataAcc || dataAcc < epoch)) {
-      out.stato = 'storico';
-      return out;
-    }
     // Se ci sono IHC aperte, il caso è comunque in attesa (i medici lo aspettano)
     if (ihcAperte.length > 0) {
       out.stato = 'in_attesa_ihc';
       return out;
     }
+    // Prima dell'epoca di tracciamento → storico
+    if (epoch && (!dataAcc || dataAcc < epoch)) {
+      out.stato = 'storico';
+      return out;
+    }
+    // Accettato PRIMA del go-live e non colorato → già lavorato fuori sistema (chiuso presunto)
+    if (!dataAcc || dataAcc < _LIFECYCLE_GOLIVE) {
+      out.stato = 'chiuso';
+      out.presunto = true;
+      out.data_chiusura_lab = dataAcc || null;
+      out.data_chiusura_finale = dataAcc || null;
+      return out;
+    }
+    // Dal go-live in poi: ciclo vita reale.
     // Non colorato ma troppo vecchio per essere in sospeso → chiuso presunto
     const oggi = opts.oggi || new Date().toISOString().slice(0,10);
     const giorni = (typeof _trc_diffDays === 'function') ? _trc_diffDays(dataAcc, oggi) : null;
-    if (dataAcc && giorni != null && giorni > _APERTO_MAX_GIORNI) {
+    if (giorni != null && giorni > _APERTO_MAX_GIORNI) {
       out.stato = 'chiuso';
       out.presunto = true;
-      out.data_chiusura_lab = dataAcc;     // proxy: non abbiamo la data reale di colorazione
+      out.data_chiusura_lab = dataAcc;
       out.data_chiusura_finale = dataAcc;
       return out;
     }
@@ -12908,11 +12923,12 @@ function renderStatoCasiWidget() {
       if (s.stato === 'aperto') aperti++;
       else if (s.stato === 'in_attesa_ihc') attesa++;
       else if (s.stato === 'chiuso') {
-        // "Chiusi nel mese": data_chiusura_finale (o lab) nel mese corrente
+        // "Chiusi nel mese": solo chiusure reali (colorati) del mese, NON i presunti storici
+        if (s.presunto) return;
         const d = s.data_chiusura_finale || s.data_chiusura_lab || '';
         if (String(d).slice(0,7) === curYm) chiusiMese++;
       }
-      // 'storico' non viene contato
+      // 'storico' e 'chiuso presunto' non vengono contati come aperti
     });
     const set = (id, v) => { const e = document.getElementById(id); if(e) e.textContent = v; };
     set('stato-casi-aperti', aperti);
