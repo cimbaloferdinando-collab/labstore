@@ -10718,10 +10718,11 @@ window.renderTracciabilita = function(){
   // Cache per calcolo stato (evita loadXxx ripetuti nel loop)
   const _coloratoreCache = (typeof loadColoratore === 'function') ? loadColoratore() : [];
   const _ihcCache = (typeof loadIHC === 'function') ? loadIHC() : [];
+  const _epoch = _getTrackingEpoch(_coloratoreCache);
   // Pre-calcola lo stato di ogni caso una volta sola
   const statoMap = new Map();
   camps.forEach(c => {
-    statoMap.set(c.id, _computeStatoCaso(c, { coloratoreCache: _coloratoreCache, ihcCache: _ihcCache }));
+    statoMap.set(c.id, _computeStatoCaso(c, { coloratoreCache: _coloratoreCache, ihcCache: _ihcCache, trackingEpoch: _epoch }));
   });
   // Applica filtro stato
   if(_campStatoFilter !== 'all'){
@@ -11860,6 +11861,17 @@ function _trc_richiedente(c) {
 // o tutte completate), 'in_attesa_ihc' (colorato + almeno 1 IHC non completata).
 // data_chiusura_lab = data del PRIMO ciclo coloratore (mai sovrascritta).
 // data_chiusura_finale = data ultima IHC completata (o = data_chiusura_lab se no IHC).
+// Epoca di inizio tracciamento = data del PRIMO ciclo coloratore registrato.
+// Prima di questa data il sistema non c'era: i casi non colorati sono "storici", non "aperti".
+function _getTrackingEpoch(colorReg) {
+  let min = null;
+  (colorReg || []).forEach(r => {
+    const d = String(r.data || '').slice(0,10);
+    if (d && (!min || d < min)) min = d;
+  });
+  return min; // 'YYYY-MM-DD' oppure null
+}
+
 function _computeStatoCaso(campione, opts = {}) {
   const out = {
     stato: 'aperto',
@@ -11877,6 +11889,7 @@ function _computeStatoCaso(campione, opts = {}) {
   // Cache opzionali per uso in loop
   const colorReg = opts.coloratoreCache || (typeof loadColoratore === 'function' ? loadColoratore() : []);
   const ihcReg   = opts.ihcCache        || (typeof loadIHC === 'function' ? loadIHC() : []);
+  const epoch    = (opts.trackingEpoch !== undefined) ? opts.trackingEpoch : _getTrackingEpoch(colorReg);
 
   // 1. Trova il primo ciclo coloratore (per data, tie-break: creato) che contiene il caso
   let primoColor = null;
@@ -11898,7 +11911,13 @@ function _computeStatoCaso(campione, opts = {}) {
 
   // 3. Regole di transizione
   if (!primoColor) {
-    out.stato = 'aperto';
+    // Mai colorato: se accettato PRIMA dell'inizio tracciamento → storico (non aperto)
+    const dataAcc = String(campione.data || '').slice(0,10);
+    if (epoch && (!dataAcc || dataAcc < epoch)) {
+      out.stato = 'storico';
+    } else {
+      out.stato = 'aperto';
+    }
     return out;
   }
   out.primo_color_id = primoColor.id || null;
@@ -11930,6 +11949,8 @@ function _computeStatoCaso(campione, opts = {}) {
 // Badge HTML per uno stato (riusabile)
 function _statoCasoBadge(info) {
   if (!info) return '';
+  if (info.stato === 'storico')
+    return '<span class="badge" style="background:#f1f5f9;color:#64748b;border-color:#e2e8f0">⚪ Storico</span>';
   if (info.stato === 'aperto')
     return '<span class="badge" style="background:#eff6ff;color:#1e40af;border-color:#bfdbfe">🔵 Aperto</span>';
   if (info.stato === 'in_attesa_ihc')
@@ -12815,11 +12836,12 @@ function renderStatoCasiWidget() {
     const camps = loadCampioni();
     const colCache = (typeof loadColoratore === 'function') ? loadColoratore() : [];
     const ihcCache = (typeof loadIHC === 'function') ? loadIHC() : [];
+    const epoch = _getTrackingEpoch(colCache);
     const now = new Date();
     const curYm = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
     let aperti = 0, attesa = 0, chiusiMese = 0;
     camps.forEach(c => {
-      const s = _computeStatoCaso(c, { coloratoreCache: colCache, ihcCache: ihcCache });
+      const s = _computeStatoCaso(c, { coloratoreCache: colCache, ihcCache: ihcCache, trackingEpoch: epoch });
       if (s.stato === 'aperto') aperti++;
       else if (s.stato === 'in_attesa_ihc') attesa++;
       else if (s.stato === 'chiuso') {
@@ -12827,6 +12849,7 @@ function renderStatoCasiWidget() {
         const d = s.data_chiusura_finale || s.data_chiusura_lab || '';
         if (String(d).slice(0,7) === curYm) chiusiMese++;
       }
+      // 'storico' non viene contato
     });
     const set = (id, v) => { const e = document.getElementById(id); if(e) e.textContent = v; };
     set('stato-casi-aperti', aperti);
