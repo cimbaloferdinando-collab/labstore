@@ -11876,6 +11876,24 @@ function _trc_richiedente(c) {
 // o tutte completate), 'in_attesa_ihc' (colorato + almeno 1 IHC non completata).
 // data_chiusura_lab = data del PRIMO ciclo coloratore (mai sovrascritta).
 // data_chiusura_finale = data ultima IHC completata (o = data_chiusura_lab se no IHC).
+// Normalizza un ID caso per match tollerante:
+// - rimuove spazi, maiuscolo, anno a 4 cifre → 2 cifre (100/2026 ≡ 100/26)
+function _normCasoId(id) {
+  let s = String(id || '').trim().toUpperCase().replace(/\s+/g, '');
+  const m = s.match(/^(\d+)\/(\d{2,4})([A-Z]*)$/);
+  if (m) {
+    let yr = m[2];
+    if (yr.length === 4) yr = yr.slice(2); // 2026 → 26
+    return m[1] + '/' + yr + (m[3] || '');
+  }
+  return s;
+}
+
+// Oltre questi giorni dall'accettazione, un caso non colorato NON è più
+// realisticamente "in sospeso": viene considerato chiuso (presunto completato,
+// lavorato fuori dal sistema). Modificabile se serve.
+const _APERTO_MAX_GIORNI = 30;
+
 // Epoca di inizio tracciamento = data del PRIMO ciclo coloratore registrato.
 // Prima di questa data il sistema non c'era: i casi non colorati sono "storici", non "aperti".
 function _getTrackingEpoch(colorReg) {
@@ -11894,12 +11912,14 @@ function _computeStatoCaso(campione, opts = {}) {
     data_chiusura_finale: null,
     primo_color_id: null,
     ihc_aperte_count: 0,
-    ihc_totali_count: 0
+    ihc_totali_count: 0,
+    presunto: false
   };
   if (!campione) return out;
   // L'ID caso visibile è campione_id (es. "1747/26"); è ciò che compare nei cicli coloratore
   const idCaso = String(campione.campione_id || '').trim();
   if (!idCaso) return out;
+  const idNorm = _normCasoId(idCaso);
 
   // Cache opzionali per uso in loop
   const colorReg = opts.coloratoreCache || (typeof loadColoratore === 'function' ? loadColoratore() : []);
@@ -11907,10 +11927,11 @@ function _computeStatoCaso(campione, opts = {}) {
   const epoch    = (opts.trackingEpoch !== undefined) ? opts.trackingEpoch : _getTrackingEpoch(colorReg);
 
   // 1. Trova il primo ciclo coloratore (per data, tie-break: creato) che contiene il caso
+  //    Match TOLLERANTE (ignora spazi, maiuscole, formato anno)
   let primoColor = null;
   for (const r of colorReg) {
-    const casi = _trc_extractCasi(r).map(x => String(x).trim());
-    if (!casi.includes(idCaso)) continue;
+    const casi = _trc_extractCasi(r).map(x => _normCasoId(x));
+    if (!casi.includes(idNorm)) continue;
     if (!primoColor) { primoColor = r; continue; }
     const dThis = String(r.data || '');
     const dBest = String(primoColor.data || '');
@@ -11918,21 +11939,37 @@ function _computeStatoCaso(campione, opts = {}) {
     else if (dThis === dBest && String(r.creato || '') < String(primoColor.creato || '')) primoColor = r;
   }
 
-  // 2. IHC del caso (match su campione_id)
-  const ihcCaso = ihcReg.filter(i => String(i.campione_id || '').trim() === idCaso);
+  // 2. IHC del caso (match tollerante su campione_id)
+  const ihcCaso = ihcReg.filter(i => _normCasoId(i.campione_id || '') === idNorm);
   const ihcAperte = ihcCaso.filter(i => i.stato !== 'completata');
   out.ihc_totali_count = ihcCaso.length;
   out.ihc_aperte_count = ihcAperte.length;
 
   // 3. Regole di transizione
   if (!primoColor) {
-    // Mai colorato: se accettato PRIMA dell'inizio tracciamento → storico (non aperto)
     const dataAcc = String(campione.data || '').slice(0,10);
+    // Prima dell'epoca → storico
     if (epoch && (!dataAcc || dataAcc < epoch)) {
       out.stato = 'storico';
-    } else {
-      out.stato = 'aperto';
+      return out;
     }
+    // Se ci sono IHC aperte, il caso è comunque in attesa (i medici lo aspettano)
+    if (ihcAperte.length > 0) {
+      out.stato = 'in_attesa_ihc';
+      return out;
+    }
+    // Non colorato ma troppo vecchio per essere in sospeso → chiuso presunto
+    const oggi = opts.oggi || new Date().toISOString().slice(0,10);
+    const giorni = (typeof _trc_diffDays === 'function') ? _trc_diffDays(dataAcc, oggi) : null;
+    if (dataAcc && giorni != null && giorni > _APERTO_MAX_GIORNI) {
+      out.stato = 'chiuso';
+      out.presunto = true;
+      out.data_chiusura_lab = dataAcc;     // proxy: non abbiamo la data reale di colorazione
+      out.data_chiusura_finale = dataAcc;
+      return out;
+    }
+    // Altrimenti genuinamente aperto (recente, in lavorazione)
+    out.stato = 'aperto';
     return out;
   }
   out.primo_color_id = primoColor.id || null;
@@ -11970,7 +12007,7 @@ function _statoCasoBadge(info) {
     return '<span class="badge" style="background:#eff6ff;color:#1e40af;border-color:#bfdbfe">🔵 Aperto</span>';
   if (info.stato === 'in_attesa_ihc')
     return `<span class="badge" style="background:#fff7ed;color:#9a3412;border-color:#fed7aa">🟡 In attesa IHC${info.ihc_aperte_count?' ('+info.ihc_aperte_count+')':''}</span>`;
-  return '<span class="badge bg-green">🟢 Chiuso</span>';
+  return `<span class="badge bg-green">🟢 Chiuso${info.presunto?' *':''}</span>`;
 }
 
 // ════════════════════════════════════════════════════════════════
