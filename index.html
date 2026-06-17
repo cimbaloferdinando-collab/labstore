@@ -600,17 +600,17 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
 
       <!-- WIDGET STATO CASI (3 stati a larghezza uguale) -->
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:18px">
-        <div onclick="_goToCasiConStato('aperto')" style="cursor:pointer;display:flex;align-items:center;justify-content:center;gap:9px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:10px 14px">
+        <div onclick="mostraCasiPerStato('aperto')" style="cursor:pointer;display:flex;align-items:center;justify-content:center;gap:9px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:10px 14px">
           <span style="font-size:15px">🔵</span>
           <span style="font-family:'DM Mono',monospace;font-size:20px;font-weight:700;color:#1e40af" id="stato-casi-aperti">0</span>
           <span style="font-size:12px;color:#1e40af;font-weight:600">Aperti</span>
         </div>
-        <div onclick="_goToCasiConStato('in_attesa_ihc')" style="cursor:pointer;display:flex;align-items:center;justify-content:center;gap:9px;background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;padding:10px 14px">
+        <div onclick="mostraCasiPerStato('in_attesa_ihc')" style="cursor:pointer;display:flex;align-items:center;justify-content:center;gap:9px;background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;padding:10px 14px">
           <span style="font-size:15px">🟡</span>
           <span style="font-family:'DM Mono',monospace;font-size:20px;font-weight:700;color:#9a3412" id="stato-casi-attesa">0</span>
           <span style="font-size:12px;color:#9a3412;font-weight:600">In attesa IHC</span>
         </div>
-        <div onclick="_goToCasiConStato('chiuso')" style="cursor:pointer;display:flex;align-items:center;justify-content:center;gap:9px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:10px 14px">
+        <div onclick="mostraCasiPerStato('chiuso')" style="cursor:pointer;display:flex;align-items:center;justify-content:center;gap:9px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:10px 14px">
           <span style="font-size:15px">🟢</span>
           <span style="font-family:'DM Mono',monospace;font-size:20px;font-weight:700;color:#166534" id="stato-casi-chiusi">0</span>
           <span style="font-size:12px;color:#166534;font-weight:600">Chiusi (mese)</span>
@@ -2770,6 +2770,21 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
     <button class="btn btn-primary" onclick="diagnosticaCasi()">🔍 Trova somiglianze</button>
     <div id="trac-diag-result" class="trac-result" style="margin-top:14px"></div>
     <div class="modal-footer"><button class="btn" onclick="closeModal('modal-trac-diag')">Chiudi</button></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════
+     MODAL: ELENCO CASI PER STATO
+══════════════════════════════ -->
+<div class="modal-overlay" id="modal-stato-casi">
+  <div class="modal" style="width:min(640px,96vw);max-width:96vw;max-height:90vh;overflow-y:auto">
+    <div class="modal-title" id="stato-casi-modal-title">Casi</div>
+    <div id="stato-casi-modal-sub" style="font-size:12px;color:var(--text2);margin-bottom:12px"></div>
+    <div id="stato-casi-modal-list"></div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('modal-stato-casi')">Chiudi</button>
+      <button class="btn btn-primary" id="stato-casi-modal-goto" onclick="">Apri nella lista completa</button>
+    </div>
   </div>
 </div>
 
@@ -12465,6 +12480,9 @@ function renderTATSection() {
   const proc = loadProc();
   const color = loadColoratore();
   const ihc = (typeof loadIHC === 'function') ? loadIHC() : [];
+  // Epoca di inizio tracciamento: i casi accettati PRIMA non hanno TAT affidabile
+  // (importati col sistema non ancora attivo → date di lavorazione mancanti o distorte)
+  const epoch = _getTrackingEpoch(color);
 
   // Indice rapido: id caso (campione_id) → primo ciclo proc/color
   const procByCaso = new Map();
@@ -12481,11 +12499,16 @@ function renderTATSection() {
   }));
 
   // Calcola TAT (match su campione_id, non su id GUID)
+  // Solo casi accettati nel periodo tracciato (data >= epoca) per medie affidabili
   const tats = [];
   const tatChiusura = []; // acc → data_chiusura_lab (solo chiuso/in_attesa_ihc)
+  let nStorici = 0;
   camp.forEach(c => {
     const idCaso = String(c.campione_id || '').trim();
     if (!idCaso || !c.data) return;
+    const dataAcc = String(c.data).slice(0,10);
+    // Escludi gli storici (accettati prima dell'inizio tracciamento)
+    if (epoch && dataAcc < epoch) { nStorici++; return; }
     const p = procByCaso.get(idCaso);
     const col = colorByCaso.get(idCaso);
     const tatAccProc = p ? _trc_diffDays(c.data, p.data) : null;
@@ -12493,7 +12516,7 @@ function renderTATSection() {
     const tatTot = col ? _trc_diffDays(c.data, col.data) : null;
     tats.push({ id: idCaso, tatAccProc, tatProcColor, tatTot });
     // TAT chiusura tecnica
-    const st = _computeStatoCaso(c, { coloratoreCache: color, ihcCache: ihc });
+    const st = _computeStatoCaso(c, { coloratoreCache: color, ihcCache: ihc, trackingEpoch: epoch });
     if ((st.stato === 'chiuso' || st.stato === 'in_attesa_ihc') && st.data_chiusura_lab) {
       const d = _trc_diffDays(c.data, st.data_chiusura_lab);
       if (d != null && d >= 0) tatChiusura.push(d);
@@ -12524,6 +12547,9 @@ function renderTATSection() {
   setTxt('tat-chiusura', chiusura != null ? chiusura.toFixed(1) + ' gg' : '— gg');
   setTxt('tat-chiusura-n', 'media su ' + tatChiusura.length + ' casi chiusi/attesa');
   setTxt('tat-pct3', pct3 + '%');
+  // Etichetta periodo: chiarisce che gli storici sono esclusi
+  const lbl = document.getElementById('tat-period-lbl');
+  if (lbl) lbl.textContent = epoch ? ('dal ' + (typeof fmtDate==='function'?fmtDate(epoch):epoch) + (nStorici?' · '+nStorici+' storici esclusi':'')) : 'tutti i casi';
 }
 
 // S5 — Top descrizioni
@@ -12877,6 +12903,83 @@ window._goToCasiConStato = function(stato){
       if(typeof renderTracciabilita === 'function') renderTracciabilita();
     }, 60);
   } catch(e) { console.warn('[goToCasiConStato]', e); }
+};
+
+// Mostra in un modal l'elenco dei casi con un dato stato
+window.mostraCasiPerStato = function(stato){
+  try {
+    const camps = (typeof loadCampioni === 'function') ? loadCampioni() : [];
+    const colCache = (typeof loadColoratore === 'function') ? loadColoratore() : [];
+    const ihcCache = (typeof loadIHC === 'function') ? loadIHC() : [];
+    const epoch = _getTrackingEpoch(colCache);
+    const now = new Date();
+    const curYm = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+
+    // Filtra i casi con lo stato richiesto (per "chiuso" solo quelli chiusi nel mese, come il widget)
+    let lista = [];
+    camps.forEach(c => {
+      const s = _computeStatoCaso(c, { coloratoreCache: colCache, ihcCache: ihcCache, trackingEpoch: epoch });
+      if (s.stato !== stato) return;
+      if (stato === 'chiuso') {
+        const d = s.data_chiusura_finale || s.data_chiusura_lab || '';
+        if (String(d).slice(0,7) !== curYm) return; // solo chiusi nel mese
+      }
+      lista.push({ camp: c, info: s });
+    });
+
+    // Ordina per ID caso decrescente
+    lista.sort((a,b) => {
+      const na = parseInt(String(a.camp.campione_id||'').split('/')[0],10)||0;
+      const nb = parseInt(String(b.camp.campione_id||'').split('/')[0],10)||0;
+      return nb - na;
+    });
+
+    const titoli = { aperto:'🔵 Casi aperti', in_attesa_ihc:'🟡 Casi in attesa IHC', chiuso:'🟢 Casi chiusi (mese corrente)' };
+    document.getElementById('stato-casi-modal-title').textContent = titoli[stato] || 'Casi';
+    document.getElementById('stato-casi-modal-sub').textContent = lista.length + ' cas' + (lista.length===1?'o':'i');
+
+    const listEl = document.getElementById('stato-casi-modal-list');
+    if (!lista.length) {
+      listEl.innerHTML = '<div style="text-align:center;color:var(--text3);padding:24px">Nessun caso in questo stato</div>';
+    } else {
+      listEl.innerHTML = lista.map(({camp, info}) => {
+        const data = camp.data ? new Date(camp.data).toLocaleDateString('it-IT',{day:'2-digit',month:'2-digit',year:'2-digit'}) : '—';
+        const extra = (stato === 'in_attesa_ihc' && info.ihc_aperte_count)
+          ? `<span style="font-size:11px;color:#9a3412">${info.ihc_aperte_count} IHC aperte</span>` : '';
+        const idEsc = String(camp.campione_id||'').replace(/'/g,"\\'");
+        return `<div onclick="_apriSchedaCasoDaModal('${idEsc}')" style="display:flex;align-items:center;gap:10px;padding:9px 10px;border-bottom:1px solid var(--border);cursor:pointer" onmouseover="this.style.background='var(--bg2)'" onmouseout="this.style.background='transparent'">
+          <span class="mono" style="font-weight:700;min-width:70px">${esc(camp.campione_id||'—')}</span>
+          <span style="font-size:12px;color:var(--text2);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(camp.tipo||'')}${camp.provenienza?' · '+esc(camp.provenienza):''}</span>
+          ${extra}
+          <span class="mono" style="font-size:11px;color:var(--text3);min-width:58px;text-align:right">${data}</span>
+        </div>`;
+      }).join('');
+    }
+
+    // Pulsante "apri nella lista completa"
+    const gotoBtn = document.getElementById('stato-casi-modal-goto');
+    if (gotoBtn) gotoBtn.onclick = () => { closeModal('modal-stato-casi'); _goToCasiConStato(stato); };
+
+    document.getElementById('modal-stato-casi').classList.add('open');
+  } catch(e) { console.warn('[mostraCasiPerStato]', e); }
+};
+
+// Apre la scheda caso completa dall'elenco del modal
+window._apriSchedaCasoDaModal = function(idCaso){
+  closeModal('modal-stato-casi');
+  try {
+    if (typeof showView === 'function') showView('report');
+    setTimeout(() => {
+      if (typeof switchRptTab === 'function') switchRptTab('tracciabilita');
+      setTimeout(() => {
+        if (typeof openTracSchedaCasoModal === 'function') {
+          openTracSchedaCasoModal();
+          const inp = document.getElementById('trac-caso-input');
+          if (inp) { inp.value = idCaso; if (typeof cercaSchedaCaso === 'function') cercaSchedaCaso(); }
+        }
+      }, 120);
+    }, 80);
+  } catch(e) { console.warn('[apriSchedaCasoDaModal]', e); }
 };
 
 // ─── Report Tab switcher ───
