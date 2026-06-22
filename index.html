@@ -4513,8 +4513,13 @@ function openScaricaModal(){
   const sel=document.getElementById('sc-prod');
   sel.innerHTML='<option value="">Seleziona prodotto…</option>';
   const prods=loadP();
-  // Raggruppa per nome per mostrare nome una volta
-  const nomi=[...new Set(prods.map(p=>p.nome))].sort();
+  // Mostra solo i prodotti che hanno almeno un lotto con disponibilità (qty>0)
+  // oppure un bidone aperto in uso. I lotti esauriti restano in magazzino ma non qui.
+  const _haDispon = (nome) => loadP().filter(p=>p.nome===nome).some(p => {
+    const apertoBid = (typeof getBidoneAperto==='function') ? getBidoneAperto(p.id) : null;
+    return (parseInt(p.qty,10)||0) > 0 || apertoBid;
+  });
+  const nomi=[...new Set(prods.map(p=>p.nome))].filter(_haDispon).sort();
   nomi.forEach(n=>{ const o=document.createElement('option'); o.value=n; o.textContent=n; sel.appendChild(o); });
   document.getElementById('sc-lotti-wrap').style.display='none';
   document.getElementById('sc-man-qty-wrap').style.display='none';
@@ -4546,9 +4551,20 @@ function scaricaSelProd(){
   const nome=document.getElementById('sc-prod').value;
   scaricaSelectedId=null;
   if(!nome){ document.getElementById('sc-lotti-wrap').style.display='none'; document.getElementById('sc-man-qty-wrap').style.display='none'; document.getElementById('sc-man-confirm-btn').style.display='none'; return; }
-  const prods=loadP().filter(p=>p.nome===nome);
+  const prods=loadP().filter(p=>p.nome===nome).filter(p => {
+    // Solo lotti con disponibilità o con bidone aperto in uso
+    const apertoBid = (typeof getBidoneAperto==='function') ? getBidoneAperto(p.id) : null;
+    return (parseInt(p.qty,10)||0) > 0 || apertoBid;
+  });
   const wrap=document.getElementById('sc-lotti-list');
   wrap.innerHTML='';
+  if(!prods.length){
+    wrap.innerHTML='<div style="font-size:12px;color:var(--text3);padding:8px">Nessun lotto disponibile per questo prodotto</div>';
+    document.getElementById('sc-lotti-wrap').style.display='';
+    document.getElementById('sc-man-qty-wrap').style.display='none';
+    document.getElementById('sc-man-confirm-btn').style.display='none';
+    return;
+  }
   prods.forEach(p=>{
     const div=document.createElement('div');
     div.style.cssText='display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid var(--border);border-radius:6px;margin-bottom:5px;cursor:pointer;transition:all .12s';
@@ -5075,9 +5091,17 @@ function _matchProdottiReag(def) {
 //         "Lotto XXX (scad YY) — N disponibili" per i chiusi,
 //         "— Nessun prodotto —" se non trovato in magazzino.
 function _buildLottoOptions(def, presetProdId, presetLotto) {
-  const prods = _matchProdottiReag(def);
+  let prods = _matchProdottiReag(def);
+  // Escludi i lotti esauriti (qty<=0), MA mantieni:
+  //  - quelli con bidone aperto in uso
+  //  - quello eventualmente già selezionato nel ciclo (preset), per non perderlo in modifica
+  prods = prods.filter(p => {
+    const apertoBid = (typeof getBidoneAperto==='function') ? getBidoneAperto(p.id) : null;
+    const isPreset = (p.id === presetProdId) || (presetLotto && p.lotto === presetLotto);
+    return (parseInt(p.qty,10)||0) > 0 || apertoBid || isPreset;
+  });
   if (!prods.length) {
-    return '<option value="">— Nessun prodotto in magazzino —</option>';
+    return '<option value="">— Nessun lotto disponibile —</option>';
   }
   let opts = '<option value="">— Nessun lotto selezionato —</option>';
   prods.forEach(p => {
@@ -5102,8 +5126,10 @@ function _buildLottoOptions(def, presetProdId, presetLotto) {
   return opts;
 }
 
-// Renderizza le righe fisse nel container dato
-function _renderRigheFixed(containerId, defs, presetReagenti) {
+// Renderizza le righe fisse nel container dato.
+// isEdit=true → ciclo esistente: NON applicare l'auto-suggerimento dello stato
+// (lo stato salvato va conservato tale e quale).
+function _renderRigheFixed(containerId, defs, presetReagenti, isEdit) {
   const cont = document.getElementById(containerId);
   if (!cont) return;
   cont.innerHTML = '';
@@ -5133,21 +5159,23 @@ function _renderRigheFixed(containerId, defs, presetReagenti) {
         <option value="cambiato"    ${presetStato==='cambiato'   ?'selected':''}>🔄 Sostituito</option>
       </select>`;
     cont.appendChild(div);
-    // Aggiorna scadenza subito
-    updateReagLottoFixed(div.querySelector('.reag-lotto-sel'));
+    // Aggiorna SOLO la scadenza. In modifica (isEdit) NON tocca lo stato salvato.
+    updateReagLottoFixed(div.querySelector('.reag-lotto-sel'), { skipStato: !!isEdit });
   });
 }
 
-window.updateReagLottoFixed = function(sel) {
+window.updateReagLottoFixed = function(sel, opts) {
+  opts = opts || {};
   const row = sel.closest('.reagente-usato-row');
   if (!row) return;
   const p = loadP().find(x => x.id === sel.value);
   const scadEl = row.querySelector('.reag-scad');
   if (scadEl) scadEl.textContent = p?.scadenza ? fmtDate(p.scadenza) : '';
-  // Auto-suggerisci stato in base al lotto selezionato:
+  // Se siamo in modifica di un ciclo esistente, NON toccare lo stato salvato
+  if (opts.skipStato) return;
+  // Auto-suggerisci stato in base al lotto selezionato (solo nuovi cicli / cambio manuale):
   // Se il lotto coincide con quello dell'ultimo ciclo → Verificato
   // Se è diverso (nuovo lotto) → Sostituito
-  // (l'utente può sempre sovrascrivere manualmente)
   const statoSel = row.querySelector('.reag-stato');
   if (!statoSel || !p) return;
   // Trova il lotto usato nell'ultimo ciclo per questo reagente
@@ -5220,7 +5248,7 @@ function _preloadReagentiProc(preset) {
       ...r, stato: (r.stato === 'cambiato') ? 'verificato' : (r.stato || 'verificato')
     }));
   }
-  _renderRigheFixed('proc-reagenti-list', REAGENTI_PROC_DEF, reagenti);
+  _renderRigheFixed('proc-reagenti-list', REAGENTI_PROC_DEF, reagenti, !!preset);
 }
 
 function _preloadReagentiColor(preset) {
@@ -5232,7 +5260,7 @@ function _preloadReagentiColor(preset) {
       ...r, stato: (r.stato === 'cambiato') ? 'verificato' : (r.stato || 'verificato')
     }));
   }
-  _renderRigheFixed('color-reagenti-list', REAGENTI_COLOR_DEF, reagenti);
+  _renderRigheFixed('color-reagenti-list', REAGENTI_COLOR_DEF, reagenti, !!preset);
 }
 
 // Eliminazione funzioni legacy non più necessarie
@@ -8811,18 +8839,21 @@ window.apriCaricoScan = function() {
 };
 
 window.openCaricaManualeModal = function() {
-  // Popola select prodotti
+  // Popola select con i NOMI prodotto (una voce per nome, non per lotto)
   const prods = loadP();
   const sel = document.getElementById('car-man-prod');
   if (sel) {
+    const nomi = [...new Set(prods.map(p => p.nome).filter(Boolean))].sort();
     sel.innerHTML = '<option value="">— Seleziona prodotto —</option>' +
-      prods.map(p => `<option value="${p.id}">${esc(p.nome)} [${esc(p.lotto||'—')}]</option>`).join('');
+      nomi.map(n => `<option value="${esc(n)}">${esc(n)}</option>`).join('');
   }
   // Reset campi
   ['car-man-qty','car-man-lotto','car-man-scad','car-man-note'].forEach(id => {
     const e = document.getElementById(id); if(e) e.value = '';
   });
   document.getElementById('car-man-qty').value = '1';
+  const nuovoChk = document.getElementById('car-man-nuovo');
+  if (nuovoChk) { nuovoChk.checked = false; if (typeof toggleNuovoProdForm==='function') toggleNuovoProdForm(); }
   document.getElementById('modal-carico-manuale').classList.add('open');
 };
 
@@ -8846,10 +8877,32 @@ window.saveCaricaManuale = async function() {
     prodId = p.id; prodNome = p.nome;
   } else {
     if (!sel.value) { toast('Seleziona un prodotto', 'error'); return; }
-    const p = prods.find(x => x.id === sel.value);
-    if (!p) { toast('Prodotto non trovato', 'error'); return; }
-    if (lotto) p.lotto = lotto;
-    if (scad)  p.scadenza = scad;
+    const nome = sel.value;
+    // Trova i record esistenti con questo nome
+    const stessoNome = prods.filter(x => x.nome === nome);
+    if (!stessoNome.length) { toast('Prodotto non trovato', 'error'); return; }
+    // Cerca un record con lo STESSO lotto (se lotto indicato): in tal caso ricarico quello
+    let p = null;
+    if (lotto) p = stessoNome.find(x => (x.lotto||'') === lotto);
+    if (p) {
+      // Lotto già presente → aggiorno scadenza se data fornita e incremento qty
+      if (scad) p.scadenza = scad;
+    } else {
+      // Nuovo lotto → creo un nuovo record prodotto eredita categoria/min dal nome
+      const modello = stessoNome[0];
+      p = {
+        id: genId(),
+        nome: nome,
+        cat: modello.cat || 'Reagenti',
+        qty: 0,
+        min: modello.min || 0,
+        lotto: lotto || '',
+        scadenza: scad || '',
+        unita: modello.unita || '',
+        creato: new Date().toISOString()
+      };
+      prods.push(p);
+    }
     prodId = p.id; prodNome = p.nome;
   }
   // Aggiorna qty
