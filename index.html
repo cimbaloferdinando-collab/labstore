@@ -2207,6 +2207,13 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
           <input type="text" id="camp-provenienza" placeholder="Reparto, medico richiedente… (lista in arrivo)">
         </div>
         <div class="fg full" style="margin:0">
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:400">
+            <input type="checkbox" id="camp-consulenza" style="width:auto;margin:0">
+            <span>📋 Consulenza (vetrini già allestiti — non passa dal coloratore)</span>
+          </label>
+          <div style="font-size:11px;color:var(--text3);margin-top:3px;padding-left:24px">I casi di consulenza non vengono conteggiati nel TAT e risultano chiusi alla registrazione.</div>
+        </div>
+        <div class="fg full" style="margin:0">
           <label>Descrizione accettazione</label>
           <textarea id="camp-desc-acc" rows="2" placeholder="Breve descrizione dei campioni arrivati…"></textarea>
         </div>
@@ -5787,6 +5794,7 @@ function openNuovoCampione(tipo){
   document.getElementById('camp-sottotipo').value = '';
   document.getElementById('camp-data').value = new Date().toISOString().slice(0,10);
   document.getElementById('camp-provenienza').value = '';
+  { const cc = document.getElementById('camp-consulenza'); if(cc) cc.checked = false; }
   document.getElementById('camp-desc-acc').value = '';
   document.getElementById('camp-note').value = '';
   document.getElementById('pezzi-container').innerHTML = '';
@@ -5967,6 +5975,7 @@ async function saveCampione(){
     sottotipo: document.getElementById('camp-sottotipo').value.trim(),
     data: document.getElementById('camp-data').value,
     provenienza: document.getElementById('camp-provenienza').value.trim(),
+    consulenza: !!(document.getElementById('camp-consulenza')||{}).checked,
     desc_accettazione: document.getElementById('camp-desc-acc').value.trim(),
     pezzi: getPezziData(),
     colorazioni: getColorazioniData(),
@@ -6120,6 +6129,7 @@ function editCampioneDetail(){
   document.getElementById('camp-sottotipo').value = c.sottotipo||'';
   document.getElementById('camp-data').value = c.data||'';
   document.getElementById('camp-provenienza').value = c.provenienza||'';
+  { const cc = document.getElementById('camp-consulenza'); if(cc) cc.checked = !!c.consulenza; }
   document.getElementById('camp-desc-acc').value = c.desc_accettazione||'';
   document.getElementById('camp-note').value = c.note||'';
   document.getElementById('pezzi-container').innerHTML = '';
@@ -7217,9 +7227,21 @@ const _patchedRenderReport = function(){
     'citologia': _vetri('cit'),
     'pap': _vetri('pap')
   };
+  // Totale = casi UNICI across tutti i tipi (un caso isto+cito conta 1), coerente con KPI home
+  const _totCasiUniciReport = (() => {
+    const setCasi = new Set(); let papN = 0;
+    colorMese.forEach(r => {
+      ['casi_ist','casi_cit'].forEach(f => {
+        const arr = Array.isArray(r[f]) ? r[f] : [];
+        arr.forEach(id => { if (id) setCasi.add(String(id).trim()); });
+      });
+      papN += (parseInt(r.vetri_pap,10) || 0);
+    });
+    return setCasi.size + papN;
+  })();
   const totVetrini = campPerTipo.istologia + campPerTipo.citologia + campPerTipo.pap;
-  // Per coerenza visiva, mostriamo nella card "Casi" il totale del mese
-  const campMese = { length: totVetrini };
+  // Card "Casi": totale casi unici del mese
+  const campMese = { length: _totCasiUniciReport };
 
   let analyticsHtml = `
   <div class="report-sec" style="margin-top:24px">
@@ -8317,10 +8339,11 @@ function renderDashAnalytics(){
   const allerteCount=prods.filter(p=>(p.min>0&&p.qty<=p.min)||daysUntil(p.scadenza)<0||(daysUntil(p.scadenza)>=0&&daysUntil(p.scadenza)<=30)).length;
   const trendCol=trend>=0?'var(--green)':'var(--red)';
   const trendIco=trend>=0?'▲':'▼';
+  const _totMese = istCur + citCur + papCur;
   const kpis=[
-    {label:'Casi mese',val:campCur,sub:trendIco+' '+Math.abs(trend)+'% vs prec.',col:trendCol},
-    {label:'Istologia',val:istCur,sub:campCur>0?Math.round(istCur/campCur*100)+'% del totale':'—',col:'var(--blue)'},
-    {label:'Citologia + PAP',val:citCur,sub:campCur>0?Math.round(citCur/campCur*100)+'% del totale':'—',col:'var(--teal)'},
+    {label:'Casi mese',val:_totMese,sub:trendIco+' '+Math.abs(trend)+'% vs prec.',col:trendCol},
+    {label:'Istologia',val:istCur,sub:_totMese>0?Math.round(istCur/_totMese*100)+'% del totale':'—',col:'var(--blue)'},
+    {label:'Citologia + PAP',val:citCur+papCur,sub:_totMese>0?Math.round((citCur+papCur)/_totMese*100)+'% del totale':'—',col:'var(--teal)'},
     {label:'Ordini aperti',val:ordAperti,sub:'in lavorazione',col:'var(--accent2)'},
     {label:'Allerte attive',val:allerteCount,sub:'scorta + scadenza',col:allerteCount>0?'var(--red)':'var(--green)'}
   ];
@@ -11713,6 +11736,8 @@ function _impxProcessRows(rawRows, sheetName) {
     const denRaw = idxDen >= 0 ? row[idxDen] : '';
     const denominazione = _impxNormalizeDenominazione(denRaw);
     const tipologia = idxTip >= 0 ? String(row[idxTip] || '').trim() : '';
+    // Consulenza: nell'Excel viene scritta nella colonna TIPOLOGIA (al posto della struttura)
+    const isConsulenza = /consulenz/i.test(tipologia);
 
     const qtaRaw = idxQta >= 0 ? row[idxQta] : '';
     const qtaParsed = _impxParseQta(qtaRaw);
@@ -11726,7 +11751,9 @@ function _impxProcessRows(rawRows, sheetName) {
 
     const tipoDet = _impxDetectTipo(descrizione, anno);
 
-    const provenienza = denominazione + (tipologia ? ' (' + tipologia + ')' : '');
+    // Per le consulenze NON aggiungo "(consulenza)" alla provenienza (lo dice già il badge);
+    // tengo solo il nome cliente. Per gli altri, mantengo "(tipologia)".
+    const provenienza = isConsulenza ? denominazione : (denominazione + (tipologia ? ' (' + tipologia + ')' : ''));
     const alreadyExists = existingIds.has(campioneId);
 
     const item = {
@@ -11739,6 +11766,7 @@ function _impxProcessRows(rawRows, sheetName) {
       provenienza_short: denominazione,
       n_pezzi: qtaParsed.n,
       desc: descrizione,
+      consulenza: isConsulenza,
       _alreadyExists: alreadyExists
     };
 
@@ -11800,7 +11828,7 @@ function _impxRenderPreviewTable() {
     return `<tr>
       <td style="font-family:DM Mono,monospace;font-weight:700">${esc(r.campione_id)}</td>
       <td style="font-size:12px;color:var(--text2)">${esc(r.data || '—')}</td>
-      <td style="color:${tipoColor};font-weight:500">${esc(tipoLabel)}</td>
+      <td style="color:${tipoColor};font-weight:500">${esc(tipoLabel)}${r.consulenza?' <span style="background:#f5f3ff;color:#6d28d9;border:1px solid #ddd6fe;border-radius:4px;padding:1px 5px;font-size:10px;font-weight:600">📋 Consulenza</span>':''}</td>
       <td>${esc(r.provenienza_short || '—')}</td>
       <td style="font-family:DM Mono,monospace">${r.n_pezzi}</td>
       <td style="font-size:11px;color:var(--text2);max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(r.desc || '—')}</td>
@@ -11843,6 +11871,7 @@ async function impxConfirmImport() {
       sottotipo: '',
       data: item.data || new Date().toISOString().slice(0, 10),
       provenienza: item.provenienza || '',
+      consulenza: !!item.consulenza,
       desc_accettazione: item.desc || '',
       pezzi: pezziArr,
       colorazioni: [],
@@ -11972,9 +12001,20 @@ function _computeStatoCaso(campione, opts = {}) {
     primo_color_id: null,
     ihc_aperte_count: 0,
     ihc_totali_count: 0,
-    presunto: false
+    presunto: false,
+    consulenza: false
   };
   if (!campione) return out;
+  // CONSULENZA: vetrini già allestiti altrove, non passa dal lab.
+  // È chiusa alla registrazione e non entra nel TAT. Check prioritario.
+  if (campione.consulenza) {
+    const d = String(campione.data || '').slice(0,10) || null;
+    out.stato = 'chiuso';
+    out.consulenza = true;
+    out.data_chiusura_lab = d;
+    out.data_chiusura_finale = d;
+    return out;
+  }
   // L'ID caso visibile è campione_id (es. "1747/26"); è ciò che compare nei cicli coloratore
   const idCaso = String(campione.campione_id || '').trim();
   if (!idCaso) return out;
@@ -12069,6 +12109,8 @@ function _computeStatoCaso(campione, opts = {}) {
 // Badge HTML per uno stato (riusabile)
 function _statoCasoBadge(info) {
   if (!info) return '';
+  if (info.consulenza)
+    return '<span class="badge" style="background:#f5f3ff;color:#6d28d9;border-color:#ddd6fe">📋 Consulenza</span>';
   if (info.stato === 'storico')
     return '<span class="badge" style="background:#f1f5f9;color:#64748b;border-color:#e2e8f0">⚪ Storico</span>';
   if (info.stato === 'aperto')
@@ -12611,6 +12653,8 @@ function renderTATSection() {
   camp.forEach(c => {
     const idCaso = String(c.campione_id || '').trim();
     if (!idCaso || !c.data) return;
+    // Le consulenze (vetrini già allestiti) non passano dal lab → fuori dal TAT
+    if (c.consulenza) return;
     const dataAcc = String(c.data).slice(0,10);
     // Escludi gli storici (accettati prima dell'inizio tracciamento)
     if (epoch && dataAcc < epoch) { nStorici++; return; }
@@ -12976,8 +13020,9 @@ function renderStatoCasiWidget() {
       if (s.stato === 'aperto') aperti++;
       else if (s.stato === 'in_attesa_ihc') attesa++;
       else if (s.stato === 'chiuso') {
-        // "Chiusi nel mese": solo chiusure reali (colorati) del mese, NON i presunti storici
-        if (s.presunto) return;
+        // "Chiusi nel mese": solo chiusure reali (colorati) del mese,
+        // NON i presunti storici né le consulenze (che saltano il lab)
+        if (s.presunto || s.consulenza) return;
         const d = s.data_chiusura_finale || s.data_chiusura_lab || '';
         if (String(d).slice(0,7) === curYm) chiusiMese++;
       }
