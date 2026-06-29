@@ -8541,18 +8541,30 @@ function renderDashAnalytics(){
     }).join('');
     const yLabels=[0,.5,1].map(t=>{ const v=Math.round(max*(1-t)); const y=pad.t+t*(H-pad.t-pad.b); return '<text x="'+(pad.l-4)+'" y="'+(y+3)+'" text-anchor="end" font-size="8" fill="var(--text3)" font-family="DM Mono,monospace">'+v+'</text>'; }).join('');
     const dots=(arr,col,serieName)=>arr.map((v,i)=>'<circle cx="'+(pad.l+i*xStep).toFixed(1)+'" cy="'+yScale(v).toFixed(1)+'" r="2.2" fill="'+col+'"><title>'+esc(points[i].label)+' — '+serieName+': '+v+'</title></circle>').join('');
-    // A1 — Media mobile 4 periodi sul TOTALE casi (ist+cit+pap), stessa serie del grafico.
+    // A1 — Media mobile 4 SETTIMANE, calcolata e disegnata SOLO sui punti settimanali.
+    // I punti mensili (storici) sono esclusi dal calcolo e dal rendering: la linea
+    // tratteggiata appare solo nella parte destra (settimane del mese corrente).
     const totSerie = points.map(p => (p.ist||0)+(p.cit||0)+(p.pap||0));
-    const movAvg = totSerie.map((_, i) => {
-      const start = Math.max(0, i - 3);
-      const win = totSerie.slice(start, i + 1);
-      return win.reduce((a, b) => a + b, 0) / win.length;
-    });
-    // La media mobile può superare il max delle singole serie → riscalo se serve
-    const maxMA = Math.max(max, ...movAvg);
-    const yScaleMA = v => H - pad.b - (v / maxMA) * (H - pad.t - pad.b);
-    const maPath = movAvg.map((v,i)=>(i?'L':'M')+(pad.l+i*xStep).toFixed(1)+' '+yScaleMA(v).toFixed(1)).join(' ');
-    const maLine = '<path d="'+maPath+'" fill="none" stroke="var(--text3)" stroke-width="1.2" stroke-dasharray="4,3" opacity="0.65"><title>Media mobile 4 periodi (totale casi)</title></path>';
+    // Indici dei soli punti settimanali, in ordine
+    const weekIdx = points.map((p,i)=>p.isMonth?-1:i).filter(i=>i>=0);
+    let maLine = '';
+    if (weekIdx.length >= 2) {
+      // Serie dei soli valori settimanali
+      const weekVals = weekIdx.map(i => totSerie[i]);
+      // Media mobile a 4 settimane: per le prime settimane usa la media delle disponibili
+      const weekMA = weekVals.map((_, k) => {
+        const start = Math.max(0, k - 3);
+        const win = weekVals.slice(start, k + 1);
+        return win.reduce((a, b) => a + b, 0) / win.length;
+      });
+      const maxMA = Math.max(max, ...weekMA);
+      const yScaleMA = v => H - pad.b - (v / maxMA) * (H - pad.t - pad.b);
+      // Path costruito solo sugli x dei punti settimanali (parte destra del grafico)
+      const maPath = weekIdx.map((origIdx, k) =>
+        (k ? 'L' : 'M') + (pad.l + origIdx * xStep).toFixed(1) + ' ' + yScaleMA(weekMA[k]).toFixed(1)
+      ).join(' ');
+      maLine = '<path d="'+maPath+'" fill="none" stroke="var(--text3)" stroke-width="1.2" stroke-dasharray="4,3" opacity="0.7"><title>Media mobile 4 settimane (solo settimane)</title></path>';
+    }
     lineSvg.innerHTML=grid+divisor+yLabels+xLabels+
       '<path d="'+path(istSerie)+'" fill="none" stroke="var(--blue)" stroke-width="1.6"/>'+
       '<path d="'+path(citSerie)+'" fill="none" stroke="var(--teal)" stroke-width="1.6"/>'+
@@ -8565,7 +8577,7 @@ function renderDashAnalytics(){
     '<span class="leg-item"><span class="leg-dot" style="background:var(--blue)"></span>Istologia</span>'+
     '<span class="leg-item"><span class="leg-dot" style="background:var(--teal)"></span>Citologia</span>'+
     '<span class="leg-item"><span class="leg-dot" style="background:#a855f7"></span>PAP</span>'+
-    '<span class="leg-item"><span class="leg-dot" style="background:var(--text3)"></span>Media mobile 4p</span>';
+    '<span class="leg-item"><span class="leg-dot" style="background:var(--text3)"></span>Media mob. 4 sett.</span>';
   const lineSub=document.getElementById('dash-line-sub');
   if(lineSub) {
     const firstMonthLbl = fmtMese(prev5Months[0]).slice(0,3);
