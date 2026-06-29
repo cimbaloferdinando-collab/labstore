@@ -9566,6 +9566,26 @@ function renderDashboardPreview(){
         } catch(_) { return 0; }
       };
 
+      // Helper ISTOLOGIA dal PROCESSATORE (dato disponibile in giornata, prima della colorazione).
+      // Conta i casi unici presenti nei cicli processatore del mese (eventualmente fino a maxDay).
+      const _procCasi = (ym, maxDay) => {
+        try {
+          const recs = (typeof loadProc === 'function' ? loadProc() : []).filter(r => {
+            if (!r.data) return false;
+            const s = String(r.data);
+            if (s.slice(0,7) !== ym) return false;
+            if (maxDay != null) { const g = parseInt(s.slice(8,10),10)||0; if (g > maxDay) return false; }
+            return true;
+          });
+          const set = new Set();
+          recs.forEach(r => {
+            const casi = (typeof _trc_extractCasi === 'function') ? _trc_extractCasi(r) : (Array.isArray(r.casi)?r.casi:[]);
+            casi.forEach(id => { if (id) set.add((typeof _normCasoId==='function')?_normCasoId(id):String(id).trim()); });
+          });
+          return set.size;
+        } catch(_) { return 0; }
+      };
+
       // ISTOLOGIA dal processatore (aggiornata in giornata), CITO e PAP dal coloratore
       const cIst = _procCasi(curYm);
       const cCit = _vetri(curYm, 'cit');
@@ -9608,26 +9628,6 @@ function renderDashboardPreview(){
           recs.forEach(r => {
             const arr = Array.isArray(r[field]) ? r[field] : [];
             arr.forEach(id => { if (id) set.add(String(id).trim()); });
-          });
-          return set.size;
-        } catch(_) { return 0; }
-      };
-
-      // Helper ISTOLOGIA dal PROCESSATORE (dato disponibile in giornata, prima della colorazione).
-      // Conta i casi unici presenti nei cicli processatore del mese (eventualmente fino a maxDay).
-      const _procCasi = (ym, maxDay) => {
-        try {
-          const recs = (typeof loadProc === 'function' ? loadProc() : []).filter(r => {
-            if (!r.data) return false;
-            const s = String(r.data);
-            if (s.slice(0,7) !== ym) return false;
-            if (maxDay != null) { const g = parseInt(s.slice(8,10),10)||0; if (g > maxDay) return false; }
-            return true;
-          });
-          const set = new Set();
-          recs.forEach(r => {
-            const casi = (typeof _trc_extractCasi === 'function') ? _trc_extractCasi(r) : (Array.isArray(r.casi)?r.casi:[]);
-            casi.forEach(id => { if (id) set.add(_normCasoId(id)); });
           });
           return set.size;
         } catch(_) { return 0; }
