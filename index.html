@@ -757,7 +757,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
 
         <div class="card" style="grid-column: span 2">
           <div class="card-hdr">
-            <span class="card-title">Distribuzione &amp; Confronto mensile</span>
+            <span class="card-title">Distribuzione tipologie &amp; Confronto</span>
             <span class="card-sub" id="dash-bar-sub">corrente vs precedente</span>
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:12px 14px;align-items:center">
@@ -795,6 +795,18 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
         </div>
 
       </div><!-- /widget clienti -->
+
+      <!-- WIDGET QUALITÀ DEL PROCESSO (B3) -->
+      <div style="margin-bottom:8px;display:flex;align-items:center;gap:10px">
+        <div style="font-family:'Libre Baskerville',serif;font-size:16px;font-weight:700;color:var(--accent)">Qualità del processo</div>
+        <div style="flex:1;height:1px;background:var(--border)"></div>
+        <span style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em">Mese corrente · indicatori</span>
+      </div>
+      <div class="card" style="margin-bottom:24px">
+        <div style="padding:14px 16px">
+          <div id="dash-quality-widget"></div>
+        </div>
+      </div><!-- /widget qualità -->
 
       <!-- GRAFICI MAGAZZINO / ORDINI -->
       <div style="margin-bottom:8px;display:flex;align-items:center;gap:10px">
@@ -1482,6 +1494,16 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
             <div class="ta-title">Diagnostica</div>
             <div class="ta-desc">Cosa hanno in comune più casi con problemi</div>
           </button>
+          <button class="trac-action-card" onclick="openQualitaMeseModal()">
+            <div class="ta-icon">📊</div>
+            <div class="ta-title">Indicatori Qualità Mese</div>
+            <div class="ta-desc">KPI ISO 15189: qualità tecnica, reagenti, tracciabilità · export PDF</div>
+          </button>
+          <button class="trac-action-card" onclick="openLottoCriticoModal()">
+            <div class="ta-icon">🧬</div>
+            <div class="ta-title">Report Lotto Critico</div>
+            <div class="ta-desc">Tracciabilità inversa completa di un lotto · richiamo/audit · export PDF</div>
+          </button>
         </div>
 
         <!-- TAT (Turnaround Time) -->
@@ -1557,7 +1579,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
             </div>
           </div>
           <div class="card">
-            <div class="card-hdr"><span class="card-title">TAT medio per cliente</span><span class="card-sub">Tempo medio di lavorazione</span></div>
+            <div class="card-hdr"><span class="card-title" data-tip="TAT calcolato da accettazione caso a vetrino colorato. Non include il tempo di refertazione, gestito esternamente.">TAT TECNICO medio per cliente</span><span class="card-sub" data-tip="TAT calcolato da accettazione caso a vetrino colorato. Non include il tempo di refertazione, gestito esternamente.">accettazione → vetrino colorato</span></div>
             <div id="cli-c5-content" style="padding:14px"></div>
           </div>
         </div>
@@ -2731,6 +2753,50 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
   </div>
 </div>
 
+<!-- ─── MODAL B3: DETTAGLIO QUALITÀ DEL PROCESSO ─── -->
+<div class="modal-overlay" id="modal-qualita-dett">
+  <div class="modal" style="width:720px;max-width:95vw">
+    <div class="modal-title" id="qualita-dett-title">Dettaglio qualità</div>
+    <div id="qualita-dett-body" class="trac-result"></div>
+    <div class="modal-footer"><button class="btn" onclick="closeModal('modal-qualita-dett')">Chiudi</button></div>
+  </div>
+</div>
+
+<!-- ─── MODAL E1: INDICATORI QUALITÀ DEL MESE ─── -->
+<div class="modal-overlay" id="modal-qualita-mese">
+  <div class="modal" style="width:820px;max-width:96vw">
+    <div class="modal-title">📊 Indicatori Qualità del Mese</div>
+    <p style="color:var(--text2);font-size:12px;margin-bottom:10px">KPI ISO 15189 calcolati on-the-fly. Conserva il PDF mensile come evidenza di management review.</p>
+    <div style="display:flex;gap:8px;margin-bottom:14px;align-items:center;flex-wrap:wrap">
+      <label style="font-size:12px;color:var(--text2)">Mese:</label>
+      <input type="month" id="qm-mese-input" style="width:auto" onchange="renderQualitaMese()">
+      <label style="font-size:12px;color:var(--text2);margin-left:8px">Soglia TAT (gg):</label>
+      <input type="number" id="qm-soglia-tat" value="5" min="1" max="60" style="width:64px" onchange="renderQualitaMese()">
+      <button class="btn btn-primary" onclick="renderQualitaMese()">🔄 Calcola</button>
+      <button class="btn" onclick="stampaQualitaMese()" id="qm-print-btn" style="display:none">🖨 Esporta PDF</button>
+    </div>
+    <div id="qm-result" class="trac-result"></div>
+    <div class="modal-footer"><button class="btn" onclick="closeModal('modal-qualita-mese')">Chiudi</button></div>
+  </div>
+</div>
+
+<!-- ─── MODAL E2: REPORT LOTTO CRITICO ─── -->
+<div class="modal-overlay" id="modal-lotto-critico">
+  <div class="modal" style="width:820px;max-width:96vw">
+    <div class="modal-title">🧬 Report Lotto Critico</div>
+    <p style="color:var(--text2);font-size:12px;margin-bottom:10px">Tracciabilità inversa completa di un lotto: anagrafica, cicli, casi, indicatori qualità. Per richiamo prodotto, audit ISO 15189, indagine anomalia.</p>
+    <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center">
+      <input type="text" id="lc-lotto-input" placeholder="Codice lotto (es. EX12345)" style="font-family:'DM Mono',monospace;flex:1;min-width:160px" onkeydown="if(event.key==='Enter')renderLottoCritico()">
+      <input type="date" id="lc-dal" style="width:auto" title="Da (opzionale)">
+      <input type="date" id="lc-al" style="width:auto" title="A (opzionale)">
+      <button class="btn btn-primary" onclick="renderLottoCritico()">🔍 Genera</button>
+      <button class="btn" onclick="stampaLottoCritico()" id="lc-print-btn" style="display:none">🖨 Esporta PDF</button>
+    </div>
+    <div id="lc-result" class="trac-result"></div>
+    <div class="modal-footer"><button class="btn" onclick="closeModal('modal-lotto-critico')">Chiudi</button></div>
+  </div>
+</div>
+
 <!-- ─── MODAL T4: AUDIT GIORNATA ─── -->
 <div class="modal-overlay" id="modal-trac-data">
   <div class="modal" style="width:760px;max-width:95vw">
@@ -2881,6 +2947,7 @@ async function forceSave(){
     const schede=JSON.parse(localStorage.getItem(LS_SCHEDE)||'[]');
     const proc=JSON.parse(localStorage.getItem(LS_PROC)||'[]');
     const color=JSON.parse(localStorage.getItem(LS_COLOR_REG)||'[]');
+    const forn=JSON.parse(localStorage.getItem(LS_FORN)||'[]');
     // Push tutto
     if(prods.length) await supaFetch('products','POST',prods,'?on_conflict=id');
     if(movs.length) await supaFetch('movements','POST',movs,'?on_conflict=id');
@@ -2894,6 +2961,8 @@ async function forceSave(){
     if(color.length) await supaFetch('coloratore_log','POST',color,'?on_conflict=id');
     // Schede: sync su Supabase (tabella schede_tecniche)
     if(schede.length) await supaFetch('schede_tecniche','POST',schede,'?on_conflict=id');
+    // Fornitori (A6): isolato — un errore qui non blocca il resto
+    try { if(forn.length) await supaFetch('fornitori','POST',forn,'?on_conflict=id'); } catch(eF){ console.warn('[sync fornitori]', eF); }
     saveQueue([]);
     updateSyncStatus('ok');
     toast('💾 Tutto salvato sul cloud','success');
@@ -3163,7 +3232,7 @@ async function initialSync(){
   if(!SUPA_OK){ updateSyncStatus('off'); return; }
   updateSyncStatus('sync');
   try{
-    const [prods,movs,wRows,wlog,ordini,arch,camp_cloud,proc_cloud,color_cloud,schede_cloud]=await Promise.all([
+    const [prods,movs,wRows,wlog,ordini,arch,camp_cloud,proc_cloud,color_cloud,schede_cloud,forn_cloud]=await Promise.all([
       supaFetch('products','GET',null,'?order=nome'),
       supaFetch('movements','GET',null,'?order=ts.desc&limit=500'),
       supaFetch('waste_state','GET',null,'?id=eq.waste_state'),
@@ -3173,13 +3242,15 @@ async function initialSync(){
       supaFetch('campioni','GET',null,'?order=data.desc&limit=5000'),
       supaFetch('processatore','GET',null,'?order=data.desc&limit=500'),
       supaFetch('coloratore_log','GET',null,'?order=data.desc&limit=500'),
-      supaFetch('schede_tecniche','GET',null,'?order=data.desc&limit=200')
+      supaFetch('schede_tecniche','GET',null,'?order=data.desc&limit=200'),
+      supaFetch('fornitori','GET',null,'?order=nome')
     ]);
     // Merge per ogni tabella: ultimo modificato vince
     const tables = [
       [LS_P, prods], [LS_M, movs], [LS_ORD, ordini],
       [LS_ARCH, arch], [LS_CAMP, camp_cloud], [LS_PROC, proc_cloud],
-      [LS_COLOR_REG, color_cloud], [LS_SCHEDE, schede_cloud], [LS_WL, wlog]
+      [LS_COLOR_REG, color_cloud], [LS_SCHEDE, schede_cloud], [LS_WL, wlog],
+      [LS_FORN, forn_cloud]
     ];
     tables.forEach(([key, cloud]) => {
       const local = JSON.parse(localStorage.getItem(key)||'[]');
@@ -4877,6 +4948,35 @@ function confirmCaricaScanNew(){
 // FIX [INFRASTRUTTURA]: LS_SCHEDE dichiarata in cima al file
 const loadSchede=()=>_getCache(LS_SCHEDE,'[]');
 function saveSchede(arr){ _setCache(LS_SCHEDE,arr); }
+
+// ── A6 — DATA LAYER FORNITORI (tabella Supabase reale) ──────────────
+// Struttura record: { id, nome, tempo_consegna_medio_giorni, modificato }
+// Il campo tempo_consegna_medio_giorni può essere null finché non popolato.
+const LS_FORN='ls_fornitori';
+const LS_FORN_DEFAULT='ls_forn_default_giorni'; // default globale configurabile
+if (Array.isArray(window._UNDO_KEYS) && !window._UNDO_KEYS.includes(LS_FORN)) window._UNDO_KEYS.push(LS_FORN);
+const loadForn=()=>_getCache(LS_FORN,'[]');
+async function saveForn(arr, deletedId){
+  _setCache(LS_FORN,_stampMod(arr));
+  if(!SUPA_OK) return;
+  if(!IS_ONLINE){ enqueue({type:'fornitori'}); return; }
+  try{
+    if(deletedId) await supaFetch('fornitori','DELETE',null,'?id=eq.'+deletedId);
+    if(arr.length) await supaFetch('fornitori','POST',arr,'?on_conflict=id');
+  }catch(e){ enqueue({type:'fornitori'}); }
+}
+// Default globale tempo consegna (giorni). Modificabile, salvato in localStorage.
+function getFornDefaultGiorni(){ const v=parseInt(localStorage.getItem(LS_FORN_DEFAULT)); return (isNaN(v)||v<=0)?7:v; }
+function setFornDefaultGiorni(g){ const n=parseInt(g); if(!isNaN(n)&&n>0) localStorage.setItem(LS_FORN_DEFAULT,String(n)); }
+// Tempo consegna per uno specifico fornitore (nome) con fallback al default globale.
+function getTempoConsegnaFornitore(nomeFornitore){
+  const f=loadForn().find(x=>(x.nome||'').toLowerCase().trim()===String(nomeFornitore||'').toLowerCase().trim());
+  if(f && f.tempo_consegna_medio_giorni!=null && f.tempo_consegna_medio_giorni>0) return f.tempo_consegna_medio_giorni;
+  return getFornDefaultGiorni();
+}
+window.loadForn=loadForn; window.saveForn=saveForn;
+window.getTempoConsegnaFornitore=getTempoConsegnaFornitore;
+window.getFornDefaultGiorni=getFornDefaultGiorni; window.setFornDefaultGiorni=setFornDefaultGiorni;
 
 let ssScanReader=null, ssCurrentUrl=null;
 
@@ -8441,17 +8541,43 @@ function renderDashAnalytics(){
     }).join('');
     const yLabels=[0,.5,1].map(t=>{ const v=Math.round(max*(1-t)); const y=pad.t+t*(H-pad.t-pad.b); return '<text x="'+(pad.l-4)+'" y="'+(y+3)+'" text-anchor="end" font-size="8" fill="var(--text3)" font-family="DM Mono,monospace">'+v+'</text>'; }).join('');
     const dots=(arr,col,serieName)=>arr.map((v,i)=>'<circle cx="'+(pad.l+i*xStep).toFixed(1)+'" cy="'+yScale(v).toFixed(1)+'" r="2.2" fill="'+col+'"><title>'+esc(points[i].label)+' — '+serieName+': '+v+'</title></circle>').join('');
+    // A1 — Media mobile 4 SETTIMANE, calcolata e disegnata SOLO sui punti settimanali.
+    // I punti mensili (storici) sono esclusi dal calcolo e dal rendering: la linea
+    // tratteggiata appare solo nella parte destra (settimane del mese corrente).
+    const totSerie = points.map(p => (p.ist||0)+(p.cit||0)+(p.pap||0));
+    // Indici dei soli punti settimanali, in ordine
+    const weekIdx = points.map((p,i)=>p.isMonth?-1:i).filter(i=>i>=0);
+    let maLine = '';
+    if (weekIdx.length >= 2) {
+      // Serie dei soli valori settimanali
+      const weekVals = weekIdx.map(i => totSerie[i]);
+      // Media mobile a 4 settimane: per le prime settimane usa la media delle disponibili
+      const weekMA = weekVals.map((_, k) => {
+        const start = Math.max(0, k - 3);
+        const win = weekVals.slice(start, k + 1);
+        return win.reduce((a, b) => a + b, 0) / win.length;
+      });
+      const maxMA = Math.max(max, ...weekMA);
+      const yScaleMA = v => H - pad.b - (v / maxMA) * (H - pad.t - pad.b);
+      // Path costruito solo sugli x dei punti settimanali (parte destra del grafico)
+      const maPath = weekIdx.map((origIdx, k) =>
+        (k ? 'L' : 'M') + (pad.l + origIdx * xStep).toFixed(1) + ' ' + yScaleMA(weekMA[k]).toFixed(1)
+      ).join(' ');
+      maLine = '<path d="'+maPath+'" fill="none" stroke="var(--text3)" stroke-width="1.2" stroke-dasharray="4,3" opacity="0.7"><title>Media mobile 4 settimane (solo settimane)</title></path>';
+    }
     lineSvg.innerHTML=grid+divisor+yLabels+xLabels+
       '<path d="'+path(istSerie)+'" fill="none" stroke="var(--blue)" stroke-width="1.6"/>'+
       '<path d="'+path(citSerie)+'" fill="none" stroke="var(--teal)" stroke-width="1.6"/>'+
       '<path d="'+path(papSerie)+'" fill="none" stroke="#a855f7" stroke-width="1.6"/>'+
+      maLine+
       dots(istSerie,'var(--blue)','Ist')+dots(citSerie,'var(--teal)','Cit')+dots(papSerie,'#a855f7','PAP');
   }
   const lineLeg=document.getElementById('dash-line-legend');
   if(lineLeg) lineLeg.innerHTML=
     '<span class="leg-item"><span class="leg-dot" style="background:var(--blue)"></span>Istologia</span>'+
     '<span class="leg-item"><span class="leg-dot" style="background:var(--teal)"></span>Citologia</span>'+
-    '<span class="leg-item"><span class="leg-dot" style="background:#a855f7"></span>PAP</span>';
+    '<span class="leg-item"><span class="leg-dot" style="background:#a855f7"></span>PAP</span>'+
+    '<span class="leg-item"><span class="leg-dot" style="background:var(--text3)"></span>Media mob. 4 sett.</span>';
   const lineSub=document.getElementById('dash-line-sub');
   if(lineSub) {
     const firstMonthLbl = fmtMese(prev5Months[0]).slice(0,3);
@@ -8470,65 +8596,87 @@ function renderDashAnalytics(){
   const mixTot=Object.values(mixCur).reduce((s,v)=>s+v,0);
   const donutSvg=document.getElementById('dash-chart-donut');
   if(donutSvg){
-    const W=280,H=140,cx=75,cy=70,r=52,inner=30;
+    // A2 — barre orizzontali (Istologia / Citologia / PAP): valore assoluto, % sul totale, periodo
+    const W=280,H=140,pad={l:64,r:42,t:24,b:8};
     if(mixTot===0){
-      donutSvg.innerHTML='<circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="none" stroke="var(--border-faint)" stroke-width="'+(r-inner)+'"/><text x="'+cx+'" y="'+(cy+4)+'" text-anchor="middle" font-size="11" fill="var(--text3)" font-family="DM Mono,monospace">—</text>';
+      donutSvg.innerHTML='<text x="'+(W/2)+'" y="'+(H/2)+'" text-anchor="middle" font-size="11" fill="var(--text3)" font-family="DM Mono,monospace">Nessun caso nel mese</text>';
     } else {
-      let acc=0;
-      const arcs=Object.entries(mixCur).filter(([_,v])=>v>0).map(([lbl,v])=>{
-        const frac=v/mixTot; const a0=acc*Math.PI*2-Math.PI/2; acc+=frac; const a1=acc*Math.PI*2-Math.PI/2;
-        const large=frac>.5?1:0;
-        const x0=cx+r*Math.cos(a0), y0=cy+r*Math.sin(a0);
-        const x1=cx+r*Math.cos(a1), y1=cy+r*Math.sin(a1);
-        const xi1=cx+inner*Math.cos(a1), yi1=cy+inner*Math.sin(a1);
-        const xi0=cx+inner*Math.cos(a0), yi0=cy+inner*Math.sin(a0);
-        return '<path d="M '+x0.toFixed(2)+' '+y0.toFixed(2)+' A '+r+' '+r+' 0 '+large+' 1 '+x1.toFixed(2)+' '+y1.toFixed(2)+' L '+xi1.toFixed(2)+' '+yi1.toFixed(2)+' A '+inner+' '+inner+' 0 '+large+' 0 '+xi0.toFixed(2)+' '+yi0.toFixed(2)+' Z" fill="'+mixCols[lbl]+'"/>';
+      const entries=Object.entries(mixCur); // ordine fisso ist/cit/pap
+      const max=Math.max(1,...entries.map(([,v])=>v));
+      const rowH=(H-pad.t-pad.b)/entries.length;
+      const bh=Math.min(20,rowH-8);
+      const periodLbl='Mese corrente';
+      const header='<text x="'+pad.l+'" y="14" font-size="9" fill="var(--text3)" font-family="DM Mono,monospace" letter-spacing=".5">'+esc(periodLbl)+' · '+mixTot+' casi</text>';
+      const bars=entries.map(([lbl,v],i)=>{
+        const y=pad.t+i*rowH+(rowH-bh)/2;
+        const w=(v/max)*(W-pad.l-pad.r);
+        const pct=Math.round(v/mixTot*100);
+        return '<text x="'+(pad.l-6)+'" y="'+(y+bh/2+3)+'" text-anchor="end" font-size="10" fill="var(--text2)" font-family="DM Sans,sans-serif">'+esc(lbl)+'</text>'+
+               '<rect x="'+pad.l+'" y="'+y+'" width="'+Math.max(2,w).toFixed(1)+'" height="'+bh+'" fill="'+mixCols[lbl]+'" rx="3"/>'+
+               '<text x="'+(pad.l+Math.max(2,w)+5)+'" y="'+(y+bh/2+3)+'" font-size="11" font-family="DM Mono,monospace" font-weight="700" fill="'+mixCols[lbl]+'">'+v+' <tspan fill="var(--text3)" font-size="9">'+pct+'%</tspan></text>';
       }).join('');
-      // Legenda a destra nel SVG
-      const legendEntries = Object.entries(mixCur).map(([lbl,v],i)=>{
-        const pct = Math.round(v/mixTot*100);
-        const y = 35 + i*32;
-        return `<rect x="165" y="${y}" width="10" height="10" rx="2" fill="${mixCols[lbl]}"/>` +
-               `<text x="179" y="${y+9}" font-size="11" fill="var(--text2)" font-family="DM Sans,sans-serif">${esc(lbl)}</text>` +
-               `<text x="270" y="${y+9}" text-anchor="end" font-size="11" font-family="DM Mono,monospace" fill="${mixCols[lbl]}" font-weight="700">${v} <tspan fill="var(--text3)" font-size="9">${pct}%</tspan></text>`;
-      }).join('');
-      donutSvg.innerHTML=arcs+
-        '<text x="'+cx+'" y="'+(cy-6)+'" text-anchor="middle" font-size="22" font-weight="700" fill="var(--text)" font-family="Cormorant Garamond,serif">'+mixTot+'</text>'+
-        '<text x="'+cx+'" y="'+(cy+10)+'" text-anchor="middle" font-size="8" fill="var(--text3)" font-family="DM Mono,monospace" letter-spacing=".5">CASI</text>'+
-        legendEntries;
+      donutSvg.innerHTML=header+bars;
     }
   }
   const donutLeg=document.getElementById('dash-donut-legend');
   if(donutLeg) donutLeg.innerHTML=''; // legenda ora dentro SVG
 
-  // ── 3. BAR — Confronto mese vs precedente per tipologia ──
+  // ── 3. BAR — Confronto triplo: corrente (parziale) / precedente / anno scorso ──
+  // A3 — mese stesso anno scorso (YoY), se disponibile
+  const dYoY=new Date(today.getFullYear()-1,today.getMonth(),1);
+  const ymYoY=`${dYoY.getFullYear()}-${String(dYoY.getMonth()+1).padStart(2,'0')}`;
+  const istYoY=_vetriniDelMese(ymYoY,'ist');
+  const citYoY=_vetriniDelMese(ymYoY,'cit');
+  const papYoY=_vetriniDelMese(ymYoY,'pap');
+  const hasYoY=(istYoY+citYoY+papYoY)>0;
+  // Completamento mese corrente
+  const giornoX=today.getDate();
+  const giorniY=new Date(today.getFullYear(),today.getMonth()+1,0).getDate();
+  const pctCompl=Math.round(giornoX/giorniY*100);
   const barSvg=document.getElementById('dash-chart-bar');
   if(barSvg){
     const W=280,H=120,pad={l:28,r:8,t:10,b:22};
     const cats=[
-      {lbl:'Ist.',cur:istCur,prev:istPrev,col:'var(--blue)'},
-      {lbl:'Cit.',cur:citCur,prev:citPrev,col:'var(--teal)'},
-      {lbl:'PAP',cur:papCur,prev:papPrev,col:'#a855f7'}
+      {lbl:'Ist.',cur:istCur,prev:istPrev,yoy:istYoY,col:'var(--blue)'},
+      {lbl:'Cit.',cur:citCur,prev:citPrev,yoy:citYoY,col:'var(--teal)'},
+      {lbl:'PAP',cur:papCur,prev:papPrev,yoy:papYoY,col:'#a855f7'}
     ];
-    const max=Math.max(1,...cats.flatMap(c=>[c.cur,c.prev]));
+    // proiezione mese corrente = cur / pctCompl * 100
+    const proj=c=>pctCompl>0?Math.round(c.cur/giornoX*giorniY):c.cur;
+    const allVals=cats.flatMap(c=>hasYoY?[c.cur,c.prev,c.yoy,proj(c)]:[c.cur,c.prev,proj(c)]);
+    const max=Math.max(1,...allVals);
     const groupW=(W-pad.l-pad.r)/cats.length;
-    const bw=Math.min(18,groupW*.32);
+    const nBar=hasYoY?3:2;
+    const bw=Math.min(13,(groupW*0.8)/nBar);
     const yScale=v=>H-pad.b-(v/max)*(H-pad.t-pad.b);
     const grid=[0,.5,1].map(t=>{ const y=pad.t+t*(H-pad.t-pad.b); return '<line x1="'+pad.l+'" x2="'+(W-pad.r)+'" y1="'+y+'" y2="'+y+'" stroke="var(--border-faint)" stroke-width=".5"/>'; }).join('');
     const yLabels=[0,.5,1].map(t=>{ const v=Math.round(max*(1-t)); const y=pad.t+t*(H-pad.t-pad.b); return '<text x="'+(pad.l-4)+'" y="'+(y+3)+'" text-anchor="end" font-size="8" fill="var(--text3)" font-family="DM Mono,monospace">'+v+'</text>'; }).join('');
     const bars=cats.map((c,i)=>{
       const cx=pad.l+groupW*i+groupW/2;
-      const yPrev=yScale(c.prev), yCur=yScale(c.cur);
-      const hPrev=H-pad.b-yPrev, hCur=H-pad.b-yCur;
-      return '<rect x="'+(cx-bw-1)+'" y="'+yPrev+'" width="'+bw+'" height="'+hPrev+'" fill="var(--border2)" rx="2"/>'+
-             '<rect x="'+(cx+1)+'" y="'+yCur+'" width="'+bw+'" height="'+hCur+'" fill="'+c.col+'" rx="2"/>'+
-             '<text x="'+cx+'" y="'+(H-6)+'" text-anchor="middle" font-size="9" fill="var(--text3)" font-family="DM Sans,sans-serif">'+c.lbl+'</text>'+
-             (c.cur>0?'<text x="'+(cx+1+bw/2)+'" y="'+(yCur-3)+'" text-anchor="middle" font-size="8" fill="'+c.col+'" font-family="DM Mono,monospace" font-weight="700">'+c.cur+'</text>':'');
+      // ordine barre: [anno scorso] [precedente] [corrente]
+      const series = hasYoY
+        ? [{v:c.yoy,fill:'var(--border-faint)'},{v:c.prev,fill:'var(--border2)'},{v:c.cur,fill:c.col}]
+        : [{v:c.prev,fill:'var(--border2)'},{v:c.cur,fill:c.col}];
+      const totalW=series.length*bw+(series.length-1)*2;
+      let x0=cx-totalW/2;
+      let out='';
+      series.forEach((s)=>{
+        const y=yScale(s.v), h=H-pad.b-y;
+        out+='<rect x="'+x0.toFixed(1)+'" y="'+y.toFixed(1)+'" width="'+bw+'" height="'+h.toFixed(1)+'" fill="'+s.fill+'" rx="2"/>';
+        x0+=bw+2;
+      });
+      // proiezione tratteggiata sovrapposta alla barra corrente
+      const yProj=yScale(proj(c));
+      const xCur=cx-totalW/2+(series.length-1)*(bw+2);
+      out+='<rect x="'+xCur.toFixed(1)+'" y="'+yProj.toFixed(1)+'" width="'+bw+'" height="'+(H-pad.b-yProj).toFixed(1)+'" fill="none" stroke="'+c.col+'" stroke-width="1" stroke-dasharray="2,2" rx="2"><title>Proiezione fine mese: ~'+proj(c)+'</title></rect>';
+      out+='<text x="'+cx+'" y="'+(H-6)+'" text-anchor="middle" font-size="9" fill="var(--text3)" font-family="DM Sans,sans-serif">'+c.lbl+'</text>';
+      if(c.cur>0) out+='<text x="'+xCur.toFixed(1)+'" y="'+(yScale(c.cur)-3)+'" text-anchor="start" font-size="8" fill="'+c.col+'" font-family="DM Mono,monospace" font-weight="700">'+c.cur+'</text>';
+      return out;
     }).join('');
     barSvg.innerHTML=grid+yLabels+bars;
   }
   const barSub=document.getElementById('dash-bar-sub');
-  if(barSub) barSub.textContent=fmtMese(ymCur)+' vs '+fmtMese(ymPrev);
+  if(barSub) barSub.textContent='Mese corr. al giorno '+giornoX+' di '+giorniY+' ('+pctCompl+'% completato)'+(hasYoY?' · vs prec. e '+fmtMese(ymYoY):' · vs '+fmtMese(ymPrev));
 
   // ── 4. HBAR — Top prodotti consumati ultimi 90gg ──
   // ── 4. HBAR — Top prodotti consumati ultimi 90gg ──
@@ -8572,21 +8720,36 @@ function renderDashAnalytics(){
   if(hbarSubEl) hbarSubEl.textContent = hbarLabel;
   const hbarSvg=document.getElementById('dash-chart-hbar');
   if(hbarSvg){
-    const W=280,H=175,pad={l:90,r:30,t:6,b:6};
+    const W=280,H=175,pad={l:90,r:34,t:6,b:6};
     if(!top.length){
       hbarSvg.innerHTML='<text x="'+(W/2)+'" y="'+(H/2)+'" text-anchor="middle" font-size="11" fill="var(--text3)" font-family="DM Mono,monospace">Magazzino vuoto</text>';
     } else {
       const max=top[0][1];
       const rowH=(H-pad.t-pad.b)/top.length;
-      const bh=Math.min(14,rowH-4);
+      const bh=Math.min(11,rowH-7);
       const colors=['var(--blue)','var(--teal)','#a855f7','var(--orange)','var(--accent2)','var(--green)','var(--yellow)'];
+      // A5 — giacenza per alias (per giorni copertura)
+      const aliasGrpH=(typeof _aliasGroup==='function')?_aliasGroup:(n=>n);
+      const giacenzaByAlias={};
+      prods.forEach(p=>{ const k=aliasGrpH(p.nome||''); giacenzaByAlias[k]=(giacenzaByAlias[k]||0)+(p.qty||0); });
       hbarSvg.innerHTML=top.map(([nome,qty],i)=>{
         const y=pad.t+i*rowH+(rowH-bh)/2;
         const w=(qty/max)*(W-pad.l-pad.r);
         const lblShort=nome.length>16?nome.slice(0,15)+'…':nome;
+        // mini-barra copertura: giorni = scorta / (consumo90/90)
+        const scorta=giacenzaByAlias[nome]||0;
+        const perDay=qty/90;
+        const giorni=perDay>0?Math.floor(scorta/perDay):null;
+        const covCol=giorni===null?'var(--border2)':(giorni>30?'var(--green)':giorni>=10?'var(--yellow)':'var(--red)');
+        const covMax=60; // scala mini-barra: 60gg = piena
+        const covW=giorni===null?0:Math.min(1,giorni/covMax)*(W-pad.l-pad.r);
+        const covLbl=giorni===null?'n/d':(giorni>=180?'180+ gg':giorni+' gg');
+        const yCov=y+bh+1.5;
         return '<text x="'+(pad.l-4)+'" y="'+(y+bh/2+3)+'" text-anchor="end" font-size="9" fill="var(--text2)" font-family="DM Sans,sans-serif">'+esc(lblShort)+'</text>'+
-               '<rect x="'+pad.l+'" y="'+y+'" width="'+w.toFixed(1)+'" height="'+bh+'" fill="'+colors[i%colors.length]+'" rx="2"/>'+
-               '<text x="'+(pad.l+w+3)+'" y="'+(y+bh/2+3)+'" font-size="9" fill="var(--text)" font-family="DM Mono,monospace" font-weight="700">'+qty+'</text>';
+               '<rect x="'+pad.l+'" y="'+y+'" width="'+w.toFixed(1)+'" height="'+bh+'" fill="'+colors[i%colors.length]+'" rx="2"><title>'+esc(nome)+': '+qty+' consumati (90gg)</title></rect>'+
+               '<text x="'+(pad.l+w+3)+'" y="'+(y+bh/2+3)+'" font-size="9" fill="var(--text)" font-family="DM Mono,monospace" font-weight="700">'+qty+'</text>'+
+               '<rect x="'+pad.l+'" y="'+yCov.toFixed(1)+'" width="'+Math.max(0,covW).toFixed(1)+'" height="3" fill="'+covCol+'" rx="1.5"><title>Copertura residua: '+covLbl+' (scorta '+scorta+')</title></rect>'+
+               '<text x="'+(W-pad.r+3)+'" y="'+(yCov+3.5).toFixed(1)+'" font-size="7" fill="'+covCol+'" font-family="DM Mono,monospace">'+covLbl+'</text>';
       }).join('');
     }
   }
@@ -8615,10 +8778,11 @@ function renderDashAnalytics(){
     const gruppi = {};
     prods.forEach(p => {
       const alias = aliasGrp(p.nome || '');
-      if (!gruppi[alias]) gruppi[alias] = {alias, qty:0, consumo:0, min:0};
+      if (!gruppi[alias]) gruppi[alias] = {alias, qty:0, consumo:0, min:0, fornitore:''};
       gruppi[alias].qty += (p.qty||0);
       gruppi[alias].consumo += (consumiDay[p.id]||consumiDay[p.nome]||0);
       gruppi[alias].min = Math.max(gruppi[alias].min, p.min||0);
+      if (!gruppi[alias].fornitore && p.fornitore) gruppi[alias].fornitore = p.fornitore;
     });
 
     const hasConsumi = Object.values(gruppi).some(g => g.consumo > 0);
@@ -8628,7 +8792,7 @@ function renderDashAnalytics(){
       forecast = Object.values(gruppi).map(g => {
         const perDay = g.consumo / 90;
         const giorni = perDay > 0 ? Math.floor(g.qty / perDay) : null;
-        return {nome: g.alias, qty: g.qty, giorni, modo:'consumo'};
+        return {nome: g.alias, qty: g.qty, giorni, modo:'consumo', fornitore:g.fornitore};
       }).filter(f => f.giorni !== null && f.giorni < 180)
         .sort((a,b) => a.giorni - b.giorni)
         .slice(0,6);
@@ -8636,7 +8800,7 @@ function renderDashAnalytics(){
       // Fallback: gruppi con giacenza totale <= scorta minima
       forecast = Object.values(gruppi)
         .filter(g => g.min > 0 && g.qty <= g.min)
-        .map(g => ({nome: g.alias, qty: g.qty, giorni: null, modo:'scorta', min: g.min}))
+        .map(g => ({nome: g.alias, qty: g.qty, giorni: null, modo:'scorta', min: g.min, fornitore:g.fornitore}))
         .sort((a,b) => a.qty - b.qty)
         .slice(0,6);
     }
@@ -8654,9 +8818,14 @@ function renderDashAnalytics(){
           lbl = f.giorni===0?'oggi':f.giorni+' gg';
         }
         const nameS = f.nome.length>22 ? f.nome.slice(0,21)+'…' : f.nome;
-        return '<div style="display:flex;align-items:center;gap:8px;padding:7px 10px;border-bottom:1px solid var(--border-faint);font-size:12px">'+
+        // A6 — tempo consegna fornitore + alert "esaurisci prima della consegna"
+        const tcons = (typeof getTempoConsegnaFornitore==='function') ? getTempoConsegnaFornitore(f.fornitore) : 7;
+        const rischio = (f.modo==='consumo' && f.giorni!=null && f.giorni <= tcons);
+        const consInfo = '<span data-tip="Tempo medio di consegna'+(f.fornitore?' '+esc(f.fornitore):' (default)')+': '+tcons+' giorni" style="font-family:DM Mono,monospace;font-size:9px;color:'+(rischio?'var(--red)':'var(--text3)')+';min-width:54px;text-align:right">🚚 '+tcons+'gg'+(rischio?' ⚠':'')+'</span>';
+        return '<div style="display:flex;align-items:center;gap:8px;padding:7px 10px;border-bottom:1px solid var(--border-faint);font-size:12px'+(rischio?';background:rgba(239,68,68,.05)':'')+'">'+
           '<span style="flex:1;color:var(--text);font-weight:500">'+esc(nameS)+'</span>'+
           '<span style="font-family:DM Mono,monospace;font-size:10px;color:var(--text3)">'+f.qty+' pz</span>'+
+          consInfo+
           '<span style="font-family:DM Mono,monospace;font-size:11px;font-weight:700;color:'+col+';min-width:60px;text-align:right">'+lbl+'</span>'+
         '</div>';
       }).join('')+'</div>';
@@ -8787,11 +8956,14 @@ function renderIHCTop() {
   // Conta le occorrenze di ogni anticorpo su TUTTE le richieste
   const counts = {};
   all.forEach(r => {
+    const patologo = (r.patologo||'').trim();
     (r.anticorpo||'').split(/[,\n]+/).map(s => s.trim()).filter(Boolean).forEach(ab => {
       const k = ab.toUpperCase().trim();
-      if (!counts[k]) counts[k] = {label: ab.trim(), tot: 0, done: 0};
+      if (!counts[k]) counts[k] = {label: ab.trim(), tot: 0, done: 0, patologi: {}};
       counts[k].tot++;
       if ((r.anticorpi_done||[]).includes(ab.trim())) counts[k].done++;
+      // A7 — conteggio per patologo richiedente
+      if (patologo) counts[k].patologi[patologo] = (counts[k].patologi[patologo]||0) + 1;
     });
   });
   const top10 = Object.values(counts).sort((a,b) => b.tot - a.tot).slice(0,10);
@@ -8800,21 +8972,37 @@ function renderIHCTop() {
     return;
   }
   const max = top10[0].tot;
-  el.innerHTML = '<div style="display:flex;flex-direction:column;gap:6px">' +
+  el.innerHTML =
+    '<div style="display:flex;gap:14px;font-size:9px;color:var(--text3);margin-bottom:8px;padding-left:34px">'+
+      '<span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:5px;background:var(--blue);border-radius:2px;display:inline-block"></span>Richiesti</span>'+
+      '<span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:5px;background:var(--green);border-radius:2px;display:inline-block"></span>Completati</span>'+
+    '</div>'+
+    '<div style="display:flex;flex-direction:column;gap:9px">' +
     top10.map((ab, i) => {
       const pct = Math.round(ab.tot / max * 100);
+      const donePctW = ab.tot > 0 ? Math.round(ab.done / max * 100) : 0; // larghezza completati sulla stessa scala
       const donePct = ab.tot > 0 ? Math.round(ab.done / ab.tot * 100) : 0;
       const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `<span style="width:16px;text-align:center;display:inline-block;font-size:11px;color:var(--text3)">${i+1}</span>`;
-      return `<div style="display:flex;align-items:center;gap:10px;font-size:12px">
-        <span style="width:24px;flex-shrink:0;text-align:center">${medal}</span>
-        <span style="flex:1;font-weight:600;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${esc(ab.label)}">${esc(ab.label)}</span>
-        <div style="width:80px;flex-shrink:0">
-          <div style="height:5px;background:var(--border);border-radius:99px;overflow:hidden">
-            <div style="width:${pct}%;height:100%;background:var(--blue);border-radius:99px"></div>
+      // A7 — patologo principale richiedente
+      const patArr = Object.entries(ab.patologi).sort((a,b)=>b[1]-a[1]);
+      let patInfo = '';
+      if (patArr.length) {
+        const [pNome, pCnt] = patArr[0];
+        const pPct = Math.round(pCnt / ab.tot * 100);
+        patInfo = `<div style="font-size:9px;color:var(--text3);margin-left:34px;margin-top:1px">${esc(pNome)}: ${pPct}%${patArr.length>1?' · +'+(patArr.length-1)+' altri':''}</div>`;
+      }
+      return `<div>
+        <div style="display:flex;align-items:center;gap:10px;font-size:12px">
+          <span style="width:24px;flex-shrink:0;text-align:center">${medal}</span>
+          <span style="flex:1;font-weight:600;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${esc(ab.label)}">${esc(ab.label)}</span>
+          <div style="width:90px;flex-shrink:0;position:relative;height:9px">
+            <div style="position:absolute;top:0;left:0;width:${pct}%;height:9px;background:var(--blue);border-radius:99px;opacity:.35"><title>Richiesti: ${ab.tot}</title></div>
+            <div style="position:absolute;top:0;left:0;width:${donePctW}%;height:9px;background:var(--green);border-radius:99px"></div>
           </div>
+          <span style="font-family:'DM Mono',monospace;font-weight:700;color:var(--blue);min-width:28px;text-align:right">${ab.tot}</span>
+          <span style="font-size:10px;color:var(--green);min-width:42px;text-align:right">${ab.done} ${donePct}%</span>
         </div>
-        <span style="font-family:'DM Mono',monospace;font-weight:700;color:var(--blue);min-width:28px;text-align:right">${ab.tot}</span>
-        <span style="font-size:10px;color:var(--text3);min-width:40px;text-align:right">${donePct}%✓</span>
+        ${patInfo}
       </div>`;
     }).join('') + '</div>';
 }
@@ -9632,7 +9820,8 @@ function renderDashboardPreview(){
           return set.size;
         } catch(_) { return 0; }
       };
-      // Totale casi processati = istologia (processatore) + citologia + PAP (coloratore)
+
+      // Totale casi processati = casi UNICI (un caso isto+cito = 1) + PAP
       set('kpi-casi-val', cIst + cCit + cPap);
       set('kpi-casi-ist', cIst);
       set('kpi-casi-cit', cCit);
@@ -9654,7 +9843,6 @@ function renderDashboardPreview(){
       });
 
       // Delta per tipo vs mese precedente (totale intero mese)
-      // Istologia dal processatore, cito/pap dal coloratore
       const pIstPrev = _procCasi(prevYm);
       const pCitPrev = _vetri(prevYm, 'cit');
       const pPapPrev = _vetri(prevYm, 'pap');
@@ -9909,6 +10097,9 @@ function renderDashboardPreview(){
 
   // Widget clienti
   try { if (typeof renderDashClienti === 'function') renderDashClienti(); } catch(e) { console.warn('[dashClienti]', e); }
+
+  // Widget qualità del processo (B3)
+  try { if (typeof renderQualitaProcesso === 'function') renderQualitaProcesso(); } catch(e) { console.warn('[qualitaProcesso]', e); }
 
   // Widget stato casi (ciclo vita)
   try { if (typeof renderStatoCasiWidget === 'function') renderStatoCasiWidget(); } catch(e) { console.warn('[statoCasi]', e); }
@@ -11132,6 +11323,24 @@ window.renderReport = function(){
       const yy = pad.t + t*(H-pad.t-pad.b);
       return `<line x1="${pad.l}" x2="${W-pad.r}" y1="${yy}" y2="${yy}" stroke="var(--border-faint)" stroke-width=".5"/>`;
     }).join('');
+    // A8 — sfondo grigio per i weekend (sab+dom), rect SVG dietro la linea
+    let weekendRects = '';
+    for (let d = 1; d <= lastDay; d++) {
+      const dow = new Date(y, mo-1, d).getDay(); // 0=dom, 6=sab
+      if (dow === 0 || dow === 6) {
+        const xc = pad.l + (d-1)*xStep;
+        const halfW = xStep/2;
+        const x0 = Math.max(pad.l, xc - halfW);
+        const x1 = Math.min(W-pad.r, xc + halfW);
+        weekendRects += `<rect x="${x0.toFixed(1)}" y="${pad.t}" width="${(x1-x0).toFixed(1)}" height="${(H-pad.t-pad.b).toFixed(1)}" fill="var(--text3)" opacity="0.07"/>`;
+      }
+    }
+    // A8 — media giornaliera del mese (sul totale casi/giorno)
+    const totDaily = data.ist.map((v,i)=>v+data.cit[i]+data.pap[i]);
+    const mediaG = totDaily.length ? totDaily.reduce((a,b)=>a+b,0)/totDaily.length : 0;
+    const yMedia = yScale(mediaG);
+    const mediaLine = `<line x1="${pad.l}" x2="${W-pad.r}" y1="${yMedia.toFixed(1)}" y2="${yMedia.toFixed(1)}" stroke="var(--orange)" stroke-width="1" stroke-dasharray="4,3" opacity="0.8"/>`+
+      `<text x="${W-pad.r-2}" y="${(yMedia-3).toFixed(1)}" text-anchor="end" font-size="8" fill="var(--orange)" font-family="DM Mono,monospace" font-weight="700">media ${mediaG.toFixed(1)}/gg</text>`;
     // Label giorni (ogni 5)
     const xLabels = Array.from({length:Math.ceil(lastDay/5)}, (_,i) => {
       const d = i*5+1; if(d>lastDay) return '';
@@ -11139,7 +11348,7 @@ window.renderReport = function(){
     }).join('');
     svgEl.setAttribute('viewBox', `0 0 ${W} ${H}`);
     svgEl.setAttribute('width', '100%');
-    svgEl.innerHTML = grid + xLabels +
+    svgEl.innerHTML = weekendRects + grid + mediaLine + xLabels +
       `<path d="${path(data.ist)}" fill="none" stroke="var(--blue)" stroke-width="1.5"/>` +
       `<path d="${path(data.cit)}" fill="none" stroke="var(--teal)" stroke-width="1.5"/>` +
       `<path d="${path(data.pap)}" fill="none" stroke="#a855f7" stroke-width="1.5"/>` +
@@ -11206,17 +11415,35 @@ window.renderReportAnnuale = function() {
     data.cit.push(yearCamp.filter(c => (c.data||'').startsWith(ym) && tlA(c.tipo) === 'citologia').length);
     data.pap.push(yearCamp.filter(c => (c.data||'').startsWith(ym) && tlA(c.tipo) === 'pap').length);
   }
+  // A9 — serie TOTALE anno corrente e anno precedente (per linea YoY)
+  const totCur = data.ist.map((v,i)=>v+data.cit[i]+data.pap[i]);
+  const prevYear = year - 1;
+  const prevYearCamp = allCamp.filter(c => c.data && c.data.startsWith(String(prevYear)));
+  const totPrev = [];
+  for (let m = 0; m < 12; m++) {
+    const ym = String(prevYear) + '-' + String(m+1).padStart(2,'0');
+    totPrev.push(prevYearCamp.filter(c => (c.data||'').startsWith(ym)).length);
+  }
+  const hasPrevYear = totPrev.some(v => v > 0);
   const svgEl = document.getElementById('report-annual-line');
   if (svgEl) {
     const W=600,H=120,pad={t:10,r:10,b:18,l:28};
-    const maxV = Math.max(1, ...data.ist, ...data.cit, ...data.pap);
+    const maxV = Math.max(1, ...data.ist, ...data.cit, ...data.pap, ...(hasPrevYear?totPrev:[]), ...totCur);
     const xStep = (W-pad.l-pad.r)/11;
     const yScale = v => pad.t + (H-pad.t-pad.b)*(1-v/maxV);
     const path = arr => arr.map((v,i) => (i?'L':'M')+(pad.l+i*xStep).toFixed(1)+' '+yScale(v).toFixed(1)).join(' ');
     const grid = [0,.5,1].map(t => { const yy=pad.t+t*(H-pad.t-pad.b); return `<line x1="${pad.l}" x2="${W-pad.r}" y1="${yy}" y2="${yy}" stroke="var(--border-faint)" stroke-width=".5"/>`; }).join('');
     const xLbls = MONTHS.map((m,i) => `<text x="${(pad.l+i*xStep).toFixed(1)}" y="${H}" text-anchor="middle" font-size="8" fill="var(--text3)" font-family="DM Mono,monospace">${m}</text>`).join('');
+    // A9 — linea anno precedente (totale), tratteggiata, colore distinto. Solo fino al mese con dati.
+    let prevYearLine = '';
+    if (hasPrevYear) {
+      const lastWithData = totPrev.reduce((acc,v,i)=>v>0?i:acc,0);
+      const prevSlice = totPrev.slice(0, lastWithData+1);
+      const prevPath = prevSlice.map((v,i)=>(i?'L':'M')+(pad.l+i*xStep).toFixed(1)+' '+yScale(v).toFixed(1)).join(' ');
+      prevYearLine = `<path d="${prevPath}" fill="none" stroke="var(--text3)" stroke-width="1.4" stroke-dasharray="5,3" opacity="0.7"><title>Anno ${prevYear} (totale)</title></path>`;
+    }
     svgEl.setAttribute('viewBox', `0 0 ${W} ${H}`);
-    svgEl.innerHTML = grid + xLbls +
+    svgEl.innerHTML = grid + xLbls + prevYearLine +
       `<path d="${path(data.ist)}" fill="none" stroke="#2563eb" stroke-width="1.8"/>` +
       `<path d="${path(data.cit)}" fill="none" stroke="#0891b2" stroke-width="1.8"/>` +
       `<path d="${path(data.pap)}" fill="none" stroke="#7c3aed" stroke-width="1.8"/>` +
@@ -11224,7 +11451,19 @@ window.renderReportAnnuale = function() {
       data.cit.map((v,i)=>v>0?`<circle cx="${(pad.l+i*xStep).toFixed(1)}" cy="${yScale(v).toFixed(1)}" r="2.5" fill="#0891b2"/>`:'').join('') +
       data.pap.map((v,i)=>v>0?`<circle cx="${(pad.l+i*xStep).toFixed(1)}" cy="${yScale(v).toFixed(1)}" r="2.5" fill="#7c3aed"/>`:'').join('');
     const sub = document.getElementById('report-annual-line-sub');
-    if (sub) sub.textContent = String(year);
+    if (sub) {
+      // A9 — Δ% YoY annuale
+      const sumCur = totCur.reduce((a,b)=>a+b,0);
+      const sumPrev = totPrev.reduce((a,b)=>a+b,0);
+      if (hasPrevYear && sumPrev > 0) {
+        const delta = Math.round((sumCur - sumPrev) / sumPrev * 100);
+        const segno = delta >= 0 ? '+' : '';
+        const col = delta >= 0 ? 'var(--green)' : 'var(--red)';
+        sub.innerHTML = String(year) + ' vs ' + prevYear + ': <span style="color:'+col+';font-weight:700">' + segno + delta + '%</span> (linea tratteggiata = ' + prevYear + ')';
+      } else {
+        sub.textContent = String(year) + (hasPrevYear ? ' · ' + prevYear + ' parziale' : ' · nessuno storico ' + prevYear);
+      }
+    }
   }
 
   // Tabella riepilogo mensile
@@ -11979,23 +12218,19 @@ function _trc_richiedente(c) {
 // o tutte completate), 'in_attesa_ihc' (colorato + almeno 1 IHC non completata).
 // data_chiusura_lab = data del PRIMO ciclo coloratore (mai sovrascritta).
 // data_chiusura_finale = data ultima IHC completata (o = data_chiusura_lab se no IHC).
-// Normalizza un ID caso per match tollerante. Estrae l'ID BASE del caso:
-// - numero / anno (4 cifre → 2 cifre: 100/2026 ≡ 100/26)
-// - eventuale suffisso PAP attaccato (L/P)
-// - IGNORA blocchetti/note che seguono dopo uno spazio o separatore
-//   (es. "345/26 2, 3" → "345/26", "345/26-A,B" → "345/26", "345/26 blocco 1" → "345/26")
-// Così le richieste IHC con blocchetti vengono agganciate al caso corretto.
+// Normalizza un ID caso per match tollerante:
+// - rimuove spazi, maiuscolo, anno a 4 cifre → 2 cifre (100/2026 ≡ 100/26)
 function _normCasoId(id) {
   const s = String(id || '').trim().toUpperCase();
-  // Cattura numero, /, anno (2-4 cifre), poi eventuali lettere ATTACCATE (no spazio).
-  // Si ferma al primo spazio/separatore: tutto ciò che segue è blocchetto/nota.
+  // Estrae l'ID BASE del caso: numero / anno (4 cifre → 2) + eventuale suffisso PAP attaccato.
+  // IGNORA blocchetti/note che seguono dopo spazio o separatore
+  // (es. "345/26 2, 3" → "345/26", "345/26-A,B" → "345/26").
   const m = s.match(/^(\d+)\s*\/\s*(\d{4}|\d{2})([A-Z]*)/);
   if (m) {
     let yr = m[2];
     if (yr.length === 4) yr = yr.slice(2); // 2026 → 26
     return m[1] + '/' + yr + (m[3] || '');
   }
-  // Fallback: nessun formato riconosciuto → togli solo spazi
   return s.replace(/\s+/g, '');
 }
 
@@ -12981,6 +13216,23 @@ function renderDashClienti() {
   const totRecent = recent.length;
   if (subEl) subEl.textContent = totRecent + ' casi totali';
 
+  // A4 — Top 5 del MESE PRECEDENTE (30-60gg fa) per confronto posizione
+  const cutoffPrev = new Date(today); cutoffPrev.setDate(cutoffPrev.getDate() - 60);
+  const cutoffPrevIso = cutoffPrev.toISOString().slice(0, 10);
+  const prevPeriod = camp.filter(c => c.data && c.data >= cutoffPrevIso && c.data < cutoffIso);
+  const volPrev = new Map();
+  prevPeriod.forEach(c => { const r = _trc_richiedente(c); if (r) volPrev.set(r, (volPrev.get(r) || 0) + 1); });
+  const topPrev = Array.from(volPrev.entries()).sort((a, b) => b[1] - a[1]).slice(0, 5).map(e => e[0]);
+  const prevPos = {}; topPrev.forEach((n, idx) => { prevPos[n] = idx; });
+  // Indicatore trend posizione: ↑ salito/entrato, ↓ sceso, → stabile, ★ nuovo
+  const trendIndicatore = (nome, posAttuale) => {
+    if (!(nome in prevPos)) return { ico: '★', col: 'var(--accent2)', tip: 'Nuovo in classifica' };
+    const delta = prevPos[nome] - posAttuale; // >0 = salito
+    if (delta > 0) return { ico: '↑', col: 'var(--green)', tip: 'Salito da #' + (prevPos[nome] + 1) };
+    if (delta < 0) return { ico: '↓', col: 'var(--yellow)', tip: 'Sceso da #' + (prevPos[nome] + 1) };
+    return { ico: '→', col: 'var(--text3)', tip: 'Posizione stabile' };
+  };
+
   if (top.length === 0) {
     topEl.innerHTML = '<div style="color:var(--text3);font-size:12px">Nessun cliente</div>';
   } else {
@@ -12989,10 +13241,12 @@ function renderDashClienti() {
       const pct = totRecent ? Math.round(n * 100 / totRecent) : 0;
       const barPct = maxN ? Math.round(n * 100 / maxN) : 0;
       const medalColors = ['#ca8a04', '#94a3b8', '#b45309', 'var(--text3)', 'var(--text3)'];
+      const tr = trendIndicatore(nome, i);
       return `<div style="display:flex;align-items:center;gap:8px;padding:4px 0;font-size:12px">
         <span style="font-family:'DM Mono',monospace;font-weight:700;color:${medalColors[i]};min-width:14px">${i + 1}</span>
+        <span data-tip="${tr.tip}" style="color:${tr.col};font-weight:700;min-width:12px;text-align:center;cursor:default">${tr.ico}</span>
         <span style="flex:1;font-weight:500">${esc(nome)}</span>
-        <div style="flex:0 0 80px;height:4px;background:var(--border);border-radius:99px;overflow:hidden">
+        <div style="flex:0 0 70px;height:4px;background:var(--border);border-radius:99px;overflow:hidden">
           <div style="height:100%;width:${barPct}%;background:var(--accent2);border-radius:99px"></div>
         </div>
         <span style="font-family:'DM Mono',monospace;font-weight:700;color:var(--accent);min-width:28px;text-align:right">${n}</span>
@@ -13265,9 +13519,25 @@ function renderC3TendenzaTempo(topClients, cutoff) {
   }
 
   svg.innerHTML = yLabels + lines + xLabels;
-  legend.innerHTML = data.map((d, i) =>
-    `<span style="display:flex;align-items:center;gap:4px"><span style="width:12px;height:2px;background:${colors[i % colors.length]};display:inline-block"></span>${esc(d.cli)}</span>`
-  ).join('');
+  // A10 — Δ% ultimi 90gg vs 90gg precedenti, per cliente (in legenda)
+  const _camp90 = loadCampioni();
+  const _now = new Date();
+  const _iso = (dd) => dd.toISOString().slice(0,10);
+  const _c90 = _iso(new Date(_now.getTime() - 90*86400000));
+  const _c180 = _iso(new Date(_now.getTime() - 180*86400000));
+  const deltaByCli = {};
+  data.forEach(d => {
+    const ultimi = _camp90.filter(c => c.data && c.data >= _c90 && _trc_richiedente(c) === d.cli).length;
+    const prec = _camp90.filter(c => c.data && c.data >= _c180 && c.data < _c90 && _trc_richiedente(c) === d.cli).length;
+    deltaByCli[d.cli] = prec > 0 ? Math.round((ultimi - prec) / prec * 100) : (ultimi > 0 ? null : 0);
+  });
+  legend.innerHTML = data.map((d, i) => {
+    const dp = deltaByCli[d.cli];
+    let badge = '';
+    if (dp === null) badge = ' <span style="color:var(--accent2);font-size:10px">(nuovo)</span>';
+    else if (dp !== 0) { const col = dp > 0 ? 'var(--green)' : 'var(--red)'; badge = ` <span style="color:${col};font-size:10px;font-weight:700">(${dp>0?'+':''}${dp}%)</span>`; }
+    return `<span style="display:flex;align-items:center;gap:4px"><span style="width:12px;height:2px;background:${colors[i % colors.length]};display:inline-block"></span>${esc(d.cli)}${badge}</span>`;
+  }).join('');
 }
 
 function renderC4Heatmap(topClients, cutoff) {
@@ -13382,6 +13652,757 @@ window.openTracDiagModal = openTracDiagModal;
 window.diagnosticaCasi = diagnosticaCasi;
 window.renderClientiSection = renderClientiSection;
 window.renderClienteMix = renderClienteMix;
+
+// ════════════════════════════════════════════════════════════════
+// GRUPPO B — INDICATORI QUALITÀ DEL PROCESSO
+// ════════════════════════════════════════════════════════════════
+
+// ─── B1 — Rilevamento IHC ripetute ───────────────────────────────
+// "IHC ripetuta" = stessa coppia (campione_id, anticorpo) presente in
+// PIÙ richieste IHC distinte, separate da almeno `giorni_min_distanza`
+// giorni tra le date di richiesta.
+// NON è ripetizione:
+//   - stesso anticorpo che compare due volte nella STESSA richiesta
+//   - due richieste lo stesso giorno con lo stesso anticorpo (intervallo < 1g)
+//
+// Parametri:
+//   ihcCache: array di record IHC (se omesso → loadIHC())
+//   opts.giorni_min_distanza : intervallo minimo in giorni (default 1)
+//   opts.dal, opts.al        : filtro periodo su data_richiesta ('YYYY-MM-DD')
+//
+// Ritorna array di:
+//   { campione_id, anticorpo, occorrenze: [{ihc_id, data}, ...] }
+// FIX [TRACCIABILITÀ]: nuova funzione B1
+function _findIHCRipetute(ihcCache, opts = {}) {
+  const arr = Array.isArray(ihcCache)
+    ? ihcCache
+    : ((typeof loadIHC === 'function') ? loadIHC() : []);
+  const minGap = (opts.giorni_min_distanza != null) ? opts.giorni_min_distanza : 1;
+  const dal = opts.dal || null;
+  const al  = opts.al  || null;
+
+  // 1) Filtra per periodo sulla data_richiesta (se richiesto)
+  const inPeriodo = (data) => {
+    if (!data) return false;
+    const d = String(data).slice(0, 10);
+    if (dal && d < dal) return false;
+    if (al  && d > al)  return false;
+    return true;
+  };
+
+  // 2) Espandi ogni richiesta in coppie (campione_id, anticorpo).
+  //    Gli anticorpi sono nella stringa r.anticorpo separati da virgola/newline.
+  //    DEDUP per (richiesta, anticorpo): se lo stesso anticorpo compare due
+  //    volte nella STESSA richiesta NON conta come ripetizione (regola B1).
+  const occByKey = new Map(); // key "campione_id||ANTICORPO_UPPER" → [{ihc_id, data}]
+  arr.forEach(r => {
+    const camp = String(r.campione_id || '').trim();
+    const data = String(r.data_richiesta || '').slice(0, 10);
+    if (!camp || !data) return;
+    if (!inPeriodo(data)) return;
+    const visti = new Set(); // dedup anticorpi entro la stessa richiesta
+    (r.anticorpo || '').split(/[,\n]+/).map(s => s.trim()).filter(Boolean).forEach(ab => {
+      const abKey = ab.toUpperCase();
+      if (visti.has(abKey)) return; // stesso anticorpo ripetuto nella stessa richiesta → ignora
+      visti.add(abKey);
+      const key = camp + '||' + abKey;
+      if (!occByKey.has(key)) occByKey.set(key, { campione_id: camp, anticorpo: ab, occorrenze: [] });
+      occByKey.get(key).occorrenze.push({ ihc_id: r.id, data });
+    });
+  });
+
+  // 3) Per ogni coppia, ordina le occorrenze per data e verifica che esistano
+  //    almeno due richieste distanti >= minGap giorni.
+  const out = [];
+  occByKey.forEach(entry => {
+    if (entry.occorrenze.length < 2) return;
+    const occ = entry.occorrenze.slice().sort((a, b) => (a.data < b.data ? -1 : a.data > b.data ? 1 : 0));
+    // È ripetuta se ALMENO una coppia di richieste dista >= minGap giorni.
+    let ripetuta = false;
+    for (let i = 1; i < occ.length && !ripetuta; i++) {
+      for (let j = 0; j < i; j++) {
+        const gap = _trc_diffDays(occ[j].data, occ[i].data);
+        if (gap != null && Math.abs(gap) >= minGap) { ripetuta = true; break; }
+      }
+    }
+    if (ripetuta) {
+      out.push({ campione_id: entry.campione_id, anticorpo: entry.anticorpo, occorrenze: occ });
+    }
+  });
+
+  return out;
+}
+window._findIHCRipetute = _findIHCRipetute;
+
+// ─── B2 — Classificazione automatica multi-ciclo coloratore ───────
+// REGOLA DI BUSINESS (osservata sul workflow reale, NON ottimizzare):
+//   Un caso che torna sul coloratore può essere:
+//   - RICAMPIONAMENTO (aggiunta vetrini, NON errore): nuovo materiale è stato
+//     processato → il caso ricompare ANCHE nel processatore.
+//   - RICOLORAZIONE PER ERRORE: blocchetto già processato, solo ritagliato e
+//     ricolorato → il caso ricompare SOLO nel coloratore, non nel processatore.
+//
+//   Per ogni caso C:
+//     N = n° di cicli coloratore EE in cui compare C (ist + cit, PAP escluso)
+//     M = n° di cicli processatore in cui compare C (tutti)
+//
+//     SE M >= N → tutte le occorrenze coloratore oltre la prima = AGGIUNTA
+//     SE M <  N → (N - M) occorrenze (le più recenti) = RICOLORAZIONE PER ERRORE
+//                 le restanti oltre la prima = AGGIUNTA
+//     La PRIMA occorrenza coloratore è SEMPRE "prima colorazione".
+//
+// NOTE CRITICHE:
+//   - Vale SOLO per protocolli EE (ist + cit). PAP escluso (no ID tracciabili).
+//   - N considera SOLO cicli coloratore EE.
+//   - M considera TUTTI i cicli processatore.
+//
+// Parametri:
+//   campioneId : ID caso da classificare
+//   opts.coloratoreCache  : array record coloratore (se omesso → loadColoratore())
+//   opts.processatoreCache: array record processatore (se omesso → loadProc())
+//
+// Ritorna:
+//   { cicli: [{cicloId, data, tipo:'prima'|'aggiunta'|'ricolorazione'}],
+//     ricolorazioni_count, aggiunte_count }
+// FIX [TRACCIABILITÀ]: nuova funzione B2
+function _classificaCicliColoratore(campioneId, opts = {}) {
+  const norm = (typeof _normCasoId === 'function') ? _normCasoId : (x => String(x || '').trim());
+  const target = norm(campioneId);
+  const color = Array.isArray(opts.coloratoreCache)
+    ? opts.coloratoreCache
+    : ((typeof loadColoratore === 'function') ? loadColoratore() : []);
+  const proc = Array.isArray(opts.processatoreCache)
+    ? opts.processatoreCache
+    : ((typeof loadProc === 'function') ? loadProc() : []);
+
+  // N — cicli coloratore EE (ist + cit, PAP escluso) in cui compare il caso.
+  //     Un record che contiene l'ID in casi_ist E/O casi_cit conta come 1 ciclo.
+  const cicliColor = color.filter(r => {
+    const ist = Array.isArray(r.casi_ist) ? r.casi_ist : [];
+    const cit = Array.isArray(r.casi_cit) ? r.casi_cit : [];
+    return ist.some(id => norm(id) === target) || cit.some(id => norm(id) === target);
+  });
+
+  // M — cicli processatore in cui compare il caso (campo casi[]).
+  const cicliProcCount = proc.filter(c => {
+    const casi = Array.isArray(c.casi) ? c.casi : [];
+    return casi.some(id => norm(id) === target);
+  }).length;
+
+  const N = cicliColor.length;
+  const M = cicliProcCount;
+
+  const out = { cicli: [], ricolorazioni_count: 0, aggiunte_count: 0 };
+  if (N === 0) return out;
+
+  // Ordina i cicli coloratore per data crescente; spareggio su creato/ordine record.
+  const ordinati = cicliColor.slice().sort((a, b) => {
+    const da = String(a.data || ''), db = String(b.data || '');
+    if (da !== db) return da < db ? -1 : 1;
+    const ca = String(a.creato || ''), cb = String(b.creato || '');
+    if (ca !== cb) return ca < cb ? -1 : 1;
+    return color.indexOf(a) - color.indexOf(b); // ordine di inserimento
+  });
+
+  // Numero di ricolorazioni = max(0, N - M). Mai meno di zero.
+  const ricol = Math.max(0, N - M);
+
+  // Le ricolorazioni sono le (N - M) occorrenze PIÙ RECENTI → in coda all'ordinamento.
+  // La prima occorrenza è SEMPRE "prima colorazione".
+  ordinati.forEach((rec, i) => {
+    let tipo;
+    if (i === 0) {
+      tipo = 'prima';
+    } else if (i >= N - ricol) {
+      // appartiene alla coda delle ricolorazioni
+      tipo = 'ricolorazione';
+    } else {
+      tipo = 'aggiunta';
+    }
+    out.cicli.push({ cicloId: rec.id, data: rec.data, tipo });
+  });
+
+  out.ricolorazioni_count = out.cicli.filter(c => c.tipo === 'ricolorazione').length;
+  out.aggiunte_count      = out.cicli.filter(c => c.tipo === 'aggiunta').length;
+  return out;
+}
+window._classificaCicliColoratore = _classificaCicliColoratore;
+
+// ─── B3 — Widget "Qualità del processo" (Dashboard) ──────────────
+// Usa B1 (_findIHCRipetute) e B2 (_classificaCicliColoratore).
+// KPI del mese corrente + trend 6 mesi. NESSUN colore allarmistico:
+// verde stabile/migliora, giallo se peggiora >20%, mai rosso.
+
+// Helper: primo/ultimo giorno di un mese YYYY-MM
+function _qp_meseRange(ym) {
+  const [y, m] = ym.split('-').map(Number);
+  const dal = ym + '-01';
+  const last = new Date(y, m, 0).getDate();
+  const al = ym + '-' + String(last).padStart(2, '0');
+  return { dal, al };
+}
+
+// Helper: lista ultimi N mesi YYYY-MM in ordine cronologico
+function _qp_ultimiMesi(n) {
+  const arr = [];
+  const d = new Date();
+  d.setDate(1);
+  for (let i = 0; i < n; i++) {
+    arr.unshift(d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'));
+    d.setMonth(d.getMonth() - 1);
+  }
+  return arr;
+}
+
+// Calcola gli indicatori di qualità per un mese YYYY-MM.
+// Ritorna { ihc_ripetute, ihc_tot, ricolorazioni, casi_color, casi_buoni, ... }
+// FIX [TRACCIABILITÀ]: nuova funzione B3 (cuore calcolo, riusato anche da E1)
+function _calcQualitaMese(ym, caches) {
+  const c = caches || {};
+  const ihc = c.ihc || ((typeof loadIHC === 'function') ? loadIHC() : []);
+  const color = c.color || ((typeof loadColoratore === 'function') ? loadColoratore() : []);
+  const proc = c.proc || ((typeof loadProc === 'function') ? loadProc() : []);
+  const { dal, al } = _qp_meseRange(ym);
+  const norm = (typeof _normCasoId === 'function') ? _normCasoId : (x => String(x || '').trim());
+
+  // ── IHC ripetute del mese (B1, filtrato su data_richiesta nel mese) ──
+  const rip = _findIHCRipetute(ihc, { dal, al });
+  const ihc_ripetute = rip.length;
+  // Totale richieste IHC del mese (numero di righe IHC con data nel mese)
+  const ihc_tot = ihc.filter(r => {
+    const d = String(r.data_richiesta || '').slice(0, 10);
+    return d >= dal && d <= al;
+  }).length;
+
+  // ── Ricolorazioni EE del mese (B2) ──
+  // Casi EE colorati nel mese: ID unici presenti in casi_ist/casi_cit dei record del mese.
+  const colorMese = color.filter(r => {
+    const d = String(r.data || '').slice(0, 10);
+    return d >= dal && d <= al;
+  });
+  const casiEEmese = new Set();
+  colorMese.forEach(r => {
+    (Array.isArray(r.casi_ist) ? r.casi_ist : []).forEach(id => { if (id) casiEEmese.add(norm(id)); });
+    (Array.isArray(r.casi_cit) ? r.casi_cit : []).forEach(id => { if (id) casiEEmese.add(norm(id)); });
+  });
+  const casi_color = casiEEmese.size;
+
+  let ricolorazioni = 0;   // n° casi con almeno 1 ricolorazione nel mese
+  let casi_buoni = 0;      // casi multi-ciclo solo-aggiunte (nessuna ricolorazione)
+  let multi_ciclo = 0;
+  const casiRicol = [];    // per la vista dettaglio
+  const casiBuoni = [];
+  casiEEmese.forEach(caso => {
+    const cl = _classificaCicliColoratore(caso, { coloratoreCache: color, processatoreCache: proc });
+    if (cl.cicli.length > 1) {
+      multi_ciclo++;
+      if (cl.ricolorazioni_count > 0) { ricolorazioni++; casiRicol.push(caso); }
+      else if (cl.aggiunte_count > 0) { casi_buoni++; casiBuoni.push(caso); }
+    }
+  });
+
+  return {
+    ym,
+    ihc_ripetute, ihc_tot,
+    ihc_ripetute_pct: ihc_tot ? Math.round(ihc_ripetute / ihc_tot * 100) : 0,
+    ricolorazioni, casi_color,
+    ricolorazioni_pct: casi_color ? Math.round(ricolorazioni / casi_color * 100) : 0,
+    casi_buoni, multi_ciclo,
+    _casiRipetute: rip,        // dettaglio IHC
+    _casiRicol: casiRicol,     // dettaglio ricolorazioni
+    _casiBuoni: casiBuoni
+  };
+}
+
+// Colore "non allarmistico": confronta col mese precedente.
+// verde = stabile o migliora, giallo = peggiora > 20%, mai rosso.
+function _qp_trendColor(curr, prev) {
+  if (prev == null || prev === 0) return 'var(--text2)';
+  const delta = (curr - prev) / prev;
+  return delta > 0.20 ? 'var(--yellow)' : 'var(--green)';
+}
+
+function renderQualitaProcesso() {
+  const root = document.getElementById('dash-quality-widget');
+  if (!root) return;
+  try {
+    const ihc = (typeof loadIHC === 'function') ? loadIHC() : [];
+    const color = (typeof loadColoratore === 'function') ? loadColoratore() : [];
+    const proc = (typeof loadProc === 'function') ? loadProc() : [];
+    const caches = { ihc, color, proc };
+
+    const mesi = _qp_ultimiMesi(6);
+    const serie = mesi.map(ym => _calcQualitaMese(ym, caches));
+    const cur = serie[serie.length - 1];
+    const prev = serie[serie.length - 2] || null;
+
+    // Memorizza per la vista dettaglio (click su KPI)
+    window._qpLastMonth = cur;
+
+    const colRip = _qp_trendColor(cur.ihc_ripetute, prev ? prev.ihc_ripetute : null);
+    const colRic = _qp_trendColor(cur.ricolorazioni, prev ? prev.ricolorazioni : null);
+
+    // ── KPI grandi (cliccabili) ──
+    const kpiCard = (label, val, sub, col, onclick) =>
+      `<div onclick="${onclick}" style="flex:1;cursor:pointer;padding:10px 12px;border-radius:10px;background:var(--bg2);border:1px solid var(--border);transition:background .15s" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background='var(--bg2)'">
+        <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">${esc(label)}</div>
+        <div style="font-family:'Libre Baskerville',serif;font-size:26px;font-weight:700;color:${col};line-height:1">${val}</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:3px">${esc(sub)}</div>
+      </div>`;
+
+    const kpiRow =
+      `<div style="display:flex;gap:10px;margin-bottom:12px">
+        ${kpiCard('IHC ripetute (mese)', cur.ihc_ripetute, cur.ihc_ripetute_pct + '% su ' + cur.ihc_tot + ' richieste', colRip, "renderQualitaDettaglio('ihc')")}
+        ${kpiCard('Ricolorazioni EE (mese)', cur.ricolorazioni, cur.ricolorazioni_pct + '% su ' + cur.casi_color + ' casi', colRic, "renderQualitaDettaglio('ricol')")}
+        ${kpiCard('Casi multi-ciclo buoni', cur.casi_buoni, 'solo aggiunte vetrini', 'var(--green)', "renderQualitaDettaglio('buoni')")}
+      </div>`;
+
+    // ── Mini line chart helper (SVG, stile coerente) ──
+    const miniLine = (vals, col, label) => {
+      const W = 230, H = 56, pad = { l: 4, r: 4, t: 8, b: 14 };
+      const max = Math.max(1, ...vals);
+      const step = (W - pad.l - pad.r) / (vals.length - 1 || 1);
+      const yS = v => H - pad.b - (v / max) * (H - pad.t - pad.b);
+      const path = vals.map((v, i) => (i ? 'L' : 'M') + (pad.l + i * step).toFixed(1) + ' ' + yS(v).toFixed(1)).join(' ');
+      const dots = vals.map((v, i) => `<circle cx="${(pad.l + i * step).toFixed(1)}" cy="${yS(v).toFixed(1)}" r="2" fill="${col}"><title>${mesi[i]}: ${v}</title></circle>`).join('');
+      const xLbls = mesi.map((m, i) => `<text x="${(pad.l + i * step).toFixed(1)}" y="${H - 3}" text-anchor="middle" font-size="7" fill="var(--text3)" font-family="DM Mono,monospace">${m.slice(5)}</text>`).join('');
+      return `<div style="flex:1">
+        <div style="font-size:10px;color:var(--text3);margin-bottom:2px">${esc(label)}</div>
+        <svg width="100%" viewBox="0 0 ${W} ${H}" style="overflow:visible">
+          <path d="${path}" fill="none" stroke="${col}" stroke-width="1.6"/>${dots}${xLbls}
+        </svg>
+      </div>`;
+    };
+
+    const charts =
+      `<div style="display:flex;gap:14px">
+        ${miniLine(serie.map(s => s.ihc_ripetute), 'var(--blue)', 'Trend IHC ripetute (6 mesi)')}
+        ${miniLine(serie.map(s => s.ricolorazioni), 'var(--teal)', 'Trend ricolorazioni EE (6 mesi)')}
+      </div>`;
+
+    root.innerHTML = kpiRow + charts;
+  } catch (e) {
+    console.warn('[renderQualitaProcesso]', e);
+    root.innerHTML = '<div style="padding:14px;color:var(--text3);font-size:12px">Dati insufficienti per gli indicatori di qualità</div>';
+  }
+}
+window.renderQualitaProcesso = renderQualitaProcesso;
+
+// Vista dettaglio (click su KPI): apre modal con lista casi coinvolti
+function renderQualitaDettaglio(tipo) {
+  const cur = window._qpLastMonth;
+  if (!cur) return;
+  const modal = document.getElementById('modal-qualita-dett');
+  const titleEl = document.getElementById('qualita-dett-title');
+  const bodyEl = document.getElementById('qualita-dett-body');
+  if (!modal || !bodyEl) return;
+
+  // Link alla scheda caso esistente (riusa openTracSchedaCasoModal se disponibile)
+  const linkCaso = (id) => {
+    const safe = String(id).replace(/'/g, "\\'");
+    if (typeof openTracSchedaCasoModal === 'function') {
+      return `<span onclick="closeModal('modal-qualita-dett');openTracSchedaCasoModal();setTimeout(()=>{var i=document.getElementById('trac-caso-input');if(i){i.value='${safe}';if(typeof cercaSchedaCaso==='function')cercaSchedaCaso();}},150)" style="cursor:pointer;color:var(--accent);text-decoration:underline;font-family:'DM Mono',monospace">${esc(id)}</span>`;
+    }
+    return `<span style="font-family:'DM Mono',monospace">${esc(id)}</span>`;
+  };
+
+  let title = '', html = '';
+  if (tipo === 'ihc') {
+    title = '🔬 IHC ripetute — ' + cur.ym;
+    const list = cur._casiRipetute || [];
+    if (!list.length) html = '<div class="trac-empty">Nessuna IHC ripetuta nel mese</div>';
+    else html = list.map(r => {
+      const date = r.occorrenze.map(o => (typeof fmtDate === 'function' ? fmtDate(o.data) : o.data)).join(' → ');
+      return `<div class="trac-row"><span class="trac-id">${linkCaso(r.campione_id)}</span><span class="trac-info">${esc(r.anticorpo)}</span><span class="trac-meta">${esc(date)}</span></div>`;
+    }).join('');
+  } else if (tipo === 'ricol') {
+    title = '🎨 Ricolorazioni EE per errore — ' + cur.ym;
+    const list = cur._casiRicol || [];
+    if (!list.length) html = '<div class="trac-empty">Nessuna ricolorazione per errore nel mese</div>';
+    else html = list.map(id => `<div class="trac-row"><span class="trac-id">${linkCaso(id)}</span><span class="trac-info">Ricolorazione per errore qualità</span></div>`).join('');
+  } else if (tipo === 'buoni') {
+    title = '✅ Casi multi-ciclo buoni (solo aggiunte) — ' + cur.ym;
+    const list = cur._casiBuoni || [];
+    if (!list.length) html = '<div class="trac-empty">Nessun caso multi-ciclo con sole aggiunte nel mese</div>';
+    else html = list.map(id => `<div class="trac-row"><span class="trac-id">${linkCaso(id)}</span><span class="trac-info">Aggiunta vetrini (ricampionamento, non errore)</span></div>`).join('');
+  }
+
+  if (titleEl) titleEl.textContent = title;
+  bodyEl.innerHTML = html;
+  modal.classList.add('open');
+}
+window.renderQualitaDettaglio = renderQualitaDettaglio;
+
+// ════════════════════════════════════════════════════════════════
+// GRUPPO E — TRACCIABILITÀ AVANZATA PER AUDIT (ISO 15189)
+// ════════════════════════════════════════════════════════════════
+
+// ─── Helper statistici (mediana, percentile) ───
+function _stat_median(arr) {
+  const a = arr.filter(x => x != null && !isNaN(x)).slice().sort((x, y) => x - y);
+  if (!a.length) return null;
+  const mid = Math.floor(a.length / 2);
+  return a.length % 2 ? a[mid] : (a[mid - 1] + a[mid]) / 2;
+}
+function _stat_percentile(arr, p) {
+  const a = arr.filter(x => x != null && !isNaN(x)).slice().sort((x, y) => x - y);
+  if (!a.length) return null;
+  const idx = Math.ceil(p / 100 * a.length) - 1;
+  return a[Math.max(0, Math.min(a.length - 1, idx))];
+}
+
+// ─── E1 — calcolo completo indicatori qualità di un mese ───
+// Ritorna un oggetto con le 3 sezioni. Tutto on-the-fly, mai memorizzato.
+function _calcIndicatoriMese(ym, sogliaTat) {
+  const camp = (typeof loadCampioni === 'function') ? loadCampioni() : [];
+  const proc = (typeof loadProc === 'function') ? loadProc() : [];
+  const color = (typeof loadColoratore === 'function') ? loadColoratore() : [];
+  const ihc = (typeof loadIHC === 'function') ? loadIHC() : [];
+  const prods = (typeof loadP === 'function') ? loadP() : [];
+  const { dal, al } = _qp_meseRange(ym);
+  const soglia = sogliaTat || 5;
+
+  // ── SEZIONE 1 — Qualità tecnica ──
+  const q = _calcQualitaMese(ym, { ihc, color, proc });
+
+  // TAT tecnico dei casi accettati nel mese (acc → primo coloratore)
+  const procByCaso = new Map();
+  proc.forEach(c => _trc_extractCasi(c).forEach(id => {
+    const k = _normCasoId(id); const ex = procByCaso.get(k);
+    if (!ex || (c.data && c.data < ex.data)) procByCaso.set(k, c);
+  }));
+  const colorByCaso = new Map();
+  color.forEach(r => _trc_extractCasi(r).forEach(id => {
+    const k = _normCasoId(id); const ex = colorByCaso.get(k);
+    if (!ex || (r.data && r.data < ex.data)) colorByCaso.set(k, r);
+  }));
+  const tats = [];
+  camp.forEach(c => {
+    const d = String(c.data || '').slice(0, 10);
+    if (d < dal || d > al) return;
+    if (c.consulenza) return;
+    const id = _normCasoId(c.campione_id || '');
+    const col = colorByCaso.get(id);
+    if (!col) return;
+    const t = _trc_diffDays(c.data, col.data);
+    if (t != null && t >= 0) tats.push(t);
+  });
+  const tatMedia = tats.length ? tats.reduce((a, b) => a + b, 0) / tats.length : null;
+  const tatMediana = _stat_median(tats);
+  const tatP95 = _stat_percentile(tats, 95);
+  const tatSopraSoglia = tats.filter(t => t > soglia).length;
+  const tatSopraPct = tats.length ? Math.round(tatSopraSoglia / tats.length * 100) : 0;
+
+  // ── SEZIONE 2 — Compliance reagenti ──
+  // Lotti scaduti usati per errore: reagenti nei cicli del mese con scadenza < data ciclo
+  const cicliMese = proc.filter(c => { const d = String(c.data||'').slice(0,10); return d >= dal && d <= al; })
+    .concat(color.filter(r => { const d = String(r.data||'').slice(0,10); return d >= dal && d <= al; }));
+  let lottiScadutiUsati = 0, reagentiSenzaLotto = 0;
+  cicliMese.forEach(rec => {
+    (rec.reagenti || []).forEach(re => {
+      if (!re.lotto || !String(re.lotto).trim()) reagentiSenzaLotto++;
+      if (re.scadenza && rec.data && String(re.scadenza).slice(0,10) < String(rec.data).slice(0,10)) lottiScadutiUsati++;
+    });
+  });
+  const inScadenza30 = prods.filter(p => { const d = daysUntil(p.scadenza); return d >= 0 && d <= 30; }).length;
+  const sottoScorta = prods.filter(p => p.min > 0 && p.qty <= p.min).length;
+
+  // ── SEZIONE 3 — Tracciabilità ──
+  // Casi accettati nel mese: completamente tracciati = acc + proc + color (+ ihc se presente e completa)
+  const casiMese = camp.filter(c => { const d = String(c.data||'').slice(0,10); return d >= dal && d <= al && !c.consulenza; });
+  let pieni = 0, parziali = 0;
+  casiMese.forEach(c => {
+    const id = _normCasoId(c.campione_id || '');
+    const hasProc = procByCaso.has(id);
+    const hasColor = colorByCaso.has(id);
+    if (hasProc && hasColor) pieni++;
+    else if (hasProc || hasColor) parziali++;
+    else parziali++; // accettato ma nessuna lavorazione tracciata
+  });
+  const totTracc = casiMese.length;
+  const coperturaPct = totTracc ? Math.round(pieni / totTracc * 100) : 0;
+
+  return {
+    ym, soglia,
+    sez1: {
+      ihc_ripetute: q.ihc_ripetute, ihc_tot: q.ihc_tot, ihc_pct: q.ihc_ripetute_pct,
+      ricolorazioni: q.ricolorazioni, casi_color: q.casi_color, ricol_pct: q.ricolorazioni_pct,
+      tat_sopra: tatSopraSoglia, tat_sopra_pct: tatSopraPct, tat_n: tats.length,
+      tat_media: tatMedia, tat_mediana: tatMediana, tat_p95: tatP95
+    },
+    sez2: {
+      lotti_scaduti_usati: lottiScadutiUsati,
+      in_scadenza_30: inScadenza30,
+      sotto_scorta: sottoScorta,
+      reagenti_senza_lotto: reagentiSenzaLotto
+    },
+    sez3: {
+      casi_pieni: pieni, casi_parziali: parziali, tot: totTracc, copertura_pct: coperturaPct
+    }
+  };
+}
+
+function openQualitaMeseModal() {
+  const inp = document.getElementById('qm-mese-input');
+  if (inp && !inp.value) inp.value = new Date().toISOString().slice(0, 7);
+  document.getElementById('qm-result').innerHTML = '';
+  document.getElementById('qm-print-btn').style.display = 'none';
+  document.getElementById('modal-qualita-mese').classList.add('open');
+  renderQualitaMese();
+}
+window.openQualitaMeseModal = openQualitaMeseModal;
+
+function renderQualitaMese() {
+  const ym = (document.getElementById('qm-mese-input').value || '').trim();
+  if (!ym) return;
+  const soglia = parseInt(document.getElementById('qm-soglia-tat').value) || 5;
+  const r = _calcIndicatoriMese(ym, soglia);
+  const fmtN = (v, suf) => v == null ? '—' : (typeof v === 'number' && !Number.isInteger(v) ? v.toFixed(1) : v) + (suf || '');
+  // KPI helper (NON allarmistico: target 0 in verde se rispettato, giallo se sopra)
+  const kpi = (label, val, sub, ok) => {
+    const col = ok === undefined ? 'var(--text)' : (ok ? 'var(--green)' : 'var(--yellow)');
+    return `<div style="flex:1;min-width:120px;padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg2)">
+      <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px">${esc(label)}</div>
+      <div style="font-family:'Libre Baskerville',serif;font-size:22px;font-weight:700;color:${col};line-height:1">${val}</div>
+      <div style="font-size:10px;color:var(--text3);margin-top:2px">${esc(sub||'')}</div>
+    </div>`;
+  };
+  const sezTitle = t => `<div class="trac-section-title" style="margin-top:14px">${t}</div>`;
+  const s1 = r.sez1, s2 = r.sez2, s3 = r.sez3;
+  const html =
+    `<div style="background:var(--accent);color:#fff;padding:10px 14px;border-radius:8px;margin-bottom:8px">
+      <div style="font-size:11px;opacity:.8">Periodo</div>
+      <div style="font-family:'Libre Baskerville',serif;font-weight:700;font-size:18px">${esc(ym)}</div>
+    </div>` +
+    sezTitle('🔬 Sezione 1 — Qualità tecnica') +
+    `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px">
+      ${kpi('IHC ripetute', s1.ihc_ripetute + '/' + s1.ihc_tot, s1.ihc_pct + '%')}
+      ${kpi('Ricolorazioni EE', s1.ricolorazioni + '/' + s1.casi_color, s1.ricol_pct + '% dei casi')}
+      ${kpi('TAT > ' + r.soglia + 'gg', s1.tat_sopra, s1.tat_sopra_pct + '% su ' + s1.tat_n + ' casi', s1.tat_sopra_pct === 0)}
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px">
+      ${kpi('TAT medio', fmtN(s1.tat_media, ' gg'), 'media mese')}
+      ${kpi('TAT mediana', fmtN(s1.tat_mediana, ' gg'), 'più robusta')}
+      ${kpi('TAT p95', fmtN(s1.tat_p95, ' gg'), 'casi peggiori')}
+    </div>` +
+    sezTitle('🧪 Sezione 2 — Compliance reagenti') +
+    `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px">
+      ${kpi('Lotti scaduti usati', s2.lotti_scaduti_usati, 'target: 0', s2.lotti_scaduti_usati === 0)}
+      ${kpi('In scadenza ≤30gg', s2.in_scadenza_30, 'da monitorare')}
+      ${kpi('Sotto scorta minima', s2.sotto_scorta, 'prodotti')}
+      ${kpi('Reagenti senza lotto', s2.reagenti_senza_lotto, 'target: 0', s2.reagenti_senza_lotto === 0)}
+    </div>` +
+    sezTitle('🔗 Sezione 3 — Tracciabilità') +
+    `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px">
+      ${kpi('Casi tracciati', s3.casi_pieni, 'acc→proc→color', s3.copertura_pct >= 80)}
+      ${kpi('Tracciabilità parziale', s3.casi_parziali, 'su ' + s3.tot + ' casi')}
+      ${kpi('Copertura', s3.copertura_pct + '%', 'completi/totale', s3.copertura_pct >= 80)}
+    </div>`;
+  document.getElementById('qm-result').innerHTML = html;
+  document.getElementById('qm-print-btn').style.display = '';
+  // memorizza per stampa
+  window._qmLast = { ym, html };
+}
+window.renderQualitaMese = renderQualitaMese;
+
+function stampaQualitaMese() {
+  const last = window._qmLast;
+  if (!last) return;
+  const operatore = 'LupoLab AP';
+  const ts = new Date().toLocaleString('it-IT');
+  const w = window.open('', '_blank', 'width=900,height=700');
+  w.document.write(`<!DOCTYPE html><html><head><title>Indicatori Qualità ${esc(last.ym)}</title>
+    <style>
+      body { font-family: Georgia, serif; padding:24px; color:#1e293b; }
+      h1 { font-size:18px; color:#1a2f5e; border-bottom:2px solid #1a2f5e; padding-bottom:8px; }
+      .trac-section-title { font-weight:700; font-size:14px; color:#1a2f5e; margin:16px 0 8px; padding-bottom:4px; border-bottom:1px solid #ddd; }
+      .footer { margin-top:24px; padding-top:10px; border-top:1px solid #ccc; font-size:11px; color:#64748b; }
+    </style></head><body>
+    <h1>📊 Indicatori Qualità del Mese — ${esc(last.ym)}</h1>
+    <p style="font-size:12px;color:#64748b">Evidenza di management review · ISO 15189</p>
+    ${last.html}
+    <div class="footer">Generato da ${operatore} · ${ts}</div>
+    <script>window.onload=()=>window.print()<\/script></body></html>`);
+  w.document.close();
+}
+window.stampaQualitaMese = stampaQualitaMese;
+
+// ─── E2 — Report "Lotto Critico" (estende cercaLottoAvanzato) ───
+// 5 sezioni: anagrafica, esposizione cicli, esposizione casi,
+// indicatori qualità del lotto, footer audit con hash.
+function _hashStringa(s) {
+  // Hash deterministico semplice (djb2) → stringa esadecimale per audit
+  let h = 5381;
+  for (let i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) >>> 0;
+  return h.toString(16).toUpperCase().padStart(8, '0');
+}
+
+function _buildLottoCritico(lotto, dal, al) {
+  const lottoL = lotto.toLowerCase();
+  const inRange = (d) => {
+    if (!d) return true;
+    const dd = String(d).slice(0, 10);
+    if (dal && dd < dal) return false;
+    if (al && dd > al) return false;
+    return true;
+  };
+  const prods = (typeof loadP === 'function') ? loadP() : [];
+  const movs = (typeof loadM === 'function') ? loadM() : [];
+  const proc = (typeof loadProc === 'function') ? loadProc() : [];
+  const color = (typeof loadColoratore === 'function') ? loadColoratore() : [];
+  const ihc = (typeof loadIHC === 'function') ? loadIHC() : [];
+  const camp = (typeof loadCampioni === 'function') ? loadCampioni() : [];
+
+  // ── Sez 1 — Anagrafica ──
+  const prodMatch = prods.filter(p => (p.lotto || '').toLowerCase().includes(lottoL));
+  const movMatch = movs.filter(m => (m.lotto || '').toLowerCase().includes(lottoL));
+  const carichi = movMatch.filter(m => m.tipo === 'carico');
+  const scarichi = movMatch.filter(m => m.tipo === 'scarico');
+  const qtyRicevuta = carichi.reduce((s, m) => s + (m.qty || 0), 0);
+  const qtyConsumata = scarichi.reduce((s, m) => s + (m.qty || 0), 0);
+  const dateArrivo = carichi.map(m => String(m.ts || '').slice(0, 10)).filter(Boolean).sort();
+  const anagrafica = {
+    prodotto: prodMatch[0]?.nome || (movMatch[0]?.prod || '—'),
+    fornitore: prodMatch[0]?.fornitore || '—',
+    scadenza: prodMatch[0]?.scadenza || '—',
+    qtyRicevuta, qtyConsumata,
+    dataArrivo: dateArrivo[0] || '—'
+  };
+
+  // ── Sez 2 — Esposizione cicli ──
+  const procMatch = proc.filter(c => (c.reagenti || []).some(r => (r.lotto || '').toLowerCase().includes(lottoL)) && inRange(c.data));
+  const colorMatch = color.filter(r => (r.reagenti || []).some(re => (re.lotto || '').toLowerCase().includes(lottoL)) && inRange(r.data));
+  const ihcMatch = ihc.filter(r => (r.lotto || '').toLowerCase().includes(lottoL) && inRange(r.data_richiesta));
+
+  // Date primo/ultimo uso (dai cicli)
+  const tutteDateUso = procMatch.map(c => c.data).concat(colorMatch.map(r => r.data)).filter(Boolean).map(d => String(d).slice(0,10)).sort();
+  anagrafica.primoUso = tutteDateUso[0] || '—';
+  anagrafica.ultimoUso = tutteDateUso[tutteDateUso.length - 1] || '—';
+
+  // ── Sez 3 — Esposizione casi ──
+  const casiSet = new Set();
+  procMatch.forEach(c => _trc_extractCasi(c).forEach(id => casiSet.add(_normCasoId(id))));
+  colorMatch.forEach(r => _trc_extractCasi(r).forEach(id => casiSet.add(_normCasoId(id))));
+  const campById = new Map();
+  camp.forEach(c => campById.set(_normCasoId(c.campione_id || ''), c));
+  const casiInfo = Array.from(casiSet).sort().map(id => {
+    const c = campById.get(id);
+    let stato = 'n/d';
+    if (c) {
+      try {
+        const st = _computeStatoCaso(c, { coloratoreCache: color, ihcCache: ihc });
+        stato = st.stato;
+      } catch (e) {}
+    }
+    return { id, data: c?.data || '—', tipo: c?.tipo || '—', cliente: c ? _trc_richiedente(c) : '—', stato };
+  });
+  const chiusi = casiInfo.filter(c => c.stato === 'chiuso' || c.stato === 'in_attesa_ihc').length;
+  const aperti = casiInfo.length - chiusi;
+
+  // ── Sez 4 — Indicatori qualità del lotto ──
+  let casiConRicol = 0;
+  casiSet.forEach(id => {
+    try {
+      const cl = _classificaCicliColoratore(id, { coloratoreCache: color, processatoreCache: proc });
+      if (cl.ricolorazioni_count > 0) casiConRicol++;
+    } catch (e) {}
+  });
+
+  return { lotto, dal, al, anagrafica, procMatch, colorMatch, ihcMatch, casiInfo, chiusi, aperti, casiConRicol };
+}
+
+function renderLottoCritico() {
+  const lotto = (document.getElementById('lc-lotto-input').value || '').trim();
+  if (!lotto) { toast('Inserisci un codice lotto', 'error'); return; }
+  const dal = document.getElementById('lc-dal').value || null;
+  const al = document.getElementById('lc-al').value || null;
+  const r = _buildLottoCritico(lotto, dal, al);
+  const a = r.anagrafica;
+
+  const sez = t => `<div class="trac-section-title" style="margin-top:14px">${t}</div>`;
+  const kv = (k, v) => `<div class="report-kv"><span style="color:var(--text2)">${esc(k)}</span><span style="font-weight:600">${esc(String(v))}</span></div>`;
+
+  if (!r.procMatch.length && !r.colorMatch.length && !r.ihcMatch.length && !r.casiInfo.length && a.prodotto === '—') {
+    document.getElementById('lc-result').innerHTML = '<div class="trac-empty">🔍 Nessun dato trovato per il lotto "' + esc(lotto) + '"</div>';
+    document.getElementById('lc-print-btn').style.display = 'none';
+    return;
+  }
+
+  let html =
+    `<div style="background:var(--accent);color:#fff;padding:12px 14px;border-radius:8px;margin-bottom:8px;display:flex;justify-content:space-between">
+      <div><div style="font-size:11px;opacity:.8">Lotto</div><div style="font-family:'DM Mono',monospace;font-weight:700;font-size:16px">${esc(lotto)}</div></div>
+      <div style="text-align:right"><div style="font-size:11px;opacity:.8">Casi coinvolti</div><div style="font-family:'Libre Baskerville',serif;font-weight:700;font-size:22px">${r.casiInfo.length}</div></div>
+    </div>` +
+    // Sez 1
+    sez('1 · 📋 Anagrafica lotto') +
+    kv('Prodotto', a.prodotto) + kv('Fornitore', a.fornitore) +
+    kv('Data arrivo', a.dataArrivo) + kv('Primo uso', a.primoUso) + kv('Ultimo uso', a.ultimoUso) +
+    kv('Scadenza', a.scadenza) +
+    kv('Quantità ricevuta', a.qtyRicevuta) + kv('Quantità consumata', a.qtyConsumata) +
+    // Sez 2
+    sez('2 · ⚗️ Esposizione cicli') +
+    `<div class="report-kv"><span style="color:var(--text2)">Cicli processatore</span><span style="font-weight:600">${r.procMatch.length}</span></div>` +
+    r.procMatch.map(c => `<div class="trac-row"><span class="trac-id">${fmtDate(c.data)}</span><span class="trac-info">${esc((c.reagenti||[]).filter(re=>(re.lotto||'').toLowerCase().includes(lotto.toLowerCase())).map(re=>re.nome).join(', '))}</span><span class="trac-meta">${_trc_extractCasi(c).length} casi</span></div>`).join('') +
+    `<div class="report-kv" style="margin-top:6px"><span style="color:var(--text2)">Cicli coloratore</span><span style="font-weight:600">${r.colorMatch.length}</span></div>` +
+    r.colorMatch.map(re => `<div class="trac-row"><span class="trac-id">${fmtDate(re.data)}</span><span class="trac-info">${esc((re.reagenti||[]).filter(x=>(x.lotto||'').toLowerCase().includes(lotto.toLowerCase())).map(x=>x.nome+' ('+(x.stato||'?')+')').join(', '))}</span><span class="trac-meta">${_trc_extractCasi(re).length} casi</span></div>`).join('') +
+    (r.ihcMatch.length ? `<div class="report-kv" style="margin-top:6px"><span style="color:var(--text2)">Cicli IHC associati</span><span style="font-weight:600">${r.ihcMatch.length}</span></div>` : '') +
+    // Sez 3
+    sez('3 · 🧬 Esposizione casi (' + r.casiInfo.length + ' · chiusi ' + r.chiusi + ' / aperti ' + r.aperti + ')') +
+    (r.casiInfo.length ? '<table style="width:100%;border-collapse:collapse;font-size:11px"><thead><tr style="border-bottom:1px solid var(--border)"><th style="text-align:left;padding:4px">ID caso</th><th style="text-align:left;padding:4px">Data acc.</th><th style="text-align:left;padding:4px">Tipo</th><th style="text-align:left;padding:4px">Cliente</th><th style="text-align:left;padding:4px">Stato</th></tr></thead><tbody>' +
+      r.casiInfo.map(c => `<tr style="border-bottom:1px solid var(--border-faint)"><td style="padding:4px;font-family:'DM Mono',monospace">${esc(c.id)}</td><td style="padding:4px">${c.data!=='—'?fmtDate(c.data):'—'}</td><td style="padding:4px">${esc(c.tipo)}</td><td style="padding:4px">${esc(c.cliente||'—')}</td><td style="padding:4px">${esc(c.stato)}</td></tr>`).join('') +
+      '</tbody></table>' : '<div class="trac-empty">Nessun caso associato</div>') +
+    // Sez 4
+    sez('4 · 📊 Indicatori qualità del lotto') +
+    kv('Casi coinvolti in ricolorazioni (errore)', r.casiConRicol);
+
+  // Sez 5 — Footer audit
+  const operatore = 'LupoLab AP';
+  const ts = new Date().toISOString();
+  const hash = _hashStringa(lotto + '|' + ts + '|' + r.casiInfo.length);
+  html += sez('5 · 🔐 Footer audit') +
+    kv('Operatore generatore', operatore) +
+    kv('Data/ora generazione', new Date().toLocaleString('it-IT')) +
+    kv('Hash identificativo', hash);
+
+  document.getElementById('lc-result').innerHTML = html;
+  document.getElementById('lc-print-btn').style.display = '';
+  window._lcLast = { lotto, html, hash };
+}
+window.renderLottoCritico = renderLottoCritico;
+
+function openLottoCriticoModal() {
+  document.getElementById('lc-lotto-input').value = '';
+  document.getElementById('lc-dal').value = '';
+  document.getElementById('lc-al').value = '';
+  document.getElementById('lc-result').innerHTML = '';
+  document.getElementById('lc-print-btn').style.display = 'none';
+  document.getElementById('modal-lotto-critico').classList.add('open');
+}
+window.openLottoCriticoModal = openLottoCriticoModal;
+
+function stampaLottoCritico() {
+  const last = window._lcLast;
+  if (!last) return;
+  const w = window.open('', '_blank', 'width=900,height=700');
+  w.document.write(`<!DOCTYPE html><html><head><title>Report Lotto Critico ${esc(last.lotto)}</title>
+    <style>
+      body { font-family: Georgia, serif; padding:24px; color:#1e293b; }
+      h1 { font-size:18px; color:#1a2f5e; border-bottom:2px solid #1a2f5e; padding-bottom:8px; }
+      .trac-section-title { font-weight:700; font-size:14px; color:#1a2f5e; margin:16px 0 8px; padding-bottom:4px; border-bottom:1px solid #ddd; }
+      .report-kv { display:flex; justify-content:space-between; padding:4px 0; border-bottom:1px solid #f1f5f9; font-size:13px; }
+      .trac-row { display:flex; gap:10px; padding:4px 0; border-bottom:1px solid #f1f5f9; font-size:11px; }
+      .trac-id { font-family:'DM Mono',monospace; font-weight:700; min-width:80px; }
+      .trac-empty { padding:10px; text-align:center; color:#94a3b8; font-style:italic; font-size:12px; }
+      table { width:100%; border-collapse:collapse; font-size:11px; }
+      th,td { text-align:left; padding:4px; border-bottom:1px solid #eee; }
+    </style></head><body>
+    <h1>🧬 Report Lotto Critico — ${esc(last.lotto)}</h1>
+    <p style="font-size:12px;color:#64748b">Tracciabilità inversa · ISO 15189 · Hash ${esc(last.hash)}</p>
+    ${last.html}
+    <script>window.onload=()=>window.print()<\/script></body></html>`);
+  w.document.close();
+}
+window.stampaLottoCritico = stampaLottoCritico;
 
 // [LupoLab AP v5] glue layer ready
 // Costruisce il datalist prodotti subito dopo il boot
