@@ -8447,13 +8447,41 @@ function renderDashAnalytics(){
   };
   const _papDelMese = (ym) => _casiUniciMese(ym, 'pap');
 
+  // ISTOLOGIA dal PROCESSATORE (coerente con il KPI "Casi processati": dato in giornata)
+  const _procDelMese = (ym) => {
+    try {
+      const recs = (typeof loadProc === 'function' ? loadProc() : []).filter(r => r.data && String(r.data).slice(0,7) === ym);
+      const set = new Set();
+      recs.forEach(r => {
+        const casi = (typeof _trc_extractCasi === 'function') ? _trc_extractCasi(r) : (Array.isArray(r.casi)?r.casi:[]);
+        casi.forEach(id => { if (id) set.add((typeof _normCasoId==='function')?_normCasoId(id):String(id).trim()); });
+      });
+      return set.size;
+    } catch(_) { return 0; }
+  };
+  // Versione settimanale (ISO week) per il grafico andamento
+  const _procDellaSettimana = (wk) => {
+    try {
+      const recs = (typeof loadProc === 'function' ? loadProc() : []).filter(r => {
+        if (!r.data) return false;
+        try { return isoWeek(new Date(r.data)) === wk; } catch(e) { return false; }
+      });
+      const set = new Set();
+      recs.forEach(r => {
+        const casi = (typeof _trc_extractCasi === 'function') ? _trc_extractCasi(r) : (Array.isArray(r.casi)?r.casi:[]);
+        casi.forEach(id => { if (id) set.add((typeof _normCasoId==='function')?_normCasoId(id):String(id).trim()); });
+      });
+      return set.size;
+    } catch(_) { return 0; }
+  };
+
   const campCur=campioni.filter(c=>ymOf(c.data)===ymCur).length;
   const campPrevTot=campioni.filter(c=>ymOf(c.data)===ymPrev).length;
-  // Conteggi del mese: TUTTI dai cicli coloratore (più fedele alla realtà)
-  const istCur = _vetriniDelMese(ymCur, 'ist');
+  // Istologia dal processatore (aggiornata in giornata), cito/pap dal coloratore
+  const istCur = _procDelMese(ymCur);
   const citCur = _vetriniDelMese(ymCur, 'cit');
   const papCur = _vetriniDelMese(ymCur, 'pap');
-  const istPrev = _vetriniDelMese(ymPrev, 'ist');
+  const istPrev = _procDelMese(ymPrev);
   const citPrev = _vetriniDelMese(ymPrev, 'cit');
   const papPrev = _vetriniDelMese(ymPrev, 'pap');
   const trend=campPrevTot>0?Math.round((campCur-campPrevTot)/campPrevTot*100):(campCur>0?100:0);
@@ -8523,7 +8551,7 @@ function renderDashAnalytics(){
     const lbl = fmtMese(ym).slice(0,3);
     points.push({
       key: ym, label: lbl, isMonth: true,
-      ist: _vetriniDelMese(ym, 'ist'),
+      ist: _procDelMese(ym),
       cit: _vetriniDelMese(ym, 'cit'),
       pap: _vetriniDelMese(ym, 'pap'),
     });
@@ -8532,7 +8560,7 @@ function renderDashAnalytics(){
     const lbl = 'S' + (idx+1);
     points.push({
       key: wk, label: lbl, isMonth: false,
-      ist: _vetriniDellaSettimana(wk, 'ist'),
+      ist: _procDellaSettimana(wk),
       cit: _vetriniDellaSettimana(wk, 'cit'),
       pap: _vetriniDellaSettimana(wk, 'pap'),
     });
@@ -8647,7 +8675,7 @@ function renderDashAnalytics(){
   // A3 — mese stesso anno scorso (YoY), se disponibile
   const dYoY=new Date(today.getFullYear()-1,today.getMonth(),1);
   const ymYoY=`${dYoY.getFullYear()}-${String(dYoY.getMonth()+1).padStart(2,'0')}`;
-  const istYoY=_vetriniDelMese(ymYoY,'ist');
+  const istYoY=_procDelMese(ymYoY);
   const citYoY=_vetriniDelMese(ymYoY,'cit');
   const papYoY=_vetriniDelMese(ymYoY,'pap');
   const hasYoY=(istYoY+citYoY+papYoY)>0;
