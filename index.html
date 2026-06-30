@@ -1494,6 +1494,11 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
             <div class="ta-title">Diagnostica</div>
             <div class="ta-desc">Cosa hanno in comune più casi con problemi</div>
           </button>
+          <button class="trac-action-card" onclick="openDiagAccProcModal()">
+            <div class="ta-icon">⚖️</div>
+            <div class="ta-title">Accettati vs Processati</div>
+            <div class="ta-desc">Perché i casi istologici accettati e processati differiscono nel mese</div>
+          </button>
           <button class="trac-action-card" onclick="openQualitaMeseModal()">
             <div class="ta-icon">📊</div>
             <div class="ta-title">Indicatori Qualità Mese</div>
@@ -2857,6 +2862,23 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
     <div class="modal-footer">
       <button class="btn" onclick="closeModal('modal-stato-casi')">Chiudi</button>
       <button class="btn btn-primary" id="stato-casi-modal-goto" onclick="">Apri nella lista completa</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════
+     MODAL: DIAGNOSTICA ACCETTATI vs PROCESSATI
+══════════════════════════════ -->
+<div class="modal-overlay" id="modal-diag-accproc">
+  <div class="modal" style="width:min(680px,96vw);max-width:96vw;max-height:90vh;overflow-y:auto">
+    <div class="modal-title">⚖️ Accettati vs Processati (istologia)</div>
+    <div style="display:flex;align-items:center;gap:8px;margin:10px 0">
+      <label style="font-size:12px;color:var(--text2)">Mese:</label>
+      <input type="month" id="diag-accproc-mese" onchange="renderDiagAccProc()" style="font-family:'DM Mono',monospace;padding:5px 8px">
+    </div>
+    <div id="diag-accproc-body"></div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('modal-diag-accproc')">Chiudi</button>
     </div>
   </div>
 </div>
@@ -11385,9 +11407,26 @@ window.renderReportAnnuale = function() {
   const ords  = (typeof loadOrd === 'function') ? loadOrd().filter(o => (o.data||o.creato||'').startsWith(String(year))) : [];
 
   const tlA = t => (t||'').toLowerCase();
-  const istN = yearCamp.filter(c => tlA(c.tipo) === 'istologia').length;
-  const citN = yearCamp.filter(c => tlA(c.tipo) === 'citologia').length;
-  const papN = yearCamp.filter(c => tlA(c.tipo) === 'pap').length;
+  // Helper coerenti con la home: ISTOLOGIA dal processatore, CIT/PAP dal coloratore
+  const _normId = (typeof _normCasoId === 'function') ? _normCasoId : (x => String(x||'').trim());
+  const _istDaProc = (recs) => {
+    const set = new Set();
+    recs.forEach(r => {
+      const casi = (typeof _trc_extractCasi === 'function') ? _trc_extractCasi(r) : (Array.isArray(r.casi)?r.casi:[]);
+      casi.forEach(id => { if (id) set.add(_normId(id)); });
+    });
+    return set.size;
+  };
+  const _citDaColor = (recs) => {
+    const set = new Set();
+    recs.forEach(r => { (Array.isArray(r.casi_cit)?r.casi_cit:[]).forEach(id => { if (id) set.add(_normId(id)); }); });
+    return set.size;
+  };
+  const _papDaColor = (recs) => recs.reduce((s,r) => s + (parseInt(r.vetri_pap,10)||0), 0);
+
+  const istN = _istDaProc(proc);
+  const citN = _citDaColor(color);
+  const papN = _papDaColor(color);
   const cicliColor = color.reduce((s,r) => s + (r.cicli_ee||0) + (r.cicli_ee_cit||0) + (r.cicli_pap||0), 0);
   const vetriTot   = color.reduce((s,r) => s + (r.vetri_ist||0) + (r.vetri_cit||0) + (r.vetri_pap||0), 0);
 
@@ -11395,7 +11434,7 @@ window.renderReportAnnuale = function() {
   const amEl = document.getElementById('report-annual-metrics');
   if (amEl) {
     amEl.innerHTML = `
-      <div class="cnt-card" data-tip="Totale casi elaborati nel mese (istologia + citologia + PAP)"><div class="cnt-lbl">Casi totali</div><div class="cnt-val" style="color:var(--accent)">${yearCamp.length}</div></div>
+      <div class="cnt-card" data-tip="Totale casi elaborati nel mese (istologia + citologia + PAP)"><div class="cnt-lbl">Casi totali</div><div class="cnt-val" style="color:var(--accent)">${istN + citN + papN}</div></div>
       <div class="cnt-card" data-tip="Campioni di tessuto solido: biopsie, pezzi operatori"><div class="cnt-lbl">Istologia</div><div class="cnt-val" style="color:var(--blue)">${istN}</div></div>
       <div class="cnt-card" data-tip="Campioni liquidi: brushing, agoaspirati, BAL, versamenti"><div class="cnt-lbl">Citologia</div><div class="cnt-val" style="color:var(--teal)">${citN}</div></div>
       <div class="cnt-card" data-tip="Papanicolau LupoLab su campioni cervico-vaginali"><div class="cnt-lbl">PAP</div><div class="cnt-val" style="color:var(--purple)">${papN}</div></div>
@@ -11411,18 +11450,23 @@ window.renderReportAnnuale = function() {
   const data = { ist:[], cit:[], pap:[] };
   for (let m = 0; m < 12; m++) {
     const ym = String(year) + '-' + String(m+1).padStart(2,'0');
-    data.ist.push(yearCamp.filter(c => (c.data||'').startsWith(ym) && tlA(c.tipo) === 'istologia').length);
-    data.cit.push(yearCamp.filter(c => (c.data||'').startsWith(ym) && tlA(c.tipo) === 'citologia').length);
-    data.pap.push(yearCamp.filter(c => (c.data||'').startsWith(ym) && tlA(c.tipo) === 'pap').length);
+    const procM  = proc.filter(r => (r.data||'').startsWith(ym));
+    const colorM = color.filter(r => (r.data||'').startsWith(ym));
+    data.ist.push(_istDaProc(procM));   // istologia dal processatore
+    data.cit.push(_citDaColor(colorM)); // citologia dal coloratore
+    data.pap.push(_papDaColor(colorM)); // pap dal coloratore
   }
   // A9 — serie TOTALE anno corrente e anno precedente (per linea YoY)
   const totCur = data.ist.map((v,i)=>v+data.cit[i]+data.pap[i]);
   const prevYear = year - 1;
-  const prevYearCamp = allCamp.filter(c => c.data && c.data.startsWith(String(prevYear)));
+  const prevProc  = (typeof loadProc === 'function') ? loadProc().filter(r => r.data && r.data.startsWith(String(prevYear))) : [];
+  const prevColor = (typeof loadColoratore === 'function') ? loadColoratore().filter(r => r.data && r.data.startsWith(String(prevYear))) : [];
   const totPrev = [];
   for (let m = 0; m < 12; m++) {
     const ym = String(prevYear) + '-' + String(m+1).padStart(2,'0');
-    totPrev.push(prevYearCamp.filter(c => (c.data||'').startsWith(ym)).length);
+    const pProc  = prevProc.filter(r => (r.data||'').startsWith(ym));
+    const pColor = prevColor.filter(r => (r.data||'').startsWith(ym));
+    totPrev.push(_istDaProc(pProc) + _citDaColor(pColor) + _papDaColor(pColor));
   }
   const hasPrevYear = totPrev.some(v => v > 0);
   const svgEl = document.getElementById('report-annual-line');
@@ -13413,6 +13457,101 @@ window._apriSchedaCasoDaModal = function(idCaso){
       }, 120);
     }, 80);
   } catch(e) { console.warn('[apriSchedaCasoDaModal]', e); }
+};
+
+// ─── DIAGNOSTICA: Accettati vs Processati (istologia) ───
+window.openDiagAccProcModal = function(){
+  const inp = document.getElementById('diag-accproc-mese');
+  if (inp && !inp.value) {
+    const n = new Date();
+    inp.value = `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}`;
+  }
+  renderDiagAccProc();
+  document.getElementById('modal-diag-accproc').classList.add('open');
+};
+
+window.renderDiagAccProc = function(){
+  const body = document.getElementById('diag-accproc-body');
+  if (!body) return;
+  const ym = (document.getElementById('diag-accproc-mese')||{}).value;
+  if (!ym) { body.innerHTML = '<div style="color:var(--text3);padding:16px">Seleziona un mese</div>'; return; }
+
+  const norm = (typeof _normCasoId === 'function') ? _normCasoId : (x=>String(x||'').trim());
+  const tl = t => (t||'').toLowerCase();
+
+  // 1. Casi istologici ACCETTATI nel mese (anagrafica)
+  const accIst = (typeof loadCampioni==='function'?loadCampioni():[])
+    .filter(c => (c.data||'').slice(0,7) === ym && tl(c.tipo) === 'istologia' && !c.consulenza);
+
+  // 2. Tutti gli ID processati (per mese di processazione), su TUTTO lo storico
+  const proc = (typeof loadProc==='function'?loadProc():[]);
+  const procIndex = new Map(); // idNorm → mese processazione (YYYY-MM) più antico
+  proc.forEach(r => {
+    const mese = (r.data||'').slice(0,7);
+    const casi = (typeof _trc_extractCasi==='function') ? _trc_extractCasi(r) : (Array.isArray(r.casi)?r.casi:[]);
+    casi.forEach(id => {
+      if (!id) return;
+      const k = norm(id);
+      if (!procIndex.has(k) || mese < procIndex.get(k)) procIndex.set(k, mese);
+    });
+  });
+
+  // 3. Classifica ogni caso accettato
+  let okStesso = 0, altroMese = [], maiProc = [];
+  accIst.forEach(c => {
+    const k = norm(c.campione_id);
+    const meseProc = procIndex.get(k);
+    if (!meseProc) maiProc.push(c);
+    else if (meseProc === ym) okStesso++;
+    else altroMese.push({ c, meseProc });
+  });
+
+  const tot = accIst.length;
+  const _fmtMese = (m) => { const [y,mm]=m.split('-'); const MM=['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic']; return MM[parseInt(mm,10)-1]+' '+y; };
+
+  let html = `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px">
+    <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:10px;text-align:center">
+      <div style="font-family:'DM Mono',monospace;font-size:22px;font-weight:700;color:#166534">${okStesso}</div>
+      <div style="font-size:10px;color:#166534">Processati stesso mese</div>
+    </div>
+    <div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;padding:10px;text-align:center">
+      <div style="font-family:'DM Mono',monospace;font-size:22px;font-weight:700;color:#9a3412">${altroMese.length}</div>
+      <div style="font-size:10px;color:#9a3412">Processati altro mese</div>
+    </div>
+    <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:10px;text-align:center">
+      <div style="font-family:'DM Mono',monospace;font-size:22px;font-weight:700;color:#b91c1c">${maiProc.length}</div>
+      <div style="font-size:10px;color:#b91c1c">Mai nel processatore</div>
+    </div>
+  </div>
+  <div style="font-size:12px;color:var(--text2);margin-bottom:12px;line-height:1.5">
+    <b>${tot}</b> casi istologici accettati in ${_fmtMese(ym)}.
+    ${altroMese.length?`<br><b>${altroMese.length}</b> sono stati processati in un altro mese (effetto a cavallo del mese — normale).`:''}
+    ${maiProc.length?`<br><b style="color:#b91c1c">${maiProc.length}</b> non risultano in nessun ciclo processatore: o non ancora processati, o ID non corrispondente.`:''}
+  </div>`;
+
+  if (altroMese.length) {
+    html += `<div style="font-size:11px;font-weight:700;color:#9a3412;margin:10px 0 4px">Processati in un altro mese</div>`;
+    html += altroMese.slice(0,40).map(({c,meseProc}) =>
+      `<div style="display:flex;gap:10px;padding:5px 8px;border-bottom:1px solid var(--border);font-size:12px">
+        <span class="mono" style="font-weight:700;min-width:70px">${esc(c.campione_id||'—')}</span>
+        <span style="color:var(--text3);flex:1">acc. ${esc((c.data||'').slice(8,10))}/${esc((c.data||'').slice(5,7))}</span>
+        <span style="color:#9a3412">→ proc. ${_fmtMese(meseProc)}</span>
+      </div>`).join('');
+    if (altroMese.length>40) html += `<div style="font-size:11px;color:var(--text3);padding:4px 8px">…e altri ${altroMese.length-40}</div>`;
+  }
+
+  if (maiProc.length) {
+    html += `<div style="font-size:11px;font-weight:700;color:#b91c1c;margin:12px 0 4px">Mai nel processatore</div>`;
+    html += maiProc.slice(0,40).map(c =>
+      `<div onclick="_apriSchedaCasoDaModal('${String(c.campione_id||'').replace(/'/g,"\\'")}')" style="display:flex;gap:10px;padding:5px 8px;border-bottom:1px solid var(--border);font-size:12px;cursor:pointer">
+        <span class="mono" style="font-weight:700;min-width:70px">${esc(c.campione_id||'—')}</span>
+        <span style="color:var(--text3);flex:1">acc. ${esc((c.data||'').slice(8,10))}/${esc((c.data||'').slice(5,7))}</span>
+        <span style="color:var(--text3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:180px">${esc(c.desc_accettazione||'')}</span>
+      </div>`).join('');
+    if (maiProc.length>40) html += `<div style="font-size:11px;color:var(--text3);padding:4px 8px">…e altri ${maiProc.length-40}</div>`;
+  }
+
+  body.innerHTML = html;
 };
 
 // ─── Report Tab switcher ───
