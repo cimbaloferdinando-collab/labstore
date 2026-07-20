@@ -11005,6 +11005,10 @@ function _riceviPanel(id){
           <input type="number" class="recv-parz-qty" data-idx="${i}" value="${restante}" min="0" max="${r.qty}" style="width:70px;text-align:center;font-family:DM Mono,monospace;font-weight:600" ${restante<=0?'disabled':''}>
         </div>
       </div>
+      <div style="display:flex;gap:6px;margin-top:6px" ${restante<=0?'style="display:none"':''}>
+        <input type="text" class="recv-parz-lotto" data-idx="${i}" placeholder="Lotto" style="flex:1;font-family:DM Mono,monospace;font-size:12px">
+        <input type="date" class="recv-parz-scad" data-idx="${i}" title="Scadenza" style="flex:1;font-size:12px">
+      </div>
     </div>`;
   }).join('');
 
