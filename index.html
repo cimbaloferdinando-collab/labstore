@@ -1338,6 +1338,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
               <th>Tipo CER</th>
               <th>Azione</th>
               <th style="text-align:center">Qty</th>
+              <th style="text-align:center">Peso</th>
               <th>Note</th>
             </tr></thead>
             <tbody id="waste-log-tbody"></tbody>
@@ -2473,6 +2474,35 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
     <div class="modal-footer">
       <button class="btn" onclick="closeModal('modal-rifiuti')">Annulla</button>
       <button class="btn btn-waste" onclick="saveRifiuto()">Registra</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════
+     MODAL: REGISTRA SMALTIMENTO
+══════════════════════════════ -->
+<div class="modal-overlay" id="modal-smaltimento">
+  <div class="modal" style="width:460px">
+    <div class="modal-title">✓ Registra Smaltimento</div>
+    <div class="form-grid">
+      <div class="fg full"><label>Codice CER *</label>
+        <select id="sm-cer">
+          <option value="cer_180103">☣ 180103* — Rifiuti infetti (materiale biologico, lame, taglienti)</option>
+          <option value="cer_150110">🧴 150110* — Imballaggi contaminati</option>
+          <option value="cer_150202">🧤 150202* — Assorbenti/DPI contaminati</option>
+          <option value="cer_180106">💧 180106* — Liquidi chimici (xilene, formalina, alcoli)</option>
+        </select>
+      </div>
+      <div class="fg"><label>N° contenitori *</label><input type="number" id="sm-qty" value="1" min="1" style="font-family:DM Mono,monospace"></div>
+      <div class="fg"><label>Peso (kg)</label><input type="number" id="sm-kg" min="0" step="0.1" placeholder="es. 12.5" style="font-family:DM Mono,monospace"></div>
+      <div class="fg"><label>Data smaltimento *</label><input type="date" id="sm-data"></div>
+      <div class="fg"><label>N° Formulario</label><input type="text" id="sm-formulario" placeholder="es. FIR 00123" style="font-family:DM Mono,monospace"></div>
+      <div class="fg full"><label>Destinatario / Trasportatore</label><input type="text" id="sm-dest" placeholder="es. Ditta smaltimento…"></div>
+      <div class="fg full"><label>Note</label><input type="text" id="sm-note" placeholder="Note aggiuntive"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('modal-smaltimento')">Annulla</button>
+      <button class="btn btn-ok" onclick="saveSmaltimento()">✓ Registra smaltimento</button>
     </div>
   </div>
 </div>
@@ -4207,7 +4237,7 @@ function renderRifiuti(){
       </div>
       <div class="waste-btns">
         <button class="btn btn-sm btn-waste" onclick="quickWaste('cer_180103','pieno',1)">+ Piena</button>
-        <button class="btn btn-sm btn-ok" onclick="quickWaste('cer_180103','smaltito',1)" ${w180103.pieni===0?'disabled':''}>✓ Smaltita</button>
+        <button class="btn btn-sm btn-ok" onclick="openSmaltimentoModal('cer_180103')" ${w180103.pieni===0?'disabled':''}>✓ Smaltita</button>
         <button class="btn btn-sm" onclick="quickWaste('cer_180103','vuoto',1)">+ Scatola</button>
         <button class="btn btn-sm btn-danger" onclick="quickWaste('cer_180103','vuoto_sub',1)" ${vuoti180103===0?'disabled':''}>− Scatola</button>
       </div>
@@ -4250,7 +4280,7 @@ function renderRifiuti(){
         </div>
         <div class="waste-btns" style="margin-top:6px">
           <button class="btn btn-sm btn-waste" onclick="quickWaste('cer_150110','pieno',1)">+ Pieno</button>
-          <button class="btn btn-sm btn-ok" onclick="quickWaste('cer_150110','smaltito',1)" ${w150110.pieni===0?'disabled':''}>✓ Smaltito</button>
+          <button class="btn btn-sm btn-ok" onclick="openSmaltimentoModal('cer_150110')" ${w150110.pieni===0?'disabled':''}>✓ Smaltito</button>
         </div>
       </div>
       <!-- 150202 -->
@@ -4262,7 +4292,7 @@ function renderRifiuti(){
         </div>
         <div class="waste-btns" style="margin-top:6px">
           <button class="btn btn-sm btn-waste" onclick="quickWaste('cer_150202','pieno',1)">+ Pieno</button>
-          <button class="btn btn-sm btn-ok" onclick="quickWaste('cer_150202','smaltito',1)" ${w150202.pieni===0?'disabled':''}>✓ Smaltito</button>
+          <button class="btn btn-sm btn-ok" onclick="openSmaltimentoModal('cer_150202')" ${w150202.pieni===0?'disabled':''}>✓ Smaltito</button>
         </div>
       </div>
     </div>`;
@@ -4289,7 +4319,7 @@ function renderRifiuti(){
       </div>
       <div class="waste-btns">
         <button class="btn btn-sm btn-waste" onclick="quickWaste('cer_180106','pieno',1)">+ Piena</button>
-        <button class="btn btn-sm btn-ok" onclick="quickWaste('cer_180106','smaltito',1)" ${w180106.pieni===0?'disabled':''}>✓ Smaltita</button>
+        <button class="btn btn-sm btn-ok" onclick="openSmaltimentoModal('cer_180106')" ${w180106.pieni===0?'disabled':''}>✓ Smaltita</button>
         <button class="btn btn-sm" onclick="quickWaste('cer_180106','vuoto',1)">+ Tanica</button>
         <button class="btn btn-sm btn-danger" onclick="quickWaste('cer_180106','vuoto_sub',1)" ${vuoti180106===0?'disabled':''}>− Tanica</button>
       </div>
@@ -4302,11 +4332,12 @@ function renderRifiuti(){
   // Log
   const wl=loadWL(), tb=document.getElementById('waste-log-tbody');
   if(!tb) return;
-  if(!wl.length){ tb.innerHTML=`<tr><td colspan="5"><div class="empty"><div class="e-ico">🗑</div><p>Nessun movimento rifiuti registrato</p></div></td></tr>`; return; }
+  if(!wl.length){ tb.innerHTML=`<tr><td colspan="6"><div class="empty"><div class="e-ico">🗑</div><p>Nessun movimento rifiuti registrato</p></div></td></tr>`; return; }
   tb.innerHTML=wl.slice(0,100).map(e=>{
     const cfg=WASTE_CONFIG[e.tipo]||{icon:'📌',label:e.tipo};
     const badgeMap={pieno:`<span class="badge bg-orange">+ Pieno</span>`,smaltito:`<span class="badge bg-green">✓ Smaltito</span>`,vuoto_add:`<span class="badge bg-blue">+ Vuoto</span>`,vuoto_sub:`<span class="badge bg-yellow">− Vuoto</span>`};
-    return `<tr><td class="mono" style="font-size:12px">${fmtTs(e.ts)}</td><td>${cfg.icon} ${cfg.label}</td><td>${badgeMap[e.azione]||e.azione}</td><td class="mono">${e.qty}</td><td style="color:var(--text2);font-size:12px">${e.note||'—'}</td></tr>`;
+    const peso = e.kg ? e.kg+' kg' : '—';
+    return `<tr><td class="mono" style="font-size:12px">${fmtTs(e.ts)}</td><td>${cfg.icon} ${cfg.label}</td><td>${badgeMap[e.azione]||e.azione}</td><td class="mono" style="text-align:center">${e.qty}</td><td class="mono" style="text-align:center">${peso}</td><td style="color:var(--text2);font-size:12px">${e.note||'—'}</td></tr>`;
   }).join('');
 }
 
@@ -4357,14 +4388,62 @@ async function saveRifiuto(){
   toast('Rifiuto registrato','success');
 }
 
+// ─── SMALTIMENTO con quantità (kg) e data ───
+window.openSmaltimentoModal = function(cerKey){
+  const sel = document.getElementById('sm-cer');
+  if (sel && cerKey) sel.value = cerKey;
+  ['sm-kg','sm-formulario','sm-dest','sm-note'].forEach(id=>{ const e=document.getElementById(id); if(e) e.value=''; });
+  const q = document.getElementById('sm-qty'); if(q) q.value = 1;
+  const d = document.getElementById('sm-data'); if(d) d.value = new Date().toISOString().slice(0,10);
+  document.getElementById('modal-smaltimento').classList.add('open');
+};
+
+window.saveSmaltimento = async function(){
+  const tipo = document.getElementById('sm-cer').value;
+  const qty  = parseInt(document.getElementById('sm-qty').value)||0;
+  const kg   = parseFloat(document.getElementById('sm-kg').value)||0;
+  const data = document.getElementById('sm-data').value;
+  const formulario = document.getElementById('sm-formulario').value.trim();
+  const dest = document.getElementById('sm-dest').value.trim();
+  const note = document.getElementById('sm-note').value.trim();
+  if(!tipo){ toast('Seleziona il codice CER','error'); return; }
+  if(qty<=0){ toast('Numero contenitori deve essere > 0','error'); return; }
+  if(!data){ toast('Inserisci la data di smaltimento','error'); return; }
+  _takeSnapshot('Smaltimento '+tipo);
+  const W=loadW();
+  if(!W[tipo]) W[tipo]={pieni:0,smaltiti:0,vuoti:0};
+  // Scala i pieni (senza andare sotto zero) e incrementa gli smaltiti
+  W[tipo].pieni = Math.max(0, (W[tipo].pieni||0) - qty);
+  W[tipo].smaltiti = (W[tipo].smaltiti||0) + qty;
+  await saveW(W);
+  // Log con data scelta, peso, formulario
+  const wl=loadWL();
+  const noteParts=[];
+  if(kg) noteParts.push(kg+' kg');
+  if(formulario) noteParts.push('Form. '+formulario);
+  if(dest) noteParts.push(dest);
+  if(note) noteParts.push(note);
+  wl.unshift({
+    id:genId(),
+    ts:new Date(data+'T12:00:00').toISOString(), // data scelta (mezzogiorno per evitare shift fuso)
+    tipo, azione:'smaltito', qty, kg,
+    formulario, dest,
+    note: noteParts.join(' · ')
+  });
+  saveWL(wl);
+  closeModal('modal-smaltimento');
+  renderRifiuti();
+  if(currentView==='dashboard') renderDashboard();
+  toast('Smaltimento registrato: '+qty+' contenitori'+(kg?' · '+kg+' kg':''),'success');
+};
+
 function openVuotiModal(){
   const W=loadW();
   document.getElementById('v-cer_180103').value  = W['cer_180103']?.vuoti||0;
   document.getElementById('v-pool-comune').value = W['bidoni_solidi_comuni']?.vuoti||0;
   document.getElementById('v-cer_180106').value  = W['cer_180106']?.vuoti||0;
   document.getElementById('modal-vuoti').classList.add('open');
-}
-async function saveVuoti(){
+}async function saveVuoti(){
   _takeSnapshot('Aggiorna contenitori vuoti'); // FIX [UNDO]
   const W=loadW();
   W['cer_180103'].vuoti                = parseInt(document.getElementById('v-cer_180103').value)||0;
