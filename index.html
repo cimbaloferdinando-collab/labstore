@@ -1953,15 +1953,19 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
     <!-- Prodotto NUOVO (nascosto di default) -->
     <div id="car-man-new-form" style="display:none;background:var(--bg3);border-radius:var(--r);padding:12px;margin-bottom:12px">
       <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Dati nuovo prodotto</div>
-      <div style="display:grid;grid-template-columns:2fr 1fr 80px;gap:8px">
+      <div style="display:grid;grid-template-columns:2fr 1fr;gap:8px">
         <div class="fg" style="margin:0"><label>Nome *</label><input type="text" id="car-man-nome-nuovo" placeholder="es. Alcol 100°"></div>
         <div class="fg" style="margin:0"><label>Categoria</label>
           <select id="car-man-cat-nuovo">
             <option>Reagenti</option><option>Coloranti</option><option>Vetrini</option>
-            <option>Cassette</option><option>IHC</option><option>Consumabili</option><option>Lame</option><option>Altro</option>
+            <option>Cassette</option><option>IHC</option><option>Consumabili</option><option>Kit Colorazioni</option><option>Lame</option><option>Altro</option>
           </select>
         </div>
-        <div class="fg" style="margin:0"><label>Min.</label><input type="number" id="car-man-min-nuovo" min="0" value="0"></div>
+        <div class="fg" style="margin:0"><label>Fornitore *</label><input type="text" id="car-man-forn-nuovo" placeholder="es. Bio Optica, Epredia…"></div>
+        <div class="fg" style="margin:0"><label>Unità</label><input type="text" id="car-man-unita-nuovo" placeholder="pz, L, ml, conf…" value="pz"></div>
+        <div class="fg" style="margin:0"><label>Scorta min.</label><input type="number" id="car-man-min-nuovo" min="0" value="0"></div>
+        <div class="fg" style="margin:0"><label>Posizione</label><input type="text" id="car-man-pos-nuovo" placeholder="es. Frigo A, Scaffale 2…"></div>
+        <div class="fg" style="margin:0;grid-column:1/-1"><label>Codici scansionabili</label><input type="text" id="car-man-codici-nuovo" placeholder="Barcode/QR — separati da virgola"></div>
       </div>
     </div>
 
@@ -1972,7 +1976,8 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
         <div class="fg" style="margin:0"><label>Quantità *</label><input type="number" id="car-man-qty" min="1" value="1" style="font-family:DM Mono,monospace"></div>
         <div class="fg" style="margin:0"><label>Lotto</label><input type="text" id="car-man-lotto" placeholder="es. LOT-2024-001" style="font-family:DM Mono,monospace"></div>
         <div class="fg" style="margin:0"><label>Scadenza</label><input type="date" id="car-man-scad"></div>
-        <div class="fg" style="margin:0"><label>Note</label><input type="text" id="car-man-note" placeholder="es. DDT n. 12345"></div>
+        <div class="fg" style="margin:0"><label>Numero DDT</label><input type="text" id="car-man-ddt" placeholder="es. 12345" style="font-family:DM Mono,monospace"></div>
+        <div class="fg" style="margin:0;grid-column:1/-1"><label>Note</label><input type="text" id="car-man-note" placeholder="Note aggiuntive"></div>
       </div>
     </div>
 
@@ -2314,9 +2319,10 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
         <div style="font-weight:600;color:var(--green);margin-bottom:5px">✓ Prodotto trovato in magazzino</div>
         <div id="cs-found-info" style="font-size:13px;color:var(--text2)"></div>
       </div>
-      <div style="display:flex;gap:9px;align-items:center">
+      <div style="display:flex;gap:9px;align-items:center;flex-wrap:wrap">
         <div class="fg" style="flex:0 0 90px;margin:0"><label>Quantità</label><input type="number" id="cs-qty" value="1" min="1"></div>
-        <div class="fg" style="flex:1;margin:0"><label>Note</label><input type="text" id="cs-note" placeholder="Es. Da DDT 123"></div>
+        <div class="fg" style="flex:0 0 120px;margin:0"><label>Numero DDT</label><input type="text" id="cs-ddt-found" placeholder="es. 12345"></div>
+        <div class="fg" style="flex:1;margin:0;min-width:140px"><label>Note</label><input type="text" id="cs-note" placeholder="Note aggiuntive"></div>
       </div>
     </div>
 
@@ -2332,12 +2338,16 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
             <option>Reagenti</option><option>IHC</option><option>Vetrini</option><option>Cassette</option>
             <option>Coloranti</option><option>Consumabili</option><option>Kit Colorazioni</option><option>Lame</option><option>Altro</option>
           </select></div>
-        <div class="fg"><label>Fornitore</label><input type="text" id="cs-fornitore" placeholder="Fornitore"></div>
+        <div class="fg"><label>Fornitore *</label><input type="text" id="cs-fornitore" placeholder="Fornitore"></div>
         <div class="fg"><label>Lotto</label><input type="text" id="cs-lotto" placeholder="Numero lotto"></div>
         <div class="fg"><label>Scadenza</label><input type="date" id="cs-scadenza"></div>
         <div class="fg"><label>Quantità *</label><input type="number" id="cs-qty-new" value="1" min="1"></div>
         <div class="fg"><label>Unità</label><input type="text" id="cs-unita" placeholder="pz, L, ml…" value="pz"></div>
+        <div class="fg"><label>Scorta min.</label><input type="number" id="cs-min" min="0" value="0"></div>
+        <div class="fg"><label>Posizione</label><input type="text" id="cs-pos" placeholder="es. Frigo A…"></div>
+        <div class="fg"><label>Numero DDT</label><input type="text" id="cs-ddt" placeholder="es. 12345"></div>
         <div class="fg"><label>Codici</label><input type="text" id="cs-codici" placeholder="Codici scansionabili"></div>
+        <div class="fg full"><label>Note</label><input type="text" id="cs-note-new" placeholder="Note aggiuntive"></div>
       </div>
     </div>
 
@@ -2395,10 +2405,11 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
           <option>Reagenti</option><option>IHC</option><option>Vetrini</option><option>Cassette</option>
           <option>Coloranti</option><option>Consumabili</option><option>Kit Colorazioni</option><option>Lame</option><option>Altro</option>
         </select></div>
-      <div class="fg"><label>Fornitore</label><input type="text" id="f-fornitore" placeholder="es. Dako, Leica…"></div>
+      <div class="fg"><label>Fornitore *</label><input type="text" id="f-fornitore" placeholder="es. Dako, Leica…"></div>
       <div class="fg full"><label>Codici scansionabili</label><input type="text" id="f-barcode" placeholder="Barcode, QR, GS1 — separati da virgola se più di uno"></div>
       <div class="fg"><label>Numero Lotto</label><input type="text" id="f-lotto" placeholder="es. LOT2024001"></div>
       <div class="fg"><label>Data Scadenza</label><input type="date" id="f-scadenza"></div>
+      <div class="fg"><label>Numero DDT</label><input type="text" id="f-ddt" placeholder="es. 12345"></div>
       <div class="fg"><label>Quantità Attuale *</label><input type="number" id="f-qty" placeholder="0" min="0"></div>
       <div class="fg"><label>Unità di Misura</label><input type="text" id="f-unita" placeholder="pz, L, ml, conf…"></div>
       <div class="fg"><label>Scorta Minima</label><input type="number" id="f-min" placeholder="0" min="0"></div>
@@ -4396,12 +4407,12 @@ function openEditModal(id){
   if(id && !p) return; // id fornito ma non trovato
   document.getElementById('prod-modal-title').textContent = p ? 'Modifica Prodotto' : '＋ Nuovo Prodotto';
   // Svuota tutti i campi
-  ['f-id','f-nome','f-cat','f-fornitore','f-barcode','f-lotto','f-scadenza','f-qty','f-unita','f-min','f-pos','f-note'].forEach(fid => {
+  ['f-id','f-nome','f-cat','f-fornitore','f-barcode','f-lotto','f-scadenza','f-qty','f-unita','f-min','f-pos','f-ddt','f-note'].forEach(fid => {
     const e = document.getElementById(fid); if(e) e.value = '';
   });
   if(p){
     // Modalità modifica: popola con i valori esistenti
-    const fields = {id:'id',nome:'nome','f-cat':'cat',fornitore:'fornitore',barcode:'barcode',lotto:'lotto',scadenza:'scadenza',qty:'qty',unita:'unita',min:'min',pos:'pos',note:'note'};
+    const fields = {id:'id',nome:'nome','f-cat':'cat',fornitore:'fornitore',barcode:'barcode',lotto:'lotto',scadenza:'scadenza',qty:'qty',unita:'unita',min:'min',pos:'pos',ddt:'ddt',note:'note'};
     Object.entries(fields).forEach(([fid,pkey])=>{ const e=document.getElementById('f-'+fid.replace('f-','')); if(e) e.value=p[pkey]||''; });
     document.getElementById('f-cat').value = p.cat||'';
   }
@@ -4413,6 +4424,7 @@ function saveProduct(){
   const nome=document.getElementById('f-nome').value.trim();
   const cat=document.getElementById('f-cat').value;
   if(!nome||!cat){ toast('Nome e categoria obbligatori','error'); return; }
+  if(!document.getElementById('f-fornitore').value.trim()){ toast('Fornitore obbligatorio','error'); return; }
   _takeSnapshot((id?'Modifica':'Nuovo')+' prodotto: '+nome); // FIX [UNDO]
   const qty_new=parseFloat(document.getElementById('f-qty').value)||0;
   // Se cat è Altro o vuoto, prova a determinarlo in modo intelligente
@@ -4428,6 +4440,7 @@ function saveProduct(){
     unita:document.getElementById('f-unita').value.trim(),
     min:parseFloat(document.getElementById('f-min').value)||0,
     pos:document.getElementById('f-pos').value.trim(),
+    ddt:(document.getElementById('f-ddt')||{}).value?.trim()||'',
     note:document.getElementById('f-note').value.trim(),
     lotti:getLottiFromForm() // FEATURE 6: lotti multipli
   };
@@ -4922,13 +4935,15 @@ function confirmCaricaScanFound(){
   if(!csMatchedId){ toast('Nessun prodotto selezionato','error'); return; }
   const qty=parseFloat(document.getElementById('cs-qty').value)||1;
   const note=document.getElementById('cs-note').value;
+  const ddt=(document.getElementById('cs-ddt-found')||{}).value?.trim()||'';
   const prods=loadP(), p=prods.find(x=>x.id===csMatchedId);
   if(!p){ toast('Prodotto non trovato','error'); return; }
   p.qty+=qty;
   if(p.qty_init===undefined) p.qty_init=qty;
+  if(ddt) p.ddt=ddt;
   saveP(prods);
   const movs=loadM();
-  movs.unshift({id:genId(),ts:new Date().toISOString(),tipo:'carico',prod:p.nome,prodId:p.id,qty,lotto:p.lotto||'',note:note||'Carico da scan'});
+  movs.unshift({id:genId(),ts:new Date().toISOString(),tipo:'carico',prod:p.nome,prodId:p.id,qty,lotto:p.lotto||'',ddt:ddt||'',note:note||'Carico da scan'});
   saveM(movs);
   closeCaricaScanModal();
   if(currentView==='inventario') renderInv();
@@ -4943,20 +4958,24 @@ function confirmCaricaScanNew(){
   const forn=document.getElementById('cs-fornitore').value.trim();
   const cat=catSel&&catSel!=='Altro'?catSel:smartCategorize(nome,forn,'');
   if(!nome){ toast('Nome obbligatorio','error'); return; }
+  if(!forn){ toast('Fornitore obbligatorio','error'); return; }
   const qty=parseFloat(document.getElementById('cs-qty-new').value)||1;
   const p={
     id:genId(), nome, cat,
-    fornitore:document.getElementById('cs-fornitore').value.trim(),
+    fornitore:forn,
     barcode:document.getElementById('cs-codici').value.trim(),
     lotto:document.getElementById('cs-lotto').value.trim(),
     scadenza:document.getElementById('cs-scadenza').value,
     qty, qty_init:qty,
     unita:document.getElementById('cs-unita').value.trim()||'pz',
-    min:0, pos:'', note:''
+    min:parseInt((document.getElementById('cs-min')||{}).value,10)||0,
+    pos:(document.getElementById('cs-pos')||{}).value?.trim()||'',
+    ddt:(document.getElementById('cs-ddt')||{}).value?.trim()||'',
+    note:(document.getElementById('cs-note-new')||{}).value?.trim()||''
   };
   const prods=loadP(); prods.push(p); saveP(prods);
   const movs=loadM();
-  movs.unshift({id:genId(),ts:new Date().toISOString(),tipo:'carico',prod:p.nome,prodId:p.id,qty,lotto:p.lotto||'',note:'Carico da scan — nuovo prodotto'});
+  movs.unshift({id:genId(),ts:new Date().toISOString(),tipo:'carico',prod:p.nome,prodId:p.id,qty,lotto:p.lotto||'',ddt:p.ddt||'',note:p.note||'Carico da scan — nuovo prodotto'});
   saveM(movs);
   closeCaricaScanModal();
   if(currentView==='inventario') renderInv();
@@ -7096,6 +7115,10 @@ function riceviParziale(id){
           <input type="number" class="recv-parz-qty" data-idx="${i}" value="${Math.max(0,restante)}" min="0" max="${restante}" style="width:70px;text-align:center" ${restante<=0?'disabled':''}>
         </div>
       </div>
+      <div style="display:flex;gap:6px;margin-top:6px" ${restante<=0?'style="display:none"':''}>
+        <input type="text" class="recv-parz-lotto" data-idx="${i}" placeholder="Lotto" style="flex:1;font-family:DM Mono,monospace;font-size:12px">
+        <input type="date" class="recv-parz-scad" data-idx="${i}" title="Scadenza" style="flex:1;font-size:12px">
+      </div>
     </div>`;
   }).join('');
   document.getElementById('od-title').textContent = 'Registra Ricezione — '+(o.num||'');
@@ -7137,14 +7160,42 @@ function confirmRicezioneParziale(id){
     haRicevuto = true;
     const r = o.righe[idx];
     r.qtyRicevuta = (r.qtyRicevuta||0) + qtyArrivo;
+    // Lotto e scadenza per questa riga
+    const lottoEl = document.querySelector('.recv-parz-lotto[data-idx="'+idx+'"]');
+    const scadEl  = document.querySelector('.recv-parz-scad[data-idx="'+idx+'"]');
+    const lotto = lottoEl ? lottoEl.value.trim() : '';
+    const scad  = scadEl ? scadEl.value : '';
     // Storico ricezioni per riga — associa al DDT
     if(!r.ricezioni) r.ricezioni = [];
-    r.ricezioni.push({ qty: qtyArrivo, ddt: ddt, data: now });
-    ddtEntry.righe.push({nome:r.nome, qty:qtyArrivo});
-    // Carica in magazzino
-    const p = prods.find(x=>x.nome.toLowerCase()===r.nome.toLowerCase());
-    if(p) p.qty += qtyArrivo;
-    movs.unshift({id:genId(),ts:now,tipo:'carico',prod:r.nome,prodId:p?.id||'',qty:qtyArrivo,lotto:'',note:'Ricezione '+o.num+(ddt?' — '+ddt:'')});
+    r.ricezioni.push({ qty: qtyArrivo, ddt: ddt, lotto: lotto, data: now });
+    ddtEntry.righe.push({nome:r.nome, qty:qtyArrivo, lotto:lotto});
+    // Carica in magazzino con la STESSA logica del carico unificato:
+    // stesso nome + stesso lotto → bumpa quel lotto; lotto nuovo → nuovo record
+    const stessoNome = prods.filter(x => x.nome.toLowerCase() === r.nome.toLowerCase());
+    let p = null;
+    if (lotto) p = stessoNome.find(x => (x.lotto||'') === lotto);
+    if (!p && !lotto) p = stessoNome[0]; // nessun lotto indicato → usa il primo record esistente
+    if (p) {
+      p.qty = (p.qty||0) + qtyArrivo;
+      if (scad) p.scadenza = scad;
+      if (ddt)  p.ddt = ddt;
+    } else {
+      // Nuovo lotto → nuovo record che eredita i dati dal modello dello stesso nome
+      const modello = stessoNome[0] || {};
+      p = {
+        id: genId(), nome: r.nome,
+        cat: modello.cat || 'Reagenti',
+        fornitore: modello.fornitore || o.fornitore || '',
+        qty: qtyArrivo, qty_init: qtyArrivo,
+        min: modello.min || 0,
+        lotto: lotto || '', scadenza: scad || '',
+        unita: modello.unita || r.unita || '',
+        pos: modello.pos || '', barcode: modello.barcode || '',
+        ddt: ddt || '', creato: now
+      };
+      prods.push(p);
+    }
+    movs.unshift({id:genId(),ts:now,tipo:'carico',prod:r.nome,prodId:p?.id||'',qty:qtyArrivo,lotto:lotto||'',ddt:ddt||'',note:'Ricezione '+o.num+(ddt?' — '+ddt:'')});
   });
   if(!haRicevuto){ toast('Nessuna quantità inserita','error'); return; }
   const tuttoRicevuto = o.righe.every(r => (r.qtyRicevuta||0) >= r.qty);
@@ -9109,9 +9160,10 @@ window.openCaricaManualeModal = function() {
       nomi.map(n => `<option value="${esc(n)}">${esc(n)}</option>`).join('');
   }
   // Reset campi
-  ['car-man-qty','car-man-lotto','car-man-scad','car-man-note'].forEach(id => {
+  ['car-man-qty','car-man-lotto','car-man-scad','car-man-note','car-man-ddt','car-man-forn-nuovo','car-man-pos-nuovo','car-man-codici-nuovo'].forEach(id => {
     const e = document.getElementById(id); if(e) e.value = '';
   });
+  { const u = document.getElementById('car-man-unita-nuovo'); if(u) u.value = 'pz'; }
   document.getElementById('car-man-qty').value = '1';
   const nuovoChk = document.getElementById('car-man-nuovo');
   if (nuovoChk) { nuovoChk.checked = false; if (typeof toggleNuovoProdForm==='function') toggleNuovoProdForm(); }
@@ -9123,17 +9175,23 @@ window.saveCaricaManuale = async function() {
   const qty    = parseInt(document.getElementById('car-man-qty').value)||0;
   const lotto  = document.getElementById('car-man-lotto').value.trim();
   const scad   = document.getElementById('car-man-scad').value;
+  const ddt    = (document.getElementById('car-man-ddt')||{}).value?.trim() || '';
   const note   = document.getElementById('car-man-note').value.trim();
   const newProd = document.getElementById('car-man-nuovo').checked;
   const newNome = document.getElementById('car-man-nome-nuovo').value.trim();
   const newCat  = document.getElementById('car-man-cat-nuovo').value;
   const newMin  = parseInt(document.getElementById('car-man-min-nuovo').value)||0;
+  const newForn  = (document.getElementById('car-man-forn-nuovo')||{}).value?.trim() || '';
+  const newUnita = (document.getElementById('car-man-unita-nuovo')||{}).value?.trim() || '';
+  const newPos   = (document.getElementById('car-man-pos-nuovo')||{}).value?.trim() || '';
+  const newCodici= (document.getElementById('car-man-codici-nuovo')||{}).value?.trim() || '';
   if (qty <= 0) { toast('Quantità deve essere > 0', 'error'); return; }
   const prods = loadP();
   let prodId, prodNome;
   if (newProd) {
     if (!newNome) { toast('Inserisci il nome del nuovo prodotto', 'error'); return; }
-    const p = { id: genId(), nome: newNome, cat: newCat||'Reagenti', qty: 0, min: newMin, lotto: lotto||'', scadenza: scad||'', creato: new Date().toISOString() };
+    if (!newForn) { toast('Inserisci il fornitore', 'error'); return; }
+    const p = { id: genId(), nome: newNome, cat: newCat||'Reagenti', fornitore: newForn, qty: 0, min: newMin, lotto: lotto||'', scadenza: scad||'', unita: newUnita, pos: newPos, barcode: newCodici, ddt: ddt||'', creato: new Date().toISOString() };
     prods.push(p);
     prodId = p.id; prodNome = p.nome;
   } else {
@@ -9149,17 +9207,21 @@ window.saveCaricaManuale = async function() {
       // Lotto già presente → aggiorno scadenza se data fornita e incremento qty
       if (scad) p.scadenza = scad;
     } else {
-      // Nuovo lotto → creo un nuovo record prodotto eredita categoria/min dal nome
+      // Nuovo lotto → creo un nuovo record prodotto eredita dati dal nome
       const modello = stessoNome[0];
       p = {
         id: genId(),
         nome: nome,
         cat: modello.cat || 'Reagenti',
+        fornitore: modello.fornitore || '',
         qty: 0,
         min: modello.min || 0,
         lotto: lotto || '',
         scadenza: scad || '',
         unita: modello.unita || '',
+        pos: modello.pos || '',
+        barcode: modello.barcode || '',
+        ddt: ddt || '',
         creato: new Date().toISOString()
       };
       prods.push(p);
@@ -9172,7 +9234,7 @@ window.saveCaricaManuale = async function() {
   p.qty = (p.qty||0) + qty;
   // Movimento carico
   const movs = loadM();
-  movs.unshift({ id: genId(), ts: new Date().toISOString(), tipo: 'carico', prodId, prod: prodNome, qty, lotto: lotto||p.lotto||'', note: note||'Carico manuale' });
+  movs.unshift({ id: genId(), ts: new Date().toISOString(), tipo: 'carico', prodId, prod: prodNome, qty, lotto: lotto||p.lotto||'', ddt: ddt||'', note: note||'Carico manuale' });
   _takeSnapshot('Carico manuale ' + prodNome);
   await saveP(prods);
   await saveM(movs);
