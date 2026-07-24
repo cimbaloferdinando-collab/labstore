@@ -7,8 +7,10 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
-<script src="https://unpkg.com/@zxing/library@0.19.1/umd/index.min.js"></script>
-<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+<!-- defer: queste librerie servono solo per scan barcode e import Excel, mai all'avvio.
+     Senza defer bloccavano il rendering della pagina finché non erano scaricate (>1MB). -->
+<script defer src="https://unpkg.com/@zxing/library@0.19.1/umd/index.min.js"></script>
+<script defer src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 <style>
 :root {
   --accent:   #1a2f5e;
@@ -3291,7 +3293,15 @@ const debouncedRenderHome  = debounce((...a)=>typeof renderHomeGrid!=='undefined
 const debouncedRenderTracc = debounce((...a)=>typeof renderTracciabilita!=='undefined'&&renderTracciabilita(...a), 200);
 
 // ── SYNC INIZIALE: merge last-write-wins con il cloud ──
+// Guardia: initialSync viene invocata sia a fine script sia da DOMContentLoaded.
+// Senza questa, l'app scaricherebbe tutte le tabelle (5000 casi) DUE volte ad ogni avvio.
+let _initialSyncPromise = null;
 async function initialSync(){
+  if (_initialSyncPromise) return _initialSyncPromise;   // già in corso/completata: riusa
+  _initialSyncPromise = _initialSyncRun();
+  return _initialSyncPromise;
+}
+async function _initialSyncRun(){
   if(!SUPA_OK){ updateSyncStatus('off'); return; }
   updateSyncStatus('sync');
   try{
@@ -11217,10 +11227,12 @@ window.renderTracciabilita = function(){
   const _coloratoreCache = (typeof loadColoratore === 'function') ? loadColoratore() : [];
   const _ihcCache = (typeof loadIHC === 'function') ? loadIHC() : [];
   const _epoch = _getTrackingEpoch(_coloratoreCache);
+  // Indice costruito UNA volta per tutto il render (lookup O(1) per caso)
+  const _statoIdx = _buildStatoIndex(_coloratoreCache, _ihcCache);
   // Pre-calcola lo stato di ogni caso una volta sola
   const statoMap = new Map();
   camps.forEach(c => {
-    statoMap.set(c.id, _computeStatoCaso(c, { coloratoreCache: _coloratoreCache, ihcCache: _ihcCache, trackingEpoch: _epoch }));
+    statoMap.set(c.id, _computeStatoCaso(c, { index: _statoIdx, trackingEpoch: _epoch }));
   });
   // Applica filtro stato
   if(_campStatoFilter !== 'all'){
@@ -12437,7 +12449,19 @@ function _trc_richiedente(c) {
 // data_chiusura_finale = data ultima IHC completata (o = data_chiusura_lab se no IHC).
 // Normalizza un ID caso per match tollerante:
 // - rimuove spazi, maiuscolo, anno a 4 cifre → 2 cifre (100/2026 ≡ 100/26)
+// Cache di normalizzazione: la funzione viene chiamata centinaia di migliaia di volte
+// nei render (stato casi, TAT, widget). Memoizzare evita di rieseguire la regex.
+const _normCasoIdCache = new Map();
 function _normCasoId(id) {
+  const raw = id == null ? '' : String(id);
+  const hit = _normCasoIdCache.get(raw);
+  if (hit !== undefined) return hit;
+  const v = _normCasoIdCompute(raw);
+  // Tetto di sicurezza per non far crescere la cache all'infinito
+  if (_normCasoIdCache.size < 50000) _normCasoIdCache.set(raw, v);
+  return v;
+}
+function _normCasoIdCompute(id) {
   const s = String(id || '').trim().toUpperCase();
   // Estrae l'ID BASE del caso: numero / anno (4 cifre → 2) + eventuale suffisso PAP attaccato.
   // IGNORA blocchetti/note che seguono dopo spazio o separatore
@@ -12473,6 +12497,43 @@ function _getTrackingEpoch(colorReg) {
   return min; // 'YYYY-MM-DD' oppure null
 }
 
+// ════════════════════════════════════════════════════════════════
+// INDICE STATO CASI — costruito UNA volta, poi lookup O(1) per caso.
+// Prima si scansionavano tutti i cicli coloratore per ogni singolo caso
+// (2000+ casi × 500 cicli × N id = decine di milioni di operazioni per render).
+// ════════════════════════════════════════════════════════════════
+function _buildStatoIndex(colorReg, ihcReg) {
+  const colorByCaso = new Map();  // idNorm → primo ciclo coloratore
+  const ihcByCaso = new Map();    // idNorm → array richieste IHC
+  let epoch = null;
+
+  (colorReg || []).forEach(r => {
+    const d = String(r.data || '').slice(0, 10);
+    if (d && (!epoch || d < epoch)) epoch = d;
+    const casi = (typeof _trc_extractCasi === 'function') ? _trc_extractCasi(r) : [];
+    for (const raw of casi) {
+      if (!raw) continue;
+      const k = _normCasoId(raw);
+      const best = colorByCaso.get(k);
+      if (!best) { colorByCaso.set(k, r); continue; }
+      // Tieni il ciclo più antico (tie-break: creato)
+      const dThis = String(r.data || ''), dBest = String(best.data || '');
+      if (dThis < dBest) colorByCaso.set(k, r);
+      else if (dThis === dBest && String(r.creato || '') < String(best.creato || '')) colorByCaso.set(k, r);
+    }
+  });
+
+  (ihcReg || []).forEach(i => {
+    const k = _normCasoId(i.campione_id || '');
+    if (!k) return;
+    let arr = ihcByCaso.get(k);
+    if (!arr) { arr = []; ihcByCaso.set(k, arr); }
+    arr.push(i);
+  });
+
+  return { colorByCaso, ihcByCaso, epoch };
+}
+
 function _computeStatoCaso(campione, opts = {}) {
   const out = {
     stato: 'aperto',
@@ -12500,26 +12561,20 @@ function _computeStatoCaso(campione, opts = {}) {
   if (!idCaso) return out;
   const idNorm = _normCasoId(idCaso);
 
-  // Cache opzionali per uso in loop
-  const colorReg = opts.coloratoreCache || (typeof loadColoratore === 'function' ? loadColoratore() : []);
-  const ihcReg   = opts.ihcCache        || (typeof loadIHC === 'function' ? loadIHC() : []);
-  const epoch    = (opts.trackingEpoch !== undefined) ? opts.trackingEpoch : _getTrackingEpoch(colorReg);
-
-  // 1. Trova il primo ciclo coloratore (per data, tie-break: creato) che contiene il caso
-  //    Match TOLLERANTE (ignora spazi, maiuscole, formato anno)
-  let primoColor = null;
-  for (const r of colorReg) {
-    const casi = _trc_extractCasi(r).map(x => _normCasoId(x));
-    if (!casi.includes(idNorm)) continue;
-    if (!primoColor) { primoColor = r; continue; }
-    const dThis = String(r.data || '');
-    const dBest = String(primoColor.data || '');
-    if (dThis < dBest) primoColor = r;
-    else if (dThis === dBest && String(r.creato || '') < String(primoColor.creato || '')) primoColor = r;
+  // Indice condiviso: se non fornito lo costruisce (compatibilità con chiamate singole)
+  let idx = opts.index;
+  if (!idx) {
+    const colorReg = opts.coloratoreCache || (typeof loadColoratore === 'function' ? loadColoratore() : []);
+    const ihcReg   = opts.ihcCache        || (typeof loadIHC === 'function' ? loadIHC() : []);
+    idx = _buildStatoIndex(colorReg, ihcReg);
   }
+  const epoch = (opts.trackingEpoch !== undefined) ? opts.trackingEpoch : idx.epoch;
 
-  // 2. IHC del caso (match tollerante su campione_id)
-  const ihcCaso = ihcReg.filter(i => _normCasoId(i.campione_id || '') === idNorm);
+  // 1. Primo ciclo coloratore del caso — lookup diretto dall'indice
+  const primoColor = idx.colorByCaso.get(idNorm) || null;
+
+  // 2. IHC del caso — lookup diretto dall'indice
+  const ihcCaso = idx.ihcByCaso.get(idNorm) || [];
   const ihcAperte = ihcCaso.filter(i => i.stato !== 'completata');
   out.ihc_totali_count = ihcCaso.length;
   out.ihc_aperte_count = ihcAperte.length;
@@ -13125,6 +13180,9 @@ function renderTATSection() {
     if (!existing || (r.data && r.data < existing.data)) colorByCaso.set(k, r);
   }));
 
+  // Indice stato ciclo vita: costruito UNA volta per tutto il calcolo
+  const _tatIdx = _buildStatoIndex(color, ihc);
+
   // Calcola TAT (match su campione_id, non su id GUID)
   // Solo casi accettati nel periodo tracciato (data >= epoca) per medie affidabili
   const tats = [];
@@ -13145,7 +13203,7 @@ function renderTATSection() {
     const tatTot = col ? _trc_diffDays(c.data, col.data) : null;
     tats.push({ id: idCaso, tatAccProc, tatProcColor, tatTot });
     // TAT chiusura tecnica
-    const st = _computeStatoCaso(c, { coloratoreCache: color, ihcCache: ihc, trackingEpoch: epoch });
+    const st = _computeStatoCaso(c, { index: _tatIdx, trackingEpoch: epoch });
     if ((st.stato === 'chiuso' || st.stato === 'in_attesa_ihc') && st.data_chiusura_lab) {
       const d = _trc_diffDays(c.data, st.data_chiusura_lab);
       if (d != null && d >= 0) tatChiusura.push(d);
@@ -13511,11 +13569,12 @@ function renderStatoCasiWidget() {
     const colCache = (typeof loadColoratore === 'function') ? loadColoratore() : [];
     const ihcCache = (typeof loadIHC === 'function') ? loadIHC() : [];
     const epoch = _getTrackingEpoch(colCache);
+    const _wIdx = _buildStatoIndex(colCache, ihcCache);
     const now = new Date();
     const curYm = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
     let aperti = 0, attesa = 0, chiusiMese = 0;
     camps.forEach(c => {
-      const s = _computeStatoCaso(c, { coloratoreCache: colCache, ihcCache: ihcCache, trackingEpoch: epoch });
+      const s = _computeStatoCaso(c, { index: _wIdx, trackingEpoch: epoch });
       if (s.stato === 'aperto') aperti++;
       else if (s.stato === 'in_attesa_ihc') attesa++;
       else if (s.stato === 'chiuso') {
@@ -13565,10 +13624,11 @@ window.mostraCasiPerStato = function(stato){
     const now = new Date();
     const curYm = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
 
+    const _mIdx = _buildStatoIndex(colCache, ihcCache);
     // Filtra i casi con lo stato richiesto (per "chiuso" solo quelli chiusi nel mese, come il widget)
     let lista = [];
     camps.forEach(c => {
-      const s = _computeStatoCaso(c, { coloratoreCache: colCache, ihcCache: ihcCache, trackingEpoch: epoch });
+      const s = _computeStatoCaso(c, { index: _mIdx, trackingEpoch: epoch });
       if (s.stato !== stato) return;
       if (stato === 'chiuso') {
         const d = s.data_chiusura_finale || s.data_chiusura_lab || '';
@@ -14597,12 +14657,13 @@ function _buildLottoCritico(lotto, dal, al) {
   colorMatch.forEach(r => _trc_extractCasi(r).forEach(id => casiSet.add(_normCasoId(id))));
   const campById = new Map();
   camp.forEach(c => campById.set(_normCasoId(c.campione_id || ''), c));
+  const _qIdx = _buildStatoIndex(color, ihc);
   const casiInfo = Array.from(casiSet).sort().map(id => {
     const c = campById.get(id);
     let stato = 'n/d';
     if (c) {
       try {
-        const st = _computeStatoCaso(c, { coloratoreCache: color, ihcCache: ihc });
+        const st = _computeStatoCaso(c, { index: _qIdx });
         stato = st.stato;
       } catch (e) {}
     }
