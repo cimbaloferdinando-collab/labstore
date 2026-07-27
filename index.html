@@ -4715,12 +4715,9 @@ function openScaricaModal(){
   const sel=document.getElementById('sc-prod');
   sel.innerHTML='<option value="">Seleziona prodotto…</option>';
   const prods=loadP();
-  // Mostra solo i prodotti che hanno almeno un lotto con disponibilità (qty>0)
-  // oppure un bidone aperto in uso. I lotti esauriti restano in magazzino ma non qui.
-  const _haDispon = (nome) => loadP().filter(p=>p.nome===nome).some(p => {
-    const apertoBid = (typeof getBidoneAperto==='function') ? getBidoneAperto(p.id) : null;
-    return (parseInt(p.qty,10)||0) > 0 || apertoBid;
-  });
+  // Mostra solo i prodotti che hanno almeno un lotto con flaconi residui (qty>0).
+  // I lotti esauriti (anche con bidone aperto) restano in magazzino ma NON qui.
+  const _haDispon = (nome) => loadP().filter(p=>p.nome===nome).some(p => (parseInt(p.qty,10)||0) > 0);
   const nomi=[...new Set(prods.map(p=>p.nome))].filter(_haDispon).sort();
   nomi.forEach(n=>{ const o=document.createElement('option'); o.value=n; o.textContent=n; sel.appendChild(o); });
   document.getElementById('sc-lotti-wrap').style.display='none';
@@ -4753,11 +4750,7 @@ function scaricaSelProd(){
   const nome=document.getElementById('sc-prod').value;
   scaricaSelectedId=null;
   if(!nome){ document.getElementById('sc-lotti-wrap').style.display='none'; document.getElementById('sc-man-qty-wrap').style.display='none'; document.getElementById('sc-man-confirm-btn').style.display='none'; return; }
-  const prods=loadP().filter(p=>p.nome===nome).filter(p => {
-    // Solo lotti con disponibilità o con bidone aperto in uso
-    const apertoBid = (typeof getBidoneAperto==='function') ? getBidoneAperto(p.id) : null;
-    return (parseInt(p.qty,10)||0) > 0 || apertoBid;
-  });
+  const prods=loadP().filter(p=>p.nome===nome).filter(p => (parseInt(p.qty,10)||0) > 0);
   const wrap=document.getElementById('sc-lotti-list');
   wrap.innerHTML='';
   if(!prods.length){
@@ -5329,13 +5322,11 @@ function _matchProdottiReag(def) {
 //         "— Nessun prodotto —" se non trovato in magazzino.
 function _buildLottoOptions(def, presetProdId, presetLotto) {
   let prods = _matchProdottiReag(def);
-  // Escludi i lotti esauriti (qty<=0), MA mantieni:
-  //  - quelli con bidone aperto in uso
-  //  - quello eventualmente già selezionato nel ciclo (preset), per non perderlo in modifica
+  // Escludi i lotti esauriti (qty<=0). Mantieni SOLO quello eventualmente già
+  // selezionato nel ciclo (preset), per non perderlo quando si modifica un ciclo esistente.
   prods = prods.filter(p => {
-    const apertoBid = (typeof getBidoneAperto==='function') ? getBidoneAperto(p.id) : null;
     const isPreset = (p.id === presetProdId) || (presetLotto && p.lotto === presetLotto);
-    return (parseInt(p.qty,10)||0) > 0 || apertoBid || isPreset;
+    return (parseInt(p.qty,10)||0) > 0 || isPreset;
   });
   if (!prods.length) {
     return '<option value="">— Nessun lotto disponibile —</option>';
