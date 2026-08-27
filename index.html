@@ -1245,7 +1245,10 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
     <div class="view" data-view="ordini" id="view-ordini">
       <div class="pg-hdr">
         <div class="pg-title">Ordini</div>
-        <button class="hbtn2 primary" onclick="openOrdineModal()">＋ Nuovo ordine</button>
+        <div style="display:flex;gap:8px">
+          <button class="hbtn2" onclick="openFixDoppioniModal()" title="Ripara carichi duplicati da ricezioni multiple">🔧 Ripara doppioni</button>
+          <button class="hbtn2 primary" onclick="openOrdineModal()">＋ Nuovo ordine</button>
+        </div>
       </div>
       <div class="filter-bar" style="margin-bottom:14px">
         <button class="chip active" onclick="setOrdFilter('all',this)">Tutti</button>
@@ -2510,9 +2513,28 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
 </div>
 
 <!-- ══════════════════════════════
-     MODAL: BIDONI VUOTI
+     MODAL: RIPARA CARICHI DUPLICATI (ricezioni multiple)
 ══════════════════════════════ -->
-<div class="modal-overlay" id="modal-vuoti">
+<div class="modal-overlay" id="modal-fix-doppioni">
+  <div class="modal" style="width:min(680px,96vw);max-width:96vw;max-height:90vh;overflow-y:auto">
+    <div class="modal-title">🔧 Ripara carichi duplicati da ricezione</div>
+    <p style="color:var(--text2);font-size:13px;margin-bottom:12px">Trova i carichi registrati più volte dallo stesso ordine (per clic ripetuti su "Conferma Ricezione") e permette di stornarli. Controlla la lista prima di applicare.</p>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+      <label style="font-size:12px;color:var(--text2)">Finestra tempo tra carichi "gemelli":</label>
+      <select id="fix-window" onchange="renderFixDoppioni()" style="padding:5px 8px">
+        <option value="120">2 minuti</option>
+        <option value="300" selected>5 minuti</option>
+        <option value="900">15 minuti</option>
+        <option value="3600">1 ora</option>
+      </select>
+    </div>
+    <div id="fix-doppioni-body"></div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('modal-fix-doppioni')">Chiudi</button>
+      <button class="btn btn-ok" id="fix-doppioni-apply" onclick="applyFixDoppioni()" style="display:none">Storna i duplicati selezionati</button>
+    </div>
+  </div>
+</div>
   <div class="modal" style="width:440px">
     <div class="modal-title">🔄 Aggiorna Contenitori Vuoti</div>
     <p style="color:var(--text2);font-size:13px;margin-bottom:16px">Inserisci quanti contenitori vuoti hai attualmente disponibili per ciascuna categoria.</p>
@@ -7032,6 +7054,144 @@ function resetRicezione(id){
   toast('Ricezione azzerata — ordine riportato ad "approvato"','info');
 }
 
+// ═══════════════════════════════════════════════════════════════
+// RIPARA CARICHI DUPLICATI DA RICEZIONE (clic ripetuti su Conferma)
+// ═══════════════════════════════════════════════════════════════
+let _fixDoppioniGruppi = [];
+
+window.openFixDoppioniModal = function(){
+  renderFixDoppioni();
+  document.getElementById('modal-fix-doppioni').classList.add('open');
+};
+
+window.renderFixDoppioni = function(){
+  const body = document.getElementById('fix-doppioni-body');
+  const applyBtn = document.getElementById('fix-doppioni-apply');
+  if(!body) return;
+  const windowSec = parseInt((document.getElementById('fix-window')||{}).value,10) || 300;
+  const movs = loadM();
+  // Considera solo i carichi da RICEZIONE (nota che inizia con "Ricezione")
+  const ric = movs.filter(m => m.tipo==='carico' && /^Ricezione/i.test(m.note||''));
+  // Raggruppa per (prodotto + nota ricezione), cioè stesso ordine+prodotto
+  const gruppi = {};
+  ric.forEach(m => {
+    const key = (m.prodId||m.prod||'') + '|' + (m.note||'');
+    (gruppi[key] = gruppi[key] || []).push(m);
+  });
+  // Trova i gruppi con >1 carico ravvicinato nel tempo (sospetti doppioni)
+  _fixDoppioniGruppi = [];
+  Object.values(gruppi).forEach(arr => {
+    if(arr.length < 2) return;
+    arr.sort((a,b)=> new Date(a.ts) - new Date(b.ts));
+    // clusterizza per finestra temporale
+    let cluster = [arr[0]];
+    for(let i=1;i<arr.length;i++){
+      const dt = (new Date(arr[i].ts) - new Date(cluster[cluster.length-1].ts))/1000;
+      if(dt <= windowSec){ cluster.push(arr[i]); }
+      else { if(cluster.length>1) _fixDoppioniGruppi.push(cluster); cluster=[arr[i]]; }
+    }
+    if(cluster.length>1) _fixDoppioniGruppi.push(cluster);
+  });
+
+  if(!_fixDoppioniGruppi.length){
+    body.innerHTML = '<div style="padding:16px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;color:#166534">✓ Nessun carico duplicato sospetto trovato con questa finestra temporale.</div>';
+    if(applyBtn) applyBtn.style.display='none';
+    return;
+  }
+
+  let html = '<div style="font-size:12px;color:var(--text2);margin-bottom:10px">Ogni gruppo è un prodotto caricato più volte a distanza di pochi minuti dallo stesso ordine. Il <b>primo</b> carico si tiene, gli altri (selezionati) vengono stornati. Gli scarichi già fatti <b>non</b> vengono toccati.</div>';
+
+  // Riepilogo per prodotto: giacenza attuale → risultante dopo storno (aggrega tutti i gruppi)
+  const prods = loadP();
+  const stornoPerProd = {}; // prodId → qty totale da stornare
+  _fixDoppioniGruppi.forEach(cluster => {
+    cluster.slice(1).forEach(m => {
+      const pid = m.prodId || ('__nome__'+m.prod+'|'+(m.lotto||''));
+      stornoPerProd[pid] = (stornoPerProd[pid]||0) + (parseFloat(m.qty)||0);
+    });
+  });
+  let ciSonoNegativi = false;
+  let riepilogo = '<div style="background:var(--bg3);border-radius:8px;padding:10px;margin-bottom:12px"><div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;margin-bottom:6px">Effetto sulle giacenze</div>';
+  Object.keys(stornoPerProd).forEach(pid => {
+    let p = pid.startsWith('__nome__')
+      ? prods.find(x => { const [n,l]=pid.slice(8).split('|'); return x.nome===n && (x.lotto||'')===(l||''); })
+      : prods.find(x => x.id === pid);
+    const nome = p ? (p.nome + (p.lotto?' · '+p.lotto:'')) : '(prodotto non trovato)';
+    const attuale = p ? (parseFloat(p.qty)||0) : 0;
+    const storno = stornoPerProd[pid];
+    const risultante = attuale - storno;
+    const neg = risultante < 0;
+    if (neg) ciSonoNegativi = true;
+    riepilogo += `<div style="display:flex;justify-content:space-between;font-size:12px;padding:3px 0;border-bottom:1px solid var(--border)">
+      <span>${esc(nome)}</span>
+      <span style="font-family:'DM Mono',monospace">${attuale} − ${storno} = <b style="color:${neg?'#b91c1c':'#166534'}">${risultante}${neg?' ⚠️':''}</b></span>
+    </div>`;
+  });
+  riepilogo += '</div>';
+  if (ciSonoNegativi) {
+    riepilogo += '<div style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:10px;margin-bottom:12px;font-size:12px;color:#b91c1c">⚠️ I prodotti in rosso andrebbero sotto zero: significa che hai scaricato più di quanto realmente ricevuto. Per quelli, dopo lo storno la giacenza sarà messa a 0 — <b>controlla e correggi a mano</b> la quantità reale a magazzino.</div>';
+  }
+  html += riepilogo;
+
+  _fixDoppioniGruppi.forEach((cluster, gi) => {
+    const primo = cluster[0];
+    const daStornare = cluster.slice(1);
+    const totStorno = daStornare.reduce((s,m)=>s+(parseFloat(m.qty)||0),0);
+    html += `<div style="border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:8px">
+      <div style="font-weight:600;font-size:13px;margin-bottom:4px">${esc(primo.prod||'—')} ${primo.lotto?'· lotto '+esc(primo.lotto):''}</div>
+      <div style="font-size:11px;color:var(--text3);margin-bottom:6px">${esc(primo.note||'')}</div>
+      <div style="font-size:12px">
+        <div style="color:#166534">✓ Tengo: ${primo.qty} — ${fmtTs(primo.ts)}</div>
+        ${daStornare.map((m,mi)=>`<label style="display:flex;align-items:center;gap:6px;color:#b91c1c;cursor:pointer;margin-top:3px">
+          <input type="checkbox" class="fix-dop-chk" data-g="${gi}" data-m="${mi}" checked style="width:auto;margin:0">
+          Storno: ${m.qty} — ${fmtTs(m.ts)}
+        </label>`).join('')}
+      </div>
+      <div style="font-size:11px;color:#b91c1c;margin-top:5px;font-weight:600">Storno totale gruppo: −${totStorno}</div>
+    </div>`;
+  });
+  body.innerHTML = html;
+  if(applyBtn) applyBtn.style.display='';
+};
+
+window.applyFixDoppioni = function(){
+  const checks = Array.from(document.querySelectorAll('.fix-dop-chk')).filter(c=>c.checked);
+  if(!checks.length){ toast('Nessun duplicato selezionato','info'); return; }
+  if(!confirm('Confermi lo storno di '+checks.length+' carichi duplicati? Le giacenze verranno diminuite di conseguenza e i movimenti duplicati rimossi. Puoi annullare con Undo.')) return;
+  _takeSnapshot('Storno '+checks.length+' carichi duplicati');
+  const prods = loadP();
+  let movs = loadM();
+  const daRimuovere = new Set();
+  let stornati = 0;
+  const messiAZero = []; // prodotti andati sotto zero → richiedono controllo manuale
+  checks.forEach(chk => {
+    const gi = parseInt(chk.dataset.g,10), mi = parseInt(chk.dataset.m,10);
+    const cluster = _fixDoppioniGruppi[gi]; if(!cluster) return;
+    const mov = cluster.slice(1)[mi]; if(!mov) return;
+    // Storna la quantità dalla giacenza del prodotto (per id, poi per nome+lotto)
+    let p = prods.find(x => x.id === mov.prodId);
+    if(!p) p = prods.find(x => x.nome===mov.prod && (x.lotto||'')===(mov.lotto||''));
+    if(p){
+      const nuovo = (parseFloat(p.qty)||0) - (parseFloat(mov.qty)||0);
+      if(nuovo < 0 && !messiAZero.includes(p.nome+(p.lotto?' · '+p.lotto:''))) messiAZero.push(p.nome+(p.lotto?' · '+p.lotto:''));
+      p.qty = Math.max(0, nuovo);
+    }
+    daRimuovere.add(mov.id);
+    stornati++;
+  });
+  // Rimuovi i movimenti duplicati
+  movs = movs.filter(m => !daRimuovere.has(m.id));
+  saveP(prods); saveM(movs);
+  closeModal('modal-fix-doppioni');
+  if(currentView==='inventario') renderInv();
+  if(currentView==='dashboard') renderDashboard();
+  if(currentView==='movimenti') renderMovimenti();
+  toast('✓ Stornati '+stornati+' carichi duplicati','success');
+  if(messiAZero.length){
+    setTimeout(()=>alert('⚠️ Questi prodotti sono stati messi a 0 perché lo storno li portava sotto zero (avevi scaricato più del ricevuto reale). Controlla e correggi a mano la giacenza reale:\n\n• '+messiAZero.join('\n• ')), 400);
+  }
+};
+
 function editRigaRicezione(ordId, rigaIdx){
   const ords = loadOrd();
   const o = ords.find(x=>x.id===ordId); if(!o) return;
@@ -7221,10 +7381,20 @@ function riceviParziale(id){
   document.getElementById('modal-ordine-detail').classList.add('open');
 }
 
+// Lock anti-doppio clic: evita che clic ripetuti registrino la ricezione più volte
+let _ricezioneInCorso = false;
 function confirmRicezioneParziale(id){
-  _takeSnapshot('Ricezione parziale ordine');
-  const ords = loadOrd();
-  const o = ords.find(x=>x.id===id); if(!o) return;
+  if (_ricezioneInCorso) return;               // già in elaborazione: ignora clic ripetuti
+  _ricezioneInCorso = true;
+  // Disabilita subito i pulsanti Conferma visibili
+  document.querySelectorAll('#ordine-detail button, #od-footer button, #modal-ordine-detail button').forEach(b => {
+    if (/conferma|ricezione/i.test(b.textContent)) { b.disabled = true; b.style.opacity = '0.6'; }
+  });
+  const _unlock = () => { _ricezioneInCorso = false; };
+  try {
+    _takeSnapshot('Ricezione parziale ordine');
+    const ords = loadOrd();
+    const o = ords.find(x=>x.id===id); if(!o){ _unlock(); return; }
   const ddt = document.getElementById('recv-parz-ddt')?.value||'';
   const scanFile = document.getElementById('recv-parz-scan')?.files?.[0];
   const prods = loadP();
@@ -7277,7 +7447,7 @@ function confirmRicezioneParziale(id){
     }
     movs.unshift({id:genId(),ts:now,tipo:'carico',prod:r.nome,prodId:p?.id||'',qty:qtyArrivo,lotto:lotto||'',ddt:ddt||'',note:'Ricezione '+o.num+(ddt?' — '+ddt:'')});
   });
-  if(!haRicevuto){ toast('Nessuna quantità inserita','error'); return; }
+  if(!haRicevuto){ toast('Nessuna quantità inserita','error'); _unlock(); _riabilitaBtnRicezione(); return; }
   const tuttoRicevuto = o.righe.every(r => (r.qtyRicevuta||0) >= r.qty);
   o.ddtList.push(ddtEntry);
   o.stato = tuttoRicevuto ? 'ricevuto' : 'parziale';
@@ -7285,6 +7455,7 @@ function confirmRicezioneParziale(id){
   // Se c'è una scan DDT, allega
   const _finalize = ()=>{
     saveP(prods); saveM(movs); saveOrd(ords);
+    _unlock(); // sblocca DOPO il salvataggio
     // Aggiorna la view: usa il pannello se siamo nella view ordini, altrimenti renderOrdini
     if(document.getElementById('ordine-detail')) {
       renderOrdiniPreview();
@@ -7302,23 +7473,40 @@ function confirmRicezioneParziale(id){
     reader.onload = function(e){
       const img = new Image();
       img.onload = function(){
-        const canvas = document.createElement('canvas');
-        const maxW=1200,maxH=1600;
-        let w=img.width,h=img.height;
-        if(w>maxW){h=h*(maxW/w);w=maxW;} if(h>maxH){w=w*(maxH/h);h=maxH;}
-        canvas.width=w;canvas.height=h;
-        canvas.getContext('2d').drawImage(img,0,0,w,h);
-        const base64=canvas.toDataURL('image/jpeg',0.7);
-        if(!o.ddtImages) o.ddtImages=[];
-        o.ddtImages.push({data:base64,nome:scanFile.name,rif:ddt,ts:now});
+        try {
+          const canvas = document.createElement('canvas');
+          const maxW=1200,maxH=1600;
+          let w=img.width,h=img.height;
+          if(w>maxW){h=h*(maxW/w);w=maxW;} if(h>maxH){w=w*(maxH/h);h=maxH;}
+          canvas.width=w;canvas.height=h;
+          canvas.getContext('2d').drawImage(img,0,0,w,h);
+          const base64=canvas.toDataURL('image/jpeg',0.7);
+          if(!o.ddtImages) o.ddtImages=[];
+          o.ddtImages.push({data:base64,nome:scanFile.name,rif:ddt,ts:now});
+        } catch(err){ console.warn('[scan DDT]', err); }
         _finalize();
       };
+      img.onerror = function(){ _finalize(); }; // se l'immagine fallisce, salva comunque
       img.src=e.target.result;
     };
+    reader.onerror = function(){ _finalize(); };
     reader.readAsDataURL(scanFile);
   } else {
     _finalize();
   }
+  } catch(err) {
+    console.warn('[confirmRicezioneParziale]', err);
+    toast('Errore durante la registrazione: '+err.message,'error');
+    _unlock();
+    _riabilitaBtnRicezione();
+  }
+}
+
+// Riabilita i pulsanti di conferma ricezione (in caso di errore o quantità mancante)
+function _riabilitaBtnRicezione(){
+  document.querySelectorAll('#ordine-detail button, #od-footer button, #modal-ordine-detail button').forEach(b => {
+    if (/conferma|ricezione/i.test(b.textContent)) { b.disabled = false; b.style.opacity = ''; }
+  });
 }
 
 // FEATURE 4: Archiviazione automatica — non più necessaria, ordini e archivio sono unificati
