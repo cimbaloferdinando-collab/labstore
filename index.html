@@ -1062,6 +1062,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
         <div class="pg-title">Inventario</div>
         <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
           <button class="hbtn2 warn" onclick="openDuplicatiModal()" title="Trova prodotti duplicati">⚠ Duplicati</button>
+          <button class="hbtn2 warn" onclick="openCorreggiGiacenzeModal()" title="Correggi manualmente le quantità">✏️ Correggi giacenze</button>
           <button class="hbtn2 ok" onclick="apriCaricoScan()">⬆ Carico</button>
           <button class="hbtn2 warn" onclick="openModalScarica()">⬇ Scarico</button>
           <button class="hbtn2" onclick="openDDTModal()">📷 DDT</button>
@@ -2508,6 +2509,22 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
     <div class="modal-footer">
       <button class="btn" onclick="closeModal('modal-smaltimento')">Annulla</button>
       <button class="btn btn-ok" onclick="saveSmaltimento()">✓ Registra smaltimento</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════
+     MODAL: CORREGGI GIACENZE (manuale)
+══════════════════════════════ -->
+<div class="modal-overlay" id="modal-correggi-giacenze">
+  <div class="modal" style="width:min(720px,96vw);max-width:96vw;max-height:90vh;overflow-y:auto">
+    <div class="modal-title">✏️ Correggi giacenze</div>
+    <p style="color:var(--text2);font-size:13px;margin-bottom:10px">Imposta la quantità reale contando i prodotti fisici a magazzino. Modifica solo le righe che ti servono e premi Salva. Utile per rimettere a posto giacenze gonfiate da ricezioni multiple.</p>
+    <input type="text" id="corr-search" placeholder="🔍 Cerca prodotto…" oninput="renderCorreggiGiacenze()" style="width:100%;margin-bottom:10px;padding:8px">
+    <div id="corr-giacenze-body" style="max-height:52vh;overflow-y:auto"></div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('modal-correggi-giacenze')">Annulla</button>
+      <button class="btn btn-ok" onclick="saveCorreggiGiacenze()">💾 Salva correzioni</button>
     </div>
   </div>
 </div>
@@ -7058,6 +7075,63 @@ function resetRicezione(id){
 // RIPARA CARICHI DUPLICATI DA RICEZIONE (clic ripetuti su Conferma)
 // ═══════════════════════════════════════════════════════════════
 let _fixDoppioniGruppi = [];
+
+// ═══════════════════════════════════════════════════════════════
+// CORREGGI GIACENZE MANUALMENTE (rimette a posto quantità gonfiate)
+// ═══════════════════════════════════════════════════════════════
+window.openCorreggiGiacenzeModal = function(){
+  const s = document.getElementById('corr-search'); if(s) s.value = '';
+  renderCorreggiGiacenze();
+  document.getElementById('modal-correggi-giacenze').classList.add('open');
+};
+
+window.renderCorreggiGiacenze = function(){
+  const body = document.getElementById('corr-giacenze-body');
+  if(!body) return;
+  const q = ((document.getElementById('corr-search')||{}).value||'').toLowerCase().trim();
+  let prods = loadP().slice();
+  if(q) prods = prods.filter(p => (p.nome||'').toLowerCase().includes(q) || (p.lotto||'').toLowerCase().includes(q));
+  // Ordina per nome, poi lotto
+  prods.sort((a,b)=> (a.nome||'').localeCompare(b.nome||'') || (a.lotto||'').localeCompare(b.lotto||''));
+  if(!prods.length){ body.innerHTML = '<div style="padding:16px;color:var(--text3)">Nessun prodotto trovato.</div>'; return; }
+  body.innerHTML = prods.map(p => {
+    const qty = parseFloat(p.qty)||0;
+    const alto = qty > 30; // evidenzia sospetti (quantità alte)
+    return `<div style="display:flex;align-items:center;gap:10px;padding:7px 4px;border-bottom:1px solid var(--border)">
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:600;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(p.nome||'—')}</div>
+        <div style="font-size:11px;color:var(--text3)">${p.lotto?'Lotto '+esc(p.lotto):'senza lotto'}${p.fornitore?' · '+esc(p.fornitore):''} · ${esc(p.unita||'pz')}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px">
+        <span style="font-size:11px;color:${alto?'#b91c1c':'var(--text3)'}">attuale: <b>${qty}</b></span>
+        <input type="number" class="corr-qty-input" data-id="${esc(p.id)}" value="${qty}" min="0" step="0.01" style="width:80px;text-align:center;font-family:'DM Mono',monospace;${alto?'border-color:#fca5a5':''}">
+      </div>
+    </div>`;
+  }).join('');
+};
+
+window.saveCorreggiGiacenze = function(){
+  const inputs = Array.from(document.querySelectorAll('.corr-qty-input'));
+  const prods = loadP();
+  let modificati = 0;
+  inputs.forEach(inp => {
+    const id = inp.dataset.id;
+    const nuovo = parseFloat(inp.value);
+    if(isNaN(nuovo)) return;
+    const p = prods.find(x => x.id === id);
+    if(p && (parseFloat(p.qty)||0) !== nuovo){
+      p.qty = nuovo;
+      modificati++;
+    }
+  });
+  if(!modificati){ toast('Nessuna quantità modificata','info'); return; }
+  _takeSnapshot('Correzione manuale '+modificati+' giacenze');
+  saveP(prods);
+  closeModal('modal-correggi-giacenze');
+  if(currentView==='inventario') renderInv();
+  if(currentView==='dashboard') renderDashboard();
+  toast('✓ Corrette '+modificati+' giacenze','success');
+};
 
 window.openFixDoppioniModal = function(){
   renderFixDoppioni();
