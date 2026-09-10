@@ -11886,18 +11886,23 @@ window.renderReportAnnuale = function() {
   };
   const istN = _uniqCasi(yearCamp.filter(c => tlA(c.tipo) === 'istologia'));
   const citN = _uniqCasi(yearCamp.filter(c => tlA(c.tipo) === 'citologia'));
-  const papN = _uniqCasi(yearCamp.filter(c => _isPap(c.tipo)));
+  // PAP LupoLab: casi unici dagli ID registrati nei cicli coloratore (casi_pap),
+  // NON dall'anagrafica (dove i PAP non vengono registrati) e NON come vetrini.
+  const _papSet = new Set();
+  color.forEach(r => (Array.isArray(r.casi_pap)?r.casi_pap:[]).forEach(id => { if (id) _papSet.add(_normId(id)); }));
+  const papN = _papSet.size;
   const cicliColor = color.reduce((s,r) => s + (r.cicli_ee||0) + (r.cicli_ee_cit||0) + (r.cicli_pap||0), 0);
   const vetriTot   = color.reduce((s,r) => s + (r.vetri_ist||0) + (r.vetri_cit||0) + (r.vetri_pap||0), 0);
 
-  // CASI TOTALI dell'anno = tutti i casi unici in anagrafica (include importati Excel)
-  const casiTotali = _uniqCasi(yearCamp);
-  // Storico: casi importati non passati dai cicli del gestionale
+  // CASI TOTALI dell'anno = istologia + citologia (anagrafica, con importati Excel) + PAP (cicli)
+  const casiTotali = istN + citN + papN;
+  // Storico: casi ist/cit in anagrafica non ancora passati dai cicli del gestionale (importati/pregressi)
   const _casiInSistema = new Set();
   proc.forEach(r => (typeof _trc_extractCasi === 'function' ? _trc_extractCasi(r) : []).forEach(id => { if (id) _casiInSistema.add(_normId(id)); }));
-  color.forEach(r => ['casi_ist','casi_cit','casi_pap'].forEach(f => (Array.isArray(r[f])?r[f]:[]).forEach(id => { if (id) _casiInSistema.add(_normId(id)); })));
-  let _tuttiCasi = new Set(); yearCamp.forEach(c => { const k=_normId(c.campione_id||''); if(k) _tuttiCasi.add(k); });
-  const casiStorici = Array.from(_tuttiCasi).filter(k => !_casiInSistema.has(k)).length;
+  color.forEach(r => ['casi_ist','casi_cit'].forEach(f => (Array.isArray(r[f])?r[f]:[]).forEach(id => { if (id) _casiInSistema.add(_normId(id)); })));
+  let _istCitAnag = new Set();
+  yearCamp.forEach(c => { if(tlA(c.tipo)==='istologia'||tlA(c.tipo)==='citologia'){ const k=_normId(c.campione_id||''); if(k) _istCitAnag.add(k); } });
+  const casiStorici = Array.from(_istCitAnag).filter(k => !_casiInSistema.has(k)).length;
 
   // KPI annuali
   const amEl = document.getElementById('report-annual-metrics');
@@ -11907,7 +11912,7 @@ window.renderReportAnnuale = function() {
       ${casiStorici > 0 ? `<div class="cnt-card" data-tip="Casi importati da Excel non passati dai cicli del gestionale (lavorati in precedenza)"><div class="cnt-lbl">di cui storico</div><div class="cnt-val" style="color:var(--text3)">${casiStorici}</div></div>` : ''}
       <div class="cnt-card" data-tip="Casi di tessuto solido registrati nell'anno (biopsie, pezzi operatori) — inclusi importati da Excel"><div class="cnt-lbl">Istologia</div><div class="cnt-val" style="color:var(--blue)">${istN}</div></div>
       <div class="cnt-card" data-tip="Campioni liquidi: brushing, agoaspirati, BAL, versamenti"><div class="cnt-lbl">Citologia</div><div class="cnt-val" style="color:var(--teal)">${citN}</div></div>
-      <div class="cnt-card" data-tip="Papanicolau LupoLab su campioni cervico-vaginali"><div class="cnt-lbl">PAP</div><div class="cnt-val" style="color:var(--purple)">${papN}</div></div>
+      <div class="cnt-card" data-tip="Casi PAP LupoLab dell'anno, contati dagli ID registrati nei cicli del coloratore"><div class="cnt-lbl">PAP</div><div class="cnt-val" style="color:var(--purple)">${papN}</div></div>
       <div class="cnt-card" data-tip="Passaggi macchina nel coloratore (EE ist. + EE cit. + PAP)"><div class="cnt-lbl">Cicli color.</div><div class="cnt-val" style="color:var(--blue)">${cicliColor}</div></div>
       ${vetriTot > 0 ? `<div class="cnt-card" data-tip="Totale vetrini colorati nel mese (ist. + cit. + PAP)"><div class="cnt-lbl">Vetrini</div><div class="cnt-val" style="color:var(--text2)">${vetriTot}</div></div>` : ''}
       <div class="cnt-card" data-tip="Cicli del processatore tissutale completati nel mese"><div class="cnt-lbl">Cicli proc.</div><div class="cnt-val" style="color:var(--orange)">${proc.length}</div></div>
@@ -11927,19 +11932,24 @@ window.renderReportAnnuale = function() {
     const ym = String(year) + '-' + String(m+1).padStart(2,'0');
     data.ist.push(_uniqMese(yearCamp, ym, c => tlA(c.tipo)==='istologia'));
     data.cit.push(_uniqMese(yearCamp, ym, c => tlA(c.tipo)==='citologia'));
-    data.pap.push(_uniqMese(yearCamp, ym, c => _isPap(c.tipo)));
+    // PAP dai casi_pap dei cicli coloratore del mese
+    const _pSet = new Set();
+    color.filter(r => (r.data||'').startsWith(ym)).forEach(r => (Array.isArray(r.casi_pap)?r.casi_pap:[]).forEach(id => { if(id) _pSet.add(_normId(id)); }));
+    data.pap.push(_pSet.size);
   }
   // A9 — serie TOTALE anno corrente e anno precedente (per linea YoY)
   const totCur = data.ist.map((v,i)=>v+data.cit[i]+data.pap[i]);
   const prevYear = year - 1;
   const prevYearCamp = allCamp.filter(c => c.data && c.data.startsWith(String(prevYear)));
+  const prevColorY = (typeof loadColoratore === 'function') ? loadColoratore().filter(r => r.data && r.data.startsWith(String(prevYear))) : [];
   const totPrev = [];
   for (let m = 0; m < 12; m++) {
     const ym = String(prevYear) + '-' + String(m+1).padStart(2,'0');
     const i = _uniqMese(prevYearCamp, ym, c => tlA(c.tipo)==='istologia');
     const ci = _uniqMese(prevYearCamp, ym, c => tlA(c.tipo)==='citologia');
-    const p = _uniqMese(prevYearCamp, ym, c => _isPap(c.tipo));
-    totPrev.push(i + ci + p);
+    const _pSet = new Set();
+    prevColorY.filter(r => (r.data||'').startsWith(ym)).forEach(r => (Array.isArray(r.casi_pap)?r.casi_pap:[]).forEach(id => { if(id) _pSet.add(_normId(id)); }));
+    totPrev.push(i + ci + _pSet.size);
   }
   const hasPrevYear = totPrev.some(v => v > 0);
   const svgEl = document.getElementById('report-annual-line');
