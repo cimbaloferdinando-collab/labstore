@@ -2552,6 +2552,11 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
     </div>
   </div>
 </div>
+
+<!-- ══════════════════════════════
+     MODAL: AGGIORNA CONTENITORI VUOTI
+══════════════════════════════ -->
+<div class="modal-overlay" id="modal-vuoti">
   <div class="modal" style="width:440px">
     <div class="modal-title">🔄 Aggiorna Contenitori Vuoti</div>
     <p style="color:var(--text2);font-size:13px;margin-bottom:16px">Inserisci quanti contenitori vuoti hai attualmente disponibili per ciascuna categoria.</p>
@@ -11160,7 +11165,7 @@ function renderOrdiniPreview(){
     parziale: '<span class="badge bg-orange">Parziale</span>'
   };
   list.innerHTML = ords.map(o => {
-    const tot = (o.righe||[]).reduce((s,r) => s + (parseFloat(r.qta)||0), 0);
+    const tot = (o.righe||[]).reduce((s,r) => s + (parseFloat(r.qty)||0), 0);
     const ric = (o.righe||[]).reduce((s,r) => s + (parseFloat(r.qtyRicevuta)||0), 0);
     const pct = tot > 0 ? Math.round(ric/tot * 100) : 0;
     const totPz = (o.righe||[]).length;
@@ -11219,15 +11224,18 @@ function renderOrdineDetailPanel(id){
     btns = `<button class="hbtn2 primary" onclick="event.stopPropagation();_riceviPanel('${id}')">📦 Registra ricezione</button>
             <button class="hbtn2" onclick="event.stopPropagation();editOrdine('${id}')">✏️ Modifica</button>
             <button class="hbtn2 ok" onclick="event.stopPropagation();_approvaPanel('${id}')">✅ Approva</button>
+            <button class="hbtn2" onclick="event.stopPropagation();segnaEvasoSenzaCarico('${id}')">✓ Segna evaso (no carico)</button>
             <button class="hbtn2 danger" onclick="event.stopPropagation();deleteOrdine('${id}')">🗑 Elimina</button>`;
   } else if(ord.stato === 'approvato'){
     btns = `<button class="hbtn2 primary" onclick="event.stopPropagation();_riceviPanel('${id}')">📦 Registra ricezione</button>
             <button class="hbtn2" onclick="event.stopPropagation();editOrdine('${id}')">✏️ Modifica</button>
+            <button class="hbtn2" onclick="event.stopPropagation();segnaEvasoSenzaCarico('${id}')">✓ Segna evaso (no carico)</button>
             <button class="hbtn2 danger" onclick="event.stopPropagation();deleteOrdine('${id}')">🗑 Elimina</button>`;
   } else if(ord.stato === 'parziale'){
     btns = `<button class="hbtn2 primary" onclick="event.stopPropagation();_riceviPanel('${id}')">📦 Continua ricezione</button>
             <button class="hbtn2" onclick="event.stopPropagation();editOrdine('${id}')">✏️ Modifica</button>
             <button class="hbtn2 ok" onclick="event.stopPropagation();_chiudiPanel('${id}')">✓ Chiudi completato</button>
+            <button class="hbtn2" onclick="event.stopPropagation();segnaEvasoSenzaCarico('${id}')">✓ Segna evaso (no carico)</button>
             <button class="hbtn2 warn" onclick="event.stopPropagation();resetRicezione_panel('${id}')">↺ Reset ricezione</button>
             <button class="hbtn2 danger" onclick="event.stopPropagation();deleteOrdine('${id}')">🗑 Elimina</button>`;
   } else if(ord.stato === 'ricevuto'){
