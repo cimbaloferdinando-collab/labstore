@@ -11856,6 +11856,7 @@ window.renderReportAnnuale = function() {
     years.add(String(now.getFullYear()));
     if (typeof loadColoratore === 'function') loadColoratore().forEach(r => { if(r.data) years.add(r.data.slice(0,4)); });
     if (typeof loadProc === 'function') loadProc().forEach(r => { if(r.data) years.add(r.data.slice(0,4)); });
+    if (typeof loadCampioni === 'function') loadCampioni().forEach(c => { if(c.data) years.add(String(c.data).slice(0,4)); });
     const sorted = [...years].sort().reverse();
     const curVal = selA.value || String(now.getFullYear());
     selA.innerHTML = sorted.map(y => `<option value="${y}" ${y===curVal?'selected':''}>${y}</option>`).join('');
@@ -11864,8 +11865,10 @@ window.renderReportAnnuale = function() {
   const year = parseInt((selA?.value) || new Date().getFullYear());
 
   // Dati anno
-  const allCamp = (typeof _derivedCampioni === 'function') ? _derivedCampioni() : [];
-  const yearCamp = allCamp.filter(c => c.data && c.data.startsWith(String(year)));
+  // Anagrafica REALE (loadCampioni): ha campione_id, tipo e include i casi importati da Excel.
+  // NON _derivedCampioni (che deriva pseudo-casi dai cicli, con id_caso e senza campione_id).
+  const allCamp = (typeof loadCampioni === 'function') ? loadCampioni() : [];
+  const yearCamp = allCamp.filter(c => c.data && String(c.data).startsWith(String(year)));
   const proc  = (typeof loadProc === 'function') ? loadProc().filter(r => r.data && r.data.startsWith(String(year))) : [];
   const color = (typeof loadColoratore === 'function') ? loadColoratore().filter(r => r.data && r.data.startsWith(String(year))) : [];
   const movs  = (typeof loadM === 'function') ? loadM().filter(m => m.ts && m.ts.startsWith(String(year))) : [];
