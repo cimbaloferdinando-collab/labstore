@@ -11872,42 +11872,29 @@ window.renderReportAnnuale = function() {
   const ords  = (typeof loadOrd === 'function') ? loadOrd().filter(o => (o.data||o.creato||'').startsWith(String(year))) : [];
 
   const tlA = t => (t||'').toLowerCase();
-  // Helper coerenti con la home: ISTOLOGIA dal processatore, CIT/PAP dal coloratore
+  const _isPap = t => tlA(t).indexOf('pap') === 0; // pap, pap_l, pap_priv
   const _normId = (typeof _normCasoId === 'function') ? _normCasoId : (x => String(x||'').trim());
-  const _istDaProc = (recs) => {
-    const set = new Set();
-    recs.forEach(r => {
-      const casi = (typeof _trc_extractCasi === 'function') ? _trc_extractCasi(r) : (Array.isArray(r.casi)?r.casi:[]);
-      casi.forEach(id => { if (id) set.add(_normId(id)); });
-    });
-    return set.size;
+  // Conta CASI UNICI per ID caso dall'ANAGRAFICA (= ID progressivi reali; include i casi
+  // importati da Excel lavorati prima del gestionale). NON conta vetrini né passaggi macchina.
+  const _uniqCasi = (arr) => {
+    const s = new Set();
+    arr.forEach(c => { const k = _normId(c.campione_id || ''); if (k) s.add(k); });
+    return s.size;
   };
-  const _citDaColor = (recs) => {
-    const set = new Set();
-    recs.forEach(r => { (Array.isArray(r.casi_cit)?r.casi_cit:[]).forEach(id => { if (id) set.add(_normId(id)); }); });
-    return set.size;
-  };
-  const _papDaColor = (recs) => recs.reduce((s,r) => s + (parseInt(r.vetri_pap,10)||0), 0);
-
-  const istN = _istDaProc(proc);
-  const citN = _citDaColor(color);
-  const papN = _papDaColor(color);
+  const istN = _uniqCasi(yearCamp.filter(c => tlA(c.tipo) === 'istologia'));
+  const citN = _uniqCasi(yearCamp.filter(c => tlA(c.tipo) === 'citologia'));
+  const papN = _uniqCasi(yearCamp.filter(c => _isPap(c.tipo)));
   const cicliColor = color.reduce((s,r) => s + (r.cicli_ee||0) + (r.cicli_ee_cit||0) + (r.cicli_pap||0), 0);
   const vetriTot   = color.reduce((s,r) => s + (r.vetri_ist||0) + (r.vetri_cit||0) + (r.vetri_pap||0), 0);
 
-  // CASI TOTALI dell'anno: include TUTTI i casi — quelli lavorati nel gestionale
-  // (processatore/coloratore) E quelli importati da Excel lavorati PRIMA di usare
-  // il gestionale (presenti in anagrafica ma non nei cicli). Conta gli ID caso unici.
-  const _casiTotaliSet = new Set();
-  yearCamp.forEach(c => { const k = _normId(c.campione_id || ''); if (k) _casiTotaliSet.add(k); });
-  proc.forEach(r => (typeof _trc_extractCasi === 'function' ? _trc_extractCasi(r) : []).forEach(id => { if (id) _casiTotaliSet.add(_normId(id)); }));
-  color.forEach(r => ['casi_ist','casi_cit'].forEach(f => (Array.isArray(r[f])?r[f]:[]).forEach(id => { if (id) _casiTotaliSet.add(_normId(id)); })));
-  const casiTotali = _casiTotaliSet.size;
-  // Casi importati/storici (in anagrafica ma non lavorati nei cicli del gestionale)
+  // CASI TOTALI dell'anno = tutti i casi unici in anagrafica (include importati Excel)
+  const casiTotali = _uniqCasi(yearCamp);
+  // Storico: casi importati non passati dai cicli del gestionale
   const _casiInSistema = new Set();
   proc.forEach(r => (typeof _trc_extractCasi === 'function' ? _trc_extractCasi(r) : []).forEach(id => { if (id) _casiInSistema.add(_normId(id)); }));
-  color.forEach(r => ['casi_ist','casi_cit'].forEach(f => (Array.isArray(r[f])?r[f]:[]).forEach(id => { if (id) _casiInSistema.add(_normId(id)); })));
-  const casiStorici = Array.from(_casiTotaliSet).filter(k => !_casiInSistema.has(k)).length;
+  color.forEach(r => ['casi_ist','casi_cit','casi_pap'].forEach(f => (Array.isArray(r[f])?r[f]:[]).forEach(id => { if (id) _casiInSistema.add(_normId(id)); })));
+  let _tuttiCasi = new Set(); yearCamp.forEach(c => { const k=_normId(c.campione_id||''); if(k) _tuttiCasi.add(k); });
+  const casiStorici = Array.from(_tuttiCasi).filter(k => !_casiInSistema.has(k)).length;
 
   // KPI annuali
   const amEl = document.getElementById('report-annual-metrics');
@@ -11915,7 +11902,7 @@ window.renderReportAnnuale = function() {
     amEl.innerHTML = `
       <div class="cnt-card" data-tip="Totale casi dell'anno: lavorati nel gestionale + importati da Excel (lavorati prima di usare il gestionale)"><div class="cnt-lbl">Casi totali</div><div class="cnt-val" style="color:var(--accent)">${casiTotali}</div></div>
       ${casiStorici > 0 ? `<div class="cnt-card" data-tip="Casi importati da Excel non passati dai cicli del gestionale (lavorati in precedenza)"><div class="cnt-lbl">di cui storico</div><div class="cnt-val" style="color:var(--text3)">${casiStorici}</div></div>` : ''}
-      <div class="cnt-card" data-tip="Campioni di tessuto solido: biopsie, pezzi operatori (dal processatore)"><div class="cnt-lbl">Istologia</div><div class="cnt-val" style="color:var(--blue)">${istN}</div></div>
+      <div class="cnt-card" data-tip="Casi di tessuto solido registrati nell'anno (biopsie, pezzi operatori) — inclusi importati da Excel"><div class="cnt-lbl">Istologia</div><div class="cnt-val" style="color:var(--blue)">${istN}</div></div>
       <div class="cnt-card" data-tip="Campioni liquidi: brushing, agoaspirati, BAL, versamenti"><div class="cnt-lbl">Citologia</div><div class="cnt-val" style="color:var(--teal)">${citN}</div></div>
       <div class="cnt-card" data-tip="Papanicolau LupoLab su campioni cervico-vaginali"><div class="cnt-lbl">PAP</div><div class="cnt-val" style="color:var(--purple)">${papN}</div></div>
       <div class="cnt-card" data-tip="Passaggi macchina nel coloratore (EE ist. + EE cit. + PAP)"><div class="cnt-lbl">Cicli color.</div><div class="cnt-val" style="color:var(--blue)">${cicliColor}</div></div>
@@ -11928,25 +11915,28 @@ window.renderReportAnnuale = function() {
   // Line chart: 12 mesi
   const MONTHS = ['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'];
   const data = { ist:[], cit:[], pap:[] };
+  const _uniqMese = (arr, ym, pred) => {
+    const s = new Set();
+    arr.forEach(c => { if((c.data||'').slice(0,7)===ym && pred(c)) { const k=_normId(c.campione_id||''); if(k) s.add(k); } });
+    return s.size;
+  };
   for (let m = 0; m < 12; m++) {
     const ym = String(year) + '-' + String(m+1).padStart(2,'0');
-    const procM  = proc.filter(r => (r.data||'').startsWith(ym));
-    const colorM = color.filter(r => (r.data||'').startsWith(ym));
-    data.ist.push(_istDaProc(procM));   // istologia dal processatore
-    data.cit.push(_citDaColor(colorM)); // citologia dal coloratore
-    data.pap.push(_papDaColor(colorM)); // pap dal coloratore
+    data.ist.push(_uniqMese(yearCamp, ym, c => tlA(c.tipo)==='istologia'));
+    data.cit.push(_uniqMese(yearCamp, ym, c => tlA(c.tipo)==='citologia'));
+    data.pap.push(_uniqMese(yearCamp, ym, c => _isPap(c.tipo)));
   }
   // A9 — serie TOTALE anno corrente e anno precedente (per linea YoY)
   const totCur = data.ist.map((v,i)=>v+data.cit[i]+data.pap[i]);
   const prevYear = year - 1;
-  const prevProc  = (typeof loadProc === 'function') ? loadProc().filter(r => r.data && r.data.startsWith(String(prevYear))) : [];
-  const prevColor = (typeof loadColoratore === 'function') ? loadColoratore().filter(r => r.data && r.data.startsWith(String(prevYear))) : [];
+  const prevYearCamp = allCamp.filter(c => c.data && c.data.startsWith(String(prevYear)));
   const totPrev = [];
   for (let m = 0; m < 12; m++) {
     const ym = String(prevYear) + '-' + String(m+1).padStart(2,'0');
-    const pProc  = prevProc.filter(r => (r.data||'').startsWith(ym));
-    const pColor = prevColor.filter(r => (r.data||'').startsWith(ym));
-    totPrev.push(_istDaProc(pProc) + _citDaColor(pColor) + _papDaColor(pColor));
+    const i = _uniqMese(prevYearCamp, ym, c => tlA(c.tipo)==='istologia');
+    const ci = _uniqMese(prevYearCamp, ym, c => tlA(c.tipo)==='citologia');
+    const p = _uniqMese(prevYearCamp, ym, c => _isPap(c.tipo));
+    totPrev.push(i + ci + p);
   }
   const hasPrevYear = totPrev.some(v => v > 0);
   const svgEl = document.getElementById('report-annual-line');
