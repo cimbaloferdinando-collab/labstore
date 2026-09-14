@@ -11,6 +11,24 @@
      Senza defer bloccavano il rendering della pagina finché non erano scaricate (>1MB). -->
 <script defer src="https://unpkg.com/@zxing/library@0.19.1/umd/index.min.js"></script>
 <script defer src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+<template id="__bundler_thumbnail" data-bg-color="#1a2f5e">
+  <svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg">
+    <rect width="1200" height="800" fill="#1a2f5e"/>
+    <!-- vetrino portaoggetti -->
+    <rect x="430" y="150" width="340" height="500" rx="18" fill="#ffffff" opacity="0.95"/>
+    <rect x="430" y="150" width="340" height="118" rx="18" fill="#2563eb"/>
+    <rect x="430" y="250" width="340" height="18" fill="#1a2f5e" opacity="0.18"/>
+    <!-- sezione di tessuto -->
+    <circle cx="600" cy="440" r="96" fill="#b45309" opacity="0.55"/>
+    <circle cx="568" cy="410" r="34" fill="#6d28d9" opacity="0.6"/>
+    <circle cx="636" cy="470" r="26" fill="#0e7490" opacity="0.6"/>
+    <!-- righe di dati -->
+    <rect x="478" y="572" width="244" height="13" rx="6" fill="#1a2f5e" opacity="0.3"/>
+    <rect x="478" y="601" width="168" height="13" rx="6" fill="#1a2f5e" opacity="0.18"/>
+    <text x="600" y="726" font-family="Georgia,serif" font-size="52" font-weight="700"
+          fill="#ffffff" text-anchor="middle" opacity="0.92">LupoLab AP</text>
+  </svg>
+</template>
 <style>
 :root {
   --accent:   #1a2f5e;
@@ -18,24 +36,30 @@
   --accent-hi:rgba(255,255,255,.15);
   --bg:       #f0f2f7;
   --surface:  #ffffff;
-  --surface2: #f8fafc;
+  --surface2: #f6f8fc;   /* V7: allineato a --sunken */
   --border:   #e2e8f0;
   --border2:  #cbd5e1;
   --border-faint: #eef2f7;
   --text:     #0f172a;
   --text2:    #374151;
   --text3:    #6b7280;
-  --text4:    #b0bec5;
-  --green:    #059669; --green-bg:#ecfdf5; --green-bd:#a7f3d0;
-  --red:      #dc2626; --red-bg:  #fef2f2; --red-bd:  #fca5a5;
-  --yellow:   #d97706; --yellow-bg:#fffbeb;--yellow-bd:#fcd34d;
-  --blue:     #2563eb; --blue-bg: #eff6ff; --blue-bd: #bfdbfe;
-  --orange:   #ea580c; --orange-bg:#fff7ed;--orange-bd:#fed7aa;
-  --purple:   #7c3aed; --purple-bg:#f5f3ff;--purple-bd:#ddd6fe;
-  --teal:     #0891b2; --teal-bg: #ecfeff; --teal-bd: #a5f3fc;
+  --text4:    #78838f;   /* V4: era #b0bec5 → 1.91:1, non leggibile */
+  /* V4 — foreground scuriti per superare 4.5:1 sui rispettivi fondi.
+     I fondi (-bg) e i bordi (-bd) restano invariati: la palette percepita non cambia. */
+  --green:    #047857; --green-bg:#ecfdf5; --green-bd:#a7f3d0;   /* 4.79:1 */
+  --red:      #b91c1c; --red-bg:  #fef2f2; --red-bd:  #fca5a5;   /* 5.94:1 */
+  --yellow:   #b45309; --yellow-bg:#fffbeb;--yellow-bd:#fcd34d;  /* 4.99:1 */
+  --blue:     #1d4ed8; --blue-bg: #eff6ff; --blue-bd: #bfdbfe;   /* 6.42:1 */
+  --orange:   #c2410c; --orange-bg:#fff7ed;--orange-bd:#fed7aa;  /* 4.94:1 */
+  --purple:   #6d28d9; --purple-bg:#f5f3ff;--purple-bd:#ddd6fe;  /* 6.66:1 */
+  --teal:     #0e7490; --teal-bg: #ecfeff; --teal-bd: #a5f3fc;   /* 5.11:1 */
   --bg2:      #ffffff;
-  --bg3:      #f7f9fc;
+  --bg3:      #f6f8fc;   /* V7: allineato a --sunken */
   --bg4:      #f1f5f9;
+  /* V7 — tre superfici con un significato dichiarato.
+     surface = contenuto · sunken = contenitore/incasso · bg = pagina.
+     I token storici sopra restano come alias per non rompere il markup esistente. */
+  --sunken:   #f6f8fc;
   --r:6px; --r-sm:4px; --r-lg:10px;
   --sh-sm:0 1px 3px rgba(15,23,42,.08);
   --sh:    0 4px 12px rgba(15,23,42,.10);
@@ -61,7 +85,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
 
 /* LAYOUT */
 .app{display:grid;grid-template-rows:52px 1fr;
-  grid-template-columns:48px 1fr;min-height:100vh}
+  grid-template-columns:76px 1fr;min-height:100vh}   /* O2: era 48px, icone senza nome */
 
 /* HEADER */
 .hdr{grid-column:1/-1;grid-row:1;height:52px;
@@ -86,7 +110,8 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
 .sync-dot.syncing{background:var(--yellow);animation:pulse 1.2s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
 .hdr-gap{flex:1}
-.hdr-btns{display:flex;align-items:center;gap:4px}
+.hdr-btns{display:flex;align-items:center;gap:4px;min-width:0}
+.hdr-actions{display:flex;align-items:center;gap:4px;min-width:0}
 .hbtn{padding:5px 10px;border-radius:var(--r-sm);
   border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.09);
   color:rgba(255,255,255,.88);font-size:11px;font-weight:500;
@@ -108,30 +133,32 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
 .fc-btn:hover{background:rgba(255,255,255,.30)}
 
 /* RAIL */
-.rail{grid-column:1;grid-row:2;width:48px;background:var(--accent);
+.rail{grid-column:1;grid-row:2;width:76px;background:var(--accent);
+  overflow-y:auto;scrollbar-width:none;
   display:flex;flex-direction:column;align-items:center;
   padding:8px 0;position:sticky;top:52px;
   height:calc(100vh - 52px);overflow-y:auto;scrollbar-width:none}
 .rail::-webkit-scrollbar{display:none}
-.rail-item{position:relative;width:100%;height:38px;display:flex;
-  align-items:center;justify-content:center;font-size:15px;
+.rail-item{position:relative;width:100%;min-height:56px;display:flex;
+  flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  padding:6px 2px;font-size:19px;line-height:1;text-align:center;
   color:rgba(255,255,255,.55);cursor:pointer;
   transition:color .12s,background .12s;flex-shrink:0;user-select:none}
 .rail-item:hover{background:rgba(255,255,255,.10);color:rgba(255,255,255,.90)}
 .rail-item.active{background:var(--accent-hi);color:#fff}
-.rail-item::after{content:attr(title);position:absolute;left:calc(100% + 8px);
-  top:50%;transform:translateY(-50%);background:#0f172a;color:#fff;
-  font-family:'DM Sans',sans-serif;font-size:11px;font-weight:500;
-  padding:4px 9px;border-radius:var(--r-sm);white-space:nowrap;
-  pointer-events:none;opacity:0;transition:opacity .12s;z-index:300;
-  box-shadow:var(--sh-sm)}
-.rail-item:hover::after{opacity:1}
-.rail-badge{position:absolute;top:5px;right:5px;min-width:14px;height:14px;
+.rail-item::after{content:attr(data-label);
+  font-family:'DM Sans',sans-serif;font-size:10px;font-weight:500;
+  letter-spacing:.01em;max-width:72px;overflow:hidden;text-overflow:ellipsis;
+  white-space:nowrap;color:inherit;opacity:.85;pointer-events:none}
+.rail-badge{position:absolute;top:6px;right:14px;min-width:14px;height:14px;
   background:var(--red);color:#fff;border-radius:999px;font-size:8px;
   font-weight:700;display:flex;align-items:center;justify-content:center;
   padding:0 3px;pointer-events:none}
 .rail-badge.hidden{display:none}
-.rail-div{width:28px;height:1px;background:rgba(255,255,255,.12);margin:4px auto}
+.rail-div{width:44px;height:1px;background:rgba(255,255,255,.14);margin:8px auto 2px}
+/* O3 — intestazione di gruppo: dice a cosa serve il blocco di icone sotto */
+.rail-grp{font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+  color:rgba(255,255,255,.42);text-align:center;padding:6px 2px 3px;user-select:none}
 .rail-bottom{flex:1}
 .rail-avatar{width:30px;height:30px;border-radius:50%;
   background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.28);
@@ -147,9 +174,9 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
 
 /* CARD */
 .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;box-shadow:var(--sh-sm)}
-.card-hdr{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--border);background:#f8fafc}
-.card-title{font-size:11px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--text2);flex:1}
-.card-sub{font-size:11px;color:var(--text3)}
+.card-hdr{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--border);background:var(--sunken)}
+.card-title{font-size:12px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--text2);flex:1}
+.card-sub{font-size:12px;color:var(--text3)}
 .card-lnk{font-size:11px;color:var(--accent2);font-weight:500;cursor:pointer;white-space:nowrap}
 .card-lnk:hover{text-decoration:underline}
 
@@ -161,7 +188,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
 .kpi-card.k-orange::before{background:var(--orange)}
 .kpi-card.k-purple::before{background:var(--purple)}
 .kpi-card.k-green::before{background:var(--green)}
-.kpi-lbl{font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--text3);margin-bottom:5px}
+.kpi-lbl{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--text3);margin-bottom:5px}
 .kpi-val{font-family:'Libre Baskerville',serif;font-size:40px;font-weight:700;color:var(--accent);line-height:1;margin-bottom:4px}
 .kpi-val.red{color:var(--red)}.kpi-val.blue{color:var(--blue)}.kpi-val.orange{color:var(--orange)}.kpi-val.green{color:var(--green)}
 .kpi-delta{font-family:'DM Mono',monospace;font-size:10px;color:var(--text3);margin-top:4px}
@@ -176,12 +203,12 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
 
 /* TABELLE */
 .tbl{width:100%;border-collapse:collapse}
-.tbl thead th{text-align:left;padding:8px 10px;font-size:10px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--text3);background:#f8fafc;border-bottom:2px solid var(--border)}
+.tbl thead th{text-align:left;padding:8px 10px;font-size:13px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--text3);background:var(--sunken);border-bottom:2px solid var(--border)}
 .tbl tbody tr{border-bottom:1px solid var(--border);transition:background .10s}
 .tbl tbody tr:last-child{border-bottom:none}
-.tbl tbody tr:hover{background:#f8fafc}
-.tbl tbody td{padding:8px 10px;font-size:12px;color:var(--text2);vertical-align:middle;white-space:nowrap}
-.mono{font-family:'DM Mono',monospace;font-size:11px}
+.tbl tbody tr:hover{background:var(--sunken)}
+.tbl tbody td{padding:8px 10px;font-size:14px;color:var(--text2);vertical-align:middle;white-space:nowrap}
+.mono{font-family:'DM Mono',monospace;font-size:13px}
 .exp-arrow{cursor:pointer;color:var(--text3);font-size:10px;padding-right:4px;transition:transform .15s;width:18px;display:inline-block}
 .expandable{cursor:pointer}
 .expandable:hover .exp-arrow{color:var(--accent2)}
@@ -193,7 +220,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
 .note-ok{display:inline-block;color:var(--text3);font-size:11px}
 
 /* BADGE */
-.badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:999px;font-size:10px;font-weight:600;border:1px solid transparent;white-space:nowrap}
+.badge{display:inline-flex;align-items:center;padding:3px 9px;border-radius:999px;font-size:11px;font-weight:600;border:1px solid transparent;white-space:nowrap}
 .bg-green{background:var(--green-bg);color:var(--green);border-color:var(--green-bd)}
 .bg-red{background:var(--red-bg);color:var(--red);border-color:var(--red-bd)}
 .bg-yellow{background:var(--yellow-bg);color:var(--yellow);border-color:var(--yellow-bd)}
@@ -204,11 +231,13 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
 
 /* PAGE HEADER */
 .pg-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:8px}
+/* V9 — .page-sub e .page-title sono alias storici: una sola resa */
+.page-sub,.pg-sub{font-size:12.5px;color:var(--text3);margin-top:2px}
 .pg-title{font-family:'Libre Baskerville',serif;font-size:22px;font-weight:700;color:var(--accent)}
 
 /* CONTATORI */
 .cnt-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:12px 14px;box-shadow:var(--sh-sm)}
-.cnt-lbl{font-size:9px;font-weight:700;letter-spacing:.11em;text-transform:uppercase;color:var(--text3);margin-bottom:4px}
+.cnt-lbl{font-size:11px;font-weight:700;letter-spacing:.11em;text-transform:uppercase;color:var(--text3);margin-bottom:4px}
 .cnt-val{font-family:'Libre Baskerville',serif;font-size:28px;font-weight:700;line-height:1}
 
 /* FILTRI CHIP */
@@ -217,10 +246,13 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
 .chip:hover,.f-btn:hover{border-color:var(--accent2);color:var(--accent2)}
 .chip.active,.f-btn.active{background:var(--accent);color:#fff;border-color:var(--accent);font-weight:600}
 
-/* BOTTONI PAGINA */
-.hbtn2{padding:6px 13px;border-radius:var(--r-sm);border:1.5px solid var(--border2);background:var(--surface);color:var(--text2);font-size:12px;font-weight:500;cursor:pointer;transition:all .13s;font-family:'DM Sans',sans-serif;white-space:nowrap}
+/* BOTTONI PAGINA
+   V5 — .hbtn2 e .btn condividono taglia, raggio e peso: lo stesso
+   "＋ Registra" ha lo stesso aspetto in tutte le 16 viste. */
+.hbtn2{padding:8px 14px;border-radius:var(--r-sm);border:1.5px solid var(--border2);background:var(--surface);color:var(--text2);font-size:13px;font-weight:500;cursor:pointer;transition:all .13s;font-family:'DM Sans',sans-serif;white-space:nowrap}
 .hbtn2:hover{border-color:var(--accent2);color:var(--accent2)}
 .hbtn2.primary{background:var(--blue);border-color:var(--blue);color:#fff;font-weight:600}
+.hbtn2.primary:hover{filter:brightness(.94);color:#fff}
 .hbtn2.primary:hover{background:#1d4ed8;border-color:#1d4ed8}
 .hbtn2.pap-l{background:var(--orange-bg);border-color:var(--orange-bd);color:var(--orange)}
 .hbtn2.pap-p{background:var(--purple-bg);border-color:var(--purple-bd);color:var(--purple)}
@@ -234,7 +266,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
 .act-btn:hover{background:var(--bg);border-color:var(--border2)}
 
 /* SEARCH INPUT */
-.search-inp{padding:6px 10px 6px 28px;border:1.5px solid var(--border2);border-radius:var(--r-sm);font-size:12px;background:var(--surface);color:var(--text);outline:none;width:200px;font-family:'DM Sans',sans-serif}
+.search-inp{padding:8px 10px 8px 30px;border:1.5px solid var(--border2);border-radius:var(--r-sm);font-size:16px;background:var(--surface);color:var(--text);outline:none;width:200px;font-family:'DM Sans',sans-serif}
 .search-inp:focus{border-color:var(--accent2);box-shadow:0 0 0 3px rgba(37,99,235,.10)}
 .search-wrap{position:relative;display:flex;align-items:center}
 .search-wrap .s-ico{position:absolute;left:9px;font-size:12px;color:var(--text3);pointer-events:none}
@@ -273,7 +305,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
 .fg{display:flex;flex-direction:column;gap:4px;margin-bottom:0}
 .fg.full{grid-column:1/-1}
 .fg label{font-size:11px;font-weight:600;color:var(--text3)}
-.fg input,.fg select,.fg textarea{padding:7px 10px;border:1.5px solid var(--border2);border-radius:var(--r-sm);font-size:13px;font-family:'DM Sans',sans-serif;color:var(--text);background:var(--surface);outline:none;transition:border-color .12s}
+.fg input,.fg select,.fg textarea{padding:9px 11px;border:1.5px solid var(--border2);border-radius:var(--r-sm);font-size:16px;font-family:'DM Sans',sans-serif;color:var(--text);background:var(--surface);outline:none;transition:border-color .12s}
 .fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--accent2);box-shadow:0 0 0 3px rgba(37,99,235,.10)}
 .fg textarea{resize:vertical;min-height:60px;font-family:'DM Sans',sans-serif}
 .btn{padding:8px 14px;border-radius:var(--r-sm);border:1.5px solid var(--border2);background:var(--surface);font-size:13px;font-weight:500;color:var(--text2);cursor:pointer;font-family:'DM Sans',sans-serif;transition:background .12s,border-color .12s}
@@ -292,9 +324,10 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
 .toast-container{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:2000;display:flex;flex-direction:column;gap:8px;pointer-events:none;align-items:center}
 .toast{background:#1a2f5e;color:#fff;padding:10px 20px;border-radius:var(--r);font-size:13px;font-weight:500;opacity:0;transform:translateY(20px);transition:opacity .25s,transform .25s;pointer-events:auto;box-shadow:0 6px 20px rgba(0,0,0,.18);max-width:360px}
 .toast.show{opacity:1;transform:translateY(0)}
-.toast.t-ok{background:var(--green)}
-.toast.t-err{background:var(--red)}
-.toast.t-warn{background:var(--yellow);color:#1a2f5e}
+.toast.t-ok,.toast.t-success{background:var(--green)}
+.toast.t-err,.toast.t-error{background:var(--red)}
+.toast.t-warn,.toast.t-warning{background:var(--yellow);color:#1a2f5e}
+.toast.t-info{background:var(--accent)}
 @keyframes fadeIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
 
 /* IHC chips (anticorpi) */
@@ -320,12 +353,36 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
 .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:12px 14px;box-shadow:var(--sh-sm)}
 
 /* Waste card / prod card */
+/* ─── F5 · Flash sulla riga appena aggiornata ─── */
+@keyframes rowFlash{
+  0%{background:#fef9c3}
+  70%{background:#fef9c3}
+  100%{background:transparent}}
+.tbl tbody tr.flash > td{animation:rowFlash 1.6s ease-out}
+
+/* ─── V3: nessun campo sotto i 16px (iOS zooma al focus sotto questa soglia) ─── */
+input,select,textarea{font-size:16px}
+input[type=number]{font-size:16px}
+
+/* ─── Scansione barcode/QR (V2: classi usate nei 3 modali di scan) ─── */
+#cs-video-wrap,#ss-video-wrap,#barcode-video-wrap{position:relative;overflow:hidden;border-radius:var(--r)}
+.scan-line{position:absolute;left:6%;right:6%;top:0;height:2px;border-radius:2px;
+  background:linear-gradient(90deg,transparent,var(--green),transparent);
+  box-shadow:0 0 10px rgba(5,150,105,.7);animation:scanSweep 2.1s ease-in-out infinite;pointer-events:none}
+@keyframes scanSweep{0%{top:8%}50%{top:88%}100%{top:8%}}
+.scan-result-box{display:flex;align-items:center;gap:10px;padding:10px 12px;
+  background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);min-height:44px}
+.sr-label{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--text3);flex-shrink:0}
+.sr-val{font-family:'DM Mono',monospace;font-size:14px;font-weight:500;color:var(--text);
+  word-break:break-all;flex:1}
+
 /* ─── Tooltip universale ─── */
 #tt{position:fixed;z-index:9999;background:var(--text,#1e293b);color:#fff;font-size:11px;line-height:1.5;padding:6px 10px;border-radius:6px;max-width:220px;pointer-events:none;box-shadow:0 4px 12px rgba(0,0,0,.25);transition:opacity .12s;opacity:0}
 #tt.show{opacity:1}
 
 .waste-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;margin-bottom:14px}
-.waste-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:16px;box-shadow:var(--shadow-sm)}
+.waste-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:16px;box-shadow:var(--sh-sm)}
 .waste-card.wc-yellow{border-top:3px solid var(--yellow)}
 .waste-card.wc-orange{border-top:3px solid var(--orange)}
 .waste-card.wc-red{border-top:3px solid var(--red)}
@@ -335,7 +392,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
 .waste-counters{display:flex;gap:12px;margin:12px 0}
 .wc-box{flex:1;text-align:center;background:var(--bg3);border-radius:8px;padding:10px 6px;border:1px solid var(--border-faint)}
 .wc-num{font-family:'DM Mono',monospace;font-size:28px;font-weight:700;line-height:1}
-.wc-lbl{font-size:10px;color:var(--text3);margin-top:4px;text-transform:uppercase;letter-spacing:.06em}
+.wc-lbl{font-size:11px;color:var(--text3);margin-top:4px;text-transform:uppercase;letter-spacing:.06em}
 .waste-btns{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
 .btn-waste{background:#fef3c7;color:#92400e;border-color:#fcd34d}
 .btn-waste:hover{background:#fde68a}
@@ -347,7 +404,8 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
 .home-list-item{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;border-bottom:1px solid var(--border-faint);font-size:13px;cursor:pointer;transition:background .12s;gap:10px}
 .home-list-item:last-child{border-bottom:none}
 .home-list-item:hover{background:var(--bg3)}
-.home-empty{text-align:center;color:var(--text3);font-size:12px;font-style:italic;padding:12px}
+.home-empty{text-align:center;color:var(--text3);font-size:13px;padding:14px 12px}
+.home-empty .empty-cta{margin-top:8px;min-height:40px;font-size:13px}
 
 /* Ricerca inversa result inline */
 .inverse-result{display:none;margin-top:10px;padding:10px;background:var(--blue-bg);border:1px solid var(--blue-bd);border-radius:var(--r-sm);font-size:12px}
@@ -381,10 +439,11 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
 .ddt-icon.green{border-color:var(--green-bd);background:var(--green-bg)}
 
 /* Tabs (modal scheda prodotto) */
-.tabs-bar{display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:14px}
-.tab-btn{padding:8px 14px;border:none;background:none;cursor:pointer;font-size:12px;color:var(--text3);font-weight:500;border-bottom:2px solid transparent;transition:all .12s}
-.tab-btn:hover{color:var(--text2)}
-.tab-btn.active{color:var(--accent);border-bottom-color:var(--accent)}
+.tabs-bar,.tabs{display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:14px;overflow-x:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab-btn,.tabs .tab{padding:8px 14px;border:none;background:none;cursor:pointer;font-size:12px;color:var(--text3);font-weight:500;border-bottom:2px solid transparent;transition:all .12s}
+.tab-btn:hover,.tabs .tab:hover{color:var(--text2)}
+.tab-btn.active,.tabs .tab.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:600}
 .tab-content{display:none}
 .tab-content.active{display:block}
 
@@ -392,9 +451,21 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
 .ai-row{display:flex;gap:10px;padding:10px;background:var(--purple-bg);border:1px solid var(--purple-bd);border-radius:var(--r-sm);margin-bottom:8px;font-size:12px;color:var(--text2)}
 .ai-row .ai-ico{font-size:16px;flex-shrink:0}
 
-/* Empty state */
-.empty-state{text-align:center;padding:40px 20px;color:var(--text3)}
-.empty-state .ico{font-size:36px;margin-bottom:8px}
+/* ─── V6 · Cifre operative in DM Mono (larghezza fissa = colonne allineate).
+   Serif riservato ai numeri-titolo della dashboard (.kpi-val, .strip-val). ─── */
+.cnt-val,.wc-num,.rifiuti-num,.col-cnt-val,.tbl .num,
+.badge-qty,.qty-val,.lot-qty{font-family:'DM Mono',monospace;font-variant-numeric:tabular-nums}
+.tbl tbody td{font-variant-numeric:tabular-nums}
+
+/* ─── V10 · Stato vuoto unico: icona + frase + azione che risolve ─── */
+.empty-state,.empty{text-align:center;padding:36px 20px;color:var(--text3)}
+.empty-state .ico,.empty .e-ico,.e-ico{font-size:34px;display:block;margin-bottom:10px;opacity:.55}
+.empty-state p,.empty p{font-size:14px;margin:0 0 4px;color:var(--text2)}
+.empty-hint{font-size:12.5px;color:var(--text3);margin:0 0 14px}
+.empty-cta{display:inline-flex;align-items:center;gap:6px;min-height:44px;
+  padding:0 18px;border-radius:var(--r-sm);border:0;background:var(--blue);color:#fff;
+  font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer}
+.empty-cta:hover{filter:brightness(.94)}
 
 /* Report KV (key-value) */
 .report-kv{display:grid;grid-template-columns:120px 1fr;gap:6px 12px;font-size:12px;margin-bottom:10px}
@@ -413,9 +484,192 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
 .leg-item{display:inline-flex;align-items:center;gap:4px;font-size:10px;color:var(--text2)}
 .leg-dot{width:10px;height:10px;border-radius:2px;display:inline-block}
 
+/* ─── F4 · TOUCH: nulla cambia con il mouse, tutto cresce al dito ─── */
+@media (pointer: coarse){
+  .btn,.hbtn,.hbtn2,.chip,.f-btn,.act-btn,.tab-btn,.tabs .tab,.rpt-tab,.card-lnk{
+    min-height:44px;display:inline-flex;align-items:center;justify-content:center;
+    padding-left:16px;padding-right:16px}
+  .btn-sm{min-height:40px;padding-left:12px;padding-right:12px}
+  .act-cell{width:auto;white-space:nowrap}
+  .act-cell .act-btn{min-width:44px;margin-left:6px}
+  .hbtn{font-size:13px}
+  .hdr{flex-wrap:nowrap}
+  .hdr-btns{flex-wrap:nowrap;flex:1;justify-content:flex-end}
+  .hdr-actions{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;
+    -webkit-overflow-scrolling:touch;position:relative}
+  .hdr-actions.sc-r{box-shadow:inset -16px 0 12px -12px rgba(0,0,0,.55)}
+  .hdr-actions.sc-l{box-shadow:inset 16px 0 12px -12px rgba(0,0,0,.55)}
+  .hdr-actions.sc-l.sc-r{box-shadow:inset 16px 0 12px -12px rgba(0,0,0,.55),
+    inset -16px 0 12px -12px rgba(0,0,0,.55)}
+  .hdr-actions::-webkit-scrollbar{display:none}
+  .hdr-actions .hbtn{flex-shrink:0;min-height:40px}
+  .hdr-time,.fc-btn{flex-shrink:0}
+  .hdr-gap{flex:0 0 8px}
+  .rail-item{height:56px;font-size:18px}
+  .rail-avatar,.fc-btn{width:44px;height:44px;font-size:13px}
+  /* nessun campo sotto i 16px, anche quando lo stile è inline */
+  input:not([type=number]):not([type=checkbox]):not([type=radio]),select,textarea,
+  .fg input:not([type=number]),.fg select,.fg textarea,.search-inp{
+    font-size:16px !important;min-height:44px}
+  input[type=number]{min-height:44px}
+  textarea{min-height:80px}
+  input[type=checkbox],input[type=radio]{width:24px;height:24px}
+  .ihc-chip,.frammento-chip,.cer-chip{min-height:36px;padding:0 12px;
+    display:inline-flex;align-items:center}
+  .home-list-item,.campione-card,.ord-card,.prod-card{min-height:52px}
+  .filter-bar{gap:8px}
+  .modal{padding:20px 18px}
+}
+
+/* ─── F6 · Footer dei modali sempre raggiungibile ─── */
+.modal-footer{position:sticky;bottom:-24px;background:var(--bg2);
+  margin:20px -24px -24px;padding:14px 24px;z-index:3;
+  box-shadow:0 -6px 14px rgba(15,23,42,.07)}
+
+/* ─── V11 · Griglie fluide: utility riusabile ─── */
+.grid-auto{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+
+/* ─── V12 · Tabelle larghe → card sotto 900px ───
+   Si attiva solo sulle tabelle marcate .tbl-cards (inventario, bidoni, allerte):
+   sono quelle con 7-8 colonne, dove la colonna Azioni finiva fuori schermo. */
+@media(max-width:900px){
+  .tbl-cards{border-collapse:separate;border-spacing:0 8px}
+  .tbl-cards thead{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+  .tbl-cards tbody tr{display:grid;grid-template-columns:1fr auto;gap:2px 10px;
+    background:var(--surface);border:1px solid var(--border);border-radius:var(--r);
+    padding:12px 14px;box-shadow:var(--sh-sm)}
+  .tbl-cards tbody tr:hover{background:var(--surface)}
+  /* le righe di dettaglio espanse restano a piena larghezza, non sono card */
+  .tbl-cards tbody tr.tr-expand{display:table-row;padding:0;border:0;background:none;box-shadow:none}
+  .tbl-cards tbody tr.tr-expand:not(.hidden){display:table-row}
+  .tbl-cards tbody tr.tr-expand > td{display:table-cell}
+  .tbl-cards tbody tr.tr-expand > td::before{display:none}
+  /* riga con un solo td in colspan (stato vuoto) */
+  .tbl-cards tbody tr:has(> td[colspan]){display:block;padding:0;border:0;background:none;box-shadow:none}
+  .tbl-cards tbody tr > td[colspan]{display:block}
+  .tbl-cards tbody tr > td[colspan]::before{display:none}
+  .tbl-cards tbody td{display:flex;align-items:baseline;gap:8px;
+    padding:2px 0;border:0;white-space:normal;grid-column:1}
+  .tbl-cards tbody td::before{content:attr(data-lbl);flex:0 0 42%;
+    font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;
+    color:var(--text3)}
+  .tbl-cards tbody td:empty{display:none}
+  /* prima colonna = titolo della card */
+  .tbl-cards tbody td:first-child{grid-column:1/-1;font-size:15px;font-weight:600;
+    color:var(--text);padding-bottom:6px}
+  .tbl-cards tbody td:first-child::before{display:none}
+  /* azioni: colonna a destra, pulsanti grandi affiancati */
+  .tbl-cards tbody td.act-cell{grid-column:2;grid-row:1;justify-self:end;
+    display:flex;gap:8px;padding:0}
+  .tbl-cards tbody td.act-cell::before{display:none}
+  .tbl-cards tbody td.act-cell .act-btn{min-width:44px;min-height:44px;margin:0}
+  /* il contenitore non deve più scorrere in orizzontale */
+  .tbl-wrap:has(.tbl-cards),.table-scroll:has(.tbl-cards){overflow-x:visible}
+}
+
+/* ─── F8 · Chip di tipo nel modale coloratore ─── */
+.ct-chip{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  min-height:56px;padding:6px 4px;background:var(--surface);border:1.5px solid var(--border2);
+  border-radius:var(--r);font-family:inherit;font-size:12px;color:var(--text2);cursor:pointer}
+.ct-chip b{font-family:'DM Mono',monospace;font-size:17px;font-weight:500;line-height:1}
+.ct-chip:hover{border-color:var(--accent2)}
+.ct-chip.active{background:var(--blue-bg);border-color:var(--blue);color:var(--blue);font-weight:600}
+#ct-chip-cit.active{background:var(--teal-bg);border-color:var(--teal);color:var(--teal)}
+#ct-chip-pap.active{background:var(--purple-bg);border-color:var(--purple);color:var(--purple)}
+
+/* ─── F7 · Scelte del modale rifiuti ─── */
+.r-cer-opt,.r-rit-opt{display:flex;align-items:center;gap:8px;min-height:48px;padding:0 14px;
+  background:var(--surface);border:1.5px solid var(--border2);border-radius:var(--r);
+  font-family:inherit;font-size:14px;color:var(--text2);cursor:pointer;text-align:left}
+.r-cer-opt:hover,.r-rit-opt:hover{border-color:var(--accent2);color:var(--accent2)}
+.r-cer-opt.active,.r-rit-opt.active{background:var(--blue-bg);border-color:var(--blue);color:var(--blue);font-weight:600}
+.r-rit-opt{flex:1;justify-content:center}
+
+/* ─── O7 · FAB contestuale + foglio magazzino ─── */
+.fab{position:fixed;right:18px;bottom:18px;z-index:240;width:60px;height:60px;border-radius:50%;
+  border:0;background:var(--blue);color:#fff;font-size:29px;line-height:1;cursor:pointer;
+  box-shadow:0 6px 18px rgba(29,78,216,.38);display:flex;align-items:center;justify-content:center;
+  -webkit-tap-highlight-color:transparent;transition:transform .12s}
+.fab:active{transform:scale(.94)}
+.fab.hidden{display:none}
+.fab-sheet-ov{display:none;position:fixed;inset:0;background:rgba(15,23,42,.45);z-index:265}
+.fab-sheet-ov.open{display:block}
+.fab-sheet{position:fixed;left:0;right:0;bottom:0;z-index:275;background:var(--surface);
+  border-radius:var(--r-lg) var(--r-lg) 0 0;padding:12px 12px calc(12px + env(safe-area-inset-bottom));
+  transform:translateY(101%);transition:transform .22s ease;box-shadow:var(--shadow-lg)}
+.fab-sheet.open{transform:translateY(0)}
+.fab-sheet-hdr{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--text3);padding:4px 8px 10px}
+.fab-opt{display:flex;width:100%;align-items:center;gap:14px;min-height:56px;padding:0 14px;
+  background:none;border:0;border-radius:var(--r);font-family:inherit;font-size:15px;
+  color:var(--text);text-align:left;cursor:pointer}
+.fab-opt:hover{background:var(--sunken)}
+.fab-opt span{font-size:20px;width:26px;text-align:center;flex-shrink:0}
+@media(max-width:900px){ .fab{bottom:calc(84px + env(safe-area-inset-bottom))} }
+
+/* ─── O1 · TABBAR + foglio "Altre sezioni" ─── */
+.tabbar{display:none}
+.tabbar-item{position:relative;background:none;border:0;font-family:inherit;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+  min-height:58px;font-size:21px;line-height:1;color:rgba(255,255,255,.62);
+  cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent}
+.tabbar-item::after{content:attr(data-label);font-size:10px;font-weight:500;
+  color:inherit;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tabbar-item.active{color:#fff}
+.tabbar-item.active::before{content:'';position:absolute;top:0;left:22%;right:22%;
+  height:3px;border-radius:0 0 3px 3px;background:#fff}
+.tab-sheet-ov{display:none;position:fixed;inset:0;background:rgba(15,23,42,.45);z-index:260}
+.tab-sheet-ov.open{display:block}
+.tab-sheet{position:fixed;left:0;right:0;bottom:0;z-index:270;
+  background:var(--accent);border-radius:var(--r-lg) var(--r-lg) 0 0;
+  padding:14px 12px calc(14px + env(safe-area-inset-bottom));
+  transform:translateY(101%);transition:transform .22s ease;box-shadow:var(--shadow-lg)}
+.tab-sheet.open{transform:translateY(0)}
+.tab-sheet-hdr{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
+  color:rgba(255,255,255,.55);padding:2px 6px 12px}
+.tab-sheet-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(84px,1fr));gap:6px}
+.tab-sheet .tabbar-item{min-height:68px;border-radius:var(--r)}
+.tab-sheet .tabbar-item:active{background:rgba(255,255,255,.12)}
+
 /* RESPONSIVE */
-@media(max-width:900px){.main{padding:14px}}
-@media(max-width:700px){.app{grid-template-columns:0 1fr}.rail{display:none}.hdr-btns .hbtn:not(.primary):not(.fc-btn-trigger){display:none}}
+@media(max-width:900px){
+  .main{padding:14px}
+  /* V11 — le griglie a colonne fisse dichiarate inline collassano qui */
+  .main .view > div[style*="grid-template-columns:repeat(5,1fr)"],
+  .main .view > div[style*="grid-template-columns:repeat(4,1fr)"]{
+    grid-template-columns:repeat(auto-fit,minmax(150px,1fr)) !important}
+  .main .view > div[style*="grid-template-columns:repeat(3,1fr)"],
+  .main .view > div[style*="grid-template-columns:1fr 1fr"],
+  .main .view > div[style*="grid-template-columns:2fr 1fr"],
+  .main .view > div[style*="grid-template-columns:1fr 1fr 1fr"]{
+    grid-template-columns:1fr !important}
+  #ordini-split{grid-template-columns:1fr !important}
+  .dash-strip{grid-template-columns:1fr !important;gap:14px;padding:14px 0}
+  .dash-strip .strip-sep{display:none}
+  .strip-cell{padding:0}
+  .waste-grid{grid-template-columns:1fr}
+  .rifiuti-grid{grid-template-columns:1fr}
+  .report-kv{grid-template-columns:1fr}
+}
+@media(max-width:820px){
+  /* F6 — un campo per riga: sotto questa soglia due colonne stanno a ~130px */
+  .form-grid{grid-template-columns:1fr}
+  .modal{width:100% !important;max-width:100vw;max-height:94vh;
+    border-radius:var(--r-lg) var(--r-lg) 0 0;margin-top:auto}
+  .modal-overlay{align-items:flex-end}
+}
+@media(max-width:900px){
+  .app{grid-template-columns:0 1fr}
+  .rail{display:none}
+  .tabbar{display:grid;grid-template-columns:repeat(6,1fr);
+    position:fixed;left:0;right:0;bottom:0;z-index:250;
+    background:var(--accent);box-shadow:0 -2px 12px rgba(15,23,42,.18);
+    padding-bottom:env(safe-area-inset-bottom)}
+  /* spazio per la tabbar: niente contenuto coperto, incluso il FAB dei modali */
+  .main{padding-bottom:calc(74px + env(safe-area-inset-bottom))}
+  .toast-container{bottom:calc(78px + env(safe-area-inset-bottom))}
+}
+@media(max-width:700px){.hdr-btns .hbtn:not(.primary):not(.fc-btn-trigger){display:none}}
 
 /* ─── REPORT TABS ─── */
 .rpt-tabs{display:flex;gap:2px;border-bottom:2px solid var(--border);margin-bottom:24px;overflow-x:auto;scrollbar-width:none}
@@ -440,7 +694,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
 .strip-cell-ordini{cursor:default}
 .strip-cell-ordini:hover{background:transparent}
 .strip-sep{width:1px;background:var(--border)}
-.strip-lbl{font-size:9px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--text3);margin-bottom:8px}
+.strip-lbl{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--text3);margin-bottom:8px}
 .strip-val{font-family:'Libre Baskerville',serif;font-size:48px;font-weight:700;color:var(--accent);line-height:1;margin-bottom:6px}
 .strip-val.red{color:var(--red)}
 .strip-val.blue{color:var(--blue)}
@@ -455,7 +709,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
 .rifiuti-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 .rifiuti-half-lbl{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px}
 .rifiuti-half-row{display:flex;align-items:baseline;gap:4px;flex-wrap:wrap}
-.rifiuti-num{font-family:'Libre Baskerville',serif;font-size:24px;font-weight:700;line-height:1}
+.rifiuti-num{font-family:'DM Mono',monospace;font-size:23px;font-weight:500;line-height:1}
 .rifiuti-num.orange{color:var(--orange)}
 .rifiuti-num.blue{color:var(--blue)}
 .rifiuti-num.gray{color:var(--text3)}
@@ -489,9 +743,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
 .prog-bar{flex:1;height:6px;background:var(--border);border-radius:99px;overflow:hidden;min-width:48px}
 .prog-fill{height:100%;border-radius:99px;transition:width .25s}
 .prog-pct{font-family:'DM Mono',monospace;font-size:10px;font-weight:600;color:var(--text3);min-width:32px;text-align:right}
-.empty{text-align:center;padding:36px 16px;color:var(--text3)}
-.empty .e-ico,.e-ico{font-size:38px;display:block;margin-bottom:10px;opacity:.6}
-.empty p{font-size:13px;margin-top:2px}
+/* (V10: .empty è definito insieme a .empty-state) */
 .page-title{font-family:'Libre Baskerville',serif;font-size:22px;font-weight:700;color:var(--accent);margin-bottom:2px}
 .page-sub{font-size:12px;color:var(--text3);margin-bottom:14px}
 
@@ -516,13 +768,15 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
     </div>
     <div class="hdr-gap"></div>
     <div class="hdr-btns">
-      <button class="hbtn undo" id="undo-btn" onclick="undoLastAction()" disabled title="Annulla ultima azione">↶ Undo</button>
-      <button class="hbtn primary" onclick="openAddModal('Istologia')">＋ Caso</button>
-      <button class="hbtn pap-l" onclick="openAddModal('PAP test')">＋ Pap L</button>
-      <button class="hbtn pap-p" onclick="openAddModal('PAP privato')">＋ Pap Priv.</button>
-      <div class="hdr-sep"></div>
-      <button class="hbtn" onclick="apriCaricoScan()">⬆ Carico</button>
-      <button class="hbtn" onclick="openModalScarica()">⬇ Scarico</button>
+      <div class="hdr-actions">
+        <button class="hbtn undo" id="undo-btn" onclick="undoLastAction()" disabled title="Annulla ultima azione">↶ Undo</button>
+        <button class="hbtn primary" onclick="openAddModal('Istologia')">＋ Caso</button>
+        <button class="hbtn pap-l" onclick="openAddModal('PAP test')">＋ Pap L</button>
+        <button class="hbtn pap-p" onclick="openAddModal('PAP privato')">＋ Pap Priv.</button>
+        <div class="hdr-sep"></div>
+        <button class="hbtn" onclick="apriCaricoScan()">⬆ Carico</button>
+        <button class="hbtn" onclick="openModalScarica()">⬇ Scarico</button>
+      </div>
       <div class="hdr-sep"></div>
       <span class="hdr-time" id="live-time">--:--</span>
       <div class="hdr-sep"></div>
@@ -534,30 +788,61 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
        RAIL (sidebar)
        ════════════════════════════ -->
   <aside class="rail" id="rail">
-    <div class="rail-item active" data-view="home" title="Dashboard">⌂</div>
+    <div class="rail-item active" data-view="home" data-label="Home" title="Dashboard">⌂</div>
     <div class="rail-div"></div>
-    <div class="rail-item" data-view="campioni"     title="Casi">⌁</div>
-    <div class="rail-item" data-view="processatore" title="Processatore">◎</div>
-    <div class="rail-item" data-view="coloratore"   title="Coloratore">◉</div>
-    <div class="rail-item" data-view="ihc"          title="IHC">🔬</div>
+    <div class="rail-grp">Lab</div>
+    <div class="rail-item" data-view="campioni"     data-label="Casi" title="Casi">🧫</div>
+    <div class="rail-item" data-view="processatore" data-label="Processatore" title="Processatore">⚗️</div>
+    <div class="rail-item" data-view="coloratore"   data-label="Coloratore" title="Coloratore">🎨</div>
+    <div class="rail-item" data-view="ihc"          data-label="IHC" title="IHC">🔬</div>
     <div class="rail-div"></div>
-    <div class="rail-item" data-view="inventario"   title="Inventario">▦</div>
-    <div class="rail-item" data-view="bidoni"        title="Bidoni reagenti/coloranti">🪣</div>
-    <div class="rail-item" data-view="movimenti"    title="Movimenti">↕</div>
-    <div class="rail-item" data-view="allerte"      title="Allerte" style="position:relative">
+    <div class="rail-grp">Magazzino</div>
+    <div class="rail-item" data-view="inventario"   data-label="Inventario" title="Inventario">📦</div>
+    <div class="rail-item" data-view="bidoni"        data-label="Flaconi in uso" title="Flaconi in uso — reagenti e coloranti">🪣</div>
+    <div class="rail-item" data-view="movimenti"    data-label="Movimenti" title="Movimenti">↕</div>
+    <div class="rail-item" data-view="allerte"      data-label="Allerte" title="Allerte" style="position:relative">
       !<span class="rail-badge hidden" id="rail-badge-allerte">0</span>
     </div>
-    <div class="rail-item" data-view="ordini"       title="Ordini" style="position:relative">
+    <div class="rail-item" data-view="ordini"       data-label="Ordini" title="Ordini" style="position:relative">
       ↻<span class="rail-badge hidden" id="rail-badge-ordini">0</span>
     </div>
-    <div class="rail-item" data-view="arch-ordini"  title="Archivio Ordini">🗂</div>
-    <div class="rail-item" data-view="schede"       title="Schede Tecniche">📋</div>
+    <div class="rail-item" data-view="schede"       data-label="Schede" title="Schede Tecniche">📋</div>
     <div class="rail-div"></div>
-    <div class="rail-item" data-view="rifiuti"      title="Rifiuti">✕</div>
-    <div class="rail-item" data-view="report"       title="Report">⊞</div>
+    <div class="rail-grp">Rifiuti · Analisi</div>
+    <div class="rail-item" data-view="rifiuti"      data-label="Rifiuti" title="Rifiuti">🗑</div>
+    <div class="rail-item" data-view="report"       data-label="Report" title="Report">⊞</div>
     <div class="rail-bottom"></div>
     <div class="rail-avatar" onclick="document.getElementById('fc-btn').click()" title="Menu sistema">FC</div>
   </aside>
+
+  <!-- ════════════════════════════
+       O1 · TABBAR (solo touch/schermo stretto: sostituisce la rail)
+       Riusa data-view e lo stesso handler _railClick: nessuna logica nuova.
+       ════════════════════════════ -->
+  <nav class="tabbar" id="tabbar" aria-label="Navigazione principale">
+    <button class="tabbar-item active" data-view="home"         data-label="Home">⌂</button>
+    <button class="tabbar-item"        data-view="campioni"     data-label="Casi">🧫</button>
+    <button class="tabbar-item"        data-view="processatore" data-label="Proc.">⚗️</button>
+    <button class="tabbar-item"        data-view="coloratore"   data-label="Color.">🎨</button>
+    <button class="tabbar-item"        data-view="inventario"   data-label="Magazz.">📦</button>
+    <button class="tabbar-item tabbar-more" onclick="toggleTabSheet()" data-label="Altro">☰<span class="rail-badge hidden" id="tab-badge-more">0</span></button>
+  </nav>
+
+  <div class="tab-sheet-ov" id="tab-sheet-ov" onclick="closeTabSheet()"></div>
+  <div class="tab-sheet" id="tab-sheet" role="dialog" aria-label="Altre sezioni">
+    <div class="tab-sheet-hdr">Altre sezioni</div>
+    <div class="tab-sheet-grid">
+      <button class="tabbar-item" data-view="ihc"         data-label="IHC">🔬</button>
+      <button class="tabbar-item" data-view="bidoni"      data-label="Flaconi in uso">🪣</button>
+      <button class="tabbar-item" data-view="movimenti"   data-label="Movimenti">↕</button>
+      <button class="tabbar-item" data-view="allerte"     data-label="Allerte">!</button>
+      <button class="tabbar-item" data-view="ordini"      data-label="Ordini">↻</button>
+      <button class="tabbar-item" data-view="schede"      data-label="Schede">📋</button>
+      <button class="tabbar-item" data-view="rifiuti"     data-label="Rifiuti">🗑</button>
+      <button class="tabbar-item" data-view="report"      data-label="Report">⊞</button>
+      <button class="tabbar-item" onclick="closeTabSheet();document.getElementById('fc-btn').click()" data-label="Sistema">FC</button>
+    </div>
+  </div>
 
   <!-- ════════════════════════════
        MAIN
@@ -598,6 +883,16 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
           <button class="btn btn-sm" onclick="document.getElementById('dash-case-search').value='';cercaCasoDashboard()" style="flex-shrink:0">✕ Pulisci</button>
         </div>
         <div id="dash-case-result" style="margin-top:8px"></div>
+      </div>
+
+      <!-- ══ O6 · DA SBRIGARE — conteggi cliccabili, ognuno porta dove si agisce ══ -->
+      <div style="margin-bottom:24px">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+          <div style="font-family:'Libre Baskerville',serif;font-size:16px;font-weight:700;color:var(--accent)">Da sbrigare</div>
+          <div style="flex:1;height:1px;background:var(--border)"></div>
+          <span style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em">Adesso</span>
+        </div>
+        <div id="dash-todo" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px"></div>
       </div>
 
       <!-- WIDGET STATO CASI (3 stati a larghezza uguale) -->
@@ -660,13 +955,13 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
         <div class="kpi-card" onclick="showView('rifiuti')">
           <div class="kpi-lbl">Rifiuti attivi</div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:7px;margin-bottom:8px">
-            <div style="background:var(--surface2,#f8fafc);border:1px solid var(--border);border-radius:6px;padding:6px 8px">
+            <div style="background:var(--sunken);border:1px solid var(--border);border-radius:6px;padding:6px 8px">
               <div style="font-size:8px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin-bottom:4px">Pieni</div>
               <div style="display:flex;gap:6px;align-items:baseline">
-                <span style="font-family:'DM Mono',monospace;font-size:20px;font-weight:700;color:var(--orange)" id="rif-sol-p">0</span><span style="font-size:9px;color:var(--text3)">bidoni</span>
+                <span style="font-family:'DM Mono',monospace;font-size:20px;font-weight:700;color:var(--orange)" id="rif-sol-p">0</span><span style="font-size:11px;color:var(--text3)">bidoni CER</span>
               </div>
             </div>
-            <div style="background:var(--surface2,#f8fafc);border:1px solid var(--border);border-radius:6px;padding:6px 8px">
+            <div style="background:var(--sunken);border:1px solid var(--border);border-radius:6px;padding:6px 8px">
               <div style="font-size:8px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin-bottom:4px">Vuoti</div>
               <div style="display:flex;gap:6px;align-items:baseline">
                 <span style="font-family:'DM Mono',monospace;font-size:20px;font-weight:700;color:var(--green)" id="rif-sol-v">0</span><span style="font-size:9px;color:var(--text3)">disp.</span>
@@ -707,7 +1002,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
           <div style="overflow-x:auto" id="home-proc-wrap">
             <table class="tbl" style="font-size:10px">
               <thead><tr><th>Data partenza</th><th>Range casi ID</th><th>Casi</th><th>Biocassette</th><th>Stato reagenti</th></tr></thead>
-              <tbody id="home-proc-tbody"><tr><td colspan="5" style="text-align:center;color:var(--text3);padding:14px;font-style:italic">Nessun ciclo registrato</td></tr></tbody>
+              <tbody id="home-proc-tbody"><tr><td colspan="5"><div class="home-empty">Nessun ciclo processatore oggi<br><button class="empty-cta" onclick="openNuovoProcessatore()">＋ Registra ciclo</button></div></td></tr></tbody>
             </table>
           </div>
         </div>
@@ -730,7 +1025,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
                   <th style="background:#f5f3ff;font-size:9px">Cicli</th><th style="background:#f5f3ff;font-size:9px">Vetri</th><th style="background:#f5f3ff;font-size:9px">Casi</th>
                 </tr>
               </thead>
-              <tbody id="home-color-tbody"><tr><td colspan="11" style="text-align:center;color:var(--text3);padding:14px;font-style:italic">Nessun ciclo registrato</td></tr></tbody>
+              <tbody id="home-color-tbody"><tr><td colspan="11"><div class="home-empty">Nessun ciclo coloratore oggi<br><button class="empty-cta" onclick="openNuovoColoratore()">＋ Registra ciclo</button></div></td></tr></tbody>
             </table>
           </div>
         </div>
@@ -777,6 +1072,21 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
         </div>
 
       </div><!-- /grafici campioni -->
+
+      <!-- ══ O6 · Analisi: chiusa di default, questi widget sono anche in Report ══ -->
+      <button type="button" id="dash-analisi-toggle" onclick="toggleDashAnalisi()"
+        style="display:flex;width:100%;align-items:center;gap:10px;min-height:52px;padding:12px 16px;
+               margin-bottom:16px;background:var(--surface);border:1px solid var(--border);
+               border-radius:var(--r);cursor:pointer;font-family:inherit;text-align:left">
+        <span style="font-size:19px">⊞</span>
+        <span style="flex:1">
+          <span style="display:block;font-family:'Libre Baskerville',serif;font-size:15px;font-weight:700;color:var(--accent)">Analisi del mese</span>
+          <span style="display:block;font-size:12.5px;color:var(--text3);margin-top:1px">Clienti, qualità del processo, consumi e previsioni</span>
+        </span>
+        <span id="dash-analisi-caret" style="font-size:15px;color:var(--text3)">▾</span>
+      </button>
+
+      <div id="dash-analisi" style="display:none">
 
       <!-- WIDGET CLIENTI: Top 5 + Nuovi -->
       <div style="margin-bottom:8px;display:flex;align-items:center;gap:10px">
@@ -835,6 +1145,12 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
 
       </div><!-- /grafici magazzino -->
 
+      <div style="text-align:center;margin-bottom:24px">
+        <button class="btn" onclick="showView('report')">Apri Report completo →</button>
+      </div>
+
+      </div><!-- /dash-analisi -->
+
     </div><!-- /view-dashboard -->
 
     <!-- ══════════════════════════════════════════════════════════════
@@ -842,7 +1158,10 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
          ══════════════════════════════════════════════════════════════ -->
     <div class="view" data-view="campioni" id="view-tracciabilita">
       <div class="pg-hdr">
-        <div class="pg-title">Casi</div>
+        <div>
+          <div class="pg-title">🧫 Casi</div>
+          <div class="page-sub" id="camp-sub">—</div>
+        </div>
         <div style="display:flex;gap:6px;flex-wrap:wrap">
           <button class="hbtn2 primary" onclick="openAddModal('Istologia')">＋ Caso</button>
           <button class="hbtn2 pap-l" onclick="openAddModal('PAP test')">＋ Pap L</button>
@@ -1023,7 +1342,10 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
          ══════════════════════════════════════════════════════════════ -->
     <div class="view" data-view="ihc" id="view-ihc">
       <div class="pg-hdr">
-        <div class="pg-title">🔬 Richieste IHC</div>
+        <div>
+          <div class="pg-title">🔬 Richieste IHC</div>
+          <div class="page-sub" id="ihc-sub">—</div>
+        </div>
         <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
           <button class="hbtn2 primary" onclick="openNuovaIHC()">＋ Nuova richiesta</button>
           <div class="search-wrap">
@@ -1059,10 +1381,11 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
          ══════════════════════════════════════════════════════════════ -->
     <div class="view" data-view="inventario" id="view-inventario">
       <div class="pg-hdr">
-        <div class="pg-title">Inventario</div>
+        <div>
+          <div class="pg-title">📦 Inventario</div>
+          <div class="page-sub" id="inv-sub">—</div>
+        </div>
         <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
-          <button class="hbtn2 warn" onclick="openDuplicatiModal()" title="Trova prodotti duplicati">⚠ Duplicati</button>
-          <button class="hbtn2 warn" onclick="openCorreggiGiacenzeModal()" title="Correggi manualmente le quantità">✏️ Correggi giacenze</button>
           <button class="hbtn2 ok" onclick="apriCaricoScan()">⬆ Carico</button>
           <button class="hbtn2 warn" onclick="openModalScarica()">⬇ Scarico</button>
           <button class="hbtn2" onclick="openDDTModal()">📷 DDT</button>
@@ -1108,7 +1431,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
           </div>
         </div>
         <div style="overflow-x:auto">
-          <table class="tbl">
+          <table class="tbl tbl-cards">
             <thead><tr>
               <th>Prodotto</th>
               <th>Categoria</th>
@@ -1130,14 +1453,13 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
     <div class="view" data-view="bidoni" id="view-bidoni">
       <div class="pg-hdr">
         <div>
-          <div class="pg-title">🪣 Bidoni reagenti &amp; coloranti</div>
+          <div class="pg-title">🪣 Flaconi in uso</div>
           <div class="page-sub" id="bidoni-stats">—</div>
         </div>
         <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
-          <button class="btn btn-sm btn-warn" onclick="sistemaScarichiOggi()" title="Sistema gli scarichi di oggi che non hanno chiuso il bidone aperto">🔧 Sistema scarichi oggi</button>
           <div class="search-wrap">
             <span class="s-ico">🔍</span>
-            <input type="text" class="search-inp" id="bidoni-search" placeholder="Cerca prodotto, lotto…" oninput="renderBidoniView()">
+            <input type="text" class="search-inp" id="bidoni-search" placeholder="Cerca flacone, prodotto, lotto…" oninput="renderBidoniView()">
           </div>
         </div>
       </div>
@@ -1150,7 +1472,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
       </div>
 
       <div class="card">
-        <div class="card-hdr"><span class="card-title" id="bidoni-count">0 bidoni</span></div>
+        <div class="card-hdr"><span class="card-title" id="bidoni-count">0 flaconi</span></div>
         <div style="overflow-x:auto">
           <table class="tbl">
             <thead><tr>
@@ -1174,7 +1496,10 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
          ══════════════════════════════════════════════════════════════ -->
     <div class="view" data-view="movimenti" id="view-movimenti">
       <div class="pg-hdr">
-        <div class="pg-title">Movimenti</div>
+        <div>
+          <div class="pg-title">↕ Movimenti</div>
+          <div class="page-sub" id="mov-sub">—</div>
+        </div>
         <div style="display:flex;gap:6px;flex-wrap:wrap">
           <button class="hbtn2" onclick="openDDTModal()">📷 DDT</button>
           <button class="hbtn2 ok" onclick="apriCaricoScan()">⬆ Carico Scan</button>
@@ -1210,7 +1535,10 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
          ══════════════════════════════════════════════════════════════ -->
     <div class="view" data-view="allerte" id="view-allerte">
       <div class="pg-hdr">
-        <div class="pg-title">Allerte</div>
+        <div>
+          <div class="pg-title">⚠ Allerte</div>
+          <div class="page-sub" id="allerte-sub">—</div>
+        </div>
         <button class="hbtn2 danger" onclick="if(typeof ordinaDaAllerte==='function')ordinaDaAllerte();else if(typeof openOrdineModal==='function')openOrdineModal('new',null)">🚨 Ordina da allerte</button>
       </div>
       <div class="filter-bar" id="allerte-filter-bar">
@@ -1223,7 +1551,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
       <div class="card">
         <div class="card-hdr"><span class="card-title" id="allerte-count">0 prodotti</span></div>
         <div style="overflow-x:auto">
-          <table class="tbl">
+          <table class="tbl tbl-cards">
             <thead><tr>
               <th>Prodotto</th>
               <th>Categoria</th>
@@ -1245,65 +1573,72 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
          ══════════════════════════════════════════════════════════════ -->
     <div class="view" data-view="ordini" id="view-ordini">
       <div class="pg-hdr">
-        <div class="pg-title">Ordini</div>
-        <div style="display:flex;gap:8px">
-          <button class="hbtn2" onclick="openFixDoppioniModal()" title="Ripara carichi duplicati da ricezioni multiple">🔧 Ripara doppioni</button>
-          <button class="hbtn2 primary" onclick="openOrdineModal()">＋ Nuovo ordine</button>
+        <div>
+          <div class="pg-title">↻ Ordini</div>
+          <div class="page-sub" id="ord-sub">—</div>
+        </div>
+        <div style="display:flex;gap:8px" id="ord-hdr-actions">
+          <button class="hbtn2 primary" id="ord-btn-nuovo" onclick="openOrdineModal()">＋ Nuovo ordine</button>
+          <button class="hbtn2 primary" id="ord-btn-ricevuto" style="display:none" onclick="openOrdineArchivioModal()">＋ Registra ordine ricevuto</button>
         </div>
       </div>
-      <div class="filter-bar" style="margin-bottom:14px">
-        <button class="chip active" onclick="setOrdFilter('all',this)">Tutti</button>
-        <button class="chip" onclick="setOrdFilter('bozza',this)">Bozza</button>
-        <button class="chip" onclick="setOrdFilter('inviato',this)">Inviato</button>
-        <button class="chip" onclick="setOrdFilter('parziale',this)">Parziale</button>
-        <button class="chip" onclick="setOrdFilter('approvato',this)">Approvato</button>
+
+      <!-- ══ O5 · due momenti dello stesso oggetto, non due viste ══ -->
+      <div class="tabs-bar">
+        <button class="tab-btn active" id="ord-tab-attivi" onclick="ordSetTab('attivi')">In corso</button>
+        <button class="tab-btn" id="ord-tab-archivio" onclick="ordSetTab('archivio')">Archivio</button>
       </div>
-      <div style="display:grid;grid-template-columns:340px 1fr;gap:14px;align-items:start" id="ordini-split">
-        <div id="ordini-list" style="display:flex;flex-direction:column;gap:8px">
-          <div class="empty-state"><div class="ico">📦</div><div>Nessun ordine</div></div>
+
+      <div id="ord-panel-attivi">
+        <div class="filter-bar" style="margin-bottom:14px">
+          <button class="chip active" onclick="setOrdFilter('all',this)">Tutti</button>
+          <button class="chip" onclick="setOrdFilter('bozza',this)">Bozza</button>
+          <button class="chip" onclick="setOrdFilter('inviato',this)">Inviato</button>
+          <button class="chip" onclick="setOrdFilter('parziale',this)">Parziale</button>
+          <button class="chip" onclick="setOrdFilter('approvato',this)">Approvato</button>
         </div>
-        <div class="card" id="ordine-detail">
-          <div class="empty-state"><div class="ico">👈</div><div>Seleziona un ordine</div></div>
+        <div style="display:grid;grid-template-columns:340px 1fr;gap:14px;align-items:start" id="ordini-split">
+          <div id="ordini-list" style="display:flex;flex-direction:column;gap:8px">
+            <div class="empty-state"><div class="ico">📦</div><div>Nessun ordine</div></div>
+          </div>
+          <div class="card" id="ordine-detail">
+            <div class="empty-state"><div class="ico">📄</div><p>Nessun ordine selezionato</p><p class="empty-hint">Tocca un ordine nell'elenco per vederne le righe e registrarne la ricezione.</p></div>
+          </div>
         </div>
+      </div>
+
+      <div id="ord-panel-archivio" style="display:none">
+        <!-- Filtri che renderArchivio() si aspetta: stessi id, stessa funzione -->
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;align-items:center">
+          <select class="search-inp" id="arch-filter-mese" onchange="renderArchivio()" style="min-width:140px">
+            <option value="">Tutti i mesi</option>
+          </select>
+          <select class="search-inp" id="arch-filter-forn" onchange="renderArchivio()" style="min-width:160px">
+            <option value="">Tutti i fornitori</option>
+          </select>
+          <select class="search-inp" id="arch-filter-stato" onchange="renderArchivio()" style="min-width:140px">
+            <option value="">Tutti gli stati</option>
+            <option value="bozza">📝 Bozza</option>
+            <option value="inviato">📤 Inviato</option>
+            <option value="approvato">✅ Approvato</option>
+            <option value="parziale">📦⏳ Parziale</option>
+            <option value="ricevuto">📦 Ricevuto</option>
+            <option value="annullato">❌ Annullato</option>
+          </select>
+        </div>
+        <div id="archivio-list"></div>
       </div>
     </div><!-- /view-ordini -->
-
-    <!-- ══════════════════════════════════════════════════════════════
-         VIEW: ARCHIVIO ORDINI (split panel + documenti)
-         ══════════════════════════════════════════════════════════════ -->
-    <div class="view" data-view="arch-ordini" id="view-archivio">
-      <div class="pg-hdr">
-        <div class="pg-title">Archivio Ordini</div>
-        <button class="btn btn-primary" onclick="openOrdineArchivioModal()">＋ Registra ordine ricevuto</button>
-      </div>
-      <!-- Filtri che renderArchivio() si aspetta -->
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;align-items:center">
-        <select class="search-inp" id="arch-filter-mese" onchange="renderArchivio()" style="min-width:140px">
-          <option value="">Tutti i mesi</option>
-        </select>
-        <select class="search-inp" id="arch-filter-forn" onchange="renderArchivio()" style="min-width:160px">
-          <option value="">Tutti i fornitori</option>
-        </select>
-        <select class="search-inp" id="arch-filter-stato" onchange="renderArchivio()" style="min-width:140px">
-          <option value="">Tutti gli stati</option>
-          <option value="bozza">📝 Bozza</option>
-          <option value="inviato">📤 Inviato</option>
-          <option value="approvato">✅ Approvato</option>
-          <option value="parziale">📦⏳ Parziale</option>
-          <option value="ricevuto">📦 Ricevuto</option>
-          <option value="annullato">❌ Annullato</option>
-        </select>
-      </div>
-      <!-- renderArchivio() scrive card direttamente qui -->
-      <div id="archivio-list"></div>
-    </div><!-- /view-archivio -->
 
     <!-- ══════════════════════════════════════════════════════════════
          VIEW: SCHEDE TECNICHE
          ══════════════════════════════════════════════════════════════ -->
     <div class="view" data-view="schede" id="view-schede">
       <div class="pg-hdr">
-        <div class="pg-title">Schede Tecniche</div>
+        <div>
+          <div class="pg-title">📋 Schede Tecniche</div>
+          <div class="page-sub">Schede di sicurezza e istruzioni d'uso dei prodotti</div>
+        </div>
         <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
           <select class="search-inp" id="schede-filter-forn" onchange="renderSchede()" style="min-width:160px;padding:6px 10px">
             <option value="">Tutti i fornitori</option>
@@ -1320,7 +1655,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
     <div class="view" data-view="rifiuti" id="view-rifiuti">
       <div class="pg-hdr">
         <div>
-          <div class="pg-title">Rifiuti</div>
+          <div class="pg-title">🗑 Rifiuti</div>
           <div class="page-sub">Tracciamento bidoni prodotti, smaltiti e disponibili</div>
         </div>
         <div style="display:flex;gap:6px;flex-wrap:wrap">
@@ -1358,7 +1693,10 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
          ══════════════════════════════════════════════════════════════ -->
     <div class="view" data-view="report" id="view-report">
       <div class="pg-hdr">
-        <div class="pg-title" id="report-title">Report & Analytics</div>
+        <div>
+          <div class="pg-title" id="report-title">⊞ Report &amp; Analytics</div>
+          <div class="page-sub" id="report-sub">—</div>
+        </div>
         <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
           <button class="hbtn2 primary" onclick="window.print()">🖨 Stampa</button>
         </div>
@@ -1697,12 +2035,31 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
     <div style="border-top:1px solid var(--border);margin:4px 0"></div>
     <div class="fc-item" onclick="exportCSVInventario()"><span class="ico">📊</span>Export CSV inventario</div>
     <div style="border-top:1px solid var(--border);margin:4px 0"></div>
+    <!-- O8 — manutenzione dati: operazioni rare, fuori dai page header -->
+    <div style="padding:6px 14px 4px;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text3)">Manutenzione dati</div>
+    <div class="fc-item" onclick="openDuplicatiModal()"><span class="ico">⚠</span>Prodotti duplicati</div>
+    <div class="fc-item" onclick="openCorreggiGiacenzeModal()"><span class="ico">✏️</span>Correggi giacenze</div>
+    <div class="fc-item" onclick="openFixDoppioniModal()"><span class="ico">🔧</span>Ripara carichi duplicati</div>
+    <div class="fc-item" onclick="sistemaScarichiOggi()"><span class="ico">🔧</span>Sistema scarichi di oggi</div>
+    <div style="border-top:1px solid var(--border);margin:4px 0"></div>
     <div class="fc-item" style="color:var(--text3)" onclick="showInfo()"><span class="ico">ℹ</span>Info — LupoLab AP v5.0.0</div>
   </div>
 
   <!-- ════════════════════════════
        TOAST CONTAINER
        ════════════════════════════ -->
+  <!-- ══ O7 · FAB contestuale: l'azione della vista corrente, raggiungibile col pollice ══ -->
+  <button class="fab" id="fab" onclick="fabAction()" aria-label="Azione principale">＋</button>
+  <div class="fab-sheet-ov" id="fab-sheet-ov" onclick="closeFabSheet()"></div>
+  <div class="fab-sheet" id="fab-sheet" role="dialog" aria-label="Operazioni di magazzino">
+    <div class="fab-sheet-hdr">Magazzino</div>
+    <button class="fab-opt" onclick="closeFabSheet();apriCaricoScan()"><span>⬆</span>Carico con scanner</button>
+    <button class="fab-opt" onclick="closeFabSheet();openManualMovModal('carico')"><span>＋</span>Carico manuale</button>
+    <button class="fab-opt" onclick="closeFabSheet();openModalScarica()"><span>⬇</span>Scarico (scanner o ricerca)</button>
+    <button class="fab-opt" onclick="closeFabSheet();openManualMovModal('scarico')"><span>−</span>Scarico manuale</button>
+    <button class="fab-opt" onclick="closeFabSheet();openProductModal()"><span>📦</span>Nuovo prodotto</button>
+  </div>
+
   <div class="toast-container" id="toast-container"></div>
 </div><!-- /app -->
 
@@ -1710,6 +2067,24 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
 <!-- ╔══════════════════════════════════════════════════════════════╗
      ║                       MODAL DEFINITIONS                      ║
      ╚══════════════════════════════════════════════════════════════╝ -->
+
+<!-- ══════════════════════════════
+     MODAL: SCAN GS1 (F2 — lotto/scadenza da barcode in ricezione)
+══════════════════════════════ -->
+<div class="modal-overlay" id="modal-gs1">
+  <div class="modal" style="width:min(460px,96vw)">
+    <div class="modal-title">📷 Leggi lotto e scadenza</div>
+    <p style="color:var(--text2);font-size:13px;margin-bottom:10px" id="gs1-status">—</p>
+    <div id="gs1-video-wrap" style="position:relative;overflow:hidden;border-radius:var(--r);background:#0f172a">
+      <video id="gs1-video" autoplay playsinline muted style="width:100%;display:block"></video>
+      <div class="scan-line"></div>
+    </div>
+    <div id="gs1-result" style="display:none;margin-top:10px"></div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeGS1Scan()">Chiudi</button>
+    </div>
+  </div>
+</div>
 
 <!-- ══════════════════════════════
      MODAL: DDT
@@ -1772,21 +2147,36 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
 
     <!-- TAB MANUALE -->
     <div id="sc-panel-manuale">
-      <div class="fg" style="margin-bottom:10px">
+      <!-- F3 — sc-prod resta il contenitore del valore scelto (invariato per la logica);
+           la scelta avviene per ricerca, non con la select nativa. -->
+      <input type="hidden" id="sc-prod" value="">
+      <div class="fg" style="margin-bottom:8px">
         <label>Prodotto</label>
-        <select id="sc-prod" onchange="scaricaSelProd()">
-          <option value="">Seleziona prodotto…</option>
-        </select>
+        <input type="text" id="sc-prod-search" placeholder="Scrivi le prime lettere…"
+               oninput="scFiltraProdotti()" onkeydown="scProdKeydown(event)" autocomplete="off">
       </div>
+      <div id="sc-prod-chosen" style="display:none;align-items:center;gap:8px;margin-bottom:10px;
+           padding:10px 12px;background:var(--green-bg);border:1px solid var(--green-bd);border-radius:var(--r)">
+        <span style="font-weight:600;font-size:15px;flex:1" id="sc-prod-chosen-name"></span>
+        <button class="btn btn-sm" onclick="scResetProdotto()">Cambia</button>
+      </div>
+      <div id="sc-prod-list" style="max-height:190px;overflow-y:auto;margin-bottom:10px"></div>
       <div id="sc-lotti-wrap" style="display:none;margin-bottom:10px">
         <label style="font-size:11px;color:var(--text3);font-weight:600;text-transform:uppercase;display:block;margin-bottom:5px">Lotto</label>
         <div id="sc-lotti-list"></div>
       </div>
       <div id="sc-man-qty-wrap" style="display:none;margin-top:8px">
         <div style="display:flex;gap:9px;align-items:center">
-          <div class="fg" style="flex:0 0 90px;margin:0">
+          <div class="fg" style="flex:0 0 150px;margin:0">
             <label>Quantità</label>
-            <input type="number" id="sc-man-qty" value="1" min="1">
+            <div style="display:flex;align-items:center;gap:6px">
+              <button type="button" class="btn" style="min-width:44px;min-height:44px;padding:0;font-size:20px"
+                      onclick="scStepQty(-1)" aria-label="Diminuisci">−</button>
+              <input type="number" id="sc-man-qty" value="1" min="1"
+                     style="flex:1;min-width:54px;text-align:center;font-family:'DM Mono',monospace;font-size:17px;font-weight:600">
+              <button type="button" class="btn" style="min-width:44px;min-height:44px;padding:0;font-size:20px"
+                      onclick="scStepQty(1)" aria-label="Aumenta">＋</button>
+            </div>
           </div>
           <div class="fg" style="flex:1;margin:0">
             <label>Note</label>
@@ -2134,8 +2524,21 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
       </div>
     </div>
 
+    <!-- ══ F8 · Casi: un blocco solo, il tipo si scegle in cima ══ -->
+    <div id="color-casi-box" style="background:var(--bg3);border-radius:var(--r);padding:14px;margin-bottom:14px;border-left:3px solid var(--blue)">
+      <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px">Casi del ciclo</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:14px">
+        <button type="button" class="ct-chip active" id="ct-chip-ist" onclick="colorSetTipo('ist')">
+          <span>🧫 Istologia</span><b id="ct-n-ist">0</b></button>
+        <button type="button" class="ct-chip" id="ct-chip-cit" onclick="colorSetTipo('cit')">
+          <span>🔬 Citologia</span><b id="ct-n-cit">0</b></button>
+        <button type="button" class="ct-chip" id="ct-chip-pap" onclick="colorSetTipo('pap')">
+          <span>📋 PAP</span><b id="ct-n-pap">0</b></button>
+      </div>
+      <div id="color-dup-warn" style="display:none;margin-bottom:10px"></div>
+
     <!-- 3. Casi Istologia -->
-    <div style="background:var(--bg3);border-radius:var(--r);padding:14px;margin-bottom:14px;border-left:3px solid var(--blue)">
+    <div id="color-blk-ist">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
         <div style="font-size:12px;font-weight:600;color:var(--blue)">🧫 Casi Istologia</div>
         <div style="font-size:11px;color:var(--text3)">N° casi: <span id="color-casi-ist-count" style="font-weight:700;color:var(--blue)">0</span></div>
@@ -2154,7 +2557,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
     </div>
 
     <!-- 4. Casi Citologia -->
-    <div style="background:var(--bg3);border-radius:var(--r);padding:14px;margin-bottom:14px;border-left:3px solid var(--teal)">
+    <div id="color-blk-cit" style="display:none">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
         <div style="font-size:12px;font-weight:600;color:var(--teal)">🔬 Casi Citologia</div>
         <div style="font-size:11px;color:var(--text3)">N° casi: <span id="color-casi-cit-count" style="font-weight:700;color:var(--teal)">0</span></div>
@@ -2173,7 +2576,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
     </div>
 
     <!-- 5. Casi PAP -->
-    <div style="background:var(--bg3);border-radius:var(--r);padding:14px;margin-bottom:14px;border-left:3px solid var(--purple)">
+    <div id="color-blk-pap" style="display:none">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
         <div style="font-size:12px;font-weight:600;color:var(--purple)">📋 Casi PAP LupoLab</div>
         <div style="font-size:11px;color:var(--text3)">N° casi: <span id="color-casi-pap-count" style="font-weight:700;color:var(--purple)">0</span></div>
@@ -2190,6 +2593,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
       </div>
       <div id="color-casi-pap-list" style="display:flex;flex-wrap:wrap;gap:4px;min-height:30px;padding:6px;background:var(--bg2);border:1px solid var(--border-faint);border-radius:6px"></div>
     </div>
+    </div><!-- /color-casi-box -->
 
     <!-- 6. Reagenti -->
     <div style="background:var(--bg3);border-radius:var(--r);padding:14px;margin-bottom:14px">
@@ -2462,24 +2866,62 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
      MODAL: BIDONE PIENO (RIFIUTI)
 ══════════════════════════════ -->
 <div class="modal-overlay" id="modal-rifiuti">
-  <div class="modal" style="width:420px">
-    <div class="modal-title">🗑 Registra Bidone Pieno</div>
-    <div class="form-grid">
-      <div class="fg full"><label>Tipo di Rifiuto *</label>
-        <select id="r-tipo">
-          <option value="">Seleziona…</option>
-          <option value="cer_180103">☣ 180103* — Rifiuti infetti (materiale biologico, lame, taglienti)</option>
-          <option value="cer_150110">🧴 150110* — Imballaggi contaminati (bottiglie xilene, formalina…)</option>
-          <option value="cer_150202">🧤 150202* — Assorbenti/DPI contaminati (camici, guanti, stracci)</option>
-          <option value="cer_180106">💧 180106* — Liquidi chimici (xilene esausto, formalina, alcoli)</option>
-        </select></div>
-      <div class="fg"><label>Numero bidoni pieni *</label><input type="number" id="r-qty" value="1" min="1"></div>
-      <div class="fg"><label>Data smaltimento (se già smaltiti)</label><input type="date" id="r-data-smalt"></div>
-      <div class="fg full"><label>Note / Codice CER</label><input type="text" id="r-note" placeholder="es. CER 180103, smaltito da…"></div>
+  <div class="modal" style="width:min(460px,96vw)">
+    <div class="modal-title">🗑 Registra contenitori pieni</div>
+
+    <!-- F7 passo 1 — quale CER: se il modale arriva da una card, è già scelto -->
+    <div id="r-cer-chosen" style="display:none;align-items:center;gap:10px;margin-bottom:14px;
+         padding:12px 14px;background:var(--sunken);border:1px solid var(--border);border-radius:var(--r)">
+      <span style="font-size:21px" id="r-cer-ico">🗑</span>
+      <span style="flex:1">
+        <span style="display:block;font-weight:600;font-size:15px" id="r-cer-label">—</span>
+        <span style="display:block;font-size:12.5px;color:var(--text3)" id="r-cer-sub">—</span>
+      </span>
+      <button class="btn btn-sm" onclick="rifCambiaCer()">Cambia</button>
     </div>
+    <div class="fg full" id="r-cer-pick" style="margin-bottom:14px">
+      <label>Tipo di rifiuto *</label>
+      <div style="display:grid;gap:6px;margin-top:4px">
+        <button type="button" class="r-cer-opt" onclick="rifScegliCer('cer_180103')">☣ <b>180103*</b> — Rifiuti infetti</button>
+        <button type="button" class="r-cer-opt" onclick="rifScegliCer('cer_150110')">🧴 <b>150110*</b> — Imballaggi contaminati</button>
+        <button type="button" class="r-cer-opt" onclick="rifScegliCer('cer_150202')">🧤 <b>150202*</b> — Assorbenti / DPI</button>
+        <button type="button" class="r-cer-opt" onclick="rifScegliCer('cer_180106')">💧 <b>180106*</b> — Liquidi chimici</button>
+      </div>
+      <input type="hidden" id="r-tipo" value="">
+    </div>
+
+    <!-- passo 1b — quanti -->
+    <div id="r-step-qty" style="display:none">
+      <label style="font-size:11px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--text3);display:block;margin-bottom:6px">Quanti contenitori pieni</label>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px">
+        <button type="button" class="btn" style="min-width:48px;min-height:48px;padding:0;font-size:22px" onclick="rifStep(-1)">−</button>
+        <input type="number" id="r-qty" value="1" min="1"
+               style="flex:0 0 84px;text-align:center;font-family:'DM Mono',monospace;font-size:21px;font-weight:600;min-height:48px">
+        <button type="button" class="btn" style="min-width:48px;min-height:48px;padding:0;font-size:22px" onclick="rifStep(1)">＋</button>
+      </div>
+
+      <!-- passo 2 — già ritirati? il campo ambiguo diventa una domanda -->
+      <label style="font-size:11px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--text3);display:block;margin-bottom:6px">Sono già stati ritirati dal trasportatore?</label>
+      <div style="display:flex;gap:8px;margin-bottom:12px">
+        <button type="button" class="r-rit-opt active" id="r-rit-no"  onclick="rifRitirato(false)">No, sono in deposito</button>
+        <button type="button" class="r-rit-opt"        id="r-rit-si"  onclick="rifRitirato(true)">Sì, già ritirati</button>
+      </div>
+
+      <div id="r-ritiro-box" style="display:none;padding:12px;background:var(--sunken);border:1px solid var(--border);border-radius:var(--r);margin-bottom:12px">
+        <div class="form-grid" style="margin:0">
+          <div class="fg"><label>Data ritiro *</label><input type="date" id="r-data-smalt"></div>
+          <div class="fg"><label>Peso totale (kg)</label><input type="number" id="r-kg" step="0.1" min="0" placeholder="0"></div>
+          <div class="fg full"><label>N° formulario FIR</label><input type="text" id="r-formulario" placeholder="es. FIR-2026-0142" style="font-family:'DM Mono',monospace"></div>
+          <div class="fg full"><label>Trasportatore / destinatario</label><input type="text" id="r-dest" placeholder="Ragione sociale"></div>
+        </div>
+      </div>
+
+      <div class="fg full"><label>Note</label><input type="text" id="r-note" placeholder="Opzionale"></div>
+    </div>
+
     <div class="modal-footer">
       <button class="btn" onclick="closeModal('modal-rifiuti')">Annulla</button>
-      <button class="btn btn-waste" onclick="saveRifiuto()">Registra</button>
+      <button class="btn btn-waste" id="r-save-btn" onclick="saveRifiuto()" disabled>Registra</button>
     </div>
   </div>
 </div>
@@ -3036,7 +3478,7 @@ function _refreshCurrentView(){
   if(currentView==='tracciabilita' && typeof renderTracciabilita==='function') renderTracciabilita();
   if(currentView==='processatore' && typeof renderProcessatore==='function') renderProcessatore();
   if(currentView==='coloratore' && typeof renderColoratore==='function') renderColoratore();
-  if(currentView==='archivio' && typeof renderArchivio==='function') renderArchivio();
+  if((currentView==='archivio' || _isArchTab()) && typeof renderArchivio==='function') renderArchivio();
   if(currentView==='schede' && typeof renderSchede==='function') renderSchede();
 }
 
@@ -3567,7 +4009,34 @@ function closeModal(id){ document.getElementById(id).classList.remove('open'); }
 // NAVIGATION
 // ══════════════════════════════════════════
 let currentView='dashboard', invFilter='all', fornFilter='all', homeFornFilter='all', manualMovType='carico';
+// O5 — dopo l'unificazione currentView è sempre 'ordini': la tab Archivio
+// si riconosce dalla visibilità del pannello. Serve ai refresh condizionati.
+function _isArchTab(){
+  const el=document.getElementById('ord-panel-archivio');
+  return !!el && el.style.display!=='none';
+}
+function ordSetTab(tab){
+  const attivi = tab!=='archivio';
+  document.getElementById('ord-panel-attivi').style.display  = attivi ? '' : 'none';
+  document.getElementById('ord-panel-archivio').style.display= attivi ? 'none' : '';
+  document.getElementById('ord-tab-attivi')?.classList.toggle('active', attivi);
+  document.getElementById('ord-tab-archivio')?.classList.toggle('active', !attivi);
+  document.getElementById('ord-btn-nuovo').style.display    = attivi ? '' : 'none';
+  document.getElementById('ord-btn-ricevuto').style.display = attivi ? 'none' : '';
+  const sub=document.getElementById('ord-sub');
+  if(sub) sub.dataset.tab = attivi ? 'attivi' : 'archivio';
+  if(!attivi && typeof renderArchivio==='function') renderArchivio();
+  else if(attivi && typeof renderOrdini==='function') renderOrdini();
+}
+
 function showView(v){
+  // O5 — Archivio non è più una vista a sé: è la seconda tab di Ordini.
+  // I vecchi nomi restano validi (rail, tabbar, link interni) e reindirizzano.
+  if(v==='archivio' || v==='arch-ordini'){
+    showView('ordini');
+    setTimeout(()=>ordSetTab('archivio'), 0);
+    return;
+  }
   document.querySelectorAll('.view').forEach(e=>e.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(e=>e.classList.remove('active'));
   const viewEl = document.getElementById('view-'+v);
@@ -3587,9 +4056,8 @@ function showView(v){
   if(v==='movimenti') renderMovimenti();
   if(v==='rifiuti') renderRifiuti();
   if(v==='allerte') renderAllerte();
-  if(v==='ordini'){ buildProdDatalist(); renderOrdini(); }
+  if(v==='ordini'){ buildProdDatalist(); ordSetTab('attivi'); }
   if(v==='report') renderReport();
-  if(v==='archivio') renderArchivio();
   if(v==='schede') renderSchede();
   if(v==='tracciabilita') renderTracciabilita();
   if(v==='processatore') renderProcessatore();
@@ -3664,7 +4132,7 @@ function renderHomeColoratore(){
   const el=document.getElementById('home-color-table');
   if(!el) return;
   const arr=loadColoratore().slice(0,7);
-  if(!arr.length){ el.innerHTML='<div class="home-empty">Nessun registro coloratore</div>'; return; }
+  if(!arr.length){ el.innerHTML='<div class="home-empty">Nessun ciclo coloratore registrato<br><button class="empty-cta" onclick="openNuovoColoratore()">＋ Registra ciclo</button></div>'; return; }
 
   const statoReag=(reg,prev)=>{
     if(!prev) return {label:'🆕',cls:'bg-blue'};
@@ -3889,7 +4357,7 @@ function renderDashboard(){
   const ordEl=document.getElementById('home-ordini-list');
   const ordOpen=ords.filter(o=>o.stato!=='ricevuto'&&o.stato!=='annullato').slice(0,6);
   const statoIco={bozza:'📝',inviato:'📤',approvato:'✅'};
-  if(!ordOpen.length){ ordEl.innerHTML='<div class="home-empty">Nessun ordine in corso</div>'; }
+  if(!ordOpen.length){ ordEl.innerHTML='<div class="home-empty">Nessun ordine in corso<br><button class="empty-cta" onclick="showView(\'ordini\')">Vai agli ordini</button></div>'; }
   else ordEl.innerHTML=ordOpen.map(o=>`<div class="home-list-item" onclick="showView('ordini')"><span style="font-weight:500">${o.num||'—'}<small style="color:var(--text3);margin-left:5px">${o.righe?.length||0} prodotti</small></span><span>${statoIco[o.stato]||''} <span style="font-size:11px;color:var(--text2)">${o.stato}</span></span></div>`).join('');
 
   // Product grid
@@ -3900,7 +4368,7 @@ function renderDashboard(){
   const procEl = document.getElementById('home-proc-oggi');
   if(procEl){
     const lastProc = loadProc()[0];
-    if(!lastProc){ procEl.innerHTML='<div style="color:var(--text3);font-size:13px">Nessun ciclo registrato</div>'; }
+    if(!lastProc){ procEl.innerHTML='<div class="home-empty">Nessun ciclo processatore registrato<br><button class="empty-cta" onclick="openNuovoProcessatore()">＋ Registra ciclo</button></div>'; }
     else{
       const protoLabel={standard:'Standard notturno',rapido:'Rapido',biopsie:'Biopsie',altro:'Altro'};
       procEl.innerHTML=`<div style="font-size:13px"><div style="font-weight:600">${fmtDate(lastProc.data)} — ${protoLabel[lastProc.protocollo]||lastProc.protocollo}</div><div style="font-size:12px;color:var(--text3);margin-top:3px">${lastProc.casi?.length||0} casi · ${lastProc.reagenti?.length||0} reagenti tracciati</div></div>`;
@@ -4200,15 +4668,15 @@ function renderInv(){
     const expandBtn = tracked ? `<span class="exp-arrow" style="cursor:pointer;margin-right:4px;display:inline-block" onclick="event.stopPropagation();toggleBidoniRow('${p.id}',this)" title="Mostra/nascondi bidoni">▶</span>` : '';
     let rows = `<tr id="inv-row-${p.id}">
       <td>${expandBtn}<span style="font-weight:500">${p.nome}</span>${p.fornitore?`<div style="font-size:11px;color:var(--text3);margin-left:${tracked?'18px':'0'}">${p.fornitore}</div>`:''}${p.pos?`<div style="font-size:11px;color:var(--text3);margin-left:${tracked?'18px':'0'}">📍 ${p.pos}</div>`:''}</td>
-      <td><span class="cat-badge">${CAT_ICON[p.cat]||'📌'} ${p.cat}</span></td>
-      <td class="mono">${p.lotto||'—'}</td>
-      <td>${scBadge(p.scadenza)}</td>
-      <td style="text-align:center">${qtyCell}</td>
-      <td>${progBar(p)}</td>
-      <td>${actionsCell}</td>
+      <td data-lbl="Categoria"><span class="cat-badge">${CAT_ICON[p.cat]||'📌'} ${p.cat}</span></td>
+      <td class="mono" data-lbl="Lotto">${p.lotto||'—'}</td>
+      <td data-lbl="Scadenza">${scBadge(p.scadenza)}</td>
+      <td style="text-align:center" data-lbl="Giacenza">${qtyCell}</td>
+      <td data-lbl="Consumo">${progBar(p)}</td>
+      <td class="act-cell">${actionsCell}</td>
     </tr>`;
     if (tracked) {
-      rows += `<tr id="inv-bidoni-${p.id}" class="hidden" style="display:none"><td colspan="7" style="background:#f8fafc;padding:8px 12px">${renderBidoniProd(p.id)}</td></tr>`;
+      rows += `<tr id="inv-bidoni-${p.id}" class="hidden tr-expand" style="display:none"><td colspan="7" style="background:var(--sunken);padding:8px 12px">${renderBidoniProd(p.id)}</td></tr>`;
     }
     return rows;
   }).join('');
@@ -4290,7 +4758,7 @@ function renderRifiuti(){
         ${box(w180103.smaltiti,'Smaltiti','var(--text2)')}
       </div>
       <div class="waste-btns">
-        <button class="btn btn-sm btn-waste" onclick="quickWaste('cer_180103','pieno',1)">+ Piena</button>
+        <button class="btn btn-sm btn-waste" onclick="openRifiutiModal('cer_180103')">+ Piena</button>
         <button class="btn btn-sm btn-ok" onclick="openSmaltimentoModal('cer_180103')" ${w180103.pieni===0?'disabled':''}>✓ Smaltita</button>
         <button class="btn btn-sm" onclick="quickWaste('cer_180103','vuoto',1)">+ Scatola</button>
         <button class="btn btn-sm btn-danger" onclick="quickWaste('cer_180103','vuoto_sub',1)" ${vuoti180103===0?'disabled':''}>− Scatola</button>
@@ -4333,7 +4801,7 @@ function renderRifiuti(){
           ${box(w150110.smaltiti,'Smaltiti','var(--text2)')}
         </div>
         <div class="waste-btns" style="margin-top:6px">
-          <button class="btn btn-sm btn-waste" onclick="quickWaste('cer_150110','pieno',1)">+ Pieno</button>
+          <button class="btn btn-sm btn-waste" onclick="openRifiutiModal('cer_150110')">+ Pieno</button>
           <button class="btn btn-sm btn-ok" onclick="openSmaltimentoModal('cer_150110')" ${w150110.pieni===0?'disabled':''}>✓ Smaltito</button>
         </div>
       </div>
@@ -4345,7 +4813,7 @@ function renderRifiuti(){
           ${box(w150202.smaltiti,'Smaltiti','var(--text2)')}
         </div>
         <div class="waste-btns" style="margin-top:6px">
-          <button class="btn btn-sm btn-waste" onclick="quickWaste('cer_150202','pieno',1)">+ Pieno</button>
+          <button class="btn btn-sm btn-waste" onclick="openRifiutiModal('cer_150202')">+ Pieno</button>
           <button class="btn btn-sm btn-ok" onclick="openSmaltimentoModal('cer_150202')" ${w150202.pieni===0?'disabled':''}>✓ Smaltito</button>
         </div>
       </div>
@@ -4372,7 +4840,7 @@ function renderRifiuti(){
         ${box(w180106.smaltiti,'Smaltite','var(--text2)')}
       </div>
       <div class="waste-btns">
-        <button class="btn btn-sm btn-waste" onclick="quickWaste('cer_180106','pieno',1)">+ Piena</button>
+        <button class="btn btn-sm btn-waste" onclick="openRifiutiModal('cer_180106')">+ Piena</button>
         <button class="btn btn-sm btn-ok" onclick="openSmaltimentoModal('cer_180106')" ${w180106.pieni===0?'disabled':''}>✓ Smaltita</button>
         <button class="btn btn-sm" onclick="quickWaste('cer_180106','vuoto',1)">+ Tanica</button>
         <button class="btn btn-sm btn-danger" onclick="quickWaste('cer_180106','vuoto_sub',1)" ${vuoti180106===0?'disabled':''}>− Tanica</button>
@@ -4418,28 +4886,84 @@ async function quickWaste(tipo,azione,qty){
   toast(labels[azione]||'Aggiornato',azione==='smaltito'?'success':'info');
 }
 
-function openRifiutiModal(){
-  ['r-tipo','r-qty','r-data-smalt','r-note'].forEach(id=>{ const e=document.getElementById(id); if(e) e.value=id==='r-qty'?1:''; });
+// F7 — cerKey opzionale: chiamato da una card, il CER è già scelto e la
+// selezione non viene nemmeno mostrata.
+function openRifiutiModal(cerKey){
+  ['r-qty','r-data-smalt','r-note','r-kg','r-formulario','r-dest'].forEach(id=>{
+    const e=document.getElementById(id); if(e) e.value = (id==='r-qty') ? 1 : '';
+  });
+  document.getElementById('r-tipo').value='';
+  document.getElementById('r-cer-chosen').style.display='none';
+  document.getElementById('r-cer-pick').style.display='';
+  document.getElementById('r-step-qty').style.display='none';
+  document.getElementById('r-save-btn').disabled=true;
+  document.querySelectorAll('.r-cer-opt').forEach(b=>b.classList.remove('active'));
+  rifRitirato(false);
   document.getElementById('modal-rifiuti').classList.add('open');
+  if(cerKey) rifScegliCer(cerKey);
+}
+function rifScegliCer(key){
+  const cfg = (typeof WASTE_CONFIG!=='undefined') ? WASTE_CONFIG[key] : null;
+  document.getElementById('r-tipo').value=key;
+  document.getElementById('r-cer-ico').textContent   = cfg?.icon || '🗑';
+  document.getElementById('r-cer-label').textContent = cfg?.label || key;
+  document.getElementById('r-cer-sub').textContent   = cfg?.sub || '';
+  document.getElementById('r-cer-chosen').style.display='flex';
+  document.getElementById('r-cer-pick').style.display='none';
+  document.getElementById('r-step-qty').style.display='';
+  document.getElementById('r-save-btn').disabled=false;
+}
+function rifCambiaCer(){
+  document.getElementById('r-tipo').value='';
+  document.getElementById('r-cer-chosen').style.display='none';
+  document.getElementById('r-cer-pick').style.display='';
+  document.getElementById('r-step-qty').style.display='none';
+  document.getElementById('r-save-btn').disabled=true;
+}
+function rifStep(d){
+  const el=document.getElementById('r-qty');
+  el.value=Math.max(1,(parseInt(el.value,10)||1)+d);
+}
+function rifRitirato(si){
+  document.getElementById('r-rit-si')?.classList.toggle('active', si);
+  document.getElementById('r-rit-no')?.classList.toggle('active', !si);
+  const box=document.getElementById('r-ritiro-box');
+  if(box) box.style.display = si ? '' : 'none';
+  if(si){
+    const d=document.getElementById('r-data-smalt');
+    if(d && !d.value) d.value=new Date().toISOString().slice(0,10);
+  } else {
+    const d=document.getElementById('r-data-smalt'); if(d) d.value='';
+  }
 }
 async function saveRifiuto(){
   const tipo=document.getElementById('r-tipo').value;
   const qty=parseInt(document.getElementById('r-qty').value)||1;
   const note=document.getElementById('r-note').value;
   const dataSmalt=document.getElementById('r-data-smalt').value;
+  const kg=parseFloat(document.getElementById('r-kg')?.value)||0;
+  const formulario=(document.getElementById('r-formulario')?.value||'').trim();
+  const dest=(document.getElementById('r-dest')?.value||'').trim();
   if(!tipo){ toast('Seleziona il tipo di rifiuto','error'); return; }
+  const ritirato = document.getElementById('r-rit-si')?.classList.contains('active');
+  if(ritirato && !dataSmalt){ toast('Inserisci la data di ritiro','error'); return; }
   _takeSnapshot('Registra rifiuto '+tipo); // FIX [UNDO]
   const W=loadW(); W[tipo].pieni+=qty;
-  // if already disposed
+  // già ritirati: escono subito dal deposito (logica invariata)
   if(dataSmalt){ W[tipo].pieni=Math.max(0,W[tipo].pieni-qty); W[tipo].smaltiti+=qty; }
   await saveW(W);
   const wl=loadWL();
-  wl.unshift({id:genId(),ts:new Date().toISOString(),tipo,azione:dataSmalt?'smaltito':'pieno',qty,note});
+  wl.unshift({id:genId(),ts:new Date().toISOString(),tipo,
+    azione:dataSmalt?'smaltito':'pieno',qty,note,
+    kg:kg||undefined, formulario:formulario||undefined, destinatario:dest||undefined,
+    data_smaltimento:dataSmalt||undefined});
   saveWL(wl);
   closeModal('modal-rifiuti');
   renderRifiuti();
   if(currentView==='dashboard') renderDashboard();
-  toast('Rifiuto registrato','success');
+  const cfg=(typeof WASTE_CONFIG!=='undefined')?WASTE_CONFIG[tipo]:null;
+  toast((ritirato?'Smaltimento registrato — ':'Contenitori in deposito — ')+
+        qty+' × '+(cfg?.label||tipo),'success');
 }
 
 // ─── SMALTIMENTO con quantità (kg) e data ───
@@ -4753,17 +5277,19 @@ function confirmDDT(){
 let codeReader=null, lastCode=null, matchedProd=null;
 // ── SCARICO MODAL ──
 let scaricaSelectedId=null;
+let _scNomi=[];
 function openScaricaModal(){
   lastCode=null; matchedProd=null; scaricaSelectedId=null;
-  // Popola select prodotti raggruppati per nome
-  const sel=document.getElementById('sc-prod');
-  sel.innerHTML='<option value="">Seleziona prodotto…</option>';
   const prods=loadP();
   // Mostra solo i prodotti che hanno almeno un lotto con flaconi residui (qty>0).
   // I lotti esauriti (anche con bidone aperto) restano in magazzino ma NON qui.
   const _haDispon = (nome) => loadP().filter(p=>p.nome===nome).some(p => (parseInt(p.qty,10)||0) > 0);
-  const nomi=[...new Set(prods.map(p=>p.nome))].filter(_haDispon).sort();
-  nomi.forEach(n=>{ const o=document.createElement('option'); o.value=n; o.textContent=n; sel.appendChild(o); });
+  _scNomi=[...new Set(prods.map(p=>p.nome))].filter(_haDispon).sort();
+  document.getElementById('sc-prod').value='';
+  document.getElementById('sc-prod-search').value='';
+  document.getElementById('sc-prod-chosen').style.display='none';
+  scFiltraProdotti();
+  setTimeout(()=>document.getElementById('sc-prod-search')?.focus(), 120);
   document.getElementById('sc-lotti-wrap').style.display='none';
   document.getElementById('sc-man-qty-wrap').style.display='none';
   document.getElementById('sc-man-confirm-btn').style.display='none';
@@ -4771,6 +5297,82 @@ function openScaricaModal(){
   scaricaTab('manuale');
   document.getElementById('modal-scarica').classList.add('open');
 }
+// F3 — lista prodotti filtrata: sostituisce la select nativa
+function scFiltraProdotti(){
+  const q=(document.getElementById('sc-prod-search').value||'').toLowerCase().trim();
+  const list=document.getElementById('sc-prod-list');
+  if(!list) return;
+  const match = q ? _scNomi.filter(n=>n.toLowerCase().includes(q)) : _scNomi;
+  if(!match.length){
+    list.innerHTML='<div style="font-size:13px;color:var(--text3);padding:10px">Nessun prodotto disponibile con questo nome</div>';
+    return;
+  }
+  list.innerHTML=match.slice(0,40).map(n=>{
+    const tot=loadP().filter(x=>x.nome===n).reduce((s,x)=>s+(parseInt(x.qty,10)||0),0);
+    return '<button type="button" class="sc-prod-opt" onclick="scScegliProdotto(this.dataset.n)" data-n="'+
+      n.replace(/"/g,'&quot;')+'" style="display:flex;width:100%;align-items:center;gap:10px;min-height:48px;'+
+      'padding:8px 12px;margin-bottom:5px;background:var(--surface);border:1px solid var(--border);'+
+      'border-radius:var(--r);font-family:inherit;font-size:14px;text-align:left;cursor:pointer">'+
+      '<span style="flex:1;font-weight:500">'+n+'</span>'+
+      '<span style="font-family:\'DM Mono\',monospace;color:var(--text3);font-size:13px">'+tot+'</span></button>';
+  }).join('');
+  _scHi=0; _scEvidenzia();
+}
+// F3 — navigazione da tastiera sulla lista filtrata
+let _scHi=0;
+function _scEvidenzia(){
+  const opts=[...document.querySelectorAll('#sc-prod-list .sc-prod-opt')];
+  if(!opts.length) return;
+  _scHi=Math.max(0, Math.min(_scHi, opts.length-1));
+  opts.forEach((o,i)=>{
+    const on = i===_scHi;
+    o.style.background = on ? 'var(--blue-bg)' : 'var(--surface)';
+    o.style.borderColor = on ? 'var(--blue)'   : 'var(--border)';
+  });
+  // mantiene la voce evidenziata dentro il riquadro visibile
+  const box=opts[_scHi].parentElement, el=opts[_scHi];
+  if(el.offsetTop < box.scrollTop) box.scrollTop = el.offsetTop;
+  else if(el.offsetTop + el.offsetHeight > box.scrollTop + box.clientHeight)
+    box.scrollTop = el.offsetTop + el.offsetHeight - box.clientHeight;
+}
+function scProdKeydown(e){
+  const opts=[...document.querySelectorAll('#sc-prod-list .sc-prod-opt')];
+  if(e.key==='ArrowDown'){ e.preventDefault(); _scHi++; _scEvidenzia(); }
+  else if(e.key==='ArrowUp'){ e.preventDefault(); _scHi--; _scEvidenzia(); }
+  else if(e.key==='Enter'){
+    e.preventDefault();
+    if(opts[_scHi]) scScegliProdotto(opts[_scHi].dataset.n);
+  }
+  else if(e.key==='Escape'){
+    e.preventDefault();
+    document.getElementById('sc-prod-search').value='';
+    scFiltraProdotti();
+  }
+}
+
+function scScegliProdotto(nome){
+  document.getElementById('sc-prod').value=nome;
+  document.getElementById('sc-prod-chosen-name').textContent=nome;
+  document.getElementById('sc-prod-chosen').style.display='flex';
+  document.getElementById('sc-prod-list').innerHTML='';
+  document.getElementById('sc-prod-search').value='';
+  document.getElementById('sc-prod-search').closest('.fg').style.display='none';
+  scaricaSelProd();
+}
+function scResetProdotto(){
+  document.getElementById('sc-prod').value='';
+  document.getElementById('sc-prod-chosen').style.display='none';
+  document.getElementById('sc-prod-search').closest('.fg').style.display='';
+  document.getElementById('sc-prod-search').focus();
+  scFiltraProdotti();
+  scaricaSelProd();
+}
+function scStepQty(d){
+  const el=document.getElementById('sc-man-qty');
+  const max=parseFloat(el.max)||Infinity;
+  el.value=Math.min(max, Math.max(1, (parseFloat(el.value)||1)+d));
+}
+
 function scaricaTab(tab){
   ['manuale','foto'].forEach(t=>{
     document.getElementById('sc-tab-'+t).classList.toggle('active',t===tab);
@@ -4794,7 +5396,15 @@ function scaricaSelProd(){
   const nome=document.getElementById('sc-prod').value;
   scaricaSelectedId=null;
   if(!nome){ document.getElementById('sc-lotti-wrap').style.display='none'; document.getElementById('sc-man-qty-wrap').style.display='none'; document.getElementById('sc-man-confirm-btn').style.display='none'; return; }
-  const prods=loadP().filter(p=>p.nome===nome).filter(p => (parseInt(p.qty,10)||0) > 0);
+  // F3 — ordine per scadenza crescente: il lotto da consumare prima sta in cima.
+  // I lotti senza scadenza vanno in fondo (non sono confrontabili).
+  const prods=loadP().filter(p=>p.nome===nome).filter(p => (parseInt(p.qty,10)||0) > 0)
+    .sort((a,b)=>{
+      if(!a.scadenza && !b.scadenza) return 0;
+      if(!a.scadenza) return 1;
+      if(!b.scadenza) return -1;
+      return String(a.scadenza).localeCompare(String(b.scadenza));
+    });
   const wrap=document.getElementById('sc-lotti-list');
   wrap.innerHTML='';
   if(!prods.length){
@@ -4804,10 +5414,12 @@ function scaricaSelProd(){
     document.getElementById('sc-man-confirm-btn').style.display='none';
     return;
   }
-  prods.forEach(p=>{
+  prods.forEach((p,i)=>{
     const div=document.createElement('div');
-    div.style.cssText='display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid var(--border);border-radius:6px;margin-bottom:5px;cursor:pointer;transition:all .12s';
-    div.innerHTML=`<span style="font-family:'DM Mono',monospace;font-weight:600">${p.lotto||'—'}</span><span style="color:var(--text3);font-size:12px">${p.scadenza?'Scad: '+fmtDate(p.scadenza):''}</span><span style="margin-left:auto;font-family:'DM Mono',monospace;color:var(--green);font-weight:700">${p.qty} ${p.unita||''}</span>`;
+    div.style.cssText='display:flex;align-items:center;gap:10px;min-height:52px;padding:10px 12px;border:1px solid var(--border);border-radius:6px;margin-bottom:6px;cursor:pointer;transition:all .12s;flex-wrap:wrap';
+    const consigliato = (i===0 && prods.length>1 && p.scadenza)
+      ? '<span class="badge bg-green" style="font-size:10px">Consigliato</span>' : '';
+    div.innerHTML=`<span style="font-family:'DM Mono',monospace;font-weight:600;font-size:15px">${p.lotto||'—'}</span>${consigliato}<span style="color:var(--text3);font-size:13px">${p.scadenza?'scade '+fmtDate(p.scadenza):'senza scadenza'}</span><span style="margin-left:auto;font-family:'DM Mono',monospace;color:var(--green);font-weight:700;font-size:15px">${p.qty} ${p.unita||''}</span>`;
     div.onclick=function(){
       document.querySelectorAll('#sc-lotti-list div').forEach(d=>{ d.style.background=''; d.style.borderColor='var(--border)'; });
       div.style.background='rgba(26,90,154,.08)'; div.style.borderColor='var(--accent2)';
@@ -4818,10 +5430,10 @@ function scaricaSelProd(){
       document.getElementById('sc-man-info').innerHTML=`<div style="font-size:12px;color:var(--text3)">Disponibili: <strong style="color:var(--green)">${p.qty}</strong> ${p.unita||''}</div>`;
     };
     wrap.appendChild(div);
+    // F3 — preseleziona il primo (scadenza più vicina): un tocco in meno nel caso tipico
+    if(i===0) setTimeout(()=>div.onclick(), 0);
   });
   document.getElementById('sc-lotti-wrap').style.display='';
-  document.getElementById('sc-man-qty-wrap').style.display='none';
-  document.getElementById('sc-man-confirm-btn').style.display='none';
 }
 // Helper: se il prodotto è tracciato a bidoni e ha un bidone aperto, lo smaltisce
 // e chiede se aprirne uno nuovo. Restituisce true se ha gestito il bidone.
@@ -4859,6 +5471,16 @@ async function _gestisciBidoneInScarico(prodId){
   return true;
 }
 
+// F5 — evidenzia per 1,6s la riga che l'azione ha appena modificato
+function flashRow(prodId){
+  const tr = document.getElementById('inv-row-'+prodId);
+  if(!tr) return;
+  tr.classList.remove('flash');
+  void tr.offsetWidth;               // forza il restart dell'animazione
+  tr.classList.add('flash');
+  setTimeout(()=>tr.classList.remove('flash'), 1800);
+}
+
 function confirmScaricaManuale(){
   if(!scaricaSelectedId){ toast('Seleziona un lotto','error'); return; }
   const qty=parseFloat(document.getElementById('sc-man-qty').value)||1;
@@ -4876,10 +5498,60 @@ function confirmScaricaManuale(){
     if(currentView==='dashboard') renderDashboard();
     if(currentView==='movimenti') renderMovimenti();
   });
-  toast('Scarico: '+p.nome+' −'+qty,'info');
+  const _lotto = p.lotto ? ' · lotto '+p.lotto : '';
+  toast('Scarico registrato — '+p.nome+_lotto+': '+(p.qty+qty)+' → '+p.qty,'success');
+  setTimeout(()=>flashRow(p.id), 120);
 }
 function closeScaricaModal(){ if(codeReader){ try{codeReader.reset();}catch(e){} codeReader=null; } closeModal('modal-scarica'); }
 function openBarcodeModal(){ openScaricaModal(); }
+// ─── F2 · Scanner lotto/scadenza per la ricezione ───
+// Usa la parseGS1 già presente nel file (una sola implementazione).
+// Scanner generico: riempie due campi (lotto, scadenza) e si chiude da solo.
+let _gs1Reader=null, _gs1Target=null;
+function openGS1Scan(lottoSel, scadSel){
+  _gs1Target={lotto:lottoSel, scad:scadSel};
+  document.getElementById('gs1-status').textContent='Inquadra il codice sulla confezione…';
+  document.getElementById('gs1-result').style.display='none';
+  document.getElementById('modal-gs1').classList.add('open');
+  _startGS1();
+}
+async function _startGS1(){
+  try{
+    const ZXing=window.ZXing; if(!ZXing) throw new Error('no ZXing');
+    _gs1Reader=new ZXing.BrowserMultiFormatReader();
+    const devs=await ZXing.BrowserCodeReader.listVideoInputDevices();
+    const devId=devs.length>1?devs[devs.length-1].deviceId:undefined;
+    _gs1Reader.decodeFromVideoDevice(devId,'gs1-video',(result)=>{
+      if(!result) return;
+      const raw=result.getText();
+      const parsed=parseGS1(raw) || {};
+      // barcode non GS1: il codice letto è il lotto
+      if(!parsed.lotto && !parsed.scadenza) parsed.lotto=String(raw).trim();
+      const box=document.getElementById('gs1-result');
+      box.style.display='';
+      box.innerHTML='<div class="scan-result-box"><span class="sr-label">Lotto</span>'+
+        '<span class="sr-val">'+(parsed.lotto||'—')+'</span></div>'+
+        '<div class="scan-result-box" style="margin-top:6px"><span class="sr-label">Scadenza</span>'+
+        '<span class="sr-val">'+(parsed.scadenza?fmtDate(parsed.scadenza):'non nel codice')+'</span></div>';
+      if(_gs1Target){
+        const l=document.querySelector(_gs1Target.lotto);
+        const s=document.querySelector(_gs1Target.scad);
+        if(l && parsed.lotto) l.value=parsed.lotto;
+        if(s && parsed.scadenza) s.value=parsed.scadenza;
+      }
+      document.getElementById('gs1-status').textContent='✓ Letto — campi compilati';
+      setTimeout(closeGS1Scan, 900);
+    });
+  }catch(e){
+    document.getElementById('gs1-status').textContent='Fotocamera non disponibile: inserisci i dati a mano.';
+  }
+}
+function closeGS1Scan(){
+  if(_gs1Reader){ try{_gs1Reader.reset();}catch(e){} _gs1Reader=null; }
+  _gs1Target=null;
+  closeModal('modal-gs1');
+}
+
 async function startBarcodeScanner(){
   try{
     const ZXing=window.ZXing; if(!ZXing) throw new Error('no ZXing');
@@ -4957,7 +5629,14 @@ function parseGS1(code){
       }
       else if(ai2==='17'&&code.length-i>=8){ // scadenza AAMMGG
         const raw=code.substr(i+2,6);
-        const y='20'+raw.slice(0,2), m=raw.slice(2,4), d=raw.slice(4,6);
+        const y='20'+raw.slice(0,2), m=raw.slice(2,4);
+        let d=raw.slice(4,6);
+        // GS1: giorno "00" significa "fine mese". Lasciarlo produce una data
+        // non valida (es. 2026-05-00) che rompe i confronti di scadenza.
+        if(d==='00'){
+          const last=new Date(Number(y), Number(m), 0).getDate();
+          d=String(last).padStart(2,'0');
+        }
         result.scadenza=y+'-'+m+'-'+d; i+=8;
       }
       else if(ai2==='11'&&code.length-i>=8){ i+=8; } // data produzione
@@ -5600,7 +6279,7 @@ function renderProcessatore(){
 
   document.getElementById('proc-stats').textContent=`${loadProc().length} cicli totali`;
   const el=document.getElementById('proc-list');
-  if(!arr.length){ el.innerHTML='<div class="empty"><div class="e-ico">⚗️</div><p>Nessun ciclo registrato</p></div>'; return; }
+  if(!arr.length){ el.innerHTML='<div class="empty"><div class="e-ico">⚗️</div><p>Nessun ciclo registrato</p><p class="empty-hint">I cicli del processatore compaiono qui in ordine di data.</p><button class="empty-cta" onclick="openNuovoProcessatore()">＋ Registra ciclo</button></div>'; return; }
 
   const protoLabel={standard:'Standard notturno',rapido:'Rapido',biopsie:'Biopsie',altro:'Altro'};
 
@@ -5734,6 +6413,7 @@ function openNuovoColoratore(preset){
   renderColorCasiList('ist');
   renderColorCasiList('cit');
   renderColorCasiList('pap');
+  if(typeof colorSetTipo==='function') colorSetTipo('ist');
   // Reagenti fissi
   _preloadReagentiColor(preset);
   document.getElementById('modal-coloratore').classList.add('open');
@@ -5778,6 +6458,66 @@ window.addCasoSingoloColor = function(tipo) {
   if (!colorCasiList[tipo].includes(v)) colorCasiList[tipo].push(v);
   if (inp) inp.value = '';
   renderColorCasiList(tipo);
+};
+
+// F8 — cambia il tipo attivo: i tre blocchi restano nel DOM (gli id che le
+// funzioni esistenti cercano), cambia solo quale è visibile.
+const _CT_BORDER = { ist:'var(--blue)', cit:'var(--teal)', pap:'var(--purple)' };
+let colorTipoAttivo = 'ist';
+function colorSetTipo(t){
+  colorTipoAttivo = t;
+  ['ist','cit','pap'].forEach(x=>{
+    const blk=document.getElementById('color-blk-'+x);
+    if(blk) blk.style.display = (x===t) ? '' : 'none';
+    document.getElementById('ct-chip-'+x)?.classList.toggle('active', x===t);
+  });
+  const box=document.getElementById('color-casi-box');
+  if(box) box.style.borderLeftColor = _CT_BORDER[t];
+  _colorSyncChipCounts();
+  _colorCheckDup(t);
+  document.getElementById('color-'+t+'-from')?.focus();
+}
+function _colorSyncChipCounts(){
+  ['ist','cit','pap'].forEach(x=>{
+    const el=document.getElementById('ct-n-'+x);
+    if(el) el.textContent=(colorCasiList[x]||[]).length;
+  });
+}
+
+// F8 — un caso già presente in un altro ciclo verrebbe contato due volte
+// su statistiche e TAT: lo segnalo prima del salvataggio.
+function _colorCheckDup(tipo){
+  const box=document.getElementById('color-dup-warn');
+  if(!box) return;
+  const editId=document.getElementById('color-edit-id')?.value||'';
+  const mieiCasi=new Set(colorCasiList[tipo]||[]);
+  if(!mieiCasi.size){ box.style.display='none'; return; }
+  const trovati=[];
+  try{
+    (loadColoratore()||[]).forEach(reg=>{
+      if(String(reg.id)===String(editId)) return;
+      const altri=[].concat(reg['casi_'+tipo]||[]);
+      altri.forEach(c=>{
+        if(mieiCasi.has(c)) trovati.push({caso:c, data:reg.data});
+      });
+    });
+  }catch(e){ box.style.display='none'; return; }
+  if(!trovati.length){ box.style.display='none'; return; }
+  box.style.display='';
+  box.innerHTML='<div style="padding:10px 12px;background:var(--yellow-bg);border:1px solid var(--yellow-bd);'+
+    'border-radius:var(--r);font-size:13px;color:var(--text2)">'+
+    '<b style="color:var(--yellow)">⚠ '+trovati.length+' cas'+(trovati.length===1?'o':'i')+
+    ' già presenti in un altro ciclo</b><div style="margin-top:4px;font-family:\'DM Mono\',monospace;font-size:12.5px">'+
+    trovati.slice(0,6).map(t=>t.caso+' — ciclo del '+(t.data?fmtDate(t.data):'?')).join('<br>')+
+    (trovati.length>6?'<br>…':'')+'</div></div>';
+}
+
+// estendo il render esistente senza riscriverlo
+const _renderColorCasiListBase = renderColorCasiList;
+renderColorCasiList = function(tipo){
+  _renderColorCasiListBase(tipo);
+  _colorSyncChipCounts();
+  _colorCheckDup(colorTipoAttivo);
 };
 
 window.removeCasoColor = function(tipo, i) {
@@ -6557,8 +7297,8 @@ async function saveArchivioOrdine(){
   if(!ord.fornitore){ toast('Inserisci almeno il fornitore','error'); return; }
   const ords=loadOrd(); ords.unshift(ord); await saveOrd(ords);
   closeModal('modal-archivio'); archStopCam();
-  if(currentView==='archivio') renderArchivio();
-  if(currentView==='ordini') renderOrdini();
+  if(_isArchTab()) renderArchivio();
+  else if(currentView==='ordini') renderOrdini();
   toast('Ordine salvato','success');
 }
 
@@ -6826,13 +7566,13 @@ function renderAllerte(){
     else if(daysUntil(p.scadenza)<=30) stati.push('<span class="badge bg-yellow">In scadenza</span>');
     return `<tr>
       <td><strong>${p.nome}</strong>${p.pos?`<br><small style="color:var(--text3)">📍${p.pos}</small>`:''}</td>
-      <td><span class="cat-badge">${CAT_ICON[p.cat]||'📌'} ${p.cat}</span></td>
-      <td style="color:var(--text2);font-size:12px">${p.fornitore||'—'}</td>
-      <td class="mono">${p.lotto||'—'}</td>
-      <td><span style="color:var(--${qStat(p)})">${p.qty}</span> <small style="color:var(--text3)">${p.unita||''}</small>${p.min?`<br><small style="color:var(--text3)">min: ${p.min}</small>`:''}</td>
-      <td>${scBadge(p.scadenza)}</td>
-      <td>${stati.join(' ')}</td>
-      <td><div style="display:flex;gap:4px">
+      <td data-lbl="Categoria"><span class="cat-badge">${CAT_ICON[p.cat]||'📌'} ${p.cat}</span></td>
+      <td style="color:var(--text2);font-size:12px" data-lbl="Fornitore">${p.fornitore||'—'}</td>
+      <td class="mono" data-lbl="Lotto">${p.lotto||'—'}</td>
+      <td data-lbl="Giacenza"><span style="color:var(--${qStat(p)})">${p.qty}</span> <small style="color:var(--text3)">${p.unita||''}</small>${p.min?`<br><small style="color:var(--text3)">min: ${p.min}</small>`:''}</td>
+      <td data-lbl="Scadenza">${scBadge(p.scadenza)}</td>
+      <td data-lbl="Stato">${stati.join(' ')}</td>
+      <td class="act-cell"><div style="display:flex;gap:4px">
         <button class="btn btn-sm btn-ok" onclick="precompileOrdine('${p.id}')">🛒 Ordina</button>
         <button class="btn btn-sm" onclick="openEditModal('${p.id}')">✎</button>
       </div></td>
@@ -7453,9 +8193,12 @@ function riceviParziale(id){
           <input type="number" class="recv-parz-qty" data-idx="${i}" value="${Math.max(0,restante)}" min="0" max="${restante}" style="width:70px;text-align:center" ${restante<=0?'disabled':''}>
         </div>
       </div>
-      <div style="display:flex;gap:6px;margin-top:6px" ${restante<=0?'style="display:none"':''}>
-        <input type="text" class="recv-parz-lotto" data-idx="${i}" placeholder="Lotto" style="flex:1;font-family:DM Mono,monospace;font-size:12px">
-        <input type="date" class="recv-parz-scad" data-idx="${i}" title="Scadenza" style="flex:1;font-size:12px">
+      <div style="gap:6px;margin-top:6px;display:${restante<=0?'none':'flex'}">
+        <input type="text" class="recv-parz-lotto" data-idx="${i}" placeholder="Lotto" style="flex:1;font-family:DM Mono,monospace">
+        <input type="date" class="recv-parz-scad" data-idx="${i}" title="Scadenza" style="flex:1">
+        <button type="button" class="btn" title="Leggi lotto e scadenza dal barcode"
+          style="min-width:44px;min-height:44px;padding:0;font-size:17px"
+          onclick="openGS1Scan('.recv-parz-lotto[data-idx=\'${i}\']','.recv-parz-scad[data-idx=\'${i}\']')">📷</button>
       </div>
     </div>`;
   }).join('');
@@ -7500,6 +8243,26 @@ function confirmRicezioneParziale(id){
   if(!o.ddtList) o.ddtList = [];
   const now = new Date().toISOString();
   const ddtEntry = { data: now, rif: ddt, righe: [] };
+
+  // F2 — controllo scadenze prima di scrivere: avvisa, non blocca.
+  const _senzaScad = [];
+  document.querySelectorAll('.recv-parz-qty').forEach(input=>{
+    const idx = parseInt(input.dataset.idx);
+    if((parseFloat(input.value)||0) <= 0) return;
+    const scadEl = document.querySelector('.recv-parz-scad[data-idx="'+idx+'"]');
+    const riga = o.righe[idx];
+    const cat = (prods.find(x=>x.id===riga?.prodId)||{}).cat || '';
+    const rilevante = !cat || ['Reagenti','IHC','Coloranti'].includes(cat);
+    if(rilevante && scadEl && !scadEl.value) _senzaScad.push(riga?.nome || 'riga '+(idx+1));
+  });
+  if(_senzaScad.length){
+    const msg = _senzaScad.length+' rig'+(_senzaScad.length===1?'a':'he')+
+      ' senza data di scadenza:\n\n· '+_senzaScad.slice(0,8).join('\n· ')+
+      (_senzaScad.length>8?'\n· …':'')+
+      '\n\nSenza scadenza questi lotti non compariranno nelle allerte. Registro comunque?';
+    if(!confirm(msg)){ _unlock(); return; }
+  }
+
   let haRicevuto = false;
   document.querySelectorAll('.recv-parz-qty').forEach(input=>{
     const idx = parseInt(input.dataset.idx);
@@ -7563,7 +8326,7 @@ function confirmRicezioneParziale(id){
     }
     if(currentView==='inventario') renderInv();
     if(currentView==='dashboard') renderDashboard();
-    if(currentView==='archivio') renderArchivio();
+    if(_isArchTab()) renderArchivio();
     toast(tuttoRicevuto ? '✅ Ordine completamente ricevuto' : '📦 Ricezione parziale registrata','success');
   };
   if(scanFile){
@@ -8482,7 +9245,7 @@ function renderBidoniProd(prodId) {
   const daysAgo = d => { if(!d) return ''; const days = Math.floor((Date.now() - new Date(d).getTime())/86400000); return days + 'gg fa'; };
   let html = `<table class="tbl" style="font-size:11px;margin:0">
     <thead><tr>
-      <th>Bidone</th><th>Lotto</th><th>Scadenza</th><th>Stato</th><th>Carico</th><th>Apertura</th><th style="text-align:right">Azioni</th>
+      <th>Flacone</th><th>Lotto</th><th>Scadenza</th><th>Stato</th><th>Carico</th><th>Apertura</th><th style="text-align:right">Azioni</th>
     </tr></thead><tbody>`;
   // Esiste già un aperto?
   const giàAperto = bidoni.some(b => b.stato === 'aperto');
@@ -10066,7 +10829,9 @@ function svgText(parent, x, y, txt, attrs){
 }
 
 // ─── Toast unificato: robusto (crea container se manca) + XSS-safe (textContent) ───
-function toast(msg, type='info', duration=3000){
+function toast(msg, type='info', duration){
+  // Le azioni che scrivono su giacenze/registri restano a video più a lungo (V1)
+  if(duration==null) duration = (type==='error'||type==='err') ? 6000 : (type==='success'||type==='ok') ? 5000 : 3000;
   let c = document.getElementById('toast-container');
   if(!c){ c = document.createElement('div'); c.id='toast-container'; c.className='toast-container'; document.body.appendChild(c); }
   const icons = {success:'✓', error:'✕', info:'ℹ', warn:'⚠'};
@@ -10129,8 +10894,11 @@ function _railClick(item){
   const dataView = item.dataset.view;
   if(!dataView) return;
   const targetView = _RAIL_VIEW_MAP[dataView] || dataView;
-  document.querySelectorAll('.rail-item').forEach(x => x.classList.remove('active'));
+  document.querySelectorAll('.rail-item,.tabbar-item').forEach(x => x.classList.remove('active'));
   item.classList.add('active');
+  // O1 — tiene allineata la controparte (rail ↔ tabbar) e chiude il foglio
+  document.querySelectorAll('[data-view="'+dataView+'"]').forEach(x => x.classList.add('active'));
+  if(typeof closeTabSheet === 'function') closeTabSheet();
   if(typeof showView === 'function'){
     showView(targetView);
   } else {
@@ -10139,6 +10907,202 @@ function _railClick(item){
     if(tgt) tgt.classList.add('active');
   }
 }
+
+// ─── O7 · FAB: una sola azione per vista, così non si cerca più il pulsante ───
+const _FAB_MAP = {
+  home:         null,
+  dashboard:    null,
+  campioni:     {ico:'＋', run:()=>openAddModal('Istologia')},
+  tracciabilita:{ico:'＋', run:()=>openAddModal('Istologia')},
+  processatore: {ico:'＋', run:()=>openNuovoProcessatore()},
+  coloratore:   {ico:'＋', run:()=>openNuovoColoratore()},
+  ihc:          {ico:'＋', run:()=>{ if(typeof openNuovaIHC==='function') openNuovaIHC(); }},
+  inventario:   {ico:'⬍', run:()=>openFabSheet()},
+  movimenti:    {ico:'⬍', run:()=>openFabSheet()},
+  allerte:      {ico:'⬍', run:()=>openFabSheet()},
+  bidoni:       {ico:'⬍', run:()=>openFabSheet()},
+  ordini:       {ico:'＋', run:()=>{
+                   const arch=document.getElementById('ord-panel-archivio');
+                   if(arch && arch.style.display!=='none' && typeof openOrdineArchivioModal==='function')
+                     openOrdineArchivioModal();
+                   else openOrdineModal();
+                 }},
+  rifiuti:      {ico:'＋', run:()=>{ if(typeof openRifiutiModal==='function') openRifiutiModal(); }},
+  schede:       null,
+  report:       null
+};
+function _syncFab(){
+  const fab=document.getElementById('fab'); if(!fab) return;
+  const cfg=_FAB_MAP[typeof currentView!=='undefined'?currentView:'home'];
+  fab.classList.toggle('hidden', !cfg);
+  if(cfg) fab.textContent=cfg.ico;
+}
+function fabAction(){
+  const cfg=_FAB_MAP[typeof currentView!=='undefined'?currentView:'home'];
+  if(cfg && typeof cfg.run==='function') cfg.run();
+}
+function openFabSheet(){
+  document.getElementById('fab-sheet')?.classList.add('open');
+  document.getElementById('fab-sheet-ov')?.classList.add('open');
+}
+function closeFabSheet(){
+  document.getElementById('fab-sheet')?.classList.remove('open');
+  document.getElementById('fab-sheet-ov')?.classList.remove('open');
+}
+document.addEventListener('DOMContentLoaded', ()=>setTimeout(_syncFab, 800));
+
+// ─── O6 · "Da sbrigare": aggrega i conteggi già disponibili e li rende cliccabili.
+//     Non calcola nulla di nuovo: rilegge gli stessi dati delle rispettive viste. ───
+function renderDashTodo(){
+  const el=document.getElementById('dash-todo');
+  if(!el) return;
+  const voci=[];
+  try{
+    const prods=(typeof loadP==='function')?loadP():[];
+    const sotto=prods.filter(p=>p.min>0&&p.qty<=p.min).length;
+    const esa=prods.filter(p=>p.qty<=0).length;
+    const scad=prods.filter(p=>{
+      const d=(typeof daysUntil==='function')?daysUntil(p.scadenza):null;
+      return d!==null&&d>=0&&d<=30;
+    }).length;
+    if(esa)   voci.push({n:esa,  lbl:'esauriti',              ico:'⛔', col:'red',    go:"showView('allerte')"});
+    if(sotto) voci.push({n:sotto,lbl:'sotto scorta',          ico:'📉', col:'yellow', go:"showView('allerte')"});
+    if(scad)  voci.push({n:scad, lbl:'in scadenza 30gg',      ico:'⏳', col:'orange', go:"showView('allerte')"});
+
+    if(typeof loadOrd==='function'){
+      const ords=loadOrd();
+      const daRic=ords.filter(o=>o.stato!=='ricevuto'&&o.stato!=='annullato').length;
+      if(daRic) voci.push({n:daRic,lbl:'ordini da ricevere',  ico:'📦', col:'blue',   go:"showView('ordini')"});
+    }
+    if(typeof loadIHC==='function'){
+      const ihc=loadIHC().filter(r=>r.stato!=='completata').length;
+      if(ihc)  voci.push({n:ihc,  lbl:'IHC da completare',    ico:'🔬', col:'purple', go:"showView('ihc')"});
+    }
+    if(typeof loadW==='function'){
+      const W=loadW();
+      const pieni=['cer_180103','cer_150110','cer_150202','cer_180106']
+        .reduce((a,k)=>a+(W[k]?.pieni||0),0);
+      if(pieni) voci.push({n:pieni,lbl:'bidoni pieni',        ico:'🗑', col:'teal',   go:"showView('rifiuti')"});
+    }
+  }catch(e){ /* la fascia è informativa: non deve mai bloccare la dashboard */ }
+
+  if(!voci.length){
+    el.innerHTML='<div class="home-empty" style="grid-column:1/-1">✅ Nulla in sospeso — scorte, ordini e rifiuti sono a posto.</div>';
+    return;
+  }
+  el.innerHTML=voci.map(v=>
+    '<button type="button" onclick="'+v.go+'" style="display:flex;align-items:center;gap:12px;'+
+    'min-height:66px;padding:12px 14px;background:var(--'+v.col+'-bg);border:1px solid var(--'+v.col+'-bd);'+
+    'border-radius:var(--r);cursor:pointer;font-family:inherit;text-align:left">'+
+    '<span style="font-size:21px">'+v.ico+'</span>'+
+    '<span style="flex:1">'+
+      '<span style="display:block;font-family:\'DM Mono\',monospace;font-size:23px;font-weight:500;'+
+      'line-height:1;color:var(--'+v.col+')">'+v.n+'</span>'+
+      '<span style="display:block;font-size:12.5px;color:var(--text2);margin-top:3px">'+v.lbl+'</span>'+
+    '</span></button>'
+  ).join('');
+}
+setInterval(renderDashTodo, 10000);
+document.addEventListener('DOMContentLoaded', ()=>setTimeout(renderDashTodo, 1400));
+
+// ─── O6 · Analisi in dashboard: aperta/chiusa, la scelta si ricorda ───
+function toggleDashAnalisi(){
+  const box=document.getElementById('dash-analisi');
+  const caret=document.getElementById('dash-analisi-caret');
+  if(!box) return;
+  const open = box.style.display==='none';
+  box.style.display = open ? '' : 'none';
+  if(caret) caret.textContent = open ? '▴' : '▾';
+  try{ localStorage.setItem('lupolab_dash_analisi', open?'1':'0'); }catch(e){}
+}
+document.addEventListener('DOMContentLoaded', ()=>{
+  try{
+    if(localStorage.getItem('lupolab_dash_analisi')==='1') toggleDashAnalisi();
+  }catch(e){}
+});
+
+// ─── V9 · Sottotitoli di pagina: rileggono i contatori già presenti in vista,
+//     così ogni schermata dice "dove sono e com'è la situazione". ───
+function _setSub(id, txt){ const el=document.getElementById(id); if(el) el.textContent=txt; }
+function _syncPageSubs(){
+  try{
+    const prods = (typeof loadP==='function') ? loadP() : [];
+    const scad30 = prods.filter(p=>{const d=(typeof daysUntil==='function')?daysUntil(p.scadenza):null;
+      return d!==null && d>=0 && d<=30}).length;
+    const sotto = prods.filter(p=>p.min>0 && p.qty<=p.min).length;
+    const esa   = prods.filter(p=>p.qty<=0).length;
+    _setSub('inv-sub', prods.length+' prodotti · '+sotto+' sotto scorta · '+scad30+' in scadenza 30gg');
+    _setSub('allerte-sub', esa+' esauriti · '+sotto+' sotto scorta · '+scad30+' in scadenza');
+
+    if(typeof loadCampioni==='function'){
+      const casi=loadCampioni();
+      const aperti=casi.filter(c=>c.stato && c.stato!=='chiuso' && c.stato!=='refertato').length;
+      _setSub('camp-sub', casi.length+' casi totali · '+aperti+' aperti');
+    }
+    if(typeof loadM==='function'){
+      const movs=loadM(), oggi=new Date().toISOString().slice(0,10);
+      const nOggi=movs.filter(m=>(m.ts||'').slice(0,10)===oggi).length;
+      _setSub('mov-sub', movs.length+' movimenti · '+nOggi+' oggi');
+    }
+    if(typeof loadOrd==='function'){
+      const ords=loadOrd();
+      const aperti=ords.filter(o=>o.stato!=='ricevuto'&&o.stato!=='annullato').length;
+      const parz=ords.filter(o=>o.stato==='parziale').length;
+      const sub=document.getElementById('ord-sub');
+      if(sub && sub.dataset.tab==='archivio')
+        _setSub('ord-sub', ords.filter(o=>o.stato==='ricevuto').length+' ordini ricevuti · '+ords.length+' in archivio');
+      else
+        _setSub('ord-sub', aperti+' in corso · '+parz+' parziali');
+    }
+    if(typeof loadIHC==='function'){
+      const ihc=loadIHC();
+      _setSub('ihc-sub', ihc.length+' richieste · '+ihc.filter(r=>r.stato!=='completata').length+' da completare');
+    }
+  }catch(e){ /* i sottotitoli sono decorativi: non devono mai bloccare il render */ }
+}
+setInterval(_syncPageSubs, 8000);
+document.addEventListener('DOMContentLoaded', ()=>setTimeout(_syncPageSubs, 1200));
+
+// ─── Header: segnala su quale lato la striscia azioni ha contenuto nascosto ───
+function _syncHdrScroll(){
+  const el=document.querySelector('.hdr-actions'); if(!el) return;
+  const max=el.scrollWidth-el.clientWidth;
+  el.classList.toggle('sc-l', el.scrollLeft>2);
+  el.classList.toggle('sc-r', max>2 && el.scrollLeft<max-2);
+}
+document.addEventListener('DOMContentLoaded',()=>{
+  const el=document.querySelector('.hdr-actions');
+  if(el) el.addEventListener('scroll',_syncHdrScroll,{passive:true});
+  window.addEventListener('resize',_syncHdrScroll);
+  _syncHdrScroll();
+});
+
+// ─── O1 · foglio "Altre sezioni" della tabbar ───
+function toggleTabSheet(){
+  const s=document.getElementById('tab-sheet'), o=document.getElementById('tab-sheet-ov');
+  if(!s||!o) return;
+  const open=s.classList.toggle('open');
+  o.classList.toggle('open', open);
+  document.querySelector('.tabbar-more')?.classList.toggle('active', open);
+}
+function closeTabSheet(){
+  document.getElementById('tab-sheet')?.classList.remove('open');
+  document.getElementById('tab-sheet-ov')?.classList.remove('open');
+  document.querySelector('.tabbar-more')?.classList.remove('active');
+}
+// il badge "Altro" somma le allerte e gli ordini da ricevere, che nella tabbar
+// stanno dietro al foglio: replica i due badge già calcolati per la rail
+function _syncTabBadge(){
+  const el=document.getElementById('tab-badge-more'); if(!el) return;
+  const n=['rail-badge-allerte','rail-badge-ordini'].reduce((s,id)=>{
+    const b=document.getElementById(id);
+    return s + (b && !b.classList.contains('hidden') ? (parseInt(b.textContent,10)||0) : 0);
+  },0);
+  el.textContent=n>99?'99+':n;
+  el.classList.toggle('hidden', n===0);
+}
+setInterval(_syncTabBadge, 4000);
+document.addEventListener('DOMContentLoaded', ()=>setTimeout(_syncTabBadge,1500));
 
 // ─── FC menu toggle ───
 function _initFCMenu(){
@@ -10413,7 +11377,7 @@ function renderDashboardPreview(){
             const pct = tot > 0 ? Math.round(ric/tot*100) : 0;
             const nP = (o.righe||[]).length;
             const barCol = pct >= 100 ? 'var(--green)' : (pct > 0 ? 'var(--orange)' : 'var(--blue)');
-            return `<div style="background:var(--surface2,#f8fafc);border:1px solid var(--border);border-radius:6px;padding:6px 8px;cursor:pointer" onclick="event.stopPropagation();showView('ordini');setTimeout(()=>{if(typeof selectOrdineDetail==='function')selectOrdineDetail('${o.id}')},80)">
+            return `<div style="background:var(--sunken);border:1px solid var(--border);border-radius:6px;padding:6px 8px;cursor:pointer" onclick="event.stopPropagation();showView('ordini');setTimeout(()=>{if(typeof selectOrdineDetail==='function')selectOrdineDetail('${o.id}')},80)">
               <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px">
                 <span style="font-family:'DM Mono',monospace;font-size:11px;font-weight:700;color:var(--accent)">${esc(o.num||'—')}</span>
                 <span class="badge ${statoBg[o.stato]||''}" style="font-size:8px">${statoLabel[o.stato]||o.stato}</span>
@@ -10599,7 +11563,7 @@ function renderHomeProcTable() {
     })
     .slice(0,5);
   if (!proc.length) {
-    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text3);padding:14px;font-style:italic">Nessun ciclo registrato</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="4"><div class="home-empty">Nessun ciclo registrato</div></td></tr>';
     return;
   }
   const statoBadge = (r) => {
@@ -10638,7 +11602,7 @@ function renderHomeColorTable() {
   if (!tbody || !loader) return;
   const reg = loader();
   if (!reg.length) {
-    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--text3);padding:14px;font-style:italic">Nessun ciclo registrato</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="8"><div class="home-empty">Nessun ciclo registrato</div></td></tr>';
     return;
   }
   // Helper count casi (espande range + fallback cicli)
@@ -10743,7 +11707,7 @@ window.renderBidoniView = function() {
   if (statsEl) statsEl.textContent = `${stats.tot} totali · 🔓 ${stats.aperti} aperti · 🔒 ${stats.chiusi} chiusi · ✕ ${stats.smaltiti} smaltiti`;
 
   const countEl = document.getElementById('bidoni-count');
-  if (countEl) countEl.textContent = visible.length + ' bidon' + (visible.length === 1 ? 'e' : 'i');
+  if (countEl) countEl.textContent = visible.length + ' flacon' + (visible.length === 1 ? 'e' : 'i');
 
   const tbody = document.getElementById('bidoni-tbody');
   if (!tbody) return;
@@ -10798,11 +11762,11 @@ window.showView = function(v){
   const tgt = document.getElementById('view-' + v);
   if(tgt) tgt.classList.add('active');
   // sync rail
-  document.querySelectorAll('.rail-item').forEach(x => x.classList.remove('active'));
+  if(typeof _syncFab === 'function') setTimeout(_syncFab, 0);
+  document.querySelectorAll('.rail-item,.tabbar-item').forEach(x => x.classList.remove('active'));
   const railMap = {dashboard:'home', tracciabilita:'campioni', archivio:'arch-ordini'};
   const railV = railMap[v] || v;
-  const railEl = document.querySelector('.rail-item[data-view="' + railV + '"]');
-  if(railEl) railEl.classList.add('active');
+  document.querySelectorAll('[data-view="' + railV + '"]').forEach(el => el.classList.add('active'));
   // currentView per logica
   if(typeof currentView !== 'undefined'){ currentView = v; }
   // render specifico
@@ -10816,7 +11780,7 @@ window.showView = function(v){
     else if(v === 'movimenti' && typeof renderMovimenti === 'function') renderMovimenti();
     else if(v === 'allerte' && typeof renderAllerte === 'function') renderAllerte();
     else if(v === 'ordini' && typeof renderOrdini === 'function') renderOrdini();
-    else if(v === 'archivio' && typeof renderArchivio === 'function') renderArchivio();
+    else if((v === 'archivio' || v === 'arch-ordini') && typeof renderArchivio === 'function') renderArchivio();
     else if(v === 'schede' && typeof renderSchede === 'function') renderSchede();
     else if(v === 'rifiuti' && typeof renderRifiuti === 'function') renderRifiuti();
     else if(v === 'report' && typeof renderReport === 'function') renderReport();
@@ -11154,8 +12118,8 @@ function renderOrdiniPreview(){
   });
 
   if(!ords.length){
-    list.innerHTML = '<div class="empty-state"><div class="ico">📦</div><div>Nessun ordine</div></div>';
-    document.getElementById('ordine-detail').innerHTML = '<div class="empty-state"><div class="ico">👈</div><div>Seleziona un ordine</div></div>';
+    list.innerHTML = '<div class="empty-state"><div class="ico">📦</div><p>Nessun ordine</p><p class="empty-hint">Crea il primo ordine fornitore per tracciarne la ricezione.</p><button class="empty-cta" onclick="openOrdineModal()">＋ Nuovo ordine</button></div>';
+    document.getElementById('ordine-detail').innerHTML = '<div class="empty-state"><div class="ico">📄</div><p>Nessun ordine selezionato</p><p class="empty-hint">Tocca un ordine nell’elenco per vederne le righe e registrarne la ricezione.</p></div>';
     return;
   }
   const statoBadge = {
@@ -11374,9 +12338,12 @@ function _riceviPanel(id){
           <input type="number" class="recv-parz-qty" data-idx="${i}" value="${restante}" min="0" max="${r.qty}" style="width:70px;text-align:center;font-family:DM Mono,monospace;font-weight:600" ${restante<=0?'disabled':''}>
         </div>
       </div>
-      <div style="display:flex;gap:6px;margin-top:6px" ${restante<=0?'style="display:none"':''}>
-        <input type="text" class="recv-parz-lotto" data-idx="${i}" placeholder="Lotto" style="flex:1;font-family:DM Mono,monospace;font-size:12px">
-        <input type="date" class="recv-parz-scad" data-idx="${i}" title="Scadenza" style="flex:1;font-size:12px">
+      <div style="gap:6px;margin-top:6px;display:${restante<=0?'none':'flex'}">
+        <input type="text" class="recv-parz-lotto" data-idx="${i}" placeholder="Lotto" style="flex:1;font-family:DM Mono,monospace">
+        <input type="date" class="recv-parz-scad" data-idx="${i}" title="Scadenza" style="flex:1">
+        <button type="button" class="btn" title="Leggi lotto e scadenza dal barcode"
+          style="min-width:44px;min-height:44px;padding:0;font-size:17px"
+          onclick="openGS1Scan('.recv-parz-lotto[data-idx=\'${i}\']','.recv-parz-scad[data-idx=\'${i}\']')">📷</button>
       </div>
     </div>`;
   }).join('');
@@ -12062,7 +13029,7 @@ document.addEventListener('DOMContentLoaded', () => {
   _initModalOverlay();
 
   // 5. Rail click handlers (con dual mapping)
-  document.querySelectorAll('.rail-item[data-view]').forEach(item => {
+  document.querySelectorAll('.rail-item[data-view],.tabbar-item[data-view]').forEach(item => {
     item.addEventListener('click', () => _railClick(item));
   });
 
