@@ -7532,6 +7532,7 @@ function setAllerteFilter(f, btn){
 function _aggregaAllerte(){
   const prods = (typeof loadP==='function') ? loadP() : [];
   const SOGLIA_SCAD = 30;
+  const MIN_DEFAULT = 2; // se un prodotto non ha una scorta minima impostata, si usa 2
   const gruppi = {};
   prods.forEach(p => {
     const key = (p.nome||'').trim().toLowerCase();
@@ -7553,8 +7554,10 @@ function _aggregaAllerte(){
   });
   const list = Object.values(gruppi);
   list.forEach(g => {
+    const soglia = g.min > 0 ? g.min : MIN_DEFAULT;                // usa il minimo del prodotto, o 2 di default
+    g.sogliaUsata = soglia;
     g.esaurito = g.qtyTot <= 0;                                   // prodotto interamente esaurito
-    g.scorta   = g.qtyTot > 0 && g.min > 0 && g.qtyTot <= g.min;  // scorta totale sotto il minimo
+    g.scorta   = g.qtyTot > 0 && g.qtyTot <= soglia;             // scorta totale sotto la soglia (min o default 2)
     g.inScad   = g.prossimaScad !== null && g.prossimaScad <= SOGLIA_SCAD; // scadenza futura imminente
     g.allerta  = g.esaurito || g.scorta || g.inScad;
   });
@@ -7602,7 +7605,7 @@ function renderAllerte(){
       <td data-lbl="Categoria"><span class="cat-badge">${(typeof CAT_ICON!=='undefined'&&CAT_ICON[g.cat])||'📌'} ${g.cat||'—'}</span></td>
       <td style="color:var(--text2);font-size:12px" data-lbl="Fornitore">${g.fornitore||'—'}</td>
       <td class="mono" data-lbl="Lotti">${g.lotti||0}</td>
-      <td style="text-align:center" data-lbl="Giacenza tot / Min"><span style="color:var(--${qColor})">${g.qtyTot}</span> <small style="color:var(--text3)">${g.unita||''}</small>${g.min?`<br><small style="color:var(--text3)">min: ${g.min}</small>`:''}</td>
+      <td style="text-align:center" data-lbl="Giacenza tot / Min"><span style="color:var(--${qColor})">${g.qtyTot}</span> <small style="color:var(--text3)">${g.unita||''}</small><br><small style="color:var(--text3)">min: ${g.sogliaUsata}${g.min>0?'':' (default)'}</small></td>
       <td data-lbl="Prossima scadenza">${scadCol}</td>
       <td data-lbl="Stato">${stati.join(' ')}</td>
       <td class="act-cell"><div style="display:flex;gap:4px">
