@@ -885,16 +885,6 @@ input[type=number]{font-size:16px}
         <div id="dash-case-result" style="margin-top:8px"></div>
       </div>
 
-      <!-- ══ O6 · DA SBRIGARE — conteggi cliccabili, ognuno porta dove si agisce ══ -->
-      <div style="margin-bottom:24px">
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
-          <div style="font-family:'Libre Baskerville',serif;font-size:16px;font-weight:700;color:var(--accent)">Da sbrigare</div>
-          <div style="flex:1;height:1px;background:var(--border)"></div>
-          <span style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em">Adesso</span>
-        </div>
-        <div id="dash-todo" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px"></div>
-      </div>
-
       <!-- WIDGET STATO CASI (3 stati a larghezza uguale) -->
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:18px">
         <div onclick="mostraCasiPerStato('aperto')" style="cursor:pointer;display:flex;align-items:center;justify-content:center;gap:9px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:10px 14px">
@@ -1545,7 +1535,6 @@ input[type=number]{font-size:16px}
         <button class="f-btn active" onclick="setAllerteFilter('all',this)">Tutti</button>
         <button class="f-btn" onclick="setAllerteFilter('esauriti',this)">🔴 Esauriti</button>
         <button class="f-btn" onclick="setAllerteFilter('critici',this)">🟡 Scorta bassa</button>
-        <button class="f-btn" onclick="setAllerteFilter('scaduti',this)">💀 Scaduti</button>
         <button class="f-btn" onclick="setAllerteFilter('inscadenza',this)">⏰ In scadenza (30gg)</button>
       </div>
       <div class="card">
@@ -1556,9 +1545,9 @@ input[type=number]{font-size:16px}
               <th>Prodotto</th>
               <th>Categoria</th>
               <th>Fornitore</th>
-              <th>Lotto</th>
-              <th style="text-align:center">Qtà / Min</th>
-              <th>Scadenza</th>
+              <th style="text-align:center">Lotti</th>
+              <th style="text-align:center">Giacenza tot / Min</th>
+              <th>Prossima scadenza</th>
               <th>Stato</th>
               <th style="text-align:right">Azione</th>
             </tr></thead>
@@ -7537,44 +7526,88 @@ function setAllerteFilter(f, btn){
   btn.classList.add('active');
   renderAllerte();
 }
+// Aggrega le allerte PER PRODOTTO (somma i lotti). Ignora il rumore:
+// - non conta i singoli lotti vuoti (guarda la giacenza TOTALE del prodotto)
+// - non considera le scadenze passate (solo la prossima scadenza FUTURA tra i lotti con giacenza)
+function _aggregaAllerte(){
+  const prods = (typeof loadP==='function') ? loadP() : [];
+  const SOGLIA_SCAD = 30;
+  const gruppi = {};
+  prods.forEach(p => {
+    const key = (p.nome||'').trim().toLowerCase();
+    if(!key) return;
+    let g = gruppi[key];
+    if(!g){
+      g = gruppi[key] = { nome:p.nome, cat:p.cat, fornitore:p.fornitore, unita:p.unita, pos:p.pos,
+                          qtyTot:0, min:0, lotti:0, prossimaScad:null, prossimaScadDate:null, prossimaScadLotto:null, id:p.id };
+    }
+    const q = parseFloat(p.qty)||0;
+    g.qtyTot += q;
+    g.min = Math.max(g.min, parseInt(p.min,10)||0); // min rappresentativo del prodotto
+    if(q > 0){ g.lotti++; g.id = p.id; }            // preferisci come riferimento un lotto con giacenza
+    const d = (typeof daysUntil==='function') ? daysUntil(p.scadenza) : null;
+    // Solo lotti con giacenza e scadenza FUTURA (ignora scaduti e lotti vuoti)
+    if(q > 0 && p.scadenza && d!==null && d>=0 && (g.prossimaScad===null || d < g.prossimaScad)){
+      g.prossimaScad = d; g.prossimaScadDate = p.scadenza; g.prossimaScadLotto = p.lotto;
+    }
+  });
+  const list = Object.values(gruppi);
+  list.forEach(g => {
+    g.esaurito = g.qtyTot <= 0;                                   // prodotto interamente esaurito
+    g.scorta   = g.qtyTot > 0 && g.min > 0 && g.qtyTot <= g.min;  // scorta totale sotto il minimo
+    g.inScad   = g.prossimaScad !== null && g.prossimaScad <= SOGLIA_SCAD; // scadenza futura imminente
+    g.allerta  = g.esaurito || g.scorta || g.inScad;
+  });
+  return list;
+}
+
 function renderAllerte(){
   if(!document.getElementById('allerte-tbody')) return;
-  let prods = loadP();
-  const esauriti   = p => p.qty <= 0;
-  const critici    = p => p.min > 0 && p.qty > 0 && p.qty <= p.min;
-  const scaduti    = p => daysUntil(p.scadenza) < 0;
-  const inscadenza = p => { const d=daysUntil(p.scadenza); return d>=0 && d<=30; };
+  const list = _aggregaAllerte();
 
   let filtered;
-  if(allerteFilter==='esauriti')    filtered = prods.filter(esauriti);
-  else if(allerteFilter==='critici') filtered = prods.filter(critici);
-  else if(allerteFilter==='scaduti') filtered = prods.filter(scaduti);
-  else if(allerteFilter==='inscadenza') filtered = prods.filter(inscadenza);
-  else filtered = prods.filter(p => esauriti(p)||critici(p)||scaduti(p)||inscadenza(p));
+  if(allerteFilter==='esauriti')        filtered = list.filter(g=>g.esaurito);
+  else if(allerteFilter==='critici')    filtered = list.filter(g=>g.scorta);
+  else if(allerteFilter==='inscadenza') filtered = list.filter(g=>g.inScad);
+  else                                  filtered = list.filter(g=>g.allerta);
 
-  document.getElementById('allerte-count').textContent = filtered.length + ' prodotto/i';
+  // Ordina: esauriti → scorta bassa → scadenze imminenti (le più vicine prima)
+  const rank = g => g.esaurito ? 0 : g.scorta ? 1 : 2;
+  filtered.sort((a,b) => (rank(a)-rank(b)) || ((a.prossimaScad??9999)-(b.prossimaScad??9999)));
+
+  const cnt = document.getElementById('allerte-count');
+  if(cnt) cnt.textContent = filtered.length + ' prodotto/i';
+  const sub = document.getElementById('allerte-sub');
+  if(sub){
+    const nE=list.filter(g=>g.esaurito).length, nS=list.filter(g=>g.scorta).length, nSc=list.filter(g=>g.inScad).length;
+    sub.textContent = `${nE} esauriti · ${nS} sotto scorta · ${nSc} in scadenza (30gg)`;
+  }
+
   const tb = document.getElementById('allerte-tbody');
   if(!filtered.length){
-    tb.innerHTML = `<tr><td colspan="8"><div class="empty"><div class="e-ico">✅</div><p>Nessuna allerta attiva</p></div></td></tr>`;
+    tb.innerHTML = `<tr><td colspan="8"><div class="empty"><div class="e-ico">✅</div><p>Nessuna allerta — scorte e scadenze a posto</p></div></td></tr>`;
     return;
   }
-  tb.innerHTML = filtered.map(p => {
+  tb.innerHTML = filtered.map(g => {
     const stati = [];
-    if(p.qty<=0) stati.push('<span class="badge bg-red">Esaurito</span>');
-    else if(p.min>0&&p.qty<=p.min) stati.push('<span class="badge bg-yellow">Scorta bassa</span>');
-    if(daysUntil(p.scadenza)<0) stati.push('<span class="badge bg-red">Scaduto</span>');
-    else if(daysUntil(p.scadenza)<=30) stati.push('<span class="badge bg-yellow">In scadenza</span>');
+    if(g.esaurito) stati.push('<span class="badge bg-red">Esaurito</span>');
+    else if(g.scorta) stati.push('<span class="badge bg-yellow">Scorta bassa</span>');
+    if(g.inScad) stati.push('<span class="badge bg-yellow">In scadenza</span>');
+    const scadCol = (g.prossimaScad!==null)
+      ? `${(typeof scBadge==='function')?scBadge(g.prossimaScadDate):g.prossimaScadDate}${g.prossimaScadLotto?`<br><small style="color:var(--text3)">lotto ${g.prossimaScadLotto}</small>`:''}`
+      : '<span style="color:var(--text3)">—</span>';
+    const qColor = g.esaurito ? 'red' : (g.scorta ? 'yellow' : 'text2');
     return `<tr>
-      <td><strong>${p.nome}</strong>${p.pos?`<br><small style="color:var(--text3)">📍${p.pos}</small>`:''}</td>
-      <td data-lbl="Categoria"><span class="cat-badge">${CAT_ICON[p.cat]||'📌'} ${p.cat}</span></td>
-      <td style="color:var(--text2);font-size:12px" data-lbl="Fornitore">${p.fornitore||'—'}</td>
-      <td class="mono" data-lbl="Lotto">${p.lotto||'—'}</td>
-      <td data-lbl="Giacenza"><span style="color:var(--${qStat(p)})">${p.qty}</span> <small style="color:var(--text3)">${p.unita||''}</small>${p.min?`<br><small style="color:var(--text3)">min: ${p.min}</small>`:''}</td>
-      <td data-lbl="Scadenza">${scBadge(p.scadenza)}</td>
+      <td><strong>${g.nome}</strong>${g.pos?`<br><small style="color:var(--text3)">📍${g.pos}</small>`:''}</td>
+      <td data-lbl="Categoria"><span class="cat-badge">${(typeof CAT_ICON!=='undefined'&&CAT_ICON[g.cat])||'📌'} ${g.cat||'—'}</span></td>
+      <td style="color:var(--text2);font-size:12px" data-lbl="Fornitore">${g.fornitore||'—'}</td>
+      <td class="mono" data-lbl="Lotti">${g.lotti||0}</td>
+      <td style="text-align:center" data-lbl="Giacenza tot / Min"><span style="color:var(--${qColor})">${g.qtyTot}</span> <small style="color:var(--text3)">${g.unita||''}</small>${g.min?`<br><small style="color:var(--text3)">min: ${g.min}</small>`:''}</td>
+      <td data-lbl="Prossima scadenza">${scadCol}</td>
       <td data-lbl="Stato">${stati.join(' ')}</td>
       <td class="act-cell"><div style="display:flex;gap:4px">
-        <button class="btn btn-sm btn-ok" onclick="precompileOrdine('${p.id}')">🛒 Ordina</button>
-        <button class="btn btn-sm" onclick="openEditModal('${p.id}')">✎</button>
+        <button class="btn btn-sm btn-ok" onclick="precompileOrdine('${g.id}')">🛒 Ordina</button>
+        <button class="btn btn-sm" onclick="openEditModal('${g.id}')">✎</button>
       </div></td>
     </tr>`;
   }).join('');
@@ -10951,20 +10984,20 @@ function closeFabSheet(){
 }
 document.addEventListener('DOMContentLoaded', ()=>setTimeout(_syncFab, 800));
 
-// ─── O6 · "Da sbrigare": aggrega i conteggi già disponibili e li rende cliccabili.
-//     Non calcola nulla di nuovo: rilegge gli stessi dati delle rispettive viste. ───
+// ─── "Da sbrigare": RIMOSSO dalla home (duplicava KPI e vista Allerte).
+//     La funzione resta come no-op per non rompere eventuali chiamate residue. ───
 function renderDashTodo(){
+  return; // fascia rimossa dalla dashboard
+  /* eslint-disable no-unreachable */
   const el=document.getElementById('dash-todo');
   if(!el) return;
   const voci=[];
   try{
-    const prods=(typeof loadP==='function')?loadP():[];
-    const sotto=prods.filter(p=>p.min>0&&p.qty<=p.min).length;
-    const esa=prods.filter(p=>p.qty<=0).length;
-    const scad=prods.filter(p=>{
-      const d=(typeof daysUntil==='function')?daysUntil(p.scadenza):null;
-      return d!==null&&d>=0&&d<=30;
-    }).length;
+    // Allerte aggregate PER PRODOTTO (coerenti con la vista Allerte): niente lotti vuoti singoli né scadenze passate
+    const ag = (typeof _aggregaAllerte==='function') ? _aggregaAllerte() : [];
+    const esa   = ag.filter(g=>g.esaurito).length;
+    const sotto = ag.filter(g=>g.scorta).length;
+    const scad  = ag.filter(g=>g.inScad).length;
     if(esa)   voci.push({n:esa,  lbl:'esauriti',              ico:'⛔', col:'red',    go:"showView('allerte')"});
     if(sotto) voci.push({n:sotto,lbl:'sotto scorta',          ico:'📉', col:'yellow', go:"showView('allerte')"});
     if(scad)  voci.push({n:scad, lbl:'in scadenza 30gg',      ico:'⏳', col:'orange', go:"showView('allerte')"});
@@ -11001,9 +11034,9 @@ function renderDashTodo(){
       '<span style="display:block;font-size:12.5px;color:var(--text2);margin-top:3px">'+v.lbl+'</span>'+
     '</span></button>'
   ).join('');
+  /* eslint-enable no-unreachable */
 }
-setInterval(renderDashTodo, 10000);
-document.addEventListener('DOMContentLoaded', ()=>setTimeout(renderDashTodo, 1400));
+// timer rimossi: la fascia "Da sbrigare" non è più nella home
 
 // ─── O6 · Analisi in dashboard: aperta/chiusa, la scelta si ricorda ───
 function toggleDashAnalisi(){
