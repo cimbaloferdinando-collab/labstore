@@ -6614,6 +6614,7 @@ async function saveColoratore(){
 const CONSUMO_GRUPPI_COLOR = [
   { id:'ee',  nome:'EE (Ematossilina-Eosina)', ico:'🧫', keys:['harris','mayer','ematoss','eosina','eosin'], vetri:['vetri_ist','vetri_cit'] },
   { id:'pap', nome:'PAP',                        ico:'📋', keys:['og6','orange g','ea50','ea 50'],            vetri:['vetri_pap'] },
+  { id:'com', nome:'Comuni (Alcol/Xilene)',      ico:'🧴', keys:['alcol','alcool','etanolo','xilene','xylene','sostituto xilene'], vetri:['vetri_ist','vetri_cit','vetri_pap'] },
 ];
 
 // Trova, per un gruppo di reagenti, i vetrini colorati dall'ultima sostituzione e dall'ultimo rabbocco.
@@ -6654,11 +6655,13 @@ function _fasciaConsumoColor(){
   if(!colorAsc.length) return '';
   const ee  = _consumoGruppo(colorAsc, CONSUMO_GRUPPI_COLOR[0].keys, CONSUMO_GRUPPI_COLOR[0].vetri);
   const pap = _consumoGruppo(colorAsc, CONSUMO_GRUPPI_COLOR[1].keys, CONSUMO_GRUPPI_COLOR[1].vetri);
+  const com = _consumoGruppo(colorAsc, CONSUMO_GRUPPI_COLOR[2].keys, CONSUMO_GRUPPI_COLOR[2].vetri);
   const blk = (lbl, info) => `<span style="white-space:nowrap">${lbl} <span title="dall'ultima sostituzione">🔄<b style="font-family:'DM Mono',monospace"> ${info.daSub}</b>${info.maiSub?' <span style="color:var(--orange)">(mai)</span>':''}</span> · <span title="dall'ultimo rabbocco">💧<b style="font-family:'DM Mono',monospace"> ${info.daRab}</b></span></span>`;
   return `<div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding:8px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;margin-bottom:10px;font-size:12px">
     <span style="font-weight:700;color:var(--text2);white-space:nowrap">📊 Vetri dall'ultimo intervento</span>
     ${blk('🧫 EE:', ee)}
     ${blk('📋 PAP:', pap)}
+    ${blk('🧴 Comuni:', com)}
     <span style="color:var(--text4);font-size:10px;margin-left:auto">🔄 sostituzione · 💧 rabbocco</span>
   </div>`;
 }
