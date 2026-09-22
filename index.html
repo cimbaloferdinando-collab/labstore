@@ -989,6 +989,7 @@ input[type=number]{font-size:16px}
 
         <div class="card">
           <div class="card-hdr"><span class="card-title">Processatore</span><span class="card-sub">Ultimi 5 cicli</span><button class="hbtn2 primary" style="font-size:10px;padding:3px 8px;margin-right:4px" onclick="event.stopPropagation();openNuovoProcessatore()">＋ Nuovo</button><span class="card-lnk" onclick="showView('processatore')">storico →</span></div>
+          <div id="home-proc-consumo"></div>
           <div style="overflow-x:auto" id="home-proc-wrap">
             <table class="tbl" style="font-size:10px">
               <thead><tr><th>Data partenza</th><th>Range casi ID</th><th>Casi</th><th>Biocassette</th><th>Stato reagenti</th></tr></thead>
@@ -999,6 +1000,7 @@ input[type=number]{font-size:16px}
 
         <div class="card">
           <div class="card-hdr"><span class="card-title">Coloratore</span><span class="card-sub">Ultimi 5 giorni</span><button class="hbtn2 primary" style="font-size:10px;padding:3px 8px;margin-right:4px" onclick="event.stopPropagation();openNuovoColoratore()">＋ Nuovo</button><span class="card-lnk" onclick="showView('coloratore')">storico →</span></div>
+          <div id="home-color-consumo"></div>
           <div style="overflow-x:auto" id="home-color-wrap">
             <table class="tbl" style="font-size:10px">
               <thead>
@@ -1229,6 +1231,9 @@ input[type=number]{font-size:16px}
         <div class="cnt-card"><div class="cnt-lbl">Ultimo ciclo</div><div class="cnt-val" style="color:var(--green);font-size:14px;line-height:1.4" id="proc-s-ultimo">—</div></div>
       </div>
 
+      <!-- Consumo dall'ultimo intervento -->
+      <div id="proc-consumo"></div>
+
       <!-- Lista cicli: il logic file usa proc-list (innerHTML pieno con tabella), io tengo una vista alternativa con tabella espandibile -->
       <div id="proc-list"></div>
     </div><!-- /view-processatore -->
@@ -1322,6 +1327,9 @@ input[type=number]{font-size:16px}
           </div>
         </div>
       </div>
+
+      <!-- Consumo dall'ultimo intervento -->
+      <div id="color-consumo"></div>
 
       <!-- Lista cicli (il logic file riempie color-list con la sua tabella) -->
       <div id="color-list"></div>
@@ -6051,14 +6059,14 @@ function _buildLottoOptions(def, presetProdId, presetLotto) {
     const bidoneAperto = (typeof getBidoneAperto === 'function') ? getBidoneAperto(p.id) : null;
     const counts = (typeof countBidoniProd === 'function') ? countBidoniProd(p.id) : null;
     let label = '';
+    const qDisp = parseInt(p.qty,10)||0; // giacenza reale (coerente con allerte/scarico/correzioni)
     if (bidoneAperto) {
       const dataAp = bidoneAperto.data_apertura
         ? new Date(bidoneAperto.data_apertura).toLocaleDateString('it-IT',{day:'2-digit',month:'2-digit',year:'2-digit'})
         : '—';
-      label = `🔓 APERTO — ${lotto}${scad?' scad '+scad:''}  (aperto ${dataAp})`;
+      label = `🔓 APERTO — ${lotto}${scad?' scad '+scad:''}  (aperto ${dataAp})${qDisp>0?' · '+qDisp+' in giac.':''}`;
     } else {
-      const nBid = counts ? counts.chiusi : (p.qty||0);
-      label = `${lotto}${scad?' scad '+scad:''}${nBid>1?' — '+nBid+' disponibili':''}`;
+      label = `${lotto}${scad?' scad '+scad:''}${qDisp>1?' — '+qDisp+' disponibili':''}`;
     }
     const selected = (p.id === presetProdId || lotto === presetLotto) ? 'selected' : '';
     opts += `<option value="${p.id}" ${selected}>${esc(label)}</option>`;
@@ -6245,6 +6253,7 @@ async function saveProcessatore(){
 }
 
 function renderProcessatore(){
+  { const c=document.getElementById('proc-consumo'); if(c && typeof _fasciaConsumoProc==='function') c.innerHTML = _fasciaConsumoProc(); }
   const _procList=document.getElementById('proc-list'); if(!_procList) return;
   let arr = loadProc();
   // Ordine cronologico decrescente: prima per data, poi per ora_inizio (se stessa data)
@@ -6596,7 +6605,79 @@ async function saveColoratore(){
   toast('Registro coloratore salvato','success');
 }
 
+// ═══════════════════════════════════════════════════════════════════════
+// CONSUMO REAGENTI — vetrini/cassette dall'ultima SOSTITUZIONE e dall'ultimo RABBOCCO
+// Serve a capire il "range massimo" di ogni reagente per sostituirlo in tempo.
+// ═══════════════════════════════════════════════════════════════════════
+
+// Gruppi del coloratore: EE (ematossilina-eosina → colora ist+cit) e PAP (→ colora pap)
+const CONSUMO_GRUPPI_COLOR = [
+  { id:'ee',  nome:'EE (Ematossilina-Eosina)', ico:'🧫', keys:['harris','mayer','ematoss','eosina','eosin'], vetri:['vetri_ist','vetri_cit'] },
+  { id:'pap', nome:'PAP',                        ico:'📋', keys:['og6','orange g','ea50','ea 50'],            vetri:['vetri_pap'] },
+];
+
+// Trova, per un gruppo di reagenti, i vetrini colorati dall'ultima sostituzione e dall'ultimo rabbocco.
+function _consumoGruppo(cicliAsc, keys, vetriFields){
+  const appartiene = (r) => { const n=(r.nome||r.prodNome||'').toLowerCase(); return keys.some(k=>n.includes(k)); };
+  const haStato = (ciclo, stato) => (ciclo.reagenti||[]).some(r => r.stato===stato && appartiene(r));
+  const vetriDi = (ciclo) => vetriFields.reduce((s,f)=>s+(parseInt(ciclo[f],10)||0),0);
+  let idxSub=-1, idxRab=-1;
+  cicliAsc.forEach((c,i)=>{ if(haStato(c,'cambiato'))idxSub=i; if(haStato(c,'rabboccato')||haStato(c,'rabocco'))idxRab=i; });
+  const sommaDa = (idx) => (idx<0 ? cicliAsc : cicliAsc.slice(idx)).reduce((s,c)=>s+vetriDi(c),0);
+  return {
+    daSub: sommaDa(idxSub), maiSub: idxSub<0, dataSub: idxSub>=0 ? cicliAsc[idxSub].data : null,
+    daRab: sommaDa(idxRab), maiRab: idxRab<0, dataRab: idxRab>=0 ? cicliAsc[idxRab].data : null,
+  };
+}
+
+// Processatore: cassette (blocchetti) dall'ultima sostituzione/rabbocco di qualsiasi reagente
+function _consumoProc(cicliAsc){
+  const haStato = (ciclo, stato) => (ciclo.reagenti||[]).some(r => r.stato===stato);
+  const cassDi = (ciclo) => parseInt(ciclo.n_biocassette,10) || parseInt(ciclo.n_cassette,10) || (ciclo.casi?.length||0);
+  let idxSub=-1, idxRab=-1;
+  cicliAsc.forEach((c,i)=>{ if(haStato(c,'cambiato'))idxSub=i; if(haStato(c,'rabboccato')||haStato(c,'rabocco'))idxRab=i; });
+  const sommaDa = (idx) => (idx<0 ? cicliAsc : cicliAsc.slice(idx)).reduce((s,c)=>s+cassDi(c),0);
+  return {
+    daSub: sommaDa(idxSub), maiSub: idxSub<0, dataSub: idxSub>=0 ? cicliAsc[idxSub].data : null,
+    daRab: sommaDa(idxRab), maiRab: idxRab<0, dataRab: idxRab>=0 ? cicliAsc[idxRab].data : null,
+  };
+}
+
+// Helper per la riga riepilogo consumo (usata dentro le tabelle home)
+function _fmtDataBreve(d){ return d ? new Date(d).toLocaleDateString('it-IT',{day:'2-digit',month:'2-digit'}) : '—'; }
+
+// Genera la fascia HTML "consumo dall'ultimo intervento" per il COLORATORE (EE + PAP).
+// Restituisce '' se non ci sono cicli.
+function _fasciaConsumoColor(){
+  if(typeof loadColoratore!=='function' || typeof _consumoGruppo!=='function' || typeof CONSUMO_GRUPPI_COLOR==='undefined') return '';
+  const colorAsc = loadColoratore().slice().sort((a,b)=> String(a.data||'').localeCompare(String(b.data||'')) || String(a.creato||'').localeCompare(String(b.creato||'')));
+  if(!colorAsc.length) return '';
+  const ee  = _consumoGruppo(colorAsc, CONSUMO_GRUPPI_COLOR[0].keys, CONSUMO_GRUPPI_COLOR[0].vetri);
+  const pap = _consumoGruppo(colorAsc, CONSUMO_GRUPPI_COLOR[1].keys, CONSUMO_GRUPPI_COLOR[1].vetri);
+  const blk = (lbl, info) => `<span style="white-space:nowrap">${lbl} <span title="dall'ultima sostituzione">🔄<b style="font-family:'DM Mono',monospace"> ${info.daSub}</b>${info.maiSub?' <span style="color:var(--orange)">(mai)</span>':''}</span> · <span title="dall'ultimo rabbocco">💧<b style="font-family:'DM Mono',monospace"> ${info.daRab}</b></span></span>`;
+  return `<div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding:8px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;margin-bottom:10px;font-size:12px">
+    <span style="font-weight:700;color:var(--text2);white-space:nowrap">📊 Vetri dall'ultimo intervento</span>
+    ${blk('🧫 EE:', ee)}
+    ${blk('📋 PAP:', pap)}
+    <span style="color:var(--text4);font-size:10px;margin-left:auto">🔄 sostituzione · 💧 rabbocco</span>
+  </div>`;
+}
+
+// Genera la fascia HTML "cassette dall'ultimo intervento" per il PROCESSATORE.
+function _fasciaConsumoProc(){
+  if(typeof loadProc!=='function' || typeof _consumoProc!=='function') return '';
+  const procAsc = loadProc().slice().sort((a,b)=> String(a.data||'').localeCompare(String(b.data||'')) || String(a.creato||'').localeCompare(String(b.creato||'')));
+  if(!procAsc.length) return '';
+  const ip = _consumoProc(procAsc);
+  return `<div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding:8px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;margin-bottom:10px;font-size:12px">
+    <span style="font-weight:700;color:var(--text2);white-space:nowrap">📊 Cassette dall'ultimo intervento</span>
+    <span style="white-space:nowrap" title="dall'ultima sostituzione">🔄 <b style="font-family:'DM Mono',monospace">${ip.daSub}</b> da sostituz.${ip.maiSub?' <span style="color:var(--orange)">(mai)</span>':' <span style="color:var(--text3)">('+_fmtDataBreve(ip.dataSub)+')</span>'}</span>
+    <span style="white-space:nowrap" title="dall'ultimo rabbocco">💧 <b style="font-family:'DM Mono',monospace">${ip.daRab}</b> da rabbocco${ip.maiRab?'':' <span style="color:var(--text3)">('+_fmtDataBreve(ip.dataRab)+')</span>'}</span>
+  </div>`;
+}
+
 function renderColoratore(){
+  { const c=document.getElementById('color-consumo'); if(c && typeof _fasciaConsumoColor==='function') c.innerHTML = _fasciaConsumoColor(); }
   const _colorList=document.getElementById('color-list'); if(!_colorList) return;
   let arr = loadColoratore();
   // Ordine cronologico decrescente per data
@@ -11589,6 +11670,7 @@ window.renderDashboard = renderDashboardPreview;
 // ─── Tabella processatore: ultimi 5 cicli ───
 function renderHomeProcTable() {
   const tbody = document.getElementById('home-proc-tbody');
+  { const c=document.getElementById('home-proc-consumo'); if(c && typeof _fasciaConsumoProc==='function') c.innerHTML = _fasciaConsumoProc(); }
   if (!tbody || typeof loadProc !== 'function') return;
   const proc = loadProc()
     .slice()
@@ -11634,6 +11716,7 @@ function renderHomeProcTable() {
 // ─── Tabella coloratore home: ultimi 5 giorni × 3 tipi colorazione ───
 function renderHomeColorTable() {
   const tbody = document.getElementById('home-color-tbody');
+  { const c=document.getElementById('home-color-consumo'); if(c && typeof _fasciaConsumoColor==='function') c.innerHTML = _fasciaConsumoColor(); }
   const loader = (typeof loadColoratore === 'function') ? loadColoratore : (typeof loadColor === 'function' ? loadColor : null);
   if (!tbody || !loader) return;
   const reg = loader();
