@@ -6624,10 +6624,13 @@ function _consumoGruppo(cicliAsc, keys, vetriFields){
   const vetriDi = (ciclo) => vetriFields.reduce((s,f)=>s+(parseInt(ciclo[f],10)||0),0);
   let idxSub=-1, idxRab=-1;
   cicliAsc.forEach((c,i)=>{ if(haStato(c,'cambiato'))idxSub=i; if(haStato(c,'rabboccato')||haStato(c,'rabocco'))idxRab=i; });
+  // Una sostituzione totale azzera ANCHE il conteggio rabbocco: il rabbocco parte dal
+  // ciclo più recente tra ultimo rabbocco e ultima sostituzione.
+  const idxRabEff = Math.max(idxRab, idxSub);
   const sommaDa = (idx) => (idx<0 ? cicliAsc : cicliAsc.slice(idx)).reduce((s,c)=>s+vetriDi(c),0);
   return {
     daSub: sommaDa(idxSub), maiSub: idxSub<0, dataSub: idxSub>=0 ? cicliAsc[idxSub].data : null,
-    daRab: sommaDa(idxRab), maiRab: idxRab<0, dataRab: idxRab>=0 ? cicliAsc[idxRab].data : null,
+    daRab: sommaDa(idxRabEff), maiRab: idxRabEff<0, dataRab: idxRabEff>=0 ? cicliAsc[idxRabEff].data : null,
   };
 }
 
@@ -6637,10 +6640,11 @@ function _consumoProc(cicliAsc){
   const cassDi = (ciclo) => parseInt(ciclo.n_biocassette,10) || parseInt(ciclo.n_cassette,10) || (ciclo.casi?.length||0);
   let idxSub=-1, idxRab=-1;
   cicliAsc.forEach((c,i)=>{ if(haStato(c,'cambiato'))idxSub=i; if(haStato(c,'rabboccato')||haStato(c,'rabocco'))idxRab=i; });
+  const idxRabEff = Math.max(idxRab, idxSub); // la sostituzione azzera anche il conteggio rabbocco
   const sommaDa = (idx) => (idx<0 ? cicliAsc : cicliAsc.slice(idx)).reduce((s,c)=>s+cassDi(c),0);
   return {
     daSub: sommaDa(idxSub), maiSub: idxSub<0, dataSub: idxSub>=0 ? cicliAsc[idxSub].data : null,
-    daRab: sommaDa(idxRab), maiRab: idxRab<0, dataRab: idxRab>=0 ? cicliAsc[idxRab].data : null,
+    daRab: sommaDa(idxRabEff), maiRab: idxRabEff<0, dataRab: idxRabEff>=0 ? cicliAsc[idxRabEff].data : null,
   };
 }
 
@@ -6662,6 +6666,7 @@ function _fasciaConsumoColor(){
     ${blk('🧫 EE:', ee)}
     ${blk('📋 PAP:', pap)}
     ${blk('🧴 Comuni:', com)}
+    <span style="color:var(--orange);font-size:10px;white-space:nowrap" title="I PAP privati passano nel coloratore ma non vengono registrati: il consumo reale è più alto di quanto indicato">⚠️ esclusi PAP privati</span>
     <span style="color:var(--text4);font-size:10px;margin-left:auto">🔄 sostituzione · 💧 rabbocco</span>
   </div>`;
 }
