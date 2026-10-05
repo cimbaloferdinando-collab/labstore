@@ -1387,6 +1387,7 @@ input[type=number]{font-size:16px}
           <button class="hbtn2 ok" onclick="apriCaricoScan()">⬆ Carico</button>
           <button class="hbtn2 warn" onclick="openModalScarica()">⬇ Scarico</button>
           <button class="hbtn2" onclick="openDDTModal()">📷 DDT</button>
+          <button class="hbtn2" onclick="openInvCheckModal()" title="Verifica periodica gestionale ↔ magazzino reale">📋 Verifica inventario</button>
           <button class="hbtn2 primary" onclick="openProductModal()">＋ Prodotto</button>
         </div>
       </div>
@@ -2030,6 +2031,7 @@ input[type=number]{font-size:16px}
     <div class="fc-item" onclick="openProductModal()"><span class="ico">＋</span>Nuovo prodotto</div>
     <div class="fc-item" onclick="openDDTModal()"><span class="ico">📷</span>Carica DDT</div>
     <div style="border-top:1px solid var(--border);margin:4px 0"></div>
+    <div class="fc-item" onclick="openInvCheckModal()"><span class="ico">📋</span>Verifica inventario</div>
     <div class="fc-item" onclick="exportCSVInventario()"><span class="ico">📊</span>Export CSV inventario</div>
     <div style="border-top:1px solid var(--border);margin:4px 0"></div>
     <!-- O8 — manutenzione dati: operazioni rare, fuori dai page header -->
@@ -2948,6 +2950,63 @@ input[type=number]{font-size:16px}
     <div class="modal-footer">
       <button class="btn" onclick="closeModal('modal-smaltimento')">Annulla</button>
       <button class="btn btn-ok" onclick="saveSmaltimento()">✓ Registra smaltimento</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════
+     MODAL: APERTURA BIDONE (chiesto ad ogni scarico di reagenti/coloranti)
+══════════════════════════════ -->
+<div class="modal-overlay" id="modal-apri-bidone">
+  <div class="modal" style="width:min(460px,96vw)">
+    <div class="modal-title" id="ab-title">🔓 Apertura bidone</div>
+    <div id="ab-aperto" style="margin-bottom:12px"></div>
+    <div class="fg" style="margin:0 0 10px">
+      <label>Lotto da aprire</label>
+      <select id="ab-lotto" onchange="_abSyncChiudi()" style="width:100%;padding:9px"></select>
+    </div>
+    <label id="ab-chiudi-wrap" style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;margin-bottom:4px">
+      <input type="checkbox" id="ab-chiudi" checked style="width:auto;margin:0">
+      <span>Segna come terminato il bidone aperto</span>
+    </label>
+    <div id="ab-chiudi-hint" style="font-size:11px;color:var(--text3);padding-left:24px"></div>
+    <div class="modal-footer">
+      <button class="btn" onclick="_abChiudi(false)">Salta</button>
+      <button class="btn btn-ok" onclick="_abChiudi(true)">✓ Conferma</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════
+     MODAL: VERIFICA INVENTARIO (controllo periodico gestionale ↔ reale)
+══════════════════════════════ -->
+<div class="modal-overlay" id="modal-inv-check">
+  <div class="modal" style="width:min(760px,96vw);max-width:96vw;max-height:92vh;display:flex;flex-direction:column">
+    <div class="modal-title">📋 Verifica inventario</div>
+    <div id="invc-head" style="font-size:12px;color:var(--text2);margin-bottom:8px"></div>
+    <div style="height:6px;background:var(--bg3);border-radius:4px;overflow:hidden;margin-bottom:10px"><div id="invc-bar" style="height:100%;width:0;background:var(--green);transition:width .2s"></div></div>
+    <div id="invc-tools" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">
+      <input type="text" id="invc-search" placeholder="🔍 Cerca prodotto o lotto…" oninput="renderInvCheck()" style="flex:1;min-width:160px;padding:8px">
+      <select id="invc-filtro" onchange="renderInvCheck()" style="padding:8px">
+        <option value="todo">Da verificare</option>
+        <option value="all">Tutti</option>
+        <option value="ok">Verificati OK</option>
+        <option value="diff">Con differenze</option>
+      </select>
+      <select id="invc-ordine" onchange="renderInvCheck()" style="padding:8px">
+        <option value="pos">Ordina per posizione</option>
+        <option value="nome">Ordina per nome</option>
+        <option value="cat">Ordina per categoria</option>
+      </select>
+      <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text2);cursor:pointer">
+        <input type="checkbox" id="invc-zero" onchange="renderInvCheck()" style="width:auto;margin:0"> lotti a zero
+      </label>
+    </div>
+    <div id="invc-body" style="flex:1;overflow-y:auto;min-height:200px"></div>
+    <div class="modal-footer" style="flex-wrap:wrap;gap:6px">
+      <button class="btn" onclick="closeModal('modal-inv-check')">Chiudi (salvato)</button>
+      <button class="btn btn-danger" onclick="ricominciaInvCheck()">↺ Ricomincia</button>
+      <button class="btn btn-primary" onclick="reportInvCheck()">📊 Report differenze</button>
     </div>
   </div>
 </div>
@@ -4866,8 +4925,9 @@ async function quickWaste(tipo,azione,qty){
   if(azione==='pieno'){
     w.pieni+=qty;
     const disp=getVuotiDisp(W,tipo);
-    if(disp>0){ setVuoti(W,tipo,disp-1); }
-    else { toast('⚠ Nessun contenitore vuoto disponibile — aggiornare le scorte','warn'); }
+    // FIX [RIFIUTI]: scala tanti vuoti quanti pieni registrati (prima sempre 1)
+    setVuoti(W,tipo,disp-qty);
+    if(disp<qty) toast('⚠ Contenitori vuoti insufficienti — aggiornare le scorte','warn');
   }
   else if(azione==='smaltito'){ if(w.pieni<qty){ toast('Non ci sono contenitori pieni da smaltire','error'); return; } w.pieni-=qty; w.smaltiti+=qty; }
   else if(azione==='vuoto'){ setVuoti(W,tipo,getVuotiDisp(W,tipo)+qty); }
@@ -4946,6 +5006,11 @@ async function saveRifiuto(){
   if(ritirato && !dataSmalt){ toast('Inserisci la data di ritiro','error'); return; }
   _takeSnapshot('Registra rifiuto '+tipo); // FIX [UNDO]
   const W=loadW(); W[tipo].pieni+=qty;
+  // FIX [RIFIUTI]: ogni contenitore riempito consuma un vuoto — dal pool comune per
+  // 150110*/150202*, dai propri per 180103*/180106*. Prima non veniva scalato nulla.
+  const _vuotiPrima = getVuotiDisp(W,tipo);
+  setVuoti(W, tipo, _vuotiPrima - qty);
+  const _vuotiMancanti = Math.max(0, qty - _vuotiPrima);
   // già ritirati: escono subito dal deposito (logica invariata)
   if(dataSmalt){ W[tipo].pieni=Math.max(0,W[tipo].pieni-qty); W[tipo].smaltiti+=qty; }
   await saveW(W);
@@ -4960,7 +5025,8 @@ async function saveRifiuto(){
   if(currentView==='dashboard') renderDashboard();
   const cfg=(typeof WASTE_CONFIG!=='undefined')?WASTE_CONFIG[tipo]:null;
   toast((ritirato?'Smaltimento registrato — ':'Contenitori in deposito — ')+
-        qty+' × '+(cfg?.label||tipo),'success');
+        qty+' × '+(cfg?.label||tipo)+' · vuoti rimasti: '+getVuotiDisp(W,tipo),'success');
+  if(_vuotiMancanti>0) setTimeout(()=>toast('⚠ Mancavano '+_vuotiMancanti+' contenitori vuoti: aggiorna le scorte dei vuoti','warn'),600);
 }
 
 // ─── SMALTIMENTO con quantità (kg) e data ───
@@ -5434,38 +5500,90 @@ function scaricaSelProd(){
 }
 // Helper: se il prodotto è tracciato a bidoni e ha un bidone aperto, lo smaltisce
 // e chiede se aprirne uno nuovo. Restituisce true se ha gestito il bidone.
+// FIX [MAGAZZINO]: ad ogni scarico di un reagente/colorante chiede se aprire un nuovo
+// bidone e di quale lotto. Il bidone aperto viene cercato su TUTTI i lotti dello stesso
+// prodotto (stesso nome) e segnato come terminato. Ritorna una Promise risolta alla
+// chiusura del modal (i chiamanti fanno .then per aggiornare la vista).
+let _abCtx = null;
+function _abFmt(d){ return d ? new Date(d).toLocaleDateString('it-IT',{day:'2-digit',month:'2-digit',year:'2-digit'}) : '—'; }
+
 async function _gestisciBidoneInScarico(prodId){
   if(typeof isBidoneTracked!=='function') return false;
-  const prod = loadP().find(p=>p.id===prodId);
+  const tutti = loadP();
+  const prod = tutti.find(p=>p.id===prodId);
   if(!prod || !isBidoneTracked(prod)) return false;
-  const aperto = getBidoneAperto(prodId);
-  if(!aperto) return false;
-  // Smaltisci il bidone aperto (segna chiusura/smaltimento)
-  const all = loadBidoni();
-  const idx = all.findIndex(b=>b.id===aperto.id);
-  if(idx>=0){
-    all[idx].stato='smaltito';
-    all[idx].data_smaltimento=new Date().toISOString().slice(0,10);
-    await saveBidoniArr(all);
-    toast('🔒 Bidone aperto (lotto '+(aperto.lotto||'—')+') segnato come terminato','info');
+  const nomeKey = (prod.nome||'').trim().toLowerCase();
+  const stessi = tutti.filter(p=>(p.nome||'').trim().toLowerCase()===nomeKey);
+  const idsStessi = new Set(stessi.map(p=>p.id));
+  const aperti = loadBidoni().filter(b=>idsStessi.has(b.prod_id) && b.stato==='aperto');
+
+  // Lotti apribili: quello appena scaricato + gli altri lotti con giacenza, per scadenza
+  const lotti = stessi.filter(p => p.id===prodId || (parseFloat(p.qty)||0) > 0)
+    .sort((a,b)=> (a.id===prodId?-1:b.id===prodId?1:0) || String(a.scadenza||'9999').localeCompare(String(b.scadenza||'9999')));
+
+  const titolo = document.getElementById('ab-title');
+  if(titolo) titolo.textContent = '🔓 Apertura bidone — ' + prod.nome;
+  const boxAp = document.getElementById('ab-aperto');
+  if(boxAp){
+    boxAp.innerHTML = aperti.length
+      ? aperti.map(b=>{
+          const gg = b.data_apertura ? Math.floor((Date.now()-new Date(b.data_apertura).getTime())/86400000) : null;
+          return `<div style="padding:9px 11px;background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;font-size:13px;margin-bottom:6px">
+            <b>Aperto ora:</b> lotto ${esc(b.lotto||'—')} · dal ${_abFmt(b.data_apertura)}${gg!==null?' ('+gg+' gg)':''}</div>`;
+        }).join('')
+      : `<div style="padding:9px 11px;background:var(--bg3);border-radius:8px;font-size:13px;color:var(--text2)">Nessun bidone aperto registrato per questo prodotto.</div>`;
   }
-  // Chiedi se aprire un nuovo bidone
-  const chiusi = loadBidoni().filter(b=>b.prod_id===prodId && b.stato==='chiuso')
-    .sort((a,b)=>{
-      const ds=(a.data_carico||'').localeCompare(b.data_carico||'');
-      if(ds!==0) return ds;
-      return (a.scadenza||'').localeCompare(b.scadenza||'');
-    });
-  if(chiusi.length){
-    const target = chiusi[0];
-    const msg = `Hai terminato il bidone aperto di ${prod.nome}.\n\nVuoi aprire un nuovo bidone?\n\nProssimo (FIFO):\nLotto: ${target.lotto||'—'}\nScadenza: ${target.scadenza?new Date(target.scadenza).toLocaleDateString('it-IT'):'—'}`;
-    if(confirm(msg)){
-      await openBidone(target.id);
+  const sel = document.getElementById('ab-lotto');
+  if(sel){
+    sel.innerHTML = lotti.map(p=>`<option value="${esc(p.id)}">${p.lotto?'Lotto '+esc(p.lotto):'Senza lotto'}${p.scadenza?' · scad '+_abFmt(p.scadenza):''} · giac. ${parseFloat(p.qty)||0}${p.id===prodId?' (appena scaricato)':''}</option>`).join('')
+      + `<option value="">— Non aprire nessun bidone —</option>`;
+    sel.value = prodId;
+  }
+  const wrapCh = document.getElementById('ab-chiudi-wrap');
+  if(wrapCh) wrapCh.style.display = aperti.length ? 'flex' : 'none';
+  _abCtx = { prodId, nome: prod.nome, apertiIds: aperti.map(b=>b.id), resolve: null };
+  _abSyncChiudi();
+  document.getElementById('modal-apri-bidone').classList.add('open');
+  return new Promise(res => { _abCtx.resolve = res; });
+}
+
+// Se si apre un nuovo bidone, il vecchio va per forza terminato (max 1 aperto per prodotto)
+function _abSyncChiudi(){
+  const sel=document.getElementById('ab-lotto'), ch=document.getElementById('ab-chiudi'), hint=document.getElementById('ab-chiudi-hint');
+  if(!sel||!ch) return;
+  if(sel.value){ ch.checked=true; ch.disabled=true; if(hint) hint.textContent='Automatico: apri un nuovo bidone, quello vecchio è finito.'; }
+  else { ch.disabled=false; if(hint) hint.textContent='Lascia la spunta se il bidone aperto è comunque finito.'; }
+}
+
+async function _abChiudi(conferma){
+  const ctx=_abCtx; _abCtx=null;
+  closeModal('modal-apri-bidone');
+  if(!ctx) return;
+  if(!conferma){ if(ctx.resolve) ctx.resolve(false); return; }
+  const scelto=(document.getElementById('ab-lotto')||{}).value||'';
+  const chiudi=!!(document.getElementById('ab-chiudi')||{}).checked || !!scelto;
+  const oggi=new Date().toISOString().slice(0,10);
+  const all=loadBidoni();
+  let nChiusi=0, apertoLotto=null;
+  if(chiudi){
+    all.forEach(b=>{ if(ctx.apertiIds.includes(b.id) && b.stato==='aperto'){ b.stato='smaltito'; b.data_smaltimento=oggi; nChiusi++; } });
+  }
+  if(scelto){
+    const p=loadP().find(x=>x.id===scelto);
+    // Usa un bidone 'chiuso' già esistente di quel lotto (FIFO), altrimenti lo crea già aperto
+    const chiusi=all.filter(b=>b.prod_id===scelto && b.stato==='chiuso').sort((a,b)=>String(a.data_carico||'').localeCompare(String(b.data_carico||'')));
+    if(chiusi.length){ chiusi[0].stato='aperto'; chiusi[0].data_apertura=oggi; }
+    else if(p){
+      all.push({ id:'bid_'+Date.now()+'_'+Math.random().toString(36).slice(2,8), prod_id:p.id,
+        lotto:p.lotto||'', scadenza:p.scadenza||'', ddt_id:null, data_carico:oggi,
+        stato:'aperto', data_apertura:oggi, data_smaltimento:null, note:'Aperto allo scarico' });
     }
-  } else {
-    toast('Nessun altro bidone chiuso disponibile da aprire','warn');
+    apertoLotto = p ? (p.lotto||'senza lotto') : '';
   }
-  return true;
+  if(nChiusi || scelto) await saveBidoniArr(all);
+  const parti=[]; if(nChiusi) parti.push('🔒 bidone terminato'); if(scelto) parti.push('🔓 aperto lotto '+apertoLotto);
+  if(parti.length) toast(ctx.nome+': '+parti.join(' · '),'success');
+  if(ctx.resolve) ctx.resolve(true);
 }
 
 // F5 — evidenzia per 1,6s la riga che l'azione ha appena modificato
@@ -5490,11 +5608,14 @@ function confirmScaricaManuale(){
   const movs=loadM(); movs.unshift({id:genId(),ts:new Date().toISOString(),tipo:'scarico',prod:p.nome,prodId:p.id,qty,lotto:p.lotto||'',note:note||'Scarico manuale'}); saveM(movs);
   closeScaricaModal();
   // Gestione bidone aperto (smaltimento + eventuale apertura nuovo)
-  _gestisciBidoneInScarico(p.id).then(()=>{
+  // Aggiorna subito la vista (lo scarico è già salvato), poi di nuovo dopo la scelta del bidone
+  const _refreshScarico = ()=>{
     if(currentView==='inventario') renderInv();
     if(currentView==='dashboard') renderDashboard();
     if(currentView==='movimenti') renderMovimenti();
-  });
+  };
+  _refreshScarico();
+  _gestisciBidoneInScarico(p.id).then(_refreshScarico);
   const _lotto = p.lotto ? ' · lotto '+p.lotto : '';
   toast('Scarico registrato — '+p.nome+_lotto+': '+(p.qty+qty)+' → '+p.qty,'success');
   setTimeout(()=>flashRow(p.id), 120);
@@ -5597,11 +5718,14 @@ function confirmBarcodeScario(){
   p.qty-=qty; saveP(prods);
   const movs=loadM(); movs.unshift({id:genId(),ts:new Date().toISOString(),tipo:'scarico',prod:p.nome,prodId:p.id,qty,lotto:p.lotto||'',note:document.getElementById('bc-note').value||'Scarico barcode'}); saveM(movs);
   closeBarcodeModal();
-  _gestisciBidoneInScarico(p.id).then(()=>{
+  // Aggiorna subito la vista (lo scarico è già salvato), poi di nuovo dopo la scelta del bidone
+  const _refreshScarico = ()=>{
     if(currentView==='inventario') renderInv();
     if(currentView==='dashboard') renderDashboard();
     if(currentView==='movimenti') renderMovimenti();
-  });
+  };
+  _refreshScarico();
+  _gestisciBidoneInScarico(p.id).then(_refreshScarico);
   toast(`Scarico: ${p.nome} −${qty}`,'info');
 }
 function addFromBarcode(){ closeBarcodeModal(); document.getElementById('f-barcode').value=lastCode||''; openAddModal(); }
@@ -7949,6 +8073,199 @@ let _fixDoppioniGruppi = [];
 // ═══════════════════════════════════════════════════════════════
 // CORREGGI GIACENZE MANUALMENTE (rimette a posto quantità gonfiate)
 // ═══════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════
+// VERIFICA INVENTARIO — controllo periodico gestionale ↔ magazzino reale
+// Bozza salvata in locale (si può fare in più giorni). Le correzioni finali
+// diventano movimenti "Rettifica inventario" (tracciabili).
+// ═══════════════════════════════════════════════════════════════
+const LS_INV_CHECK = 'ls_inv_check';       // bozza in corso
+const LS_INV_CHECK_LOG = 'ls_inv_check_log'; // storico verifiche concluse
+
+function _invcBozza(){
+  let b = _getCache(LS_INV_CHECK, 'null');
+  if(!b || typeof b !== 'object' || !b.righe){
+    b = { iniziata: new Date().toISOString(), righe: {} };
+    _setCache(LS_INV_CHECK, b);
+  }
+  return b;
+}
+function _invcSalva(b){ _setCache(LS_INV_CHECK, b); }
+
+window.openInvCheckModal = function(){
+  _invcBozza();
+  const s=document.getElementById('invc-search'); if(s) s.value='';
+  renderInvCheck();
+  document.getElementById('modal-inv-check').classList.add('open');
+};
+
+function _invcLista(){
+  const inclZero = (document.getElementById('invc-zero')||{}).checked;
+  return loadP().filter(p => inclZero || (parseFloat(p.qty)||0) > 0);
+}
+
+function _invcStatoRiga(p, r){
+  if(!r) return 'todo';
+  return r.stato;
+}
+
+function _invcProgress(){
+  const b=_invcBozza(), lista=_invcLista();
+  let ok=0, diff=0;
+  lista.forEach(p => { const r=b.righe[p.id]; if(r){ if(r.stato==='ok') ok++; else diff++; } });
+  const tot=lista.length, fatti=ok+diff;
+  const head=document.getElementById('invc-head');
+  if(head){
+    const dIn = new Date(b.iniziata).toLocaleDateString('it-IT',{day:'2-digit',month:'2-digit',year:'numeric'});
+    head.innerHTML = `Iniziata il <b>${dIn}</b> · <b>${fatti}/${tot}</b> verificati · <span style="color:var(--green)">✓ ${ok} OK</span> · <span style="color:var(--red)">≠ ${diff} differenze</span>`;
+  }
+  const bar=document.getElementById('invc-bar'); if(bar) bar.style.width = (tot? Math.round(fatti/tot*100):0)+'%';
+}
+
+window.renderInvCheck = function(){
+  const body=document.getElementById('invc-body'); if(!body) return;
+  const b=_invcBozza();
+  const q=((document.getElementById('invc-search')||{}).value||'').toLowerCase().trim();
+  const filtro=(document.getElementById('invc-filtro')||{}).value||'todo';
+  const ordine=(document.getElementById('invc-ordine')||{}).value||'pos';
+  let lista=_invcLista();
+  if(q) lista=lista.filter(p=>(p.nome||'').toLowerCase().includes(q)||(p.lotto||'').toLowerCase().includes(q));
+  lista=lista.filter(p=>{ const st=_invcStatoRiga(p,b.righe[p.id]); return filtro==='all'||st===filtro; });
+  const cmp=(a,b2)=>String(a||'').localeCompare(String(b2||''),'it');
+  lista.sort((a,c)=> ordine==='pos' ? (cmp(a.pos||'~',c.pos||'~')||cmp(a.nome,c.nome)||cmp(a.lotto,c.lotto))
+                   : ordine==='cat' ? (cmp(a.cat,c.cat)||cmp(a.nome,c.nome)||cmp(a.lotto,c.lotto))
+                   : (cmp(a.nome,c.nome)||cmp(a.lotto,c.lotto)));
+  if(!lista.length){
+    body.innerHTML = `<div style="padding:24px;text-align:center;color:var(--text3)">${filtro==='todo'?'✅ Nessun prodotto da verificare in questo filtro':'Nessun prodotto'}</div>`;
+    _invcProgress(); return;
+  }
+  body.innerHTML = lista.map(p=>_invcRigaHTML(p, b.righe[p.id])).join('');
+  _invcProgress();
+};
+
+function _invcRigaHTML(p, r){
+  const gest=parseFloat(p.qty)||0;
+  const st=_invcStatoRiga(p,r);
+  const bg = st==='ok' ? '#f0fdf4' : st==='diff' ? '#fef2f2' : 'transparent';
+  const badge = st==='ok' ? '<span class="badge bg-green">✓ OK</span>'
+              : st==='diff' ? `<span class="badge bg-red">≠ ${r.qtyReale>gest?'+':''}${(r.qtyReale-gest)}</span>` : '';
+  const scad = p.scadenza ? ' · scad '+(typeof fmtDate==='function'?fmtDate(p.scadenza):p.scadenza) : '';
+  const idJ = String(p.id).replace(/'/g,"\\'");
+  return `<div id="invc-row-${esc(p.id)}" style="display:flex;align-items:center;gap:8px;padding:9px 6px;border-bottom:1px solid var(--border);background:${bg};flex-wrap:wrap">
+    <div style="flex:1;min-width:170px">
+      <div style="font-weight:600;font-size:13px">${esc(p.nome||'—')} ${badge}</div>
+      <div style="font-size:11px;color:var(--text3)">${p.lotto?'Lotto '+esc(p.lotto):'senza lotto'}${scad}${p.pos?' · 📍'+esc(p.pos):''}</div>
+    </div>
+    <div style="font-size:11px;color:var(--text2);text-align:right;min-width:70px">gestionale<br><b style="font-family:'DM Mono',monospace;font-size:14px">${gest}</b> ${esc(p.unita||'')}</div>
+    <input type="number" min="0" step="1" inputmode="numeric" placeholder="reale" value="${r?r.qtyReale:''}"
+      onchange="invcSetReale('${idJ}', this.value)"
+      style="width:74px;text-align:center;font-family:'DM Mono',monospace;padding:8px">
+    <button class="btn btn-ok" style="min-width:58px;padding:8px 10px" onclick="invcSetOk('${idJ}')">✓ OK</button>
+    ${r?`<button class="btn btn-sm" title="Annulla verifica" onclick="invcReset('${idJ}')">↺</button>`:''}
+  </div>`;
+}
+
+// Aggiorna solo la riga (niente re-render completo → non perdi la posizione sul tablet)
+function _invcRefreshRiga(id){
+  const p=loadP().find(x=>x.id===id); const el=document.getElementById('invc-row-'+id);
+  if(p && el){ const tmp=document.createElement('div'); tmp.innerHTML=_invcRigaHTML(p,_invcBozza().righe[id]); el.replaceWith(tmp.firstElementChild); }
+  _invcProgress();
+}
+
+window.invcSetOk = function(id){
+  const p=loadP().find(x=>x.id===id); if(!p) return;
+  const b=_invcBozza(); const gest=parseFloat(p.qty)||0;
+  b.righe[id]={ stato:'ok', qtyReale:gest, gestAlConteggio:gest, ts:new Date().toISOString() };
+  _invcSalva(b); _invcRefreshRiga(id);
+};
+window.invcSetReale = function(id, val){
+  const p=loadP().find(x=>x.id===id); if(!p) return;
+  if(val===''||val==null){ return; }
+  const reale=parseFloat(String(val).replace(',','.')); if(isNaN(reale)||reale<0){ toast('Quantità non valida','error'); return; }
+  const b=_invcBozza(); const gest=parseFloat(p.qty)||0;
+  b.righe[id]={ stato: reale===gest?'ok':'diff', qtyReale:reale, gestAlConteggio:gest, ts:new Date().toISOString() };
+  _invcSalva(b); _invcRefreshRiga(id);
+};
+window.invcReset = function(id){
+  const b=_invcBozza(); delete b.righe[id]; _invcSalva(b); _invcRefreshRiga(id);
+};
+
+window.ricominciaInvCheck = function(){
+  if(!confirm('Cancellare tutte le verifiche fatte finora e ricominciare l\'inventario da capo?')) return;
+  _setCache(LS_INV_CHECK, { iniziata:new Date().toISOString(), righe:{} });
+  renderInvCheck();
+  toast('Verifica azzerata','info');
+};
+
+function _invcDifferenze(){
+  const b=_invcBozza(), prods=loadP();
+  return Object.keys(b.righe).map(id=>{
+    const r=b.righe[id]; if(r.stato!=='diff') return null;
+    const p=prods.find(x=>x.id===id); if(!p) return null;
+    const ora=parseFloat(p.qty)||0;
+    // Se dopo il conteggio ci sono stati carichi/scarichi, li preserva
+    const finale=Math.max(0, r.qtyReale + (ora - r.gestAlConteggio));
+    return { p, r, ora, finale, delta: finale-ora, mosso: ora!==r.gestAlConteggio };
+  }).filter(Boolean);
+}
+
+window.reportInvCheck = function(){
+  const body=document.getElementById('invc-body'); if(!body) return;
+  const b=_invcBozza(); const diffs=_invcDifferenze();
+  const nOk=Object.values(b.righe).filter(r=>r.stato==='ok').length;
+  const tot=_invcLista().length, fatti=Object.keys(b.righe).length;
+  let html = `<div style="padding:10px;background:var(--bg3);border-radius:8px;margin-bottom:10px;font-size:13px">
+    Verificati <b>${fatti}</b> su ${tot} · <span style="color:var(--green)">✓ ${nOk} corrispondenti</span> · <span style="color:var(--red)">≠ ${diffs.length} con differenze</span>
+    ${fatti<tot?`<div style="font-size:11px;color:var(--orange);margin-top:4px">⚠️ Ci sono ancora ${tot-fatti} lotti non verificati.</div>`:''}
+  </div>`;
+  if(!diffs.length){
+    html += `<div style="padding:16px;text-align:center;color:var(--green)">✅ Nessuna differenza: il gestionale corrisponde al magazzino reale.</div>`;
+  } else {
+    html += diffs.map(d=>`<div style="display:flex;justify-content:space-between;gap:8px;padding:8px 6px;border-bottom:1px solid var(--border);font-size:13px;flex-wrap:wrap">
+      <div><b>${esc(d.p.nome)}</b><div style="font-size:11px;color:var(--text3)">${d.p.lotto?'Lotto '+esc(d.p.lotto):'senza lotto'}${d.mosso?' · movimentato dopo il conteggio':''}</div></div>
+      <div style="font-family:'DM Mono',monospace;text-align:right">gest. ${d.ora} → reale <b>${d.finale}</b><br><span style="color:${d.delta>0?'var(--green)':'var(--red)'}">${d.delta>0?'+':''}${d.delta}</span></div>
+    </div>`).join('');
+  }
+  html += `<div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;margin-top:12px">
+    <button class="btn" onclick="renderInvCheck()">← Torna alla verifica</button>
+    ${diffs.length?`<button class="btn btn-ok" onclick="applicaInvCheck(true)">✓ Applica ${diffs.length} correzioni e chiudi</button>`:''}
+    <button class="btn" onclick="applicaInvCheck(false)">Chiudi verifica ${diffs.length?'senza correggere':''}</button>
+  </div>`;
+  body.innerHTML = html;
+};
+
+window.applicaInvCheck = function(applica){
+  const b=_invcBozza(); const diffs=_invcDifferenze();
+  const msg = applica
+    ? `Applicare ${diffs.length} correzioni alle giacenze e chiudere la verifica?\n\nOgni correzione sarà registrata come movimento "Rettifica inventario".`
+    : 'Chiudere la verifica senza modificare le giacenze? Il report resterà nello storico verifiche.';
+  if(!confirm(msg)) return;
+  const oggi=new Date().toLocaleDateString('it-IT');
+  if(applica && diffs.length){
+    _takeSnapshot('Rettifica inventario ('+diffs.length+')');
+    const prods=loadP(), movs=loadM();
+    diffs.forEach(d=>{
+      const p=prods.find(x=>x.id===d.p.id); if(!p || !d.delta) return;
+      p.qty=d.finale;
+      movs.unshift({ id:genId(), ts:new Date().toISOString(), tipo:d.delta>0?'carico':'scarico',
+        prod:p.nome, prodId:p.id, qty:Math.abs(d.delta), lotto:p.lotto||'', note:'Rettifica inventario '+oggi });
+    });
+    saveP(prods); saveM(movs);
+  }
+  // Storico verifiche (locale)
+  const log=_getCache(LS_INV_CHECK_LOG,'[]');
+  log.unshift({ id:genId(), iniziata:b.iniziata, chiusa:new Date().toISOString(),
+    verificati:Object.keys(b.righe).length, ok:Object.values(b.righe).filter(r=>r.stato==='ok').length,
+    differenze:diffs.map(d=>({nome:d.p.nome,lotto:d.p.lotto||'',gest:d.ora,reale:d.finale})), applicate:!!applica });
+  _setCache(LS_INV_CHECK_LOG, log.slice(0,50));
+  _setCache(LS_INV_CHECK, null); delete _cache[LS_INV_CHECK];
+  closeModal('modal-inv-check');
+  if(typeof currentView!=='undefined'){
+    if(currentView==='inventario' && typeof renderInv==='function') renderInv();
+    if(currentView==='movimenti' && typeof renderMovimenti==='function') renderMovimenti();
+  }
+  toast(applica&&diffs.length ? '✓ Inventario chiuso: '+diffs.length+' giacenze rettificate' : '✓ Verifica inventario chiusa','success');
+};
+
 window.openCorreggiGiacenzeModal = function(){
   const s = document.getElementById('corr-search'); if(s) s.value = '';
   renderCorreggiGiacenze();
