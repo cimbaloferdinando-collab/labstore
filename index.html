@@ -1424,6 +1424,14 @@ input[type=number]{font-size:16px}
         <div class="card-hdr">
           <span class="card-title" id="inv-count">0 prodotti</span>
           <div style="flex:1"></div>
+          <select id="inv-sort" onchange="setInvSort(this.value)" title="Ordina i lotti" style="padding:6px 8px;font-size:12px;margin-right:6px">
+            <option value="nome">↕ Ordina: nome</option>
+            <option value="carico_new">Carico: più recenti</option>
+            <option value="carico_old">Carico: più vecchi</option>
+            <option value="scad">Scadenza più vicina</option>
+            <option value="qty_desc">Quantità: maggiore</option>
+            <option value="qty_asc">Quantità: minore</option>
+          </select>
           <div class="search-wrap">
             <span class="s-ico">🔍</span>
             <input type="text" class="search-inp" id="inv-search" placeholder="Cerca nome, codice, lotto…" oninput="if(typeof debouncedRenderInv==='function')debouncedRenderInv();else if(typeof renderInv==='function')renderInv()">
@@ -2998,9 +3006,6 @@ input[type=number]{font-size:16px}
         <option value="nome">Ordina per nome</option>
         <option value="cat">Ordina per categoria</option>
       </select>
-      <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text2);cursor:pointer">
-        <input type="checkbox" id="invc-zero" onchange="renderInvCheck()" style="width:auto;margin:0"> lotti a zero
-      </label>
     </div>
     <div id="invc-body" style="flex:1;overflow-y:auto;min-height:200px"></div>
     <div class="modal-footer" style="flex-wrap:wrap;gap:6px">
@@ -4643,8 +4648,28 @@ function setHomeFornFilter(f,btn){
   document.querySelectorAll('#home-forn-bar .f-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active'); renderHomeGrid();
 }
+// FIX [UI/UX]: ordinamento dei lotti nell'inventario (anche sul singolo prodotto). Scelta ricordata.
+let invSort = (function(){ try{ const v=_getCache('ls_inv_sort','"nome"'); return typeof v==='string'?v:'nome'; }catch(e){ return 'nome'; } })();
+function setInvSort(v){ invSort=v||'nome'; _setCache('ls_inv_sort', invSort); renderInv(); }
+function _ordinaInv(prods){
+  const cmpTxt=(a,b)=>String(a||'').localeCompare(String(b||''),'it');
+  const base=(a,b)=>cmpTxt(a.nome,b.nome)||cmpTxt(a.lotto,b.lotto);
+  if(invSort==='carico_new'||invSort==='carico_old'){
+    // data di carico del lotto: data di creazione del record, altrimenti il primo movimento di carico
+    const primo={};
+    loadM().forEach(m=>{ if(m.tipo==='carico' && m.prodId && (!primo[m.prodId] || m.ts<primo[m.prodId])) primo[m.prodId]=m.ts; });
+    const dc=p=>String(p.creato||primo[p.id]||'');
+    const dir = invSort==='carico_new' ? -1 : 1;
+    return prods.sort((a,b)=> (dc(a)===dc(b)?0:(dc(a)<dc(b)?-dir:dir)) || base(a,b));
+  }
+  if(invSort==='scad')     return prods.sort((a,b)=> cmpTxt(a.scadenza||'9999',b.scadenza||'9999') || base(a,b));
+  if(invSort==='qty_desc') return prods.sort((a,b)=> ((parseFloat(b.qty)||0)-(parseFloat(a.qty)||0)) || base(a,b));
+  if(invSort==='qty_asc')  return prods.sort((a,b)=> ((parseFloat(a.qty)||0)-(parseFloat(b.qty)||0)) || base(a,b));
+  return prods.sort(base);
+}
+
 function renderInv(){
-  let prods=loadP();
+  let prods=loadP().slice();
   const q=(document.getElementById('inv-search')?.value||'').toLowerCase();
   if(invFilter!=='all') prods=prods.filter(p=>p.cat===invFilter);
   if(fornFilter!=='all'){
@@ -4668,7 +4693,9 @@ function renderInv(){
       prods=prods.filter(p=>matchAlias(p.nome, subFilter));
     }
   }
-  if(q) prods=prods.filter(p=>p.nome.toLowerCase().includes(q)||(p.barcode||'').includes(q)||(p.fornitore||'').toLowerCase().includes(q));
+  if(q) prods=prods.filter(p=>p.nome.toLowerCase().includes(q)||(p.barcode||'').includes(q)||(p.fornitore||'').toLowerCase().includes(q)||(p.lotto||'').toLowerCase().includes(q));
+  _ordinaInv(prods);
+  { const ss=document.getElementById('inv-sort'); if(ss && ss.value!==invSort) ss.value=invSort; }
   document.getElementById('inv-count').textContent=prods.length+' prodott'+(prods.length===1?'o':'i');
   const tb=document.getElementById('inv-tbody');
   if(!prods.length){ tb.innerHTML=`<tr><td colspan="7"><div class="empty"><div class="e-ico">📦</div><p>Nessun prodotto trovato</p></div></td></tr>`; return; }
@@ -8098,9 +8125,28 @@ window.openInvCheckModal = function(){
   document.getElementById('modal-inv-check').classList.add('open');
 };
 
+// FIX [MAGAZZINO]: solo i lotti ATTIVI presenti in gestionale:
+//  - giacenza > 0
+//  - non scaduti (nessuna scadenza o scadenza da oggi in poi)
+//  - per reagenti/coloranti tracciati a bidoni: se il lotto ha bidoni registrati,
+//    almeno uno deve essere ancora chiuso o aperto (non tutti terminati)
+function _invcAttivo(p, bidoniAttiviPerProd, bidoniPerProd){
+  if((parseFloat(p.qty)||0) <= 0) return false;
+  if(p.scadenza && typeof daysUntil==='function' && daysUntil(p.scadenza) < 0) return false;
+  if(typeof isBidoneTracked==='function' && isBidoneTracked(p) && bidoniPerProd.has(p.id) && !bidoniAttiviPerProd.has(p.id)) return false;
+  return true;
+}
 function _invcLista(){
-  const inclZero = (document.getElementById('invc-zero')||{}).checked;
-  return loadP().filter(p => inclZero || (parseFloat(p.qty)||0) > 0);
+  const bid = (typeof loadBidoni==='function') ? loadBidoni() : [];
+  const tutti = new Set(), attivi = new Set();
+  bid.forEach(b => { tutti.add(b.prod_id); if(b.stato==='chiuso' || b.stato==='aperto') attivi.add(b.prod_id); });
+  return loadP().filter(p => _invcAttivo(p, attivi, tutti));
+}
+// Righe della bozza che riguardano lotti ancora attivi (per conteggi e report coerenti)
+function _invcRigheAttive(){
+  const b=_invcBozza(); const ids=new Set(_invcLista().map(p=>p.id)); const out={};
+  Object.keys(b.righe).forEach(id=>{ if(ids.has(id)) out[id]=b.righe[id]; });
+  return out;
 }
 
 function _invcStatoRiga(p, r){
@@ -8197,9 +8243,9 @@ window.ricominciaInvCheck = function(){
 };
 
 function _invcDifferenze(){
-  const b=_invcBozza(), prods=loadP();
-  return Object.keys(b.righe).map(id=>{
-    const r=b.righe[id]; if(r.stato!=='diff') return null;
+  const righe=_invcRigheAttive(), prods=loadP();
+  return Object.keys(righe).map(id=>{
+    const r=righe[id]; if(r.stato!=='diff') return null;
     const p=prods.find(x=>x.id===id); if(!p) return null;
     const ora=parseFloat(p.qty)||0;
     // Se dopo il conteggio ci sono stati carichi/scarichi, li preserva
@@ -8211,8 +8257,9 @@ function _invcDifferenze(){
 window.reportInvCheck = function(){
   const body=document.getElementById('invc-body'); if(!body) return;
   const b=_invcBozza(); const diffs=_invcDifferenze();
-  const nOk=Object.values(b.righe).filter(r=>r.stato==='ok').length;
-  const tot=_invcLista().length, fatti=Object.keys(b.righe).length;
+  const _ra=_invcRigheAttive();
+  const nOk=Object.values(_ra).filter(r=>r.stato==='ok').length;
+  const tot=_invcLista().length, fatti=Object.keys(_ra).length;
   let html = `<div style="padding:10px;background:var(--bg3);border-radius:8px;margin-bottom:10px;font-size:13px">
     Verificati <b>${fatti}</b> su ${tot} · <span style="color:var(--green)">✓ ${nOk} corrispondenti</span> · <span style="color:var(--red)">≠ ${diffs.length} con differenze</span>
     ${fatti<tot?`<div style="font-size:11px;color:var(--orange);margin-top:4px">⚠️ Ci sono ancora ${tot-fatti} lotti non verificati.</div>`:''}
@@ -8235,6 +8282,7 @@ window.reportInvCheck = function(){
 
 window.applicaInvCheck = function(applica){
   const b=_invcBozza(); const diffs=_invcDifferenze();
+  const _raPrima=_invcRigheAttive(); // conteggi presi PRIMA di applicare le rettifiche
   const msg = applica
     ? `Applicare ${diffs.length} correzioni alle giacenze e chiudere la verifica?\n\nOgni correzione sarà registrata come movimento "Rettifica inventario".`
     : 'Chiudere la verifica senza modificare le giacenze? Il report resterà nello storico verifiche.';
@@ -8254,7 +8302,7 @@ window.applicaInvCheck = function(applica){
   // Storico verifiche (locale)
   const log=_getCache(LS_INV_CHECK_LOG,'[]');
   log.unshift({ id:genId(), iniziata:b.iniziata, chiusa:new Date().toISOString(),
-    verificati:Object.keys(b.righe).length, ok:Object.values(b.righe).filter(r=>r.stato==='ok').length,
+    verificati:Object.keys(_raPrima).length, ok:Object.values(_raPrima).filter(r=>r.stato==='ok').length,
     differenze:diffs.map(d=>({nome:d.p.nome,lotto:d.p.lotto||'',gest:d.ora,reale:d.finale})), applicate:!!applica });
   _setCache(LS_INV_CHECK_LOG, log.slice(0,50));
   _setCache(LS_INV_CHECK, null); delete _cache[LS_INV_CHECK];
