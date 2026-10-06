@@ -108,6 +108,8 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
 .sync-dot{width:6px;height:6px;border-radius:50%;background:var(--green);flex-shrink:0}
 .sync-dot.offline{background:var(--red)}
 .sync-dot.syncing{background:var(--yellow);animation:pulse 1.2s infinite}
+.sync-dot.err{background:var(--red);box-shadow:0 0 0 3px rgba(220,38,38,.25)}
+.sync-chip.err{color:var(--red)!important;border-color:var(--red)!important}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
 .hdr-gap{flex:1}
 .hdr-btns{display:flex;align-items:center;gap:4px;min-width:0}
@@ -762,7 +764,7 @@ input[type=number]{font-size:16px}
   <header class="hdr">
     <div class="hdr-logo"><span>L</span></div>
     <div class="hdr-brand">LupoLab AP<span>· v5</span></div>
-    <div class="sync-chip" id="sync-chip" onclick="forceSync()" title="Stato sincronizzazione cloud">
+    <div class="sync-chip" id="sync-chip" onclick="_syncChipClick()" title="Stato sincronizzazione cloud">
       <span class="sync-dot" id="sync-dot"></span>
       <span id="sync-state">sync</span> · <span id="sync-ts">—</span>
     </div>
@@ -978,6 +980,7 @@ input[type=number]{font-size:16px}
             <span style="color:var(--text3)">Vetrini:</span> <span id="kpi-ihc-vetrini" style="font-family:'DM Mono',monospace;font-weight:700;color:#a855f7">0</span>
           </div>
           <div id="kpi-ihc-antic" style="margin-top:5px;display:flex;flex-wrap:wrap;gap:3px;max-height:60px;overflow:hidden"></div>
+          <div id="kpi-ihc-mag" style="margin-top:6px"></div>
         </div>
 
       </div><!-- /kpi -->
@@ -1346,12 +1349,15 @@ input[type=number]{font-size:16px}
         </div>
         <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
           <button class="hbtn2 primary" onclick="openNuovaIHC()">＋ Nuova richiesta</button>
+          <button class="hbtn2" onclick="openIhcMag()" title="Dispenser in uso e chiusi pronti">📦 Magazzino IHC</button>
+          <button class="hbtn2" id="ihc-corsa-btn" onclick="toggleCorsaUltra()" title="Corsa grande: OptiView tolto, tutti gli anticorpi su UltraView">⚡ Corsa solo UltraView</button>
           <div class="search-wrap">
             <span class="s-ico">🔍</span>
             <input type="text" class="search-inp" id="ihc-search" placeholder="Cerca caso, patologo, anticorpo…" oninput="renderIHC()">
           </div>
         </div>
       </div>
+      <div id="ihc-corsa-banner"></div>
 
       <!-- Top 10 anticorpi più usati -->
       <div class="card" style="margin-bottom:14px">
@@ -1388,6 +1394,7 @@ input[type=number]{font-size:16px}
           <button class="hbtn2 warn" onclick="openModalScarica()">⬇ Scarico</button>
           <button class="hbtn2" onclick="openDDTModal()">📷 DDT</button>
           <button class="hbtn2" onclick="openInvCheckModal()" title="Verifica periodica gestionale ↔ magazzino reale">📋 Verifica inventario</button>
+          <button class="hbtn2" onclick="openIhcMag()" title="Anticorpi, kit e reagenti BenchMark: in uso / chiusi">📦 Magazzino IHC</button>
           <button class="hbtn2 primary" onclick="openProductModal()">＋ Prodotto</button>
         </div>
       </div>
@@ -2819,7 +2826,7 @@ input[type=number]{font-size:16px}
     <div class="form-grid">
       <div class="fg full"><label>Nome Prodotto *</label><input type="text" id="f-nome" placeholder="es. Xilene, Ematossilina Mayer…"></div>
       <div class="fg"><label>Categoria *</label>
-        <select id="f-cat"><option value="">Seleziona…</option>
+        <select id="f-cat" onchange="_fIhcSync()"><option value="">Seleziona…</option>
           <option>Reagenti</option><option>IHC</option><option>Vetrini</option><option>Cassette</option>
           <option>Coloranti</option><option>Consumabili</option><option>Kit Colorazioni</option><option>Lame</option><option>Altro</option>
         </select></div>
@@ -2832,6 +2839,20 @@ input[type=number]{font-size:16px}
       <div class="fg"><label>Unità di Misura</label><input type="text" id="f-unita" placeholder="pz, L, ml, conf…"></div>
       <div class="fg"><label>Scorta Minima</label><input type="number" id="f-min" placeholder="0" min="0"></div>
       <div class="fg"><label>Posizione in Lab</label><input type="text" id="f-pos" placeholder="es. Frigo A, Scaffale 2…"></div>
+      <!-- FIX [MAGAZZINO]: tracciamento test IHC (solo categoria IHC) -->
+      <div class="fg full" id="f-ihc-box" style="display:none;background:#faf5ff;border:1px solid #e9d5ff;border-radius:8px;padding:10px">
+        <div style="font-size:11px;font-weight:700;color:#7e22ce;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">🔬 Tracciamento test IHC</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div class="fg" style="margin:0"><label>Tipo</label>
+            <select id="f-ihc-tipo" onchange="_fIhcSync()"><option value="">Automatico</option><option value="anticorpo">Anticorpo</option><option value="kit">Kit di rivelazione</option><option value="contrasto">Ematossilina / Bluing (ogni vetrino)</option><option value="protocollo">Amplifier / Option (da protocollo)</option><option value="consumabile">Consumabile (non tracciato)</option></select></div>
+          <div class="fg" style="margin:0"><label>Test per dispenser/kit</label><input type="number" id="f-test-tot" min="0" inputmode="numeric" placeholder="es. 50"></div>
+          <div class="fg" style="margin:0"><label>Test residui (in uso)</label><input type="number" id="f-test-res" min="0" inputmode="numeric" placeholder="vuoto = pieno"></div>
+          <div class="fg" style="margin:0" id="f-kit-wrap"><label>Kit di rivelazione</label>
+            <select id="f-kit-riv"><option value="">—</option><option>OptiView</option><option>UltraView</option></select></div>
+          <div class="fg" style="margin:0;grid-column:1/-1" id="f-alias-wrap"><label>Nomi usati nelle richieste IHC</label>
+            <input type="text" id="f-ihc-alias" placeholder="es. CK7, CK-7 — separati da virgola (facoltativo)"></div>
+        </div>
+      </div>
       <!-- FEATURE 6: Lotti multipli -->
       <div class="fg full" style="margin-top:8px">
         <div style="display:flex;align-items:center;justify-content:space-between">
@@ -2958,6 +2979,39 @@ input[type=number]{font-size:16px}
     <div class="modal-footer">
       <button class="btn" onclick="closeModal('modal-smaltimento')">Annulla</button>
       <button class="btn btn-ok" onclick="saveSmaltimento()">✓ Registra smaltimento</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════
+     MODAL: MAGAZZINO IHC (dispenser in uso / chiusi pronti)
+══════════════════════════════ -->
+<div class="modal-overlay" id="modal-ihc-mag">
+  <div class="modal" style="width:min(820px,97vw);max-width:97vw;max-height:94vh;display:flex;flex-direction:column">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+      <div class="modal-title" style="margin:0;flex:1">📦 Magazzino IHC</div>
+      <input type="text" id="ihcm-search" placeholder="🔍 Cerca…" oninput="renderIhcMag()" style="padding:7px;width:150px">
+    </div>
+    <div id="ihcm-sum" style="font-size:12px;color:var(--text2);margin-bottom:8px"></div>
+    <div id="ihcm-body" style="flex:1;overflow-y:auto"></div>
+    <div class="modal-footer"><button class="btn" onclick="closeModal('modal-ihc-mag')">Chiudi</button></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════
+     MODAL: COLLEGA ANTICORPO (nome della richiesta IHC non trovato in magazzino)
+══════════════════════════════ -->
+<div class="modal-overlay" id="modal-ihc-link">
+  <div class="modal" style="width:min(460px,96vw)">
+    <div class="modal-title">🔗 Collega anticorpo</div>
+    <p style="font-size:13px;color:var(--text2);margin-bottom:12px">Il nome <b id="ihl-item"></b> non corrisponde a nessun anticorpo in magazzino. A quale prodotto si riferisce? Lo ricorderò per le prossime richieste.</p>
+    <div class="fg" style="margin:0 0 10px"><label>Anticorpo in magazzino</label><select id="ihl-prod" style="width:100%;padding:9px"></select></div>
+    <div class="fg" style="margin:0 0 6px"><label>Kit di rivelazione</label>
+      <select id="ihl-kit" style="width:100%;padding:9px"><option value="">— lascia com'è —</option><option>OptiView</option><option>UltraView</option></select></div>
+    <div class="modal-footer" style="flex-wrap:wrap;gap:6px">
+      <button class="btn" onclick="_ihcLinkConferma('dopo')">Più tardi</button>
+      <button class="btn" onclick="_ihcLinkConferma('ignora')">Non tracciare</button>
+      <button class="btn btn-ok" onclick="_ihcLinkConferma('collega')">🔗 Collega</button>
     </div>
   </div>
 </div>
@@ -3563,7 +3617,7 @@ async function forceSave(){
     // Push tutto
     if(prods.length) await supaFetch('products','POST',prods,'?on_conflict=id');
     if(movs.length) await supaFetch('movements','POST',movs,'?on_conflict=id');
-    await supaFetch('waste_state','DELETE',null,'?id=eq.waste_state');
+    // FIX [INFRASTRUTTURA]: niente DELETE prima del POST (upsert attivo; il DELETE rischiava di perdere lo stato)
     if(Object.keys(W).length) await supaFetch('waste_state','POST',[{id:'waste_state',data:W}],'?on_conflict=id');
     if(wlog.length) await supaFetch('waste_log','POST',wlog,'?on_conflict=id');
     if(ords.length) await supaFetch('ordini','POST',ords,'?on_conflict=id');
@@ -3577,7 +3631,7 @@ async function forceSave(){
     try { if(forn.length) await supaFetch('fornitori','POST',forn,'?on_conflict=id'); } catch(eF){ console.warn('[sync fornitori]', eF); }
     saveQueue([]);
     updateSyncStatus('ok');
-    toast('💾 Tutto salvato sul cloud','success');
+    _toastEsitoSync('💾 Tutto salvato sul cloud');
   }catch(e){ updateSyncStatus('err'); toast('Errore salvataggio: '+e.message,'error'); }
 }
 
@@ -3585,7 +3639,70 @@ async function forceSave(){
 window.addEventListener('online',  ()=>{ IS_ONLINE=true;  updateSyncStatus('sync'); flushQueue(); });
 window.addEventListener('offline', ()=>{ IS_ONLINE=false; updateSyncStatus('offline'); updateQueueBadge(); });
 
+// FIX [INFRASTRUTTURA]: errori di scrittura verso Supabase registrati e resi VISIBILI.
+// Prima supaFetch restituiva null in silenzio e il chip in alto mostrava sempre "sync".
+var _SYNC_ERR = window._SYNC_ERR || {};   // tabella → {status, msg, ts}
+var _SYNC_LAST_OK = null;                 // ultimo scambio riuscito con Supabase
+var _SYNC_TOAST_TS = {};
+function _syncMsgLeggibile(status, raw){
+  let j=null; try{ j=JSON.parse(raw); }catch(_){}
+  const m = (j && (j.message||j.hint||j.details)) || String(raw||'').slice(0,160);
+  const col = /column '([^']+)'/i.exec(m) || /'([^']+)' column/i.exec(m);
+  if(status===0) return 'rete non raggiungibile';
+  if(status===409 || (j && j.code==='23505')) return 'record già presenti: il cloud rifiuta gli aggiornamenti (upsert non attivo)';
+  if((j && j.code==='PGRST204') || col) return 'colonna mancante nel database' + (col?': '+col[1]:'');
+  if(status===401 || status===403) return 'permessi negati (chiave o policy)';
+  return 'HTTP '+status+(m?' — '+m:'');
+}
+function _registraErroreSync(table, status, raw){
+  const msg=_syncMsgLeggibile(status, raw);
+  _SYNC_ERR[table]={status, msg, ts:new Date()};
+  updateSyncStatus('err');
+  const now=Date.now();
+  if(!_SYNC_TOAST_TS[table] || now-_SYNC_TOAST_TS[table] > 10*60*1000){
+    _SYNC_TOAST_TS[table]=now;
+    if(typeof toast==='function') toast('⚠ Cloud: «'+table+'» non salvato — '+msg+'. I dati restano sul dispositivo.','error');
+  }
+}
+function _syncErroriTesto(){
+  return Object.entries(_SYNC_ERR).map(([t,e])=>'• '+t+': '+e.msg).join('\n');
+}
+function _toastEsitoSync(msgOk){
+  const n=Object.keys(_SYNC_ERR).length;
+  if(n) toast('⚠ Sync incompleta: '+n+' tabell'+(n===1?'a':'e')+' rifiutat'+(n===1?'a':'e')+' dal cloud. Tocca il chip in alto per i dettagli.','error');
+  else toast(msgOk,'success');
+}
+function _renderSyncChip(state){
+  const dot=document.getElementById('sync-dot'), st=document.getElementById('sync-state'), ts=document.getElementById('sync-ts'), chip=document.getElementById('sync-chip');
+  if(!dot||!st) return;
+  dot.className='sync-dot'+(state==='err'?' err':state==='sync'?' syncing':(state==='offline'||state==='off')?' offline':'');
+  st.textContent={ok:'sync',sync:'sync…',err:'⚠ errore sync',offline:'offline',off:'locale'}[state]||'sync';
+  if(chip){
+    chip.classList.toggle('err', state==='err');
+    chip.title = state==='err' ? 'Il cloud ha rifiutato:\n'+_syncErroriTesto()+'\n\nTocca per i dettagli'
+               : 'Ultimo scambio riuscito con il cloud'+(_SYNC_LAST_OK?' alle '+_SYNC_LAST_OK.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'}):': —')
+                 + ((typeof _sqlColonneMancanti==='function' && _sqlColonneMancanti()) ? '\n⚠ Colonne mancanti nel database: tocca per lo script SQL' : '');
+  }
+  if(ts) ts.textContent = _SYNC_LAST_OK ? _SYNC_LAST_OK.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'}) : '—';
+}
+function _syncChipClick(){
+  const n=Object.keys(_SYNC_ERR).length;
+  const sql=(typeof _sqlColonneMancanti==='function')?_sqlColonneMancanti():'';
+  if(sql){
+    const msg='Il database non ha alcune colonne: quei dati restano solo sul dispositivo.\n\nScript da lanciare in Supabase → SQL Editor:\n\n'+sql+'\n\nOK = copia lo script negli appunti';
+    if(confirm(msg)){
+      try{ navigator.clipboard.writeText(sql).then(()=>toast('📋 Script SQL copiato','success')).catch(()=>prompt('Copia lo script:',sql)); }
+      catch(e){ prompt('Copia lo script:', sql); }
+      return;
+    }
+  }
+  if(!n){ forceSync(); return; }
+  if(confirm('⚠ Il cloud ha rifiutato il salvataggio di '+n+' tabell'+(n===1?'a':'e')+':\n\n'+_syncErroriTesto()+'\n\nI dati sono salvati su questo dispositivo, ma NON nel cloud.\n\nOK = riprova la sincronizzazione')) forceSync();
+}
+
 function updateSyncStatus(state){
+  if(state==='ok' && Object.keys(_SYNC_ERR).length) state='err';
+  _renderSyncChip(state);
   const el=document.getElementById('sync-status'); if(!el) return;
   const q=loadQueue().length;
   const map={
@@ -3688,7 +3805,7 @@ async function forceSync(){
     _invalidateAll();
     updateSyncStatus('ok');
     _refreshCurrentView();
-    toast('✅ Sync completata — merge last-write-wins','success');
+    _toastEsitoSync('✅ Sync completata');
   }catch(e){ updateSyncStatus('err'); toast('Errore sync: '+e.message,'error'); }
 }
 async function flushQueue(){
@@ -3709,7 +3826,7 @@ async function flushQueue(){
     // Push tutto su Supabase
     if(prods.length) await supaFetch('products','POST',prods,'?on_conflict=id');
     if(movs.length) await supaFetch('movements','POST',movs,'?on_conflict=id');
-    await supaFetch('waste_state','DELETE',null,'?id=eq.waste_state');
+    // FIX [INFRASTRUTTURA]: niente DELETE prima del POST (upsert attivo; il DELETE rischiava di perdere lo stato)
     if(Object.keys(W).length) await supaFetch('waste_state','POST',[{id:'waste_state',data:W}],'?on_conflict=id');
     if(ords.length) await supaFetch('ordini','POST',ords,'?on_conflict=id');
     if(arch.length) await supaFetch('archivio_ordini','POST',arch,'?on_conflict=id');
@@ -3720,21 +3837,75 @@ async function flushQueue(){
     if(schede.length) await supaFetch('schede_tecniche','POST',schede,'?on_conflict=id');
     saveQueue([]);
     updateSyncStatus('ok');
-    toast('✅ '+q.length+' modifica/he sincronizzata/e','success');
+    _toastEsitoSync('✅ '+q.length+' modifica/he sincronizzata/e');
   }catch(e){ updateSyncStatus('err'); }
+}
+
+// FIX [INFRASTRUTTURA]: colonne che il database non ha. Vengono escluse dall'invio
+// (così il resto dei dati si sincronizza comunque) e ricordate per generare l'SQL.
+function _missingCols(){ const m=_getCache('ls_sync_missing_cols','{}'); return (m&&typeof m==='object')?m:{}; }
+function _tipoSqlDa(val){
+  if(typeof val==='number') return Number.isInteger(val)?'integer':'numeric';
+  if(typeof val==='boolean') return 'boolean';
+  if(val && typeof val==='object') return 'jsonb';
+  return 'text';
+}
+function _colonnaMancante(raw){
+  let j=null; try{ j=JSON.parse(raw); }catch(_){}
+  const m=(j&&j.message)||String(raw||'');
+  const r=/Could not find the '([^']+)' column/i.exec(m);
+  return (r && r[1]) ? r[1] : null;
+}
+function _aggiungiColonnaMancante(table, col, rows){
+  const m=_missingCols(); if(!m[table]) m[table]={};
+  if(!m[table][col]){
+    const es=(rows||[]).find(r=>r && r[col]!==undefined && r[col]!==null);
+    m[table][col]=_tipoSqlDa(es?es[col]:'');
+    _setCache('ls_sync_missing_cols', m);
+    if(typeof toast==='function') toast('⚠ Cloud: manca la colonna «'+col+'» in «'+table+'». Quel dato resta solo sul dispositivo: tocca il chip sync in alto per lo script SQL.','warn');
+  }
+}
+function _stripColonneMancanti(table, rows){
+  const miss=_missingCols()[table]; if(!miss) return rows;
+  const keys=Object.keys(miss); if(!keys.length) return rows;
+  return rows.map(r=>{ if(!r||typeof r!=='object') return r; const o={...r}; keys.forEach(k=>{ delete o[k]; }); return o; });
+}
+function _sqlColonneMancanti(){
+  const m=_missingCols(); const righe=[];
+  Object.keys(m).forEach(t=>Object.keys(m[t]).forEach(c=>righe.push('alter table public.'+t+' add column if not exists "'+c+'" '+m[t][c]+';')));
+  return righe.join('\n');
 }
 
 async function supaFetch(table,method='GET',body=null,query=''){
   if(!SUPA_OK) return null;
   if(!IS_ONLINE && method!=='GET') return null; // offline: non tentare write
-  try{
-    const res=await fetch(SUPA_URL+'/rest/v1/'+table+query,{
-      method, body:body?JSON.stringify(body):undefined,
-      headers:{'Content-Type':'application/json','apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,'Prefer':'return=representation'}
-    });
-    if(!res.ok) return null;
-    const t=await res.text(); return t?JSON.parse(t):true;
-  }catch(e){ return null; }
+  const isWrite = method!=='GET';
+  // FIX [INFRASTRUTTURA]: upsert VERO (resolution=merge-duplicates) e scritture senza
+  // rimandare indietro i dati (return=minimal → molto più leggero da tablet).
+  const prefer = method==='POST' ? 'return=minimal,resolution=merge-duplicates'
+               : isWrite ? 'return=minimal' : 'return=representation';
+  let payload = (isWrite && Array.isArray(body)) ? _stripColonneMancanti(table, body) : body;
+  for(let tentativo=0; tentativo<10; tentativo++){
+    let res;
+    try{
+      res=await fetch(SUPA_URL+'/rest/v1/'+table+query,{
+        method, body:payload?JSON.stringify(payload):undefined,
+        headers:{'Content-Type':'application/json','apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,'Prefer':prefer}
+      });
+    }catch(e){ if(isWrite) _registraErroreSync(table, 0, String(e&&e.message||e)); return null; }
+    if(res.ok){
+      _SYNC_LAST_OK=new Date();
+      if(isWrite && method!=='DELETE' && _SYNC_ERR[table]) delete _SYNC_ERR[table];
+      const t=await res.text(); return t?JSON.parse(t):true;
+    }
+    let raw=''; try{ raw=await res.text(); }catch(_){}
+    const col = (isWrite && Array.isArray(payload)) ? _colonnaMancante(raw) : null;
+    if(col){ _aggiungiColonnaMancante(table, col, payload); payload=_stripColonneMancanti(table, payload); continue; }
+    if(isWrite) _registraErroreSync(table, res.status, raw);
+    return null;
+  }
+  if(isWrite) _registraErroreSync(table, 400, 'troppe colonne mancanti');
+  return null;
 }
 
 // ── DATA LAYER — In-memory cache + localStorage + Supabase ──
@@ -3815,7 +3986,7 @@ async function saveW(obj){
   localStorage.setItem(LS_W,JSON.stringify(obj));
   if(!SUPA_OK) return;
   if(!IS_ONLINE){ enqueue({type:'waste'}); return; }
-  await supaFetch('waste_state','DELETE',null,'?id=eq.waste_state');
+  // FIX [INFRASTRUTTURA]: niente DELETE prima del POST (upsert attivo)
   await supaFetch('waste_state','POST',[{id:'waste_state',data:obj}],'?on_conflict=id');
 }
 
@@ -4699,6 +4870,9 @@ function renderInv(){
   document.getElementById('inv-count').textContent=prods.length+' prodott'+(prods.length===1?'o':'i');
   const tb=document.getElementById('inv-tbody');
   if(!prods.length){ tb.innerHTML=`<tr><td colspan="7"><div class="empty"><div class="e-ico">📦</div><p>Nessun prodotto trovato</p></div></td></tr>`; return; }
+  // FIX [UI/UX]: copertura IHC per nome (calcolata una volta per render)
+  const _ihcCop={}; try{ if(typeof _ihcStatoMagazzino==='function') _ihcStatoMagazzino().forEach(g=>{ _ihcCop[(g.nome||'').trim().toLowerCase()]=g; }); }catch(e){}
+  const _ihcApertiId=new Set(); try{ if(typeof _ihcGruppi==='function') Object.values(_ihcGruppi()).forEach(l=>{ const a=_ihcApertoDelGruppo(l); if(a) _ihcApertiId.add(a.id); }); }catch(e){}
   tb.innerHTML=prods.map(p=>{
     const tracked = isBidoneTracked(p);
     // Colonna principale: Ini → Att (sempre, identico a prima)
@@ -4723,6 +4897,19 @@ function renderInv(){
       `;
     }
     if(p.min) qtyCell += `<div style="font-size:10px;color:var(--text3);margin-top:2px">min: ${p.min}</div>`;
+    // FIX [UI/UX]: anticorpi/kit IHC → test residui del dispenser in uso + copertura del prodotto
+    const _tt=parseInt(p.test_tot,10)||0;
+    if(p.cat==='IHC' && _tt>0 && (parseFloat(p.qty)||0)>0){
+      const _res=(typeof _ihcResiduo==='function')?_ihcResiduo(p):_tt;
+      const _pct=Math.max(0,Math.min(100,Math.round(_res/_tt*100)));
+      const _g=_ihcCop[(p.nome||'').trim().toLowerCase()];
+      const _inUso=_ihcApertiId.has(p.id), _chiusi=(parseFloat(p.qty)||0)-(_inUso?1:0);
+      qtyCell += `<div style="margin-top:5px;font-size:10px;color:#7e22ce">${_inUso
+          ? `🔓 in uso ${_res}/${_tt} test
+             <div style="height:4px;background:#f3e8ff;border-radius:3px;margin-top:2px;overflow:hidden"><div style="height:100%;width:${_pct}%;background:${_pct<20?'var(--red)':'#a855f7'}"></div></div>`
+          : ''}${_chiusi>0?`<div>🔒 ${_chiusi} chius${_chiusi===1?'o':'i'}</div>`:''}
+        ${_g && _g.copertura!==null ? '<span style="color:'+(_g.basso?'var(--red)':'var(--text3)')+'">~'+_g.copertura+' gg di copertura</span>' : ''}</div>`;
+    }
 
     // Azioni: per reagenti/coloranti aggiungo 🔓 Apri / ✕ Smaltisci diretti
     let actionsCell;
@@ -5163,7 +5350,25 @@ function openEditModal(id){
     Object.entries(fields).forEach(([fid,pkey])=>{ const e=document.getElementById('f-'+fid.replace('f-','')); if(e) e.value=p[pkey]||''; });
     document.getElementById('f-cat').value = p.cat||'';
   }
+  // FIX [MAGAZZINO]: campi IHC
+  const _sv=(i,v)=>{ const e=document.getElementById(i); if(e) e.value=(v===undefined||v===null)?'':v; };
+  _sv('f-ihc-tipo', p ? (p.ihc_tipo || (typeof _ihcTipo==='function'?_ihcTipo(p):'')) : '');
+  _sv('f-test-tot', p && p.test_tot ? p.test_tot : '');
+  _sv('f-test-res', p && p.test_tot ? (typeof _ihcResiduo==='function'?_ihcResiduo(p):p.test_residui) : '');
+  _sv('f-kit-riv', p ? p.kit_riv : '');
+  _sv('f-ihc-alias', p ? p.ihc_alias : '');
+  _fIhcSync();
   document.getElementById('modal-product').classList.add('open');
+}
+// Mostra il box IHC solo per la categoria IHC; kit e nomi solo per gli anticorpi
+function _fIhcSync(){
+  const box=document.getElementById('f-ihc-box'); if(!box) return;
+  const isIhc=(document.getElementById('f-cat')||{}).value==='IHC';
+  box.style.display = isIhc ? '' : 'none';
+  const tipoEl=document.getElementById('f-ihc-tipo');
+  if(isIhc && tipoEl && !tipoEl.value && /optiview|ultraview/i.test((document.getElementById('f-nome')||{}).value||'')) tipoEl.value='kit';
+  const anti = tipoEl && (tipoEl.value==='anticorpo' || (!tipoEl.value && isIhc && typeof _ihcTipo==='function' && _ihcTipo({cat:'IHC', nome:(document.getElementById('f-nome')||{}).value||''})==='anticorpo'));
+  ['f-kit-wrap','f-alias-wrap'].forEach(i=>{ const e=document.getElementById(i); if(e) e.style.display = anti ? '' : 'none'; });
 }
 function closeProductModal(){ closeModal('modal-product'); }
 function saveProduct(){
@@ -5177,7 +5382,9 @@ function saveProduct(){
   // Se cat è Altro o vuoto, prova a determinarlo in modo intelligente
   const fornitoreVal=document.getElementById('f-fornitore').value.trim();
   const catFinal=cat&&cat!=='Altro'?cat:smartCategorize(nome,fornitoreVal,document.getElementById('f-barcode').value.trim());
-  const p={id:id||genId(),nome,cat:catFinal,
+  // FIX [MAGAZZINO]: in modifica conserva i campi non presenti nel form (creato, test residui, alias…)
+  const _esistente = id ? (loadP().find(x=>x.id===id)||{}) : {};
+  const p={..._esistente, id:id||genId(),nome,cat:catFinal,
     fornitore:fornitoreVal,
     barcode:document.getElementById('f-barcode').value.trim(),
     lotto:document.getElementById('f-lotto').value.trim(),
@@ -5193,6 +5400,29 @@ function saveProduct(){
   };
   // Calcola qty totale inclusi lotti aggiuntivi
   if(p.lotti.length) p.qty = qty_new + p.lotti.reduce((s,l)=>s+(l.qty||0),0);
+  if(!p.creato) p.creato = new Date().toISOString();
+  // FIX [MAGAZZINO]: tracciamento test IHC
+  if(catFinal==='IHC'){
+    const tipo=(document.getElementById('f-ihc-tipo')||{}).value||'';
+    const tot=parseInt((document.getElementById('f-test-tot')||{}).value,10)||0;
+    const resRaw=((document.getElementById('f-test-res')||{}).value||'').trim();
+    const tipoEff = tipo || (typeof _ihcTipo==='function' ? _ihcTipo({cat:'IHC', nome}) : '');
+    p.ihc_tipo=tipo;
+    p.test_tot=tot||null;
+    p.test_residui= tot ? Math.min(tot, resRaw==='' ? tot : Math.max(0, parseFloat(resRaw)||0)) : null;
+    if(tipoEff==='anticorpo'){
+      p.kit_riv=(document.getElementById('f-kit-riv')||{}).value||'';
+      p.ihc_alias=((document.getElementById('f-ihc-alias')||{}).value||'').trim();
+    }
+    // Stessa configurazione su tutti i lotti con lo stesso nome (test, kit, nomi)
+    if(tipo || tot){
+      loadP().forEach(x=>{ if(x.id!==p.id && x.nome===p.nome){
+        x.ihc_tipo=tipo; x.test_tot=p.test_tot;
+        if(tipoEff==='anticorpo'){ x.kit_riv=p.kit_riv; x.ihc_alias=p.ihc_alias; }
+        if(!x.test_residui && p.test_tot) x.test_residui=p.test_tot;
+      }});
+    }
+  }
   const prods=loadP();
   if(id){ const i=prods.findIndex(x=>x.id===id); if(i>=0)prods[i]=p; else prods.push(p); } else prods.push(p);
   saveP(prods); closeProductModal();
@@ -5891,7 +6121,9 @@ function confirmCaricaScanFound(){
   const ddt=(document.getElementById('cs-ddt-found')||{}).value?.trim()||'';
   const prods=loadP(), p=prods.find(x=>x.id===csMatchedId);
   if(!p){ toast('Prodotto non trovato','error'); return; }
+  const _qPrima=p.qty;
   p.qty+=qty;
+  _ihcEredita(null, p, _qPrima);
   if(p.qty_init===undefined) p.qty_init=qty;
   if(ddt) p.ddt=ddt;
   saveP(prods);
@@ -7772,6 +8004,9 @@ function setAllerteFilter(f, btn){
 function _aggregaAllerte(){
   const prods = (typeof loadP==='function') ? loadP() : [];
   const SOGLIA_SCAD = 30;
+  const SOGLIA_SCAD_IHC = 60;
+  const ihcMap = {};
+  try{ if(typeof _ihcStatoMagazzino==='function') _ihcStatoMagazzino().forEach(x=>{ ihcMap[(x.nome||'').trim().toLowerCase()] = x; }); }catch(e){}
   const MIN_DEFAULT = 2; // se un prodotto non ha una scorta minima impostata, si usa 2
   const gruppi = {};
   prods.forEach(p => {
@@ -7799,6 +8034,14 @@ function _aggregaAllerte(){
     g.esaurito = g.qtyTot <= 0;                                   // prodotto interamente esaurito
     g.scorta   = g.qtyTot > 0 && g.qtyTot <= soglia;             // scorta totale sotto la soglia (min o default 2)
     g.inScad   = g.prossimaScad !== null && g.prossimaScad <= SOGLIA_SCAD; // scadenza futura imminente
+    // FIX [MAGAZZINO]: anticorpi e kit IHC tracciati a test → scorta valutata sui TEST (non sui pezzi)
+    const ih = ihcMap[(g.nome||'').trim().toLowerCase()];
+    if(ih){
+      g.ihc = ih;
+      g.esaurito = ih.test <= 0;   // conta solo ciò che la macchina accetta (non scaduto)
+      g.scorta = ih.test > 0 && (ih.basso || (g.min > 0 && g.qtyTot <= g.min));
+      g.inScad = g.prossimaScad !== null && g.prossimaScad <= SOGLIA_SCAD_IHC; // IHC: più margine per ordinare
+    }
     g.allerta  = g.esaurito || g.scorta || g.inScad;
   });
   return list;
@@ -7836,6 +8079,7 @@ function renderAllerte(){
     if(g.esaurito) stati.push('<span class="badge bg-red">Esaurito</span>');
     else if(g.scorta) stati.push('<span class="badge bg-yellow">Scorta bassa</span>');
     if(g.inScad) stati.push('<span class="badge bg-yellow">In scadenza</span>');
+    if(g.ihc && g.scorta) stati.unshift('<span class="badge" style="background:#faf5ff;color:#7e22ce;border-color:#e9d5ff">🔬 Test in esaurimento</span>');
     const scadCol = (g.prossimaScad!==null)
       ? `${(typeof scBadge==='function')?scBadge(g.prossimaScadDate):g.prossimaScadDate}${g.prossimaScadLotto?`<br><small style="color:var(--text3)">lotto ${g.prossimaScadLotto}</small>`:''}`
       : '<span style="color:var(--text3)">—</span>';
@@ -7845,7 +8089,9 @@ function renderAllerte(){
       <td data-lbl="Categoria"><span class="cat-badge">${(typeof CAT_ICON!=='undefined'&&CAT_ICON[g.cat])||'📌'} ${g.cat||'—'}</span></td>
       <td style="color:var(--text2);font-size:12px" data-lbl="Fornitore">${g.fornitore||'—'}</td>
       <td class="mono" data-lbl="Lotti">${g.lotti||0}</td>
-      <td style="text-align:center" data-lbl="Giacenza tot / Min"><span style="color:var(--${qColor})">${g.qtyTot}</span> <small style="color:var(--text3)">${g.unita||''}</small><br><small style="color:var(--text3)">min: ${g.sogliaUsata}${g.min>0?'':' (default)'}</small></td>
+      <td style="text-align:center" data-lbl="Giacenza tot / Min"><span style="color:var(--${qColor})">${g.qtyTot}</span> <small style="color:var(--text3)">${g.unita||''}</small><br>${g.ihc
+        ? `<small style="color:#7e22ce;font-weight:600">🔬 ${g.ihc.test} test${g.ihc.copertura!==null?' · ~'+g.ihc.copertura+' gg':''}</small>`
+        : `<small style="color:var(--text3)">min: ${g.sogliaUsata}${g.min>0?'':' (default)'}</small>`}</td>
       <td data-lbl="Prossima scadenza">${scadCol}</td>
       <td data-lbl="Stato">${stati.join(' ')}</td>
       <td class="act-cell"><div style="display:flex;gap:4px">
@@ -8777,9 +9023,11 @@ function confirmRicezioneParziale(id){
     if (lotto) p = stessoNome.find(x => (x.lotto||'') === lotto);
     if (!p && !lotto) p = stessoNome[0]; // nessun lotto indicato → usa il primo record esistente
     if (p) {
+      const _qPrima = p.qty;
       p.qty = (p.qty||0) + qtyArrivo;
       if (scad) p.scadenza = scad;
       if (ddt)  p.ddt = ddt;
+      _ihcEredita(null, p, _qPrima);
     } else {
       // Nuovo lotto → nuovo record che eredita i dati dal modello dello stesso nome
       const modello = stessoNome[0] || {};
@@ -8794,6 +9042,7 @@ function confirmRicezioneParziale(id){
         pos: modello.pos || '', barcode: modello.barcode || '',
         ddt: ddt || '', creato: now
       };
+      _ihcEredita(modello, p);
       prods.push(p);
     }
     movs.unshift({id:genId(),ts:now,tipo:'carico',prod:r.nome,prodId:p?.id||'',qty:qtyArrivo,lotto:lotto||'',ddt:ddt||'',note:'Ricezione '+o.num+(ddt?' — '+ddt:'')});
@@ -9324,6 +9573,615 @@ async function saveIHCArr(arr, deletedId){
   }catch(e){ enqueue({type:'ihc'}); }
 }
 
+// ═══════════════════════════════════════════════════════════════════════
+// MAGAZZINO IHC — test di anticorpi e kit di rivelazione scalati dal registro IHC
+// Campi lotto: ihc_tipo ('anticorpo'|'kit'), test_tot (test per dispenser/kit),
+// test_residui (test del dispenser IN USO), kit_riv ('OptiView'|'UltraView'),
+// ihc_alias (nomi usati nelle richieste, separati da virgola).
+// qty = dispenser/kit in magazzino (compreso quello in uso).
+// ═══════════════════════════════════════════════════════════════════════
+const LS_IHC_IGNORA = 'ls_ihc_ignora';
+// FIX [TRACCIABILITÀ]: le lettere greche diventano latine (34βE12 = 34BE12, α-actina = a-actina)
+function _ihcGreek(s){ return String(s||'').replace(/[βΒ]/g,'b').replace(/[αΑ]/g,'a').replace(/[γΓ]/g,'g').replace(/[δΔ]/g,'d').replace(/[κΚ]/g,'k'); }
+function _ihcNorm(s){ return _ihcGreek(s).toLowerCase().replace(/[^a-z0-9]/g,''); }
+function _ihcRegex(nome){
+  const k=_ihcNorm(nome); if(!k) return null;
+  const re=new RegExp('(^|[^a-z0-9])'+k.split('').join('[\\s\\-\\/\\.]*')+'($|[^a-z0-9])','i');
+  return { test: x => re.test(_ihcGreek(x)) };
+}
+// Accessori BenchMark: Ematossilina e Bluing su OGNI vetrino; Amplifier A/B e Option 1
+// solo per gli anticorpi che li prevedono (flag 'A' e '1' nella tabella IHC_PROTOCOLLI).
+const IHC_ACCESSORI = [
+  {id:'ematox', nome:'Ematossilina', regola:'vetrino', re:/hematox|ematoss|\bhema\b/i},
+  {id:'bluing', nome:'Bluing',       regola:'vetrino', re:/bluing/i},
+  {id:'ampA',   nome:'Amplifier A',  regola:'A',       re:/amplifier\s*a\b|\bamp\.?\s*a\b/i},
+  {id:'ampB',   nome:'Amplifier B',  regola:'A',       re:/amplifier\s*b\b|\bamp\.?\s*b\b/i},
+  {id:'opt1',   nome:'Option 1',     regola:'1',       re:/option\s*0?1\b/i},
+];
+const IHC_KIT_RE = { OptiView:/opti[\s\-]*view|\bopt[\s\-]*view/i, UltraView:/ultra[\s\-]*view/i };
+const IHC_CONSUMABILI_RE = /ez[\s\-]*prep|\blcs\b|low cross|reaction buffer|\bcc[12]\b|\boption\b(?!\s*0?1\b)/i;
+function _ihcAccessorio(p){ const n=p&&p.nome||''; return IHC_ACCESSORI.find(a=>a.re.test(n))||null; }
+function _ihcTipo(p){
+  if(!p || p.cat!=='IHC') return '';
+  if(p.ihc_tipo) return p.ihc_tipo;
+  const n=p.nome||'';
+  const acc=_ihcAccessorio(p);
+  if(acc) return acc.regola==='vetrino' ? 'contrasto' : 'protocollo';
+  if(!/amplif/i.test(n) && (IHC_KIT_RE.OptiView.test(n)||IHC_KIT_RE.UltraView.test(n))) return 'kit';
+  if(IHC_CONSUMABILI_RE.test(n)) return 'consumabile';
+  return 'anticorpo';
+}
+function _ihcBlocchetti(campioneId){
+  const s=String(campioneId||'').trim();
+  const m=s.match(/^[\d]+\/\d{2}[A-Za-zLPp]*\s*(.*)$/);
+  if(!m || !m[1] || !m[1].trim()) return 1;
+  const parts=m[1].trim().split(/[\s,;\-\/\+]+/).filter(Boolean);
+  return Math.max(1, parts.filter(p=>/^\d+$/.test(p)||/^[A-Za-z]{1,3}$/.test(p)).length);
+}
+// Lotti di magazzino che corrispondono al nome scritto nella richiesta
+function _ihcLottiAnticorpo(nomeAnt, prods){
+  prods = prods || loadP();
+  const k=_ihcNorm(nomeAnt); if(!k) return [];
+  const cand=prods.filter(p=>p.cat==='IHC' && _ihcTipo(p)==='anticorpo');
+  const perAlias=cand.filter(p=>String(p.ihc_alias||'').split(/[,;]+/).map(_ihcNorm).filter(Boolean).includes(k));
+  if(perAlias.length) return perAlias;
+  const re=_ihcRegex(nomeAnt);
+  return re ? cand.filter(p=>re.test(p.nome||'')) : [];
+}
+function _ihcLottiKit(kitNome, prods){
+  prods = prods || loadP();
+  const re=IHC_KIT_RE[kitNome] || _ihcRegex(kitNome); if(!re) return [];
+  return prods.filter(p=>p.cat==='IHC' && _ihcTipo(p)==='kit' && re.test(p.nome||''));
+}
+function _ihcLottiAccessorio(acc, prods){
+  prods = prods || loadP();
+  return prods.filter(p=>p.cat==='IHC' && (p.ihc_tipo ? (p.ihc_tipo==='contrasto'||p.ihc_tipo==='protocollo') : true) && acc.re.test(p.nome||''));
+}
+function _ihcResiduo(p){
+  const tot=parseInt(p.test_tot,10)||0;
+  const r=parseFloat(p.test_residui);
+  return (isNaN(r) || r<=0) ? tot : Math.min(r, tot||r);
+}
+// ── APERTO / CHIUSO ──
+// In ogni gruppo (lotti dello stesso prodotto) al massimo UN dispenser è "in uso" (ihc_in_uso).
+// qty del lotto = unità in magazzino, compresa quella in uso. Le altre sono chiuse e piene.
+// FIX [MAGAZZINO]: la BenchMark rifiuta i reagenti scaduti → per il gestionale valgono zero:
+// mai aperti in automatico, mai contati come scorta, segnalati "da smaltire"
+function _ihcScaduto(p){ return !!(p && p.scadenza && typeof daysUntil==='function' && daysUntil(p.scadenza) < 0); }
+function _ihcVivi(lotti){ return lotti.filter(p=>(parseFloat(p.qty)||0)>0 && (parseInt(p.test_tot,10)||0)>0 && !_ihcScaduto(p)); }
+function _ihcFefo(lotti){ return lotti.slice().sort((a,b)=>String(a.scadenza||'9999').localeCompare(String(b.scadenza||'9999'))); }
+function _ihcApertoDelGruppo(lotti){
+  const vivi=_ihcVivi(lotti);
+  return vivi.find(p=>p.ihc_in_uso===true)
+      // dati precedenti a questa versione: era aperto il dispenser non più pieno
+      || vivi.find(p=>p.ihc_in_uso===undefined && _ihcResiduo(p) < (parseInt(p.test_tot,10)||0))
+      || null;
+}
+function _ihcSetInUso(lotti, lot, now){
+  lotti.forEach(x=>{ if(x!==lot && x.ihc_in_uso){ x.ihc_in_uso=false; x.modificato=now; } });
+  lot.ihc_in_uso=true; lot.ihc_aperto_da=now; lot.modificato=now;
+}
+function _ihcResApertura(p){
+  const tot=parseInt(p.test_tot,10)||null, res=parseFloat(p.test_residui);
+  return (p.ihc_vss && tot && res>0 && res<tot) ? res : tot;
+}
+function _ihcApriProssimo(lotti, now, msg, entry){
+  const next=_ihcFefo(_ihcVivi(lotti))[0]; if(!next) return null;
+  const _tot=parseInt(next.test_tot,10), _res=parseFloat(next.test_residui);
+  _ihcSetInUso(lotti, next, now);
+  next.test_residui = (next.ihc_vss && _res>0 && _res<_tot) ? _res : _tot;   // registrato in macchina: test reali
+  if(entry) entry(next.id).aperto=true;
+  if(msg) msg.push('🔓 aperto '+next.nome+(next.lotto?' (lotto '+next.lotto+')':''));
+  return next;
+}
+// Scala n test dal dispenser in uso; se finisce lo segna terminato e apre il chiuso che scade prima
+function _ihcScala(lotti, n, motivo, movs, now, msg){
+  let resto=n; const consumi=[];
+  const entry=id=>{ let e=consumi.find(c=>c.prodId===id); if(!e){ e={prodId:id,n:0,esauriti:0,aperto:false}; consumi.push(e); } return e; };
+  let guard=0;
+  while(resto>0 && guard++<1000){
+    // prima apertura (nessuno in uso): silenziosa; il messaggio serve solo quando uno finisce
+    let open=_ihcApertoDelGruppo(lotti) || _ihcApriProssimo(lotti, now, null, entry);
+    if(!open) break;
+    const tot=parseInt(open.test_tot,10); let res=_ihcResiduo(open);
+    const t=Math.min(res,resto); res-=t; resto-=t; entry(open.id).n+=t;
+    open.test_residui=res; open.modificato=now;
+    if(res<=0){
+      open.qty=Math.max(0,(parseFloat(open.qty)||0)-1); entry(open.id).esauriti++;
+      open.ihc_in_uso=false; open.test_residui=tot;
+      movs.unshift({id:genId(), ts:now, tipo:'scarico', prod:open.nome, prodId:open.id, qty:1, lotto:open.lotto||'', note:'Dispenser esaurito (IHC '+motivo+')'});
+      const succ=_ihcApriProssimo(lotti, now, null, entry);   // in macchina si carica subito il successivo
+      if(msg) msg.push('🔒 '+open.nome+' finito'+(succ?' → 🔓 aperto '+(succ.lotto?'lotto '+succ.lotto:'il successivo'):' · ⛔ nessun chiuso disponibile'));
+    }
+  }
+  return {consumi:consumi.filter(c=>c.n||c.esauriti||c.aperto), mancanti:resto};
+}
+// Annulla un consumo: restituisce test, dispenser terminati e riporta "in uso" com'era
+function _ihcRestituisci(consumi, motivo, prods, movs, now){
+  [...(consumi||[])].reverse().forEach(c=>{
+    const p=prods.find(x=>x.id===c.prodId); if(!p) return;
+    const tot=parseInt(p.test_tot,10)||0;
+    if(c.esauriti){
+      p.qty=(parseFloat(p.qty)||0)+c.esauriti;
+      movs.unshift({id:genId(), ts:now, tipo:'carico', prod:p.nome, prodId:p.id, qty:c.esauriti, lotto:p.lotto||'', note:'Annullo consumo IHC '+motivo});
+    }
+    let res=_ihcResiduo(p)+(c.n||0)-tot*(c.esauriti||0);
+    if(tot>0){ res=Math.min(res, tot); if(res<=0) res=tot; }
+    p.test_residui=res; p.modificato=now;
+    const gruppo=prods.filter(x=>x.nome===p.nome);
+    if(c.esauriti){ _ihcSetInUso(gruppo, p, now); }
+    // richiude il dispenser aperto da questo consumo SOLO se torna pieno
+    // (altri consumi successivi sullo stesso dispenser restano validi)
+    else if(c.aperto && tot>0 && res>=tot){ p.ihc_in_uso=false; }
+  });
+}
+// Consuma i test per UN anticorpo di una richiesta. Ritorna {voce, nonTrovato}
+function _ihcConsumaVoce(rec, item, prods, movs, now){
+  const n=_ihcBlocchetti(rec.campione_id);
+  const lottiAnt=_ihcLottiAnticorpo(item, prods);
+  if(!lottiAnt.length) return {voce:null, nonTrovato:true, n};
+  const motivo=item+' · '+String(rec.campione_id||'').split(/\s/)[0];
+  const msgAnt=[];
+  const a=_ihcScala(lottiAnt, n, motivo, movs, now, msgAnt);
+  const corsaUltra = corsaUltraAttiva();
+  const kitNome = corsaUltra ? 'UltraView' : _ihcKitPredefinito(item, lottiAnt);
+  const msg=[];
+  let k={consumi:[], mancanti:0};
+  if(kitNome) k=_ihcScala(_ihcLottiKit(kitNome, prods), n, motivo, movs, now, msg);
+  // Accessori: Ematossilina e Bluing su ogni vetrino; Amplifier A/B e Option 1 se previsti dal protocollo
+  const flag=_ihcVoceProtocollo(item, lottiAnt);
+  const acc=[]; const accMancanti=[];
+  IHC_ACCESSORI.forEach(ac=>{
+    if(ac.regola!=='vetrino' && !flag.includes(ac.regola)) return;
+    const lotti=_ihcLottiAccessorio(ac, prods);
+    if(!_ihcVivi(lotti).length && !lotti.some(p=>(parseInt(p.test_tot,10)||0)>0)) return; // non configurato: si ignora
+    const r=_ihcScala(lotti, n, motivo, movs, now, msg);
+    r.consumi.forEach(c=>acc.push(c));
+    if(r.mancanti>0) accMancanti.push(ac.nome+' −'+r.mancanti);
+  });
+  const avvisi=[];
+  if(!lottiAnt.some(p=>(parseInt(p.test_tot,10)||0)>0)) avvisi.push(item+': test per dispenser non impostati');
+  else if(a.mancanti>0) avvisi.push(item+': '+a.mancanti+' test senza dispenser disponibile');
+  if(!kitNome) avvisi.push(item+': kit di rivelazione non impostato');
+  else if(k.mancanti>0) avvisi.push(kitNome+': '+k.mancanti+' test senza kit disponibile');
+  if(accMancanti.length) avvisi.push('senza scorta: '+accMancanti.join(', '));
+  msgAnt.forEach(m=>avvisi.push(m)); msg.forEach(m=>avvisi.push(m));
+  return {voce:{n, ant:a.consumi, kit:k.consumi, acc, kitNome, corsaUltra, ts:now}, nonTrovato:false, avvisi, n};
+}
+// Nuovo lotto: eredita la configurazione IHC dal modello e parte con il dispenser pieno.
+// Lotto esistente che torna disponibile (era a zero): il dispenser in uso riparte pieno.
+function _ihcEredita(modello, p, qtyPrima){
+  if(!p || p.cat!=='IHC') return;
+  if(modello && modello!==p){
+    ['ihc_tipo','test_tot','kit_riv','ihc_alias'].forEach(k=>{ if(modello[k]!==undefined && modello[k]!==null && modello[k]!=='' && (p[k]===undefined||p[k]===null||p[k]==='')) p[k]=modello[k]; });
+  }
+  const tot=parseInt(p.test_tot,10)||0;
+  if(tot && (qtyPrima===undefined || (parseFloat(qtyPrima)||0)<=0)) p.test_residui=tot;
+}
+// Home: anticorpi/kit IHC in esaurimento (max 3, prima i più urgenti)
+function _renderIhcMagHome(){
+  const el=document.getElementById('kpi-ihc-mag'); if(!el) return;
+  let lista=[]; try{ lista=_ihcStatoMagazzino().filter(g=>g.basso); }catch(e){}
+  if(!lista.length){ el.innerHTML=''; return; }
+  lista.sort((a,b)=>((a.copertura??9999)-(b.copertura??9999)) || (a.test-b.test));
+  el.innerHTML = '<div onclick="event.stopPropagation();showView(\'allerte\')" style="cursor:pointer;padding:5px 7px;background:#faf5ff;border:1px solid #e9d5ff;border-radius:6px;font-size:11px;color:#7e22ce">'
+    + lista.slice(0,3).map(g=>'⚠ <b>'+esc(g.nome)+'</b> · '+g.test+' test'+(g.copertura!==null?' (~'+g.copertura+' gg)':'')).join('<br>')
+    + (lista.length>3?'<br><span style="color:var(--text3)">+'+(lista.length-3)+' altri</span>':'') + '</div>';
+}
+// ── PROTOCOLLO PER ANTICORPO (corsa normale) ──
+// Lettere: O = OptiView · U = UltraView · A = Amplifier A e B · 1 = Option 1
+// Chiave = nome dell'anticorpo come scritto nelle richieste (maiuscole, spazi,
+// trattini e barre indifferenti). Il kit impostato nella scheda prodotto ha la precedenza.
+const IHC_PROTOCOLLI = {
+  // ── OptiView (dal foglio "Richiesta IHC") ──
+  'BCC':'O', '34βE12+p63':'O', 'BCC (34βE12+p63)':'O',
+  'CD138':'O', 'CD20':'O', 'CD3':'O', 'CD30':'O', 'CD34':'O',
+  'CD68':'O', 'CD68 (KP-1)':'O', 'KP-1':'O',
+  'Ciclina D1':'O', 'Cyclin D1':'O',
+  'Desmina':'O', 'Desmin':'O',
+  'Ki67':'O', 'MIB-1':'O',
+  'Melan A':'O', 'MART1':'O', 'Melan A (MART1)':'O',
+  'S100':'O',
+  // ── UltraView ──
+  '34βE12':'U',
+  'Actina':'U', 'ASM':'U', 'SMA':'U', 'Actina (ASM)':'U',
+  'BCL2':'U', 'BCL6':'U', 'CD10':'U', 'CD23':'U',
+  'CD45':'U', 'LCA':'U', 'CD45 (LCA)':'U',
+  'CD56':'U', 'CDX-2':'U', 'CK19':'U', 'CK20':'U', 'CK5/6':'U', 'CK7':'U',
+  'Cromo-A':'U', 'Cromogranina':'U', 'Chromogranin':'U',
+  'EMA':'U', 'ER':'U',
+  'Hepatoc':'U', 'HSA':'U', 'HepPar1':'U', 'Hepatoc (HSA)':'U',
+  'HMB-45':'U', 'H. pylori':'U', 'Helicobacter':'U',
+  'P16':'U', 'P53':'U', 'P63':'U',
+  'PanCK':'U', 'AE1-AE3':'U', 'PanCK (AE1-AE3)':'U',
+  'PR':'U', 'PSA':'U',
+  'Sinapto':'U', 'Sinaptofisina':'U', 'Synaptophysin':'U',
+  'SOX-10':'U', 'TTF-1':'U', 'Vimentina':'U', 'WT1':'U',
+  'Caldesmone':'U', 'Caldesmon':'U', 'Calponina':'U', 'Calponin':'U',
+  'Alfafetoproteina':'U', 'AFP':'U',
+  'PAX-5':'U', 'PRAME':'U', 'PLAP':'U',
+  // ── Senza indicazione sul foglio: CD5, E-Caderina, HBME1, HER2 ──
+  // Amplifier A/B (lettera A) e Option 1 (lettera 1): nessun anticorpo indicato per ora
+};
+function _ihcVoceProtocollo(item, lottiAnt){
+  const k=_ihcNorm(item);
+  const split=v=>String(v).toUpperCase().split(/[\s,+;\/]+/).filter(Boolean);
+  // 1° passaggio: nome identico (es. "BCC" non deve prendere il kit di "34βE12")
+  for(const [nome,val] of Object.entries(IHC_PROTOCOLLI)) if(_ihcNorm(nome)===k) return split(val);
+  // 2° passaggio: il nome in tabella compare nel nome del prodotto in magazzino (il più lungo vince)
+  let best=null, bestLen=0;
+  for(const [nome,val] of Object.entries(IHC_PROTOCOLLI)){
+    const re=_ihcRegex(nome), len=_ihcNorm(nome).length;
+    if(re && len>bestLen && (lottiAnt||[]).some(p=>re.test(p.nome||''))){ best=val; bestLen=len; }
+  }
+  return best ? split(best) : [];
+}
+function _ihcKitPredefinito(item, lottiAnt){
+  const daScheda=((lottiAnt||[]).find(p=>p.kit_riv)||{}).kit_riv;
+  if(daScheda) return daScheda;
+  const t=_ihcVoceProtocollo(item, lottiAnt);
+  return t.includes('O') ? 'OptiView' : t.includes('U') ? 'UltraView' : '';
+}
+
+// ── CORSA SOLO ULTRAVIEW: valida solo per la giornata in cui viene attivata ──
+const LS_IHC_CORSA='ls_ihc_corsa_ultra', LS_IHC_AVV8='ls_ihc_avviso8';
+function _oggiLocale(d){ d=d||new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function corsaUltraAttiva(){ const v=_getCache(LS_IHC_CORSA,'null'); return !!(v && v.data===_oggiLocale()); }
+function toggleCorsaUltra(forza){
+  const on = (forza!==undefined) ? !!forza : !corsaUltraAttiva();
+  _setCache(LS_IHC_CORSA, on ? {data:_oggiLocale(), da:new Date().toISOString()} : null);
+  _renderCorsaUltra();
+  toast(on ? '⚡ Corsa solo UltraView attiva fino a fine giornata' : 'Corsa solo UltraView disattivata', on?'warn':'info');
+}
+function _renderCorsaUltra(){
+  const on=corsaUltraAttiva();
+  const btn=document.getElementById('ihc-corsa-btn');
+  if(btn){ btn.style.background=on?'#f97316':''; btn.style.color=on?'#fff':''; btn.style.borderColor=on?'#f97316':''; btn.textContent=on?'⚡ UltraView ATTIVA':'⚡ Corsa solo UltraView'; }
+  const ban=document.getElementById('ihc-corsa-banner');
+  if(ban) ban.innerHTML = on
+    ? `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 14px;margin-bottom:12px;background:#fff7ed;border:1.5px solid #f97316;border-radius:10px;font-size:13px;color:#9a3412">
+        <span style="font-size:18px">⚡</span>
+        <span style="flex:1;min-width:200px"><b>Corsa solo UltraView attiva per oggi.</b> Tutti gli anticorpi che spunti scalano i test da UltraView, qualunque sia il loro kit abituale.</span>
+        <button class="btn btn-sm" onclick="toggleCorsaUltra(false)">Disattiva</button></div>`
+    : '';
+}
+function _dataLocaleDa(iso){ try{ return _oggiLocale(new Date(iso)); }catch(e){ return ''; } }
+
+// Sposta sul kit indicato i test di kit scalati OGGI con un kit diverso
+async function _ihcRiassegnaKitOggi(kitNuovo){
+  const oggi=_oggiLocale(), prods=loadP(), movs=loadM(), now=new Date().toISOString(), arr=loadIHC();
+  let n=0, mancanti=0;
+  arr.forEach(r=>Object.entries(r.consumi||{}).forEach(([item,v])=>{
+    if(!v || !v.ts || _dataLocaleDa(v.ts)!==oggi || v.kitNome===kitNuovo || !v.n) return;
+    _ihcRestituisci(v.kit||[], item, prods, movs, now);
+    const k=_ihcScala(_ihcLottiKit(kitNuovo,prods), v.n, item+' · '+String(r.campione_id||'').split(/\s/)[0], movs, now, null);
+    v.kit=k.consumi; v.kitNome=kitNuovo; v.corsaUltra=true; mancanti+=k.mancanti; r.modificato=now; n++;
+  }));
+  if(!n) return 0;
+  await saveP(prods); saveM(movs); await saveIHCArr(arr);
+  toast('🔄 '+n+' anticorpi di oggi spostati su '+kitNuovo+(mancanti?' · ⚠ '+mancanti+' test senza kit disponibile':''), mancanti?'warn':'success');
+  return n;
+}
+
+// Avviso: più di 8 anticorpi diversi oggi con la modalità spenta → era una corsa solo UltraView?
+async function _ihcControlloCorsaGrande(){
+  if(corsaUltraAttiva()) return;
+  const oggi=_oggiLocale();
+  if(_getCache(LS_IHC_AVV8,'null')===oggi) return;   // già chiesto oggi
+  const diversi=new Set();
+  loadIHC().forEach(r=>Object.entries(r.consumi||{}).forEach(([item,v])=>{ if(v && v.ts && _dataLocaleDa(v.ts)===oggi) diversi.add(_ihcNorm(item)); }));
+  if(diversi.size<=8) return;
+  _setCache(LS_IHC_AVV8, oggi);
+  const ok=confirm('Oggi hai segnato '+diversi.size+' anticorpi diversi: più degli 8 che stanno a bordo.\n\nEra una corsa con solo UltraView (OptiView tolto)?\n\nOK = attiva la modalità e sposta su UltraView i test di oggi scalati da OptiView\nAnnulla = no, erano più corse (non lo chiedo più oggi)');
+  if(!ok) return;
+  toggleCorsaUltra(true);
+  await _ihcRiassegnaKitOggi('UltraView');
+  if(typeof renderIHC==='function') renderIHC();
+}
+
+// ═══ MAGAZZINO IHC — vista aperti/chiusi ═══
+const IHC_SEZIONI=[
+  {tipo:'anticorpo',  titolo:'🧬 Anticorpi'},
+  {tipo:'kit',        titolo:'🧪 Kit di rivelazione'},
+  {tipo:'contrasto',  titolo:'🔵 Ematossilina e Bluing (ogni vetrino)'},
+  {tipo:'protocollo', titolo:'⚗️ Amplifier e Option (da protocollo)'},
+];
+function openIhcMag(){ const s=document.getElementById('ihcm-search'); if(s) s.value=''; renderIhcMag(); document.getElementById('modal-ihc-mag').classList.add('open'); }
+function _ihcGruppi(){
+  const per={};
+  loadP().filter(p=>p.cat==='IHC').forEach(p=>{ const k=(p.nome||'').trim().toLowerCase(); (per[k]=per[k]||[]).push(p); });
+  return per;
+}
+function _ihcFmtD(d){ return d ? new Date(d).toLocaleDateString('it-IT',{day:'2-digit',month:'2-digit',year:'2-digit'}) : '—'; }
+function renderIhcMag(){
+  const body=document.getElementById('ihcm-body'); if(!body) return;
+  const q=((document.getElementById('ihcm-search')||{}).value||'').toLowerCase().trim();
+  const per=_ihcGruppi(); const cop={};
+  try{ _ihcStatoMagazzino().forEach(g=>{ cop[(g.nome||'').trim().toLowerCase()]=g; }); }catch(e){}
+  let nUso=0, nChiusi=0, nNonConf=0, html='';
+  IHC_SEZIONI.forEach(sez=>{
+    const keys=Object.keys(per).filter(k=>_ihcTipo(per[k][0])===sez.tipo && (!q || k.includes(q))).sort((a,b)=>a.localeCompare(b,'it'));
+    if(!keys.length) return;
+    html+=`<div style="font-size:12px;font-weight:700;color:var(--accent);margin:14px 0 6px;text-transform:uppercase;letter-spacing:.05em">${sez.titolo}</div>`;
+    keys.forEach(k=>{
+      const lotti=per[k]; const nome=lotti[0].nome;
+      const tot=Math.max(0,...lotti.map(p=>parseInt(p.test_tot,10)||0));
+      const kj=JSON.stringify(k).replace(/"/g,'&quot;');
+      if(!tot){
+        nNonConf++;
+        const giac=lotti.reduce((s,p)=>s+(parseFloat(p.qty)||0),0);
+        html+=`<div style="display:flex;align-items:center;gap:8px;padding:9px 10px;border:1px dashed var(--border);border-radius:8px;margin-bottom:6px;font-size:13px">
+          <b style="flex:1">${esc(nome)}</b><span style="color:var(--text3)">${giac} in magazzino · test non configurati</span>
+          <button class="btn btn-sm" onclick="closeModal('modal-ihc-mag');openEditModal('${esc(lotti[0].id)}')">⚙️ Configura</button></div>`;
+        return;
+      }
+      const aperto=_ihcApertoDelGruppo(lotti);
+      const chiusiPerLotto=_ihcFefo(_ihcVivi(lotti)).map(p=>({p, n:(parseFloat(p.qty)||0)-(p===aperto?1:0)})).filter(x=>x.n>0);
+      const nCh=chiusiPerLotto.reduce((s,x)=>s+x.n,0);
+      if(aperto) nUso++; nChiusi+=nCh;
+      const g=cop[k];
+      let usoHtml;
+      if(aperto){
+        const res=_ihcResiduo(aperto), pct=Math.round(res/tot*100);
+        usoHtml=`<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <span style="font-weight:600">🔓 In uso</span>
+          <span style="color:var(--text2);font-size:12px">${aperto.lotto?'lotto '+esc(aperto.lotto):'senza lotto'} · aperto ${_ihcFmtD(aperto.ihc_aperto_da)} · scad ${_ihcFmtD(aperto.scadenza)}</span>
+          <span style="flex:1"></span>
+          <button class="btn btn-sm" title="Correggi i test residui (es. come mostrati dalla BenchMark)" onclick="ihcCorreggiResidui('${esc(aperto.id)}')">✏️ ${res}/${tot}</button>
+          <button class="btn btn-sm" onclick="ihcTermina(${kj})">Termina</button></div>
+          <div style="height:6px;background:var(--bg3);border-radius:4px;margin-top:5px;overflow:hidden"><div style="height:100%;width:${pct}%;background:${pct<20?'var(--red)':pct<50?'var(--yellow)':'var(--green)'}"></div></div>`;
+      } else {
+        usoHtml=`<div style="display:flex;align-items:center;gap:8px"><span style="color:var(--text3)">Nessun dispenser in uso</span></div>`;
+      }
+      const sel = chiusiPerLotto.length
+        ? `<select id="ihcm-sel-${esc(lotti[0].id)}" style="padding:5px;font-size:12px">${chiusiPerLotto.map(x=>`<option value="${esc(x.p.id)}">${x.p.lotto?'lotto '+esc(x.p.lotto):'senza lotto'} · scad ${_ihcFmtD(x.p.scadenza)}</option>`).join('')}</select>
+           <button class="btn btn-sm btn-ok" onclick="ihcApri(${kj}, document.getElementById('ihcm-sel-${esc(lotti[0].id)}').value)">🔓 Apri${aperto?' (sostituisce)':''}</button>`
+        : '';
+      const scaduti=lotti.filter(p=>(parseFloat(p.qty)||0)>0 && _ihcScaduto(p));
+      const esaurito=!aperto && !nCh;
+      html+=`<div style="padding:10px 12px;border:1px solid ${esaurito?'#fecaca':g&&g.basso?'#e9d5ff':'var(--border)'};background:${esaurito?'#fef2f2':'var(--card)'};border-radius:10px;margin-bottom:8px;font-size:13px">
+        <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:6px;flex-wrap:wrap">
+          <b style="font-size:14px">${esc(nome)}</b>
+          <span style="color:var(--text3);font-size:11px">${tot} test/unità${lotti[0].kit_riv?' · '+esc(lotti[0].kit_riv):''}</span>
+          <span style="flex:1"></span>
+          ${g?`<span style="font-size:11px;color:${g.basso?'var(--red)':'var(--text3)'}">${g.test} test${g.copertura!==null?' · ~'+g.copertura+' gg':''}</span>`:''}
+        </div>
+        ${esaurito?'<div style="color:var(--red);font-weight:600">⛔ Esaurito: nessun dispenser in uso né chiuso</div>':usoHtml}
+        <div style="display:flex;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap">
+          <span style="font-weight:600">🔒 Chiusi: ${nCh}</span>
+          <span style="color:var(--text2);font-size:12px;flex:1">${chiusiPerLotto.map(x=>(x.p.lotto?esc(x.p.lotto):'s.l.')+' ×'+x.n+' (scad '+_ihcFmtD(x.p.scadenza)+(x.p.ihc_vss?' · già in macchina, '+_ihcResiduo(x.p)+' test':'')+')').join(' · ')||'—'}</span>
+          ${sel}
+        </div>
+        ${scaduti.length?`<div style="display:flex;align-items:center;gap:8px;margin-top:8px;padding:6px 8px;background:#fef2f2;border-radius:6px;flex-wrap:wrap">
+          <span style="color:var(--red);font-weight:600;font-size:12px;flex:1">⛔ Scaduti da smaltire: ${scaduti.map(p=>(p.lotto?esc(p.lotto):'s.l.')+' ×'+(parseFloat(p.qty)||0)+' (scad '+_ihcFmtD(p.scadenza)+')').join(' · ')}</span>
+          <button class="btn btn-sm btn-danger" onclick="ihcSmaltisciScaduti(${kj})">Smaltiti</button></div>`:''}
+      </div>`;
+    });
+  });
+  if(!html) html='<div style="padding:24px;text-align:center;color:var(--text3)">Nessun prodotto IHC'+(q?' per questa ricerca':'')+'. I prodotti della categoria IHC compaiono qui.</div>';
+  if(!_ihcAllineato()) html = `<div style="padding:12px 14px;margin-bottom:12px;background:#eff6ff;border:1.5px solid #3b82f6;border-radius:10px">
+      <div style="font-weight:700;color:#1e40af;margin-bottom:4px">Primo avvio del Magazzino IHC</div>
+      <div style="font-size:12px;color:var(--text2);margin-bottom:8px">Carica quello che hai in macchina (inventario BenchMark del 06/10/2026: ${IHC_ALLINEAMENTO.seed.filter(x=>x.v).length} dispenser con i test reali) e le scorte in frigo (${IHC_ALLINEAMENTO.seed.filter(x=>!x.v).length} dispenser chiusi).</div>
+      <button class="btn btn-ok" onclick="allineaMagazzinoIhc()">⚡ Allinea magazzino IHC</button></div>` + html;
+  body.innerHTML=html;
+  const sum=document.getElementById('ihcm-sum');
+  if(sum) sum.innerHTML=`🔓 <b>${nUso}</b> in uso · 🔒 <b>${nChiusi}</b> chiusi pronti${nNonConf?` · <span style="color:var(--orange)">⚙️ ${nNonConf} da configurare</span>`:''}`;
+}
+// ═══ ALLINEAMENTO INIZIALE (una tantum) ═══
+// Dati letti dal report "Inventario" del software VSS v12.5.4 della BenchMark (06/10/2026 07:51):
+// solo dispenser attivi con test > 0 (v:1, r = test residui reali, o = registrazione = apertura)
+// + scorte chiuse in frigo indicate da Ferdinando il 06/10/2026 (v:0).
+// n nome · c catalogo · l lotto · s scadenza · t test per dispenser
+const IHC_ALLINEAMENTO_ID='20261006';
+const IHC_ALLINEAMENTO={"seed":[{"n":"p16 (E6H4) Histo","c":"805-4713","l":"N14733","s":"2027-07-23","t":50,"r":1,"o":"2025-12-11","v":1},{"n":"ANTI-CD20","c":"760-2531","l":"M24075","s":"2026-11-11","t":50,"r":1,"o":"2025-05-12","v":1},{"n":"ANTI-PAN KERATIN","c":"760-2595","l":"N15523","s":"2027-08-14","t":50,"r":2,"o":"2026-04-23","v":1},{"n":"Ki-67 (30-9)","c":"790-4286","l":"M25553","s":"2027-01-13","t":50,"r":2,"o":"2026-04-09","v":1},{"n":"ultraView Universal DAB","c":"760-500","l":"N14063","s":"2027-06-10","t":250,"r":4,"o":"2026-05-07","v":1},{"n":"BLUING REAGENT","c":"760-2037","l":"N22978","s":"2027-12-01","t":250,"r":4,"o":"2026-05-06","v":1},{"n":"CD138 (B-A38)","c":"760-4248","l":"V0005480","s":"2028-01-31","t":50,"r":5,"o":"2025-12-15","v":1},{"n":"BLUING REAGENT","c":"760-2037","l":"N22999","s":"2027-12-10","t":250,"r":5,"o":"2026-07-13","v":1},{"n":"S100 (4C4.9)","c":"790-2914","l":"M21874","s":"2026-11-07","t":50,"r":7,"o":"2025-03-19","v":1},{"n":"ANTI-PAN KERATIN","c":"760-2595","l":"N28992","s":"2028-01-06","t":50,"r":8,"o":"2026-07-23","v":1},{"n":"CD34 (QBend10)","c":"790-2927","l":"M25550","s":"2026-12-11","t":50,"r":9,"o":"2025-06-05","v":1},{"n":"bcl-2 (SP66)","c":"790-4604","l":"M24946","s":"2026-11-17","t":50,"r":13,"o":"2025-05-12","v":1},{"n":"p16 (E6H4) Histo","c":"805-4713","l":"N24578","s":"2027-12-03","t":50,"r":15,"o":"2026-05-29","v":1},{"n":"CD56 (MRQ-42)","c":"760-4596","l":"V0004818","s":"2027-06-30","t":50,"r":17,"o":"2026-01-07","v":1},{"n":"CD45(2B11PD7/26)","c":"760-4279","l":"V0004498","s":"2027-02-28","t":50,"r":17,"o":"2026-03-03","v":1},{"n":"CK 5/6 (D5/16B4)","c":"790-4554","l":"N01164","s":"2027-03-09","t":50,"r":18,"o":"2025-09-26","v":1},{"n":"Cyclin D1(SP4-R)","c":"790-4508","l":"M29900Z","s":"2027-02-03","t":50,"r":20,"o":"2025-10-20","v":1},{"n":"SOX-10 (SP267)","c":"760-4968","l":"V0004319","s":"2026-12-31","t":50,"r":21,"o":"2024-05-20","v":1},{"n":"anti-CK7 (SP52)","c":"790-4462","l":"N17914","s":"2027-08-03","t":50,"r":26,"o":"2025-12-17","v":1},{"n":"anti-Mel (HMB45)","c":"790-4366","l":"M22066","s":"2026-10-14","t":50,"r":27,"o":"2025-04-09","v":1},{"n":"ANTI-DESMIN","c":"760-2513","l":"N17916","s":"2027-09-30","t":50,"r":31,"o":"2026-02-26","v":1},{"n":"CD68 (KP-1)","c":"790-2931","l":"N04489","s":"2027-04-06","t":50,"r":32,"o":"2025-10-29","v":1},{"n":"anti-H.pylori","c":"790-1014","l":"M25835","s":"2027-01-08","t":50,"r":32,"o":"2025-06-05","v":1},{"n":"anti-p63(4A4)","c":"790-4509","l":"N00128","s":"2027-02-12","t":50,"r":32,"o":"2025-10-30","v":1},{"n":"SM Actin","c":"760-2833","l":"V0005035","s":"2027-09-30","t":50,"r":34,"o":"2026-04-02","v":1},{"n":"ANTI-p53","c":"760-2542","l":"N00602","s":"2027-01-29","t":50,"r":35,"o":"2025-07-17","v":1},{"n":"anti-PR (1E2)","c":"790-2223","l":"M26564","s":"2026-12-11","t":50,"r":35,"o":"2025-07-17","v":1},{"n":"PRAME-50","c":"790-7149","l":"N25352","s":"2027-12-18","t":50,"r":38,"o":"2026-06-09","v":1},{"n":"anti-CD5 (SP19)","c":"790-4451","l":"N07241","s":"2027-04-03","t":50,"r":39,"o":"2025-10-20","v":1},{"n":"CD10 (SP67)","c":"790-4506","l":"N17821","s":"2027-09-11","t":50,"r":39,"o":"2026-06-18","v":1},{"n":"anti-CK (34BE12)","c":"790-4373","l":"M26883","s":"2026-11-21","t":50,"r":40,"o":"2025-10-30","v":1},{"n":"anti-Ck20 (SP33)","c":"790-4431","l":"N01151","s":"2027-02-20","t":50,"r":41,"o":"2025-06-19","v":1},{"n":"MART-1 (A-103)","c":"790-2990","l":"M25060","s":"2026-12-03","t":50,"r":41,"o":"2025-09-22","v":1},{"n":"anti-Synap(SP11)","c":"790-4407","l":"N08611","s":"2027-05-06","t":50,"r":42,"o":"2026-03-11","v":1},{"n":"ANTI-CHROMO","c":"760-2519","l":"M21378","s":"2026-11-04","t":50,"r":43,"o":"2025-11-03","v":1},{"n":"anti-CD3 (2GV6)","c":"790-4341","l":"N25541","s":"2028-01-07","t":50,"r":43,"o":"2026-09-10","v":1},{"n":"(34BE12+p63)","c":"790-4536","l":"M25989","s":"2026-11-20","t":50,"r":44,"o":"2025-09-30","v":1},{"n":"bcl-6","c":"760-4241","l":"V0004912","s":"2027-04-30","t":50,"r":44,"o":"2026-07-06","v":1},{"n":"anti-TTF-1","c":"790-4398","l":"N10149","s":"2027-06-19","t":50,"r":45,"o":"2025-12-15","v":1},{"n":"S100 (4C4.9)","c":"790-2914","l":"N28355","s":"2027-12-17","t":50,"r":45,"o":"2026-08-20","v":1},{"n":"WT1 (6F-H2)","c":"760-4397","l":"V0005489","s":"2028-02-29","t":50,"r":46,"o":"2026-04-09","v":1},{"n":"PLAP","c":"760-2664","l":"V0005715","s":"2028-02-29","t":50,"r":46,"o":"2026-04-28","v":1},{"n":"AFP","c":"760-2603","l":"V0005504","s":"2027-12-31","t":50,"r":47,"o":"2026-04-28","v":1},{"n":"VENTANA HER2/neu","c":"790-4493","l":"N25205","s":"2027-05-24","t":50,"r":47,"o":"2026-04-15","v":1},{"n":"ER (SP1)","c":"790-4324","l":"N28706","s":"2027-12-03","t":50,"r":47,"o":"2026-08-03","v":1},{"n":"Mesothelial Cell","c":"760-4445","l":"V0004878","s":"2027-07-31","t":50,"r":48,"o":"2026-05-29","v":1},{"n":"Calponin(EP798Y)","c":"760-4376","l":"V0005695","s":"2028-04-30","t":50,"r":48,"o":"2026-04-15","v":1},{"n":"anti-CD23 (SP23)","c":"790-4408","l":"N02426","s":"2027-02-18","t":50,"r":48,"o":"2026-02-23","v":1},{"n":"anti-PAX5 (SP34)","c":"790-4420","l":"N10216","s":"2027-06-05","t":50,"r":48,"o":"2025-12-12","v":1},{"n":"anti-EMA (E29)","c":"790-4463","l":"N13396","s":"2027-07-06","t":50,"r":48,"o":"2026-05-14","v":1},{"n":"Caldesmon (E89)","c":"760-4375","l":"V0005244","s":"2027-10-31","t":50,"r":49,"o":"2026-04-15","v":1},{"n":"E-cadherin (36)","c":"790-4497","l":"N22198","s":"2027-10-05","t":50,"r":49,"o":"2026-04-15","v":1},{"n":"OptiView DAB IHC Detection Kit","c":"760-700","l":"N09023","s":"2027-03-26","t":250,"r":57,"o":"2025-09-09","v":1},{"n":"AMPLIFIER A","c":"760-080","l":"N12018","s":"2027-06-09","t":250,"r":65,"o":"2025-12-09","v":1},{"n":"AMPLIFIER B","c":"760-080","l":"N12018","s":"2027-06-09","t":250,"r":65,"o":"2025-12-09","v":1},{"n":"ultraView Universal DAB","c":"760-500","l":"N26945","s":"2028-01-13","t":250,"r":70,"o":"2026-07-23","v":1},{"n":"OPTION 1 (AB DILUENT CASEIN)","c":"X","l":"k10862","s":"2026-10-07","t":250,"r":88,"o":"2025-04-07","v":1},{"n":"OPTION 1 (AB DILUENT CASEIN)","c":"X","l":"m26433","s":"2027-12-09","t":250,"r":162,"o":"2026-06-09","v":1},{"n":"HEMATOXYLIN","c":"760-2021","l":"P01683","s":"2027-08-23","t":250,"r":172,"o":"2026-09-10","v":1},{"n":"BLUING REAGENT","c":"760-2037","l":"P03877","s":"2028-04-09","t":250,"r":235,"o":"2026-09-29","v":1},{"n":"SM Actin","c":"760-2833","l":"V0005904","s":"2028-03-31","t":50,"r":null,"o":null,"v":0},{"n":"bcl-2 (SP66)","c":"790-4604","l":"N29226","s":"2028-01-14","t":50,"r":null,"o":null,"v":0},{"n":"CD10 (SP67)","c":"790-4506","l":"N30739","s":"2028-02-02","t":50,"r":null,"o":null,"v":0},{"n":"CD138 (B-A38)","c":"760-4248","l":"V0005987","s":"2028-07-31","t":50,"r":null,"o":null,"v":0},{"n":"anti-CD30","c":"790-4858","l":"N30547","s":"2027-01-22","t":50,"r":null,"o":null,"v":0},{"n":"CD34 (QBend10)","c":"790-2927","l":"N30731","s":"2028-02-02","t":50,"r":null,"o":null,"v":0},{"n":"CD56 (MRQ-42)","c":"760-4596","l":"V0005742","s":"2028-07-31","t":50,"r":null,"o":null,"v":0},{"n":"CK19 A53-B/A2.26","c":"760-4281","l":"V0005249","s":"2028-01-31","t":50,"r":null,"o":null,"v":0},{"n":"anti-CK7 (SP52)","c":"790-4462","l":"N27745","s":"2027-12-16","t":50,"r":null,"o":null,"v":0},{"n":"ANTI-CHROMO","c":"760-2519","l":"N23072","s":"2027-11-24","t":50,"r":null,"o":null,"v":0},{"n":"ER (SP1)","c":"790-4324","l":"N28706","s":"2027-12-03","t":50,"r":null,"o":null,"v":0},{"n":"Mesothelial Cell","c":"760-4445","l":"V0005737","s":"2027-12-31","t":50,"r":null,"o":null,"v":0},{"n":"HSA (OCH1E5)","c":"760-4350","l":"V0005065","s":"2027-09-30","t":50,"r":null,"o":null,"v":0},{"n":"p16 (E6H4) Histo","c":"805-4713","l":"P05252","s":"2028-04-05","t":50,"r":null,"o":null,"v":0},{"n":"ANTI-p53","c":"760-2542","l":"N16696","s":"2027-08-04","t":50,"r":null,"o":null,"v":0},{"n":"AMPLIFIER A","c":"760-080","l":"N25143","s":"2027-11-05","t":250,"r":null,"o":null,"v":0},{"n":"AMPLIFIER B","c":"760-080","l":"N25143","s":"2027-11-05","t":250,"r":null,"o":null,"v":0}],"alias":{"anti-p63(4A4)":"P63","CK19 A53-B/A2.26":"CK19","anti-H.pylori":"H. pylori, HPylori, Helicobacter","CK 5/6 (D5/16B4)":"CK5/6","anti-CK7 (SP52)":"CK7","(34BE12+p63)":"BCC, 34βE12+p63, BCC (34βE12+p63)","anti-Synap(SP11)":"Sinapto, Sinaptofisina","anti-PR (1E2)":"PR","VENTANA HER2/neu":"HER2","anti-TTF-1":"TTF-1, TTF1","Calponin(EP798Y)":"Calponina, Calponin","anti-Ck20 (SP33)":"CK20","SM Actin":"Actina, ASM, SMA, Actina (ASM)","ANTI-CHROMO":"Cromo-A, Cromogranina","ER (SP1)":"ER","ANTI-PAN KERATIN":"PanCK, AE1-AE3, PanCK (AE1-AE3)","E-cadherin (36)":"E-Caderina, E-cadherin","anti-CD3 (2GV6)":"CD3","CD45(2B11PD7/26)":"CD45, LCA, CD45 (LCA)","Cyclin D1(SP4-R)":"Ciclina D1, Cyclin D1","anti-CK (34BE12)":"34βE12, 34BE12","MART-1 (A-103)":"Melan A, MART1, Melan A (MART1)","p16 (E6H4) Histo":"P16","ANTI-DESMIN":"Desmina, Desmin","PRAME-50":"PRAME","HSA (OCH1E5)":"Hepatoc, HSA, Hepatoc (HSA)","Caldesmon (E89)":"Caldesmone, Caldesmon","anti-CD30":"CD30","anti-EMA (E29)":"EMA","AFP":"Alfafetoproteina, AFP","anti-PAX5 (SP34)":"PAX-5, PAX5","ANTI-p53":"P53","Ki-67 (30-9)":"Ki67, Ki-67, MIB-1","Mesothelial Cell":"HBME1","anti-Mel (HMB45)":"HMB-45, HMB45","CD68 (KP-1)":"CD68, KP-1","ANTI-CD20":"CD20"}};
+function _ihcAllineato(){
+  try{ if(_getCache('ls_ihc_allineamento','null')===IHC_ALLINEAMENTO_ID) return true; }catch(e){}
+  return loadP().some(p=>p.ihc_seed===IHC_ALLINEAMENTO_ID);   // eseguito anche da un altro dispositivo
+}
+async function allineaMagazzinoIhc(){
+  if(_ihcAllineato()){ toast('Magazzino IHC già allineato','info'); return; }
+  const prods=loadP();
+  const TRACK=new Set(['anticorpo','kit','contrasto','protocollo']);
+  const seedNomi=new Set(IHC_ALLINEAMENTO.seed.map(x=>x.n.trim().toLowerCase()));
+  // lotti IHC esistenti riutilizzabili (stesso numero di lotto)
+  const perLotto={};
+  prods.filter(p=>p.cat==='IHC' && TRACK.has(_ihcTipo(p))).forEach(p=>{ const k=String(p.lotto||'').trim().toLowerCase(); if(k) (perLotto[k]=perLotto[k]||[]).push(p); });
+  const daAzzerare=prods.filter(p=>p.cat==='IHC' && TRACK.has(_ihcTipo(p)) && (parseFloat(p.qty)||0)>0);
+  const msg='Allineo il Magazzino IHC con:\n\n• '+IHC_ALLINEAMENTO.seed.filter(x=>x.v).length+' dispenser in macchina (test reali dalla BenchMark)\n• '+IHC_ALLINEAMENTO.seed.filter(x=>!x.v).length+' dispenser chiusi in frigo\n\n'
+    +(daAzzerare.length?'Gli altri lotti IHC (anticorpi, kit, ematossilina, bluing, amplifier) presenti oggi nel gestionale verranno azzerati, perché non risultano né in macchina né in frigo. CC1, EZ Prep e gli altri consumabili non vengono toccati.\n\n':'')
+    +'Puoi annullare con Undo.';
+  if(!confirm(msg)) return;
+  _takeSnapshot('Allineamento Magazzino IHC 06/10/2026');
+  const now=new Date().toISOString(), movs=loadM(), usati=new Set(), nuovi=[];
+  const mov=(p,delta,nota)=>{ if(!delta) return; movs.unshift({id:genId(), ts:now, tipo:delta>0?'carico':'scarico', prod:p.nome, prodId:p.id, qty:Math.abs(delta), lotto:p.lotto||'', note:nota}); };
+  IHC_ALLINEAMENTO.seed.forEach(x=>{
+    const k=String(x.l).trim().toLowerCase();
+    let p=(perLotto[k]||[]).find(r=>!usati.has(r.id));
+    const prima = p ? (parseFloat(p.qty)||0) : 0;
+    if(!p){ p={id:genId(), creato:now, fornitore:'Roche', unita:'disp'}; prods.push(p); nuovi.push(p); }
+    usati.add(p.id);
+    const alias=IHC_ALLINEAMENTO.alias[x.n];
+    Object.assign(p,{ nome:x.n, cat:'IHC', lotto:x.l, scadenza:x.s, qty:1, test_tot:x.t,
+      test_residui: x.v ? x.r : x.t, ihc_vss: !!x.v, ihc_in_uso:false, ihc_aperto_da: x.v ? x.o : null,
+      ihc_seed:IHC_ALLINEAMENTO_ID, modificato:now });
+    if(alias){
+      const al=new Set(String(p.ihc_alias||'').split(/[,;]+/).map(a=>a.trim()).filter(Boolean)); alias.split(',').forEach(a=>al.add(a.trim()));
+      p.ihc_alias=[...al].join(', ');
+    }
+    if(!p.barcode && x.c && x.c!=='X') p.barcode=x.c;
+    mov(p, 1-prima, x.v ? 'Allineamento IHC: in macchina ('+x.r+' test)' : 'Allineamento IHC: scorta frigo');
+  });
+  // un solo dispenser "in uso" per prodotto: quello registrato in macchina che scade prima
+  const gruppi={};
+  prods.filter(p=>p.ihc_seed===IHC_ALLINEAMENTO_ID).forEach(p=>{ const k=p.nome.trim().toLowerCase(); (gruppi[k]=gruppi[k]||[]).push(p); });
+  Object.values(gruppi).forEach(l=>{
+    const inMacchina=l.filter(p=>p.ihc_vss).sort((a,b)=>String(a.scadenza).localeCompare(String(b.scadenza)) || (a.test_residui-b.test_residui));
+    if(inMacchina[0]) inMacchina[0].ihc_in_uso=true;
+  });
+  // lotti IHC tracciati non presenti né in macchina né in frigo → azzerati
+  let azzerati=0;
+  daAzzerare.forEach(p=>{ if(usati.has(p.id)) return; mov(p, -(parseFloat(p.qty)||0), 'Allineamento IHC: non presente in macchina né in frigo'); p.qty=0; p.ihc_in_uso=false; p.modificato=now; azzerati++; });
+  _setCache('ls_ihc_allineamento', IHC_ALLINEAMENTO_ID);
+  await saveP(prods); saveM(movs);
+  toast('⚡ Magazzino IHC allineato: '+IHC_ALLINEAMENTO.seed.length+' dispenser'+(nuovi.length?' ('+nuovi.length+' nuovi)':'')+(azzerati?' · '+azzerati+' lotti azzerati':''),'success');
+  renderIhcMag();
+  if(typeof currentView!=='undefined' && currentView==='inventario' && typeof renderInv==='function') renderInv();
+}
+// Scorte scadute: la macchina non le accetta → scaricate come smaltite
+async function ihcSmaltisciScaduti(key){
+  const prods=loadP(); const sc=prods.filter(p=>p.cat==='IHC' && (p.nome||'').trim().toLowerCase()===key && (parseFloat(p.qty)||0)>0 && _ihcScaduto(p));
+  if(!sc.length) return;
+  if(!confirm('Segnare come smaltit'+(sc.length===1?'o':'i')+' '+sc.length+' lott'+(sc.length===1?'o':'i')+' scadut'+(sc.length===1?'o':'i')+' di '+sc[0].nome+'?')) return;
+  _takeSnapshot('Magazzino IHC: smaltimento scaduti '+sc[0].nome);
+  const now=new Date().toISOString(), movs=loadM();
+  sc.forEach(p=>{ movs.unshift({id:genId(), ts:now, tipo:'scarico', prod:p.nome, prodId:p.id, qty:parseFloat(p.qty)||0, lotto:p.lotto||'', note:'Scaduto, smaltito'}); p.qty=0; p.ihc_in_uso=false; p.modificato=now; });
+  await saveP(prods); saveM(movs);
+  toast('🗑 '+sc[0].nome+': scaduti smaltiti','success'); renderIhcMag();
+}
+// Apre un dispenser del lotto scelto; se ce n'è già uno in uso viene segnato come terminato
+async function ihcApri(key, lotId){
+  const prods=loadP(); const lotti=prods.filter(p=>p.cat==='IHC' && (p.nome||'').trim().toLowerCase()===key);
+  const lot=lotti.find(p=>p.id===lotId); if(!lot){ toast('Lotto non trovato','error'); return; }
+  const now=new Date().toISOString(), movs=loadM(); const aperto=_ihcApertoDelGruppo(lotti);
+  if((parseFloat(lot.qty)||0) - (lot===aperto?1:0) <= 0){ toast('Nessuna unità chiusa in quel lotto','error'); return; }
+  if(aperto){
+    const res=_ihcResiduo(aperto);
+    if(!confirm('Il dispenser in uso ('+(aperto.lotto?'lotto '+aperto.lotto:'senza lotto')+') ha ancora '+res+' test.\n\nLo segno come terminato e apro il nuovo?')) return;
+    _takeSnapshot('Magazzino IHC: sostituzione '+lot.nome);
+    aperto.qty=Math.max(0,(parseFloat(aperto.qty)||0)-1); aperto.ihc_in_uso=false; aperto.test_residui=parseInt(aperto.test_tot,10)||null; aperto.modificato=now;
+    movs.unshift({id:genId(), ts:now, tipo:'scarico', prod:aperto.nome, prodId:aperto.id, qty:1, lotto:aperto.lotto||'', note:'Dispenser terminato (sostituito manualmente, '+res+' test residui)'});
+  } else _takeSnapshot('Magazzino IHC: apertura '+lot.nome);
+  _ihcSetInUso(lotti, lot, now); lot.test_residui=_ihcResApertura(lot);
+  await saveP(prods); saveM(movs);
+  toast('🔓 Aperto '+lot.nome+(lot.lotto?' · lotto '+lot.lotto:''),'success');
+  renderIhcMag();
+}
+// Termina il dispenser in uso (−1 unità) e propone di aprire il prossimo
+async function ihcTermina(key){
+  const prods=loadP(); const lotti=prods.filter(p=>p.cat==='IHC' && (p.nome||'').trim().toLowerCase()===key);
+  const aperto=_ihcApertoDelGruppo(lotti); if(!aperto) return;
+  const res=_ihcResiduo(aperto);
+  if(!confirm('Segnare come terminato il dispenser in uso di '+aperto.nome+(res?' ('+res+' test ancora registrati)':'')+'?')) return;
+  _takeSnapshot('Magazzino IHC: termina '+aperto.nome);
+  const now=new Date().toISOString(), movs=loadM();
+  aperto.qty=Math.max(0,(parseFloat(aperto.qty)||0)-1); aperto.ihc_in_uso=false; aperto.test_residui=parseInt(aperto.test_tot,10)||null; aperto.modificato=now;
+  movs.unshift({id:genId(), ts:now, tipo:'scarico', prod:aperto.nome, prodId:aperto.id, qty:1, lotto:aperto.lotto||'', note:'Dispenser terminato'});
+  const next=_ihcFefo(_ihcVivi(lotti))[0];
+  if(next && confirm('Aprire subito il prossimo?\n\n'+(next.lotto?'Lotto '+next.lotto:'Senza lotto')+' · scadenza '+_ihcFmtD(next.scadenza))){
+    _ihcSetInUso(lotti, next, now); next.test_residui=_ihcResApertura(next);
+  }
+  await saveP(prods); saveM(movs);
+  toast('🔒 '+aperto.nome+': dispenser terminato'+(next&&next.ihc_in_uso?' · aperto il successivo':''),'success');
+  renderIhcMag();
+}
+// Corregge i test residui del dispenser in uso
+async function ihcCorreggiResidui(id){
+  const prods=loadP(); const p=prods.find(x=>x.id===id); if(!p) return;
+  const tot=parseInt(p.test_tot,10)||0;
+  const v=prompt('Test residui nel dispenser in uso di '+p.nome+' (0–'+tot+'):', _ihcResiduo(p));
+  if(v===null) return;
+  const n=parseInt(String(v).replace(',','.'),10);
+  if(isNaN(n)||n<0||n>tot){ toast('Valore non valido (0–'+tot+')','error'); return; }
+  if(n===0){ toast('Con 0 test usa "Termina"','info'); return; }
+  _takeSnapshot('Magazzino IHC: correzione test '+p.nome);
+  p.test_residui = n; p.modificato=new Date().toISOString();
+  await saveP(prods); toast('✏️ '+p.nome+': '+n+' test residui','success'); renderIhcMag();
+}
+
+function _ihcIgnorati(){ const v=_getCache(LS_IHC_IGNORA,'[]'); return Array.isArray(v)?v:[]; }
+
+// Applica consumi/restituzioni per le voci passate a "fatto"/"non fatto". Salva prodotti e movimenti.
+async function _ihcAggiornaMagazzino(rec, fatti, annullati){
+  if(!fatti.length && !annullati.length) return [];
+  const prods=loadP(), movs=loadM(), now=new Date().toISOString();
+  const consumi={...(rec.consumi||{})}; const sconosciuti=[]; const avvisi=[];
+  annullati.forEach(item=>{
+    if(consumi[item]){ const v=consumi[item]; _ihcRestituisci([...(v.ant||[]),...(v.kit||[]),...(v.acc||[])], item, prods, movs, now); delete consumi[item]; }
+  });
+  fatti.forEach(item=>{
+    if(consumi[item]) return; // già scalato
+    const r=_ihcConsumaVoce(rec, item, prods, movs, now);
+    if(r.nonTrovato){ if(!_ihcIgnorati().includes(_ihcNorm(item))) sconosciuti.push(item); return; }
+    if(r.voce.ant.length || r.voce.kit.length || r.voce.acc.length) consumi[item]=r.voce;
+    (r.avvisi||[]).forEach(a=>avvisi.push(a));
+  });
+  rec.consumi=consumi;
+  if(annullati.length || fatti.some(i=>consumi[i])){ await saveP(prods); saveM(movs); }
+  if(avvisi.length) toast('🔬 '+avvisi.join(' · '),'warn');
+  return sconosciuti;
+}
+
+// ── Collegamento di un nome di anticorpo sconosciuto a un prodotto in magazzino ──
+let _ihcLinkCoda=[];
+function _ihcChiediCollegamento(ihcId, items){
+  items.forEach(it=>{ if(!_ihcLinkCoda.some(x=>x.ihcId===ihcId && x.item===it)) _ihcLinkCoda.push({ihcId, item:it}); });
+  _ihcLinkProssimo();
+}
+function _ihcLinkProssimo(){
+  const m=document.getElementById('modal-ihc-link'); if(!m) return;
+  if(m.classList.contains('open') || !_ihcLinkCoda.length) return;
+  const {item}=_ihcLinkCoda[0];
+  const nomi=[...new Set(loadP().filter(p=>p.cat==='IHC' && _ihcTipo(p)!=='kit').map(p=>p.nome))].sort((a,b)=>a.localeCompare(b,'it'));
+  document.getElementById('ihl-item').textContent=item;
+  document.getElementById('ihl-prod').innerHTML='<option value="">— scegli l\'anticorpo in magazzino —</option>'+nomi.map(n=>`<option value="${esc(n)}">${esc(n)}</option>`).join('');
+  document.getElementById('ihl-kit').value='';
+  m.classList.add('open');
+}
+async function _ihcLinkConferma(azione){
+  const m=document.getElementById('modal-ihc-link'); const voce=_ihcLinkCoda.shift(); if(m) m.classList.remove('open');
+  if(!voce){ return; }
+  if(azione==='ignora'){
+    const ig=_ihcIgnorati(); ig.push(_ihcNorm(voce.item)); _setCache(LS_IHC_IGNORA, [...new Set(ig)]);
+    toast('«'+voce.item+'» non verrà più scalato dal magazzino','info');
+  } else if(azione==='collega'){
+    const nome=document.getElementById('ihl-prod').value; const kit=document.getElementById('ihl-kit').value;
+    if(!nome){ toast('Scegli un prodotto','error'); _ihcLinkCoda.unshift(voce); _ihcLinkProssimo(); return; }
+    const prods=loadP();
+    prods.filter(p=>p.nome===nome).forEach(p=>{
+      const al=String(p.ihc_alias||'').split(/[,;]+/).map(s=>s.trim()).filter(Boolean);
+      if(!al.some(a=>_ihcNorm(a)===_ihcNorm(voce.item))) al.push(voce.item);
+      p.ihc_alias=al.join(', '); p.ihc_tipo='anticorpo'; if(kit) p.kit_riv=kit; p.modificato=new Date().toISOString();
+    });
+    await saveP(prods);
+    // Applica subito il consumo alla richiesta che lo aveva chiesto
+    const arr=loadIHC(); const i=arr.findIndex(x=>x.id===voce.ihcId);
+    if(i>=0 && (arr[i].anticorpi_done||[]).includes(voce.item)){
+      const rec={...arr[i]}; await _ihcAggiornaMagazzino(rec, [voce.item], []);
+      arr[i]={...rec, modificato:new Date().toISOString()}; await saveIHCArr(arr);
+    }
+    toast('🔗 «'+voce.item+'» collegato a '+nome,'success');
+  }
+  setTimeout(_ihcLinkProssimo, 250);
+  if(typeof currentView!=='undefined' && currentView==='inventario' && typeof renderInv==='function') renderInv();
+}
+
+// ── Copertura: test disponibili e giorni stimati sul consumo degli ultimi 90 giorni ──
+function _ihcStatoMagazzino(){
+  const prods=loadP(); const ihc=(typeof loadIHC==='function')?loadIHC():[];
+  const limite=Date.now()-90*86400000; const usoPerProd={};
+  ihc.forEach(r=>Object.values(r.consumi||{}).forEach(v=>{
+    if(new Date(v.ts).getTime()<limite) return;
+    [...(v.ant||[]),...(v.kit||[]),...(v.acc||[])].forEach(c=>{ usoPerProd[c.prodId]=(usoPerProd[c.prodId]||0)+(c.n||0); });
+  }));
+  const gruppi={}, perNome={};
+  prods.filter(p=>p.cat==='IHC' && (parseInt(p.test_tot,10)||0)>0).forEach(p=>{ const key=(p.nome||'').trim().toLowerCase(); (perNome[key]=perNome[key]||[]).push(p); });
+  Object.entries(perNome).forEach(([key,lotti])=>{
+    const aperto=_ihcApertoDelGruppo(lotti);
+    const g=gruppi[key]={nome:lotti[0].nome, tipo:_ihcTipo(lotti[0])||'anticorpo', test:0, uso90:0};
+    lotti.forEach(p=>{
+      const q=parseFloat(p.qty)||0, tot=parseInt(p.test_tot,10)||0;
+      if(q>0 && !_ihcScaduto(p)) g.test += (p===aperto || p.ihc_vss) ? (q-1)*tot + _ihcResiduo(p) : q*tot;
+      g.uso90 += usoPerProd[p.id]||0;
+    });
+  });
+  return Object.values(gruppi).map(g=>{
+    const alGiorno=g.uso90/90;
+    g.copertura = alGiorno>0 ? Math.floor(g.test/alGiorno) : null;
+    g.basso = g.test<=10 || (g.copertura!==null && g.copertura<30);
+    return g;
+  });
+}
+
 // FIX [UI/UX]: chip anticorpi tappabili con stato completato
 function _ihcChips(r){
   const items=(r.anticorpo||'').split(/[,\n]+/).map(s=>s.trim()).filter(Boolean);
@@ -9359,10 +10217,17 @@ async function toggleIHCAnticorpo(id, item){
   let dataCompl = r.data_completamento || null;
   if (nuovoStato === 'completata' && !dataCompl) dataCompl = new Date().toISOString();
   else if (nuovoStato !== 'completata') dataCompl = null; // esce da completata → reset
-  arr[i]={...r, anticorpi_done:done, stato:nuovoStato, data_completamento:dataCompl, modificato:new Date().toISOString()};
+  // FIX [TRACCIABILITÀ]: spunta → scala i test di anticorpo e kit; togli spunta → li restituisce
+  const rec={...r};
+  let sconosciuti=[];
+  try{ sconosciuti = await _ihcAggiornaMagazzino(rec, idx<0?[item]:[], idx>=0?[item]:[]); }
+  catch(e){ console.warn('[IHC magazzino]', e); }
+  arr[i]={...rec, anticorpi_done:done, stato:nuovoStato, data_completamento:dataCompl, modificato:new Date().toISOString()};
   await saveIHCArr(arr);
   renderIHC();
   renderDashboard();
+  if(sconosciuti.length) _ihcChiediCollegamento(id, sconosciuti);
+  if(idx<0) _ihcControlloCorsaGrande();
 }
 
 let _ihcFilter='all';
@@ -9375,6 +10240,7 @@ function setIHCFilter(f,btn){
 
 function renderIHC(){
   const el=document.getElementById('ihc-list'); if(!el) return;
+  try{ _renderCorsaUltra(); }catch(e){}
   const q=(document.getElementById('ihc-search')?.value||'').toLowerCase();
   let arr=loadIHC();
   if(_ihcFilter!=='all') arr=arr.filter(x=>x.stato===_ihcFilter);
@@ -9444,6 +10310,7 @@ async function saveIHC(){
   if (statoSel === 'completata' && !dataCompl) dataCompl = new Date().toISOString();
   else if (statoSel !== 'completata') dataCompl = null;
   const rec={
+    ...(existing||{}),           // FIX [TRACCIABILITÀ]: conserva campi non presenti nel form (es. consumi)
     id: editId||genId(),
     campione_id,
     patologo,
@@ -9456,9 +10323,19 @@ async function saveIHC(){
     modificato: new Date().toISOString()
   };
   if(!editId) rec.creato=new Date().toISOString();
+  // FIX [TRACCIABILITÀ]: "completata" dal form = tutti gli anticorpi eseguiti → scala quelli non ancora spuntati
+  let _sconosciuti=[];
+  if(statoSel==='completata'){
+    const items=anticorpo.split(/[,\n]+/).map(x=>x.trim()).filter(Boolean);
+    const nuovi=items.filter(it=>!rec.anticorpi_done.includes(it));
+    rec.anticorpi_done=[...rec.anticorpi_done, ...nuovi];
+    try{ _sconosciuti = await _ihcAggiornaMagazzino(rec, nuovi, []); }catch(e){ console.warn('[IHC magazzino]', e); }
+  }
   if(editId){ const i=arr.findIndex(x=>x.id===editId); if(i>=0) arr[i]=rec; else arr.unshift(rec); }
   else arr.unshift(rec);
   await saveIHCArr(arr);
+  if(_sconosciuti.length) setTimeout(()=>_ihcChiediCollegamento(rec.id, _sconosciuti), 300);
+  if(statoSel==='completata') setTimeout(()=>_ihcControlloCorsaGrande(), 600);
   closeModal('modal-ihc');
   renderIHC();
   renderDashboard();
@@ -10843,6 +11720,7 @@ window.saveCaricaManuale = async function() {
         ddt: ddt || '',
         creato: new Date().toISOString()
       };
+      _ihcEredita(modello, p);
       prods.push(p);
     }
     prodId = p.id; prodNome = p.nome;
@@ -10850,7 +11728,9 @@ window.saveCaricaManuale = async function() {
   // Aggiorna qty
   const p = prods.find(x => x.id === prodId);
   if (!p) { toast('Errore interno', 'error'); return; }
+  const _qPrima = p.qty;
   p.qty = (p.qty||0) + qty;
+  _ihcEredita(null, p, _qPrima);
   // Movimento carico
   const movs = loadM();
   movs.unshift({ id: genId(), ts: new Date().toISOString(), tipo: 'carico', prodId, prod: prodNome, qty, lotto: lotto||p.lotto||'', ddt: ddt||'', note: note||'Carico manuale' });
@@ -11364,14 +12244,8 @@ function _updateSyncChip(){
   const state = document.getElementById('sync-state');
   const ts = document.getElementById('sync-ts');
   if(!dot || !state) return;
-  if(typeof IS_ONLINE !== 'undefined' && !IS_ONLINE){
-    dot.className = 'sync-dot offline';
-    state.textContent = 'offline';
-  } else {
-    dot.className = 'sync-dot';
-    state.textContent = 'sync';
-  }
-  if(ts) ts.textContent = new Date().toLocaleTimeString('it-IT', {hour:'2-digit', minute:'2-digit'});
+  // FIX [INFRASTRUTTURA]: mostra lo stato REALE (prima scriveva sempre "sync" + ora corrente)
+  _renderSyncChip((typeof IS_ONLINE !== 'undefined' && !IS_ONLINE) ? 'offline' : (Object.keys(_SYNC_ERR).length ? 'err' : 'ok'));
 }
 
 // ─── Rail click handler ───
@@ -12035,6 +12909,7 @@ function renderDashboardPreview(){
 
   // Widget stato casi (ciclo vita)
   try { if (typeof renderStatoCasiWidget === 'function') renderStatoCasiWidget(); } catch(e) { console.warn('[statoCasi]', e); }
+  try { if (typeof _renderIhcMagHome === 'function') _renderIhcMagHome(); } catch(e) { console.warn('[ihcMag]', e); }
 
   updateRailBadges();
 }
