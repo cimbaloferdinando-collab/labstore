@@ -3737,11 +3737,13 @@ function _renderSyncChip(state){
   }
   if(ts) ts.textContent = _SYNC_LAST_OK ? _SYNC_LAST_OK.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'}) : '—';
 }
-function _syncChipClick(){
+async function _syncChipClick(){
+  // FIX [INFRASTRUTTURA]: se lo script è già stato lanciato, se ne accorge qui e non lo richiede
+  if(Object.keys(_missingCols()).length) await _verificaColonneMancanti(true);
   const n=Object.keys(_SYNC_ERR).length;
   const sql=(typeof _sqlColonneMancanti==='function')?_sqlColonneMancanti():'';
   if(sql){
-    const msg='Il database non ha alcune colonne: quei dati restano solo sul dispositivo.\n\nScript da lanciare in Supabase → SQL Editor:\n\n'+sql+'\n\nOK = copia lo script negli appunti';
+    const msg='Il database non ha alcune colonne: quei dati restano solo sul dispositivo.\n\nScript da lanciare in Supabase → SQL Editor:\n\n'+sql+'\n\nDopo averlo lanciato tocca di nuovo il chip sync (o ricarica l\'app): le colonne vengono riconosciute e i dati inviati da soli.\n\nOK = copia lo script negli appunti';
     if(confirm(msg)){
       try{ navigator.clipboard.writeText(sql).then(()=>toast('📋 Script SQL copiato','success')).catch(()=>prompt('Copia lo script:',sql)); }
       catch(e){ prompt('Copia lo script:', sql); }
@@ -3792,8 +3794,10 @@ function _mergeArrays(local, cloud){
       // Confronta timestamp modificato — ultimo vince
       const localTs = new Date(item.modificato||item.creato||0).getTime();
       const cloudTs = new Date(existing.modificato||existing.creato||0).getTime();
-      if(localTs >= cloudTs) map[item.id] = item;
-      // altrimenti resta il cloud
+      // FIX [INFRASTRUTTURA]: unione per campo → chi è più recente vince sui campi in comune,
+      // ma i campi presenti solo in locale (colonne non ancora nel database) non vengono persi
+      if(localTs >= cloudTs) map[item.id] = {...existing, ...item};
+      else map[item.id] = {...item, ...existing};
     }
   });
   return Object.values(map);
@@ -3921,6 +3925,32 @@ function _stripColonneMancanti(table, rows){
   const miss=_missingCols()[table]; if(!miss) return rows;
   const keys=Object.keys(miss); if(!keys.length) return rows;
   return rows.map(r=>{ if(!r||typeof r!=='object') return r; const o={...r}; keys.forEach(k=>{ delete o[k]; }); return o; });
+}
+// FIX [INFRASTRUTTURA]: l'elenco delle colonne mancanti non si svuotava mai → anche dopo lo script SQL
+// quei campi restavano esclusi per sempre. Ora si controlla sul database: se la colonna c'è, si toglie
+// dall'elenco e si rimandano i dati (forceSync) così i valori salvati solo sul dispositivo arrivano nel cloud.
+let _verificaColInCorso=false;
+async function _verificaColonneMancanti(silenzioso){
+  const m=_missingCols(); const tab=Object.keys(m);
+  if(!tab.length || !SUPA_OK || !IS_ONLINE || _verificaColInCorso) return 0;
+  _verificaColInCorso=true; let trovate=0;
+  try{
+    for(const t of tab){
+      for(const c of Object.keys(m[t]||{})){
+        try{
+          const r=await supaFetch(t,'GET',null,'?select='+encodeURIComponent(c)+'&limit=1');
+          if(r!==null){ delete m[t][c]; trovate++; }
+        }catch(e){}
+      }
+      if(m[t] && !Object.keys(m[t]).length) delete m[t];
+    }
+    if(trovate){
+      _setCache('ls_sync_missing_cols', m);
+      toast('✅ Colonne aggiunte nel database: invio i dati rimasti sul dispositivo…','success');
+      await forceSync();
+    } else if(!silenzioso) toast('Le colonne non risultano ancora nel database','warn');
+  } finally { _verificaColInCorso=false; }
+  return trovate;
 }
 function _sqlColonneMancanti(){
   const m=_missingCols(); const righe=[];
@@ -4114,6 +4144,7 @@ async function _initialSyncRun(){
     _invalidateAll();
     updateSyncStatus('ok');
     _refreshCurrentView();
+    if(Object.keys(_missingCols()).length) setTimeout(()=>{ _verificaColonneMancanti(true); }, 1500); // FIX [INFRASTRUTTURA]
   }catch(e){ updateSyncStatus('err'); }
 }
 
