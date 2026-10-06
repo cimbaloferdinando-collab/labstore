@@ -3958,7 +3958,30 @@ function _sqlColonneMancanti(){
   return righe.join('\n');
 }
 
+// FIX [INFRASTRUTTURA]: PostgREST rifiuta un invio multiplo se i record non hanno tutti gli stessi campi
+// ("All object keys must match", HTTP 400). Record creati con versioni diverse dell'app hanno campi diversi:
+// si spediscono a gruppi di record con gli stessi campi. Così l'upsert tocca solo i campi presenti
+// (niente null forzati sui valori già nel cloud).
 async function supaFetch(table,method='GET',body=null,query=''){
+  if(method==='POST' && Array.isArray(body) && body.length>1){
+    const gruppi=new Map();
+    body.forEach(r=>{ const k=(r&&typeof r==='object')?Object.keys(r).sort().join('|'):''; if(!gruppi.has(k)) gruppi.set(k,[]); gruppi.get(k).push(r); });
+    if(gruppi.size>1){
+      let esito=true, errore=null;
+      for(const rows of gruppi.values()){
+        for(let i=0;i<rows.length;i+=500){            // blocchi da 500 righe: richieste leggere da tablet
+          const r=await _supaFetchUno(table,method,rows.slice(i,i+500),query);
+          if(r===null){ esito=null; if(_SYNC_ERR[table]) errore=_SYNC_ERR[table]; }
+        }
+      }
+      if(errore) _SYNC_ERR[table]=errore;               // un gruppo riuscito dopo non deve nascondere l'errore
+      if(typeof updateSyncStatus==='function' && errore) updateSyncStatus('err');
+      return esito;
+    }
+  }
+  return _supaFetchUno(table,method,body,query);
+}
+async function _supaFetchUno(table,method='GET',body=null,query=''){
   if(!SUPA_OK) return null;
   if(!IS_ONLINE && method!=='GET') return null; // offline: non tentare write
   const isWrite = method!=='GET';
