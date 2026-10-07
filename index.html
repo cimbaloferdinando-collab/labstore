@@ -319,7 +319,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
 .btn-warn{background:var(--yellow-bg);color:var(--yellow);border-color:var(--yellow-bd)}
 .btn-danger{background:var(--red-bg);color:var(--red);border-color:var(--red-bd)}
 .btn-danger:hover{background:#fee2e2}
-.reagente-usato-row{display:flex;gap:8px;align-items:center;padding:8px 12px;border:1.5px solid var(--border);border-radius:var(--r-sm);margin-bottom:6px;background:var(--bg3);transition:border-color .12s}
+.reagente-usato-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:8px 12px;border:1.5px solid var(--border);border-radius:var(--r-sm);margin-bottom:6px;background:var(--bg3);transition:border-color .12s}
 .reagente-usato-row select,.reagente-usato-row input{flex:1;padding:4px 8px;border:1px solid var(--border2);border-radius:var(--r-sm);font-size:12px;font-family:'DM Mono',monospace;background:var(--surface)}
 
 /* TOAST */
@@ -672,6 +672,14 @@ input[type=number]{font-size:16px}
   .toast-container{bottom:calc(78px + env(safe-area-inset-bottom))}
 }
 @media(max-width:700px){.hdr-btns .hbtn:not(.primary):not(.fc-btn-trigger){display:none}}
+/* FIX [UI/UX]: telefono — l'intestazione sforava di ~50px e faceva scorrere tutta la pagina in orizzontale */
+@media(max-width:480px){
+  .hdr-brand,.hdr-time,.hdr-btns > .hdr-sep{display:none}
+  .sync-chip{padding:3px 8px}
+  #sync-ts{display:none}
+  .hdr{padding-right:8px}
+  .hdr-gap{flex:1 1 4px}
+}
 
 /* ─── REPORT TABS ─── */
 .rpt-tabs{display:flex;gap:2px;border-bottom:2px solid var(--border);margin-bottom:24px;overflow-x:auto;scrollbar-width:none}
@@ -748,6 +756,26 @@ input[type=number]{font-size:16px}
 /* (V10: .empty è definito insieme a .empty-state) */
 .page-title{font-family:'Libre Baskerville',serif;font-size:22px;font-weight:700;color:var(--accent);margin-bottom:2px}
 .page-sub{font-size:12px;color:var(--text3);margin-bottom:14px}
+
+/* FIX [UI/UX]: finestre adattive — niente scorrimento orizzontale dell'intera finestra.
+   I campi si restringono con la finestra (prima la larghezza minima di input/select la allargava),
+   le tabelle scorrono dentro il proprio riquadro (vedi _modaliAdattive). */
+.modal{box-sizing:border-box;overflow-x:hidden}
+.modal *{min-width:0}
+.modal input:not([type=checkbox]):not([type=radio]):not([type=range]),.modal select,.modal textarea{max-width:100%}
+.modal .fg input,.modal .fg select,.modal .fg textarea{width:100%;box-sizing:border-box}
+.modal img,.modal canvas,.modal svg,.modal video{max-width:100%}
+.modal pre{white-space:pre-wrap;word-break:break-word}
+.modal .tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:100%}
+.modal .tbl-wrap > table{min-width:100%}
+.reagente-usato-row > select,.reagente-usato-row > .reag-lotto-sel{flex:1 1 150px}
+@media(max-width:600px){
+  .modal [style*="grid-template-columns:1fr 1fr 1fr"],.modal [style*="grid-template-columns: 1fr 1fr 1fr"],
+  .modal [style*="grid-template-columns:repeat(3,1fr)"],.modal [style*="grid-template-columns:2fr 1fr"],
+  .modal [style*="grid-template-columns:1fr 2fr"],.modal [style*="grid-template-columns:1fr 1fr 1fr 1fr"],
+  .modal [style*="grid-template-columns:repeat(4,1fr)"]{grid-template-columns:1fr 1fr !important}
+  .modal .modal-footer{flex-wrap:wrap}
+}
 
 /* FIX [UI/UX]: Magazzino IHC a tessere */
 .ihcm-filtri{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:10px;flex-shrink:0}
@@ -6571,11 +6599,12 @@ function _renderRigheFixed(containerId, defs, presetReagenti, isEdit) {
   if (!cont) return;
   cont.innerHTML = '';
   defs.forEach((def, idx) => {
-    // Cerca il preset salvato per questo reagente (matching per nome chiave)
-    const preset = (presetReagenti||[]).find(r => {
-      const n = (r.nome||r.prodNome||'').toLowerCase();
-      return def.keys.some(k => n.includes(k));
-    }) || null;
+    // FIX [TRACCIABILITÀ]: prima il nome esatto della riga (es. "Alcol 95%"), poi le parole chiave
+    const preset = (presetReagenti||[]).find(r => String(r.nome||'').trim().toLowerCase() === def.nome.toLowerCase())
+      || (presetReagenti||[]).find(r => {
+        const n = (r.nome||r.prodNome||'').toLowerCase();
+        return def.keys.some(k => n.includes(k));
+      }) || null;
     const presetProdId = preset?.prodId || '';
     const presetLotto  = preset?.lotto  || '';
     const presetStato  = preset?.stato  || 'verificato';
@@ -6596,8 +6625,9 @@ function _renderRigheFixed(containerId, defs, presetReagenti, isEdit) {
         <option value="cambiato"    ${presetStato==='cambiato'   ?'selected':''}>🔄 Sostituito</option>
       </select>`;
     cont.appendChild(div);
-    // Aggiorna SOLO la scadenza. In modifica (isEdit) NON tocca lo stato salvato.
-    updateReagLottoFixed(div.querySelector('.reag-lotto-sel'), { skipStato: !!isEdit });
+    // FIX [TRACCIABILITÀ]: all'apertura si aggiorna SOLO la scadenza, mai lo stato (nuovo ciclo o modifica).
+    // Lo stato si suggerisce solo quando l'utente cambia lotto a mano (onchange).
+    updateReagLottoFixed(div.querySelector('.reag-lotto-sel'), { skipStato: true });
   });
 }
 
@@ -6621,14 +6651,21 @@ window.updateReagLottoFixed = function(sel, opts) {
   if (!defRaw) return;
   try {
     const def = JSON.parse(defRaw);
-    // Cerca nell'ultimo ciclo
-    const loader = row.closest('#proc-reagenti-list') ? loadProc : loadColoratore;
-    const lastCiclo = (typeof loader === 'function') ? loader()[0] : null;
+    // FIX [TRACCIABILITÀ]: confronto con l'ultimo ciclo PER DATA precedente a quello che si sta compilando
+    // (prima si prendeva il primo dell'elenco, cioè l'ultimo inserito, anche se di un altro giorno)
+    const isProc = !!row.closest('#proc-reagenti-list');
+    const loader = isProc ? loadProc : loadColoratore;
+    const dataForm = (document.getElementById(isProc ? 'proc-data' : 'color-data')||{}).value || '';
+    const editId = (document.getElementById(isProc ? 'proc-edit-id' : 'color-edit-id')||{}).value || '';
+    const prec = (loader()||[]).filter(c => c && c.data && c.id !== editId && (!dataForm || c.data <= dataForm))
+      .sort((a,b) => (b.data||'').localeCompare(a.data||'') || String(b.ora_inizio||'').localeCompare(String(a.ora_inizio||'')));
+    const lastCiclo = prec[0];
     if (!lastCiclo) return;
-    const lastReag = (lastCiclo.reagenti||[]).find(r => {
-      const n = (r.nome||r.prodNome||'').toLowerCase();
-      return def.keys.some(k => n.includes(k));
-    });
+    const lastReag = (lastCiclo.reagenti||[]).find(r => String(r.nome||'').trim().toLowerCase() === def.nome.toLowerCase())
+      || (lastCiclo.reagenti||[]).find(r => {
+        const n = (r.nome||r.prodNome||'').toLowerCase();
+        return def.keys.some(k => n.includes(k));
+      });
     if (!lastReag) return;
     // Stesso lotto → verificato, lotto diverso → sostituito
     const statoCorrente = statoSel.value;
@@ -6677,13 +6714,9 @@ function _preloadReagentiProc(preset) {
   if (preset) {
     reagenti = preset.reagenti || [];
   } else {
-    // Nuovo ciclo: prendo i reagenti dell'ultimo ciclo.
-    // "cambiato/sostituito" → resetto a "verificato" (lotto già cambiato nel ciclo precedente)
-    // "rabboccato" → mantengo (può ripetersi sul ciclo successivo)
-    // "verificato" → mantengo
-    reagenti = _getLastCycleReagenti(loadProc).map(r => ({
-      ...r, stato: (r.stato === 'cambiato') ? 'verificato' : (r.stato || 'verificato')
-    }));
+    // Nuovo ciclo: stessi lotti dell'ultimo ciclo, stato sempre "verificato".
+    // FIX [TRACCIABILITÀ]: prima "rabboccato" veniva ereditato dal ciclo precedente → sembrava cambiare da solo
+    reagenti = _getLastCycleReagenti(loadProc).map(r => ({ ...r, stato: 'verificato' }));
   }
   _renderRigheFixed('proc-reagenti-list', REAGENTI_PROC_DEF, reagenti, !!preset);
 }
@@ -6693,9 +6726,7 @@ function _preloadReagentiColor(preset) {
   if (preset) {
     reagenti = preset.reagenti || [];
   } else {
-    reagenti = _getLastCycleReagenti(loadColoratore).map(r => ({
-      ...r, stato: (r.stato === 'cambiato') ? 'verificato' : (r.stato || 'verificato')
-    }));
+    reagenti = _getLastCycleReagenti(loadColoratore).map(r => ({ ...r, stato: 'verificato' })); // FIX [TRACCIABILITÀ]
   }
   _renderRigheFixed('color-reagenti-list', REAGENTI_COLOR_DEF, reagenti, !!preset);
 }
@@ -17762,6 +17793,30 @@ if (typeof buildProdDatalist === 'function') buildProdDatalist();
     if (!el) return;
     _hide = setTimeout(() => tt.classList.remove('show'), 80);
   });
+})();
+
+// FIX [UI/UX]: tabelle dentro le finestre → scorrono nel proprio riquadro, la finestra resta ferma.
+// Le tabelle vengono create dinamicamente: un osservatore le avvolge appena compaiono.
+(function _modaliAdattive(){
+  function avvolgi(root){
+    (root.querySelectorAll ? root.querySelectorAll('table') : []).forEach(tb => {
+      if (!tb.closest('.modal')) return;
+      const p = tb.parentElement;
+      if (!p || p.classList.contains('tbl-wrap')) return;
+      const st = getComputedStyle(p);
+      if (/(auto|scroll)/.test(st.overflowX) && p.children.length === 1) return;   // già scorrevole
+      const w = document.createElement('div'); w.className = 'tbl-wrap';
+      p.insertBefore(w, tb); w.appendChild(tb);
+    });
+  }
+  function avvia(){
+    document.querySelectorAll('.modal').forEach(m => {
+      avvolgi(m);
+      new MutationObserver(muts => { muts.forEach(mu => mu.addedNodes.forEach(n => { if (n.nodeType === 1) avvolgi(n.tagName === 'TABLE' ? n.parentElement || n : n); })); })
+        .observe(m, { childList: true, subtree: true });
+    });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', avvia); else avvia();
 })();
 </script>
 </body>
