@@ -841,9 +841,10 @@ input[type=number]{font-size:16px}
     <div class="hdr-btns">
       <div class="hdr-actions">
         <button class="hbtn undo" id="undo-btn" onclick="undoLastAction()" disabled title="Annulla ultima azione">↶ Undo</button>
-        <button class="hbtn primary" onclick="openAddModal('Istologia')">＋ Caso</button>
-        <button class="hbtn pap-l" onclick="openAddModal('PAP test')">＋ Pap L</button>
-        <button class="hbtn pap-p" onclick="openAddModal('PAP privato')">＋ Pap Priv.</button>
+        <!-- FIX [UI/UX]: i pulsanti caso aprono l'accettazione (openNuovoCampione), non il modal prodotto -->
+        <button class="hbtn primary" onclick="openNuovoCampione('istologia')">＋ Caso</button>
+        <button class="hbtn pap-l" onclick="openNuovoCampione('pap_l')">＋ Pap L</button>
+        <button class="hbtn pap-p" onclick="openNuovoCampione('pap_priv')">＋ Pap Priv.</button>
         <div class="hdr-sep"></div>
         <button class="hbtn" onclick="apriCaricoScan()">⬆ Carico</button>
         <button class="hbtn" onclick="openModalScarica()">⬇ Scarico</button>
@@ -1227,9 +1228,10 @@ input[type=number]{font-size:16px}
           <div class="page-sub" id="camp-sub">—</div>
         </div>
         <div style="display:flex;gap:6px;flex-wrap:wrap">
-          <button class="hbtn2 primary" onclick="openAddModal('Istologia')">＋ Caso</button>
-          <button class="hbtn2 pap-l" onclick="openAddModal('PAP test')">＋ Pap L</button>
-          <button class="hbtn2 pap-p" onclick="openAddModal('PAP privato')">＋ Pap Priv.</button>
+          <!-- FIX [UI/UX]: accettazione caso invece del modal prodotto -->
+          <button class="hbtn2 primary" onclick="openNuovoCampione('istologia')">＋ Caso</button>
+          <button class="hbtn2 pap-l" onclick="openNuovoCampione('pap_l')">＋ Pap L</button>
+          <button class="hbtn2 pap-p" onclick="openNuovoCampione('pap_priv')">＋ Pap Priv.</button>
           <button class="hbtn2" onclick="openImportExcelModal()" title="Importa casi dal file Excel di accettazione">📥 Importa Excel</button>
         </div>
       </div>
@@ -2108,10 +2110,11 @@ input[type=number]{font-size:16px}
     </div>
     <div class="fc-item" onclick="forceSave()"><span class="ico">💾</span>Forza salvataggio cloud</div>
     <div class="fc-item" onclick="forceSync()"><span class="ico">☁</span>Forza Sync Supabase</div>
+    <div class="fc-item" onclick="impostaAIKey()"><span class="ico">🔑</span>Chiave API IA (lettura DDT)</div>
     <div class="fc-item" onclick="exportBackup()"><span class="ico">📂</span>Backup dati (export JSON)</div>
     <div class="fc-item" onclick="importBackup()"><span class="ico">📥</span>Ripristino dati (import JSON)</div>
     <div style="border-top:1px solid var(--border);margin:4px 0"></div>
-    <div class="fc-item" onclick="openAddModal('PAP privato')"><span class="ico">＋</span>Nuovo Pap Privato</div>
+    <div class="fc-item" onclick="openNuovoCampione('pap_priv')"><span class="ico">＋</span>Nuovo Pap Privato</div><!-- FIX [UI/UX]: accettazione Pap privato -->
     <div class="fc-item" onclick="openProductModal()"><span class="ico">＋</span>Nuovo prodotto</div>
     <div class="fc-item" onclick="openDDTModal()"><span class="ico">📷</span>Carica DDT</div>
     <div style="border-top:1px solid var(--border);margin:4px 0"></div>
@@ -3637,10 +3640,13 @@ const LS_ARCH='ls_archivio_ordini';
 // ── UNDO SYSTEM — Stack di snapshot per annullare fino a 10 azioni ──
 const UNDO_MAX = 10;
 const _undoStack = [];
-const _UNDO_KEYS = [LS_P, LS_M, LS_W, LS_WL, LS_ORD, LS_SCHEDE, LS_PROC, LS_COLOR_REG, LS_CAMP, LS_ARCH];
+// FIX [INFRASTRUTTURA]: "var" → window._UNDO_KEYS esiste e fornitori/bidoni/IHC vengono davvero aggiunti
+var _UNDO_KEYS = [LS_P, LS_M, LS_W, LS_WL, LS_ORD, LS_SCHEDE, LS_PROC, LS_COLOR_REG, LS_CAMP, LS_ARCH];
 function _takeSnapshot(label){
   const snap = { label, ts: Date.now(), data: {} };
-  _UNDO_KEYS.forEach(k => { try{ snap.data[k] = localStorage.getItem(k)||'[]'; }catch(e){} });
+  // Si legge localStorage (ultima versione SALVATA): alcune azioni prendono lo snapshot dopo aver già
+  // modificato gli oggetti in memoria, e così l'Undo torna comunque allo stato precedente
+  _UNDO_KEYS.forEach(k => { try{ snap.data[k] = localStorage.getItem(k) || (k===LS_W?'{}':'[]'); }catch(e){} });
   _undoStack.push(snap);
   if(_undoStack.length > UNDO_MAX) _undoStack.shift();
   _updateUndoBtn();
@@ -3648,8 +3654,9 @@ function _takeSnapshot(label){
 function undoLastAction(){
   if(!_undoStack.length){ toast('Nessuna azione da annullare','info'); return; }
   const snap = _undoStack.pop();
-  Object.entries(snap.data).forEach(([k,v]) => { localStorage.setItem(k,v); });
-  _invalidateAll();
+  // FIX [INFRASTRUTTURA]: ripristino tramite cache tracciata → l'annullamento arriva anche nel cloud
+  // (prima la sincronizzazione successiva riportava indietro ciò che era stato annullato)
+  Object.entries(snap.data).forEach(([k,v]) => { try{ const val=JSON.parse(v); if(k===LS_W) saveW(val); else _setCache(k,val); }catch(e){} });
   // Refresh view corrente
   _refreshCurrentView();
   _updateUndoBtn();
@@ -3678,41 +3685,12 @@ function _refreshCurrentView(){
 }
 
 // ── SALVA MANUALE — Force push di tutto su Supabase ──
+// FIX [INFRASTRUTTURA]: "Forza salvataggio" = sincronizzazione completa (scarica, unisce, invia solo le modifiche)
 async function forceSave(){
   if(!SUPA_OK){ toast('Supabase non configurato','error'); return; }
   if(!IS_ONLINE){ toast('Sei offline — impossibile salvare sul cloud','error'); return; }
-  updateSyncStatus('sync');
-  try{
-    const prods=JSON.parse(localStorage.getItem(LS_P)||'[]');
-    const movs=JSON.parse(localStorage.getItem(LS_M)||'[]');
-    const W=JSON.parse(localStorage.getItem(LS_W)||'{}');
-    const wlog=JSON.parse(localStorage.getItem(LS_WL)||'[]');
-    const ords=JSON.parse(localStorage.getItem(LS_ORD)||'[]');
-    const arch=JSON.parse(localStorage.getItem(LS_ARCH)||'[]');
-    const camp=JSON.parse(localStorage.getItem(LS_CAMP)||'[]');
-    const schede=JSON.parse(localStorage.getItem(LS_SCHEDE)||'[]');
-    const proc=JSON.parse(localStorage.getItem(LS_PROC)||'[]');
-    const color=JSON.parse(localStorage.getItem(LS_COLOR_REG)||'[]');
-    const forn=JSON.parse(localStorage.getItem(LS_FORN)||'[]');
-    // Push tutto
-    if(prods.length) await supaFetch('products','POST',prods,'?on_conflict=id');
-    if(movs.length) await supaFetch('movements','POST',movs,'?on_conflict=id');
-    // FIX [INFRASTRUTTURA]: niente DELETE prima del POST (upsert attivo; il DELETE rischiava di perdere lo stato)
-    if(Object.keys(W).length) await supaFetch('waste_state','POST',[{id:'waste_state',data:W}],'?on_conflict=id');
-    if(wlog.length) await supaFetch('waste_log','POST',wlog,'?on_conflict=id');
-    if(ords.length) await supaFetch('ordini','POST',ords,'?on_conflict=id');
-    if(arch.length) await supaFetch('archivio_ordini','POST',arch,'?on_conflict=id');
-    if(camp.length) await supaFetch('campioni','POST',camp,'?on_conflict=id');
-    if(proc.length) await supaFetch('processatore','POST',proc,'?on_conflict=id');
-    if(color.length) await supaFetch('coloratore_log','POST',color,'?on_conflict=id');
-    // Schede: sync su Supabase (tabella schede_tecniche)
-    if(schede.length) await supaFetch('schede_tecniche','POST',schede,'?on_conflict=id');
-    // Fornitori (A6): isolato — un errore qui non blocca il resto
-    try { if(forn.length) await supaFetch('fornitori','POST',forn,'?on_conflict=id'); } catch(eF){ console.warn('[sync fornitori]', eF); }
-    saveQueue([]);
-    updateSyncStatus('ok');
-    _toastEsitoSync('💾 Tutto salvato sul cloud');
-  }catch(e){ updateSyncStatus('err'); toast('Errore salvataggio: '+e.message,'error'); }
+  await _conLock(_syncCompleta);
+  _toastEsitoSync('💾 Tutto sincronizzato con il cloud');
 }
 
 // Rileva cambio connessione
@@ -3764,14 +3742,22 @@ function _renderSyncChip(state){
                  + ((typeof _sqlColonneMancanti==='function' && _sqlColonneMancanti()) ? '\n⚠ Colonne mancanti nel database: tocca per lo script SQL' : '');
   }
   if(ts) ts.textContent = _SYNC_LAST_OK ? _SYNC_LAST_OK.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'}) : '—';
+  // FIX [INFRASTRUTTURA]: colonne mancanti = dati che non arrivano nel cloud → il chip lo dice chiaramente
+  if(state==='ok' && typeof _missingCols==='function' && (Object.keys(_missingCols()).length || (typeof _storageMancante!=='undefined' && _storageMancante))){
+    dot.className='sync-dot err'; st.textContent='⚠ database incompleto'; if(chip) chip.classList.add('err');
+  }
 }
 async function _syncChipClick(){
   // FIX [INFRASTRUTTURA]: se lo script è già stato lanciato, se ne accorge qui e non lo richiede
-  if(Object.keys(_missingCols()).length) await _verificaColonneMancanti(true);
+  const primaMancanti=Object.keys(_missingCols()).length;
+  if(IS_ONLINE && SUPA_OK){ try{ toast('🔎 Controllo completo del database…','info'); }catch(_){} await _scansionaSchema(); }
+  if(typeof _storageMancante!=='undefined' && _storageMancante){ _storageMancante=false; await _migraAllegati(); }   // ricontrolla l'archivio allegati
+  if(primaMancanti && !Object.keys(_missingCols()).length && !_storageMancante){ toast('✅ Database completo: invio i dati rimasti sul dispositivo…','success'); await forceSync(); return; }
   const n=Object.keys(_SYNC_ERR).length;
   const sql=(typeof _sqlColonneMancanti==='function')?_sqlColonneMancanti():'';
   if(sql){
-    const msg='Il database non ha alcune colonne: quei dati restano solo sul dispositivo.\n\nScript da lanciare in Supabase → SQL Editor:\n\n'+sql+'\n\nDopo averlo lanciato tocca di nuovo il chip sync (o ricarica l\'app): le colonne vengono riconosciute e i dati inviati da soli.\n\nOK = copia lo script negli appunti';
+    const nCol=sql.split('\n').filter(r=>/add column/.test(r)).length;
+    const msg='Controllo completo del database: mancano '+nCol+' colonne'+(_tabelleMancanti.length?' e '+_tabelleMancanti.length+' tabelle ('+_tabelleMancanti.join(', ')+')':'')+(_storageMancante?' e l\'archivio allegati':'')+'.\nQuei dati restano solo sul dispositivo finché non le aggiungi.\n\nÈ UN UNICO SCRIPT COMPLETO per tutte le tabelle.\n\n'+sql+'\n\nDopo averlo lanciato tocca di nuovo il chip sync: il database viene ricontrollato e i dati inviati da soli.\n\nOK = copia lo script negli appunti';
     if(confirm(msg)){
       try{ navigator.clipboard.writeText(sql).then(()=>toast('📋 Script SQL copiato','success')).catch(()=>prompt('Copia lo script:',sql)); }
       catch(e){ prompt('Copia lo script:', sql); }
@@ -3798,15 +3784,12 @@ function updateSyncStatus(state){
 }
 
 // ── CODA OFFLINE ──
-function loadQueue(){ return _getCache(LS_QUEUE,'[]'); }
-function saveQueue(q){ _setCache(LS_QUEUE,q); updateQueueBadge(); }
-function updateQueueBadge(){
-  if(!IS_ONLINE) updateSyncStatus('offline');
-}
-function enqueue(op){
-  const q=loadQueue(); q.push({...op,ts:Date.now()}); saveQueue(q);
-  updateSyncStatus('offline');
-}
+// FIX [INFRASTRUTTURA]: la coda è ora quella persistente del motore v2 (ls_sync_outbox).
+// Queste funzioni restano per compatibilità con il codice esistente.
+function loadQueue(){ return new Array(_contaInCoda()); }
+function saveQueue(q){ updateQueueBadge(); }
+function updateQueueBadge(){ if(!IS_ONLINE) updateSyncStatus('offline'); }
+function enqueue(op){ _programmaPush(); if(!IS_ONLINE) updateSyncStatus('offline'); }
 
 // Invia tutto quando torna online
 // ── MERGE LAST-WRITE-WINS: confronta locale vs cloud per timestamp ──
@@ -3833,96 +3816,13 @@ function _mergeArrays(local, cloud){
 
 async function forceSync(){
   if(!SUPA_OK||!IS_ONLINE){ toast('Non connesso','error'); return; }
-  updateSyncStatus('sync');
-  try{
-    // FIX [INFRASTRUTTURA]: Scarica tutto dal cloud + processatore/coloratore/schede
-    const [prods,movs,wRows,wlog,ordini,arch,camp_cloud,proc_cloud,color_cloud,schede_cloud]=await Promise.all([
-      supaFetch('products','GET',null,'?order=nome'),
-      supaFetch('movements','GET',null,'?order=ts.desc&limit=500'),
-      supaFetch('waste_state','GET',null,'?id=eq.waste_state'),
-      supaFetch('waste_log','GET',null,'?order=ts.desc&limit=200'),
-      supaFetch('ordini','GET',null,'?order=creato.desc&limit=200'),
-      supaFetch('archivio_ordini','GET',null,'?order=creato.desc&limit=500'),
-      supaFetch('campioni','GET',null,'?order=data.desc&limit=5000'),
-      supaFetch('processatore','GET',null,'?order=data.desc&limit=500'),
-      supaFetch('coloratore_log','GET',null,'?order=data.desc&limit=500'),
-      supaFetch('schede_tecniche','GET',null,'?order=data.desc&limit=200')
-    ]);
-    // Merge last-write-wins per ogni tabella con array di record
-    const mergedP = _mergeArrays(JSON.parse(localStorage.getItem(LS_P)||'[]'), prods);
-    const mergedM = _mergeArrays(JSON.parse(localStorage.getItem(LS_M)||'[]'), movs);
-    const mergedOrd = _mergeArrays(JSON.parse(localStorage.getItem(LS_ORD)||'[]'), ordini);
-    const mergedArch = _mergeArrays(JSON.parse(localStorage.getItem(LS_ARCH)||'[]'), arch);
-    const mergedCamp = _mergeArrays(JSON.parse(localStorage.getItem(LS_CAMP)||'[]'), camp_cloud);
-    const mergedProc = _mergeArrays(JSON.parse(localStorage.getItem(LS_PROC)||'[]'), proc_cloud);
-    const mergedColor = _mergeArrays(JSON.parse(localStorage.getItem(LS_COLOR_REG)||'[]'), color_cloud);
-    const mergedSchede = _mergeArrays(JSON.parse(localStorage.getItem(LS_SCHEDE)||'[]'), schede_cloud);
-    const mergedWlog = _mergeArrays(JSON.parse(localStorage.getItem(LS_WL)||'[]'), wlog);
-    // Salva merge in locale
-    _setCache(LS_P, mergedP);
-    _setCache(LS_M, mergedM);
-    _setCache(LS_ORD, mergedOrd);
-    _setCache(LS_ARCH, mergedArch);
-    _setCache(LS_CAMP, mergedCamp);
-    _setCache(LS_PROC, mergedProc);
-    _setCache(LS_COLOR_REG, mergedColor);
-    _setCache(LS_SCHEDE, mergedSchede);
-    _setCache(LS_WL, mergedWlog);
-    // Waste state: oggetto singolo, cloud vince se più recente
-    if(wRows&&wRows.length){
-      const localW=JSON.parse(localStorage.getItem(LS_W)||'{}');
-      const cloudW=wRows[0].data||{};
-      const localTs=new Date(localW._ts||0).getTime();
-      const cloudTs=new Date(cloudW._ts||0).getTime();
-      if(cloudTs>localTs) localStorage.setItem(LS_W, JSON.stringify(cloudW));
-    }
-    // Push merge result su Supabase
-    if(mergedP.length) await supaFetch('products','POST',mergedP,'?on_conflict=id');
-    if(mergedM.length) await supaFetch('movements','POST',mergedM,'?on_conflict=id');
-    if(mergedOrd.length) await supaFetch('ordini','POST',mergedOrd,'?on_conflict=id');
-    if(mergedArch.length) await supaFetch('archivio_ordini','POST',mergedArch,'?on_conflict=id');
-    if(mergedCamp.length) await supaFetch('campioni','POST',mergedCamp,'?on_conflict=id');
-    if(mergedProc.length) await supaFetch('processatore','POST',mergedProc,'?on_conflict=id');
-    if(mergedColor.length) await supaFetch('coloratore_log','POST',mergedColor,'?on_conflict=id');
-    if(mergedSchede.length) await supaFetch('schede_tecniche','POST',mergedSchede,'?on_conflict=id');
-    if(mergedWlog.length) await supaFetch('waste_log','POST',mergedWlog,'?on_conflict=id');
-    _invalidateAll();
-    updateSyncStatus('ok');
-    _refreshCurrentView();
-    _toastEsitoSync('✅ Sync completata');
-  }catch(e){ updateSyncStatus('err'); toast('Errore sync: '+e.message,'error'); }
+  await _conLock(_syncCompleta);
+  _toastEsitoSync('✅ Sync completata');
 }
+// Invia la coda (modifiche e cancellazioni in attesa)
 async function flushQueue(){
   if(!SUPA_OK||!IS_ONLINE) return;
-  const q=loadQueue(); if(!q.length){ updateSyncStatus('ok'); return; }
-  updateSyncStatus('sync');
-  try{
-    const prods=JSON.parse(localStorage.getItem(LS_P)||'[]');
-    const movs=JSON.parse(localStorage.getItem(LS_M)||'[]');
-    const W=JSON.parse(localStorage.getItem(LS_W)||'{}');
-    const ords=JSON.parse(localStorage.getItem(LS_ORD)||'[]');
-    const wlog=JSON.parse(localStorage.getItem(LS_WL)||'[]');
-    const arch=JSON.parse(localStorage.getItem(LS_ARCH)||'[]');
-    const camp=JSON.parse(localStorage.getItem(LS_CAMP)||'[]');
-    const proc=JSON.parse(localStorage.getItem(LS_PROC)||'[]');
-    const color=JSON.parse(localStorage.getItem(LS_COLOR_REG)||'[]');
-    const schede=JSON.parse(localStorage.getItem(LS_SCHEDE)||'[]');
-    // Push tutto su Supabase
-    if(prods.length) await supaFetch('products','POST',prods,'?on_conflict=id');
-    if(movs.length) await supaFetch('movements','POST',movs,'?on_conflict=id');
-    // FIX [INFRASTRUTTURA]: niente DELETE prima del POST (upsert attivo; il DELETE rischiava di perdere lo stato)
-    if(Object.keys(W).length) await supaFetch('waste_state','POST',[{id:'waste_state',data:W}],'?on_conflict=id');
-    if(ords.length) await supaFetch('ordini','POST',ords,'?on_conflict=id');
-    if(arch.length) await supaFetch('archivio_ordini','POST',arch,'?on_conflict=id');
-    if(camp.length) await supaFetch('campioni','POST',camp,'?on_conflict=id');
-    if(wlog.length) await supaFetch('waste_log','POST',wlog,'?on_conflict=id');
-    if(proc.length) await supaFetch('processatore','POST',proc,'?on_conflict=id');
-    if(color.length) await supaFetch('coloratore_log','POST',color,'?on_conflict=id');
-    if(schede.length) await supaFetch('schede_tecniche','POST',schede,'?on_conflict=id');
-    saveQueue([]);
-    updateSyncStatus('ok');
-    _toastEsitoSync('✅ '+q.length+' modifica/he sincronizzata/e');
-  }catch(e){ updateSyncStatus('err'); }
+  return _conLock(_pushTutto);
 }
 
 // FIX [INFRASTRUTTURA]: colonne che il database non ha. Vengono escluse dall'invio
@@ -3967,7 +3867,7 @@ async function _verificaColonneMancanti(silenzioso){
       for(const c of Object.keys(m[t]||{})){
         try{
           const r=await supaFetch(t,'GET',null,'?select='+encodeURIComponent(c)+'&limit=1');
-          if(r!==null){ delete m[t][c]; trovate++; }
+          if(r!==null){ delete m[t][c]; trovate++; _segnaTabellaDaInviare(t); }
         }catch(e){}
       }
       if(m[t] && !Object.keys(m[t]).length) delete m[t];
@@ -3980,9 +3880,93 @@ async function _verificaColonneMancanti(silenzioso){
   } finally { _verificaColInCorso=false; }
   return trovate;
 }
+// FIX [INFRASTRUTTURA]: CONTROLLO COMPLETO DELLO SCHEMA.
+// Prima le colonne mancanti venivano scoperte una alla volta, solo quando un salvataggio falliva
+// (→ uno script nuovo ogni giorno). Ora si confrontano TUTTI i campi presenti nei dati del dispositivo
+// con le colonne reali di OGNI tabella Supabase, e si genera un unico script completo (tabelle mancanti incluse).
+const SYNC_TABELLE=[
+  ['products','ls_products'], ['movements','ls_movements'], ['ordini','ls_ordini'], ['archivio_ordini','ls_archivio_ordini'],
+  ['campioni','ls_campioni'], ['processatore','ls_processatore'], ['coloratore_log','ls_coloratore'],
+  ['schede_tecniche','ls_schede_tecniche'], ['waste_log','ls_waste_log'], ['fornitori','ls_fornitori'],
+  ['ihc_requests','ls_ihc'], ['bidoni','ls_bidoni'],
+];
+let _tabelleMancanti=[];   // tabelle che non esistono nel database
+function _tipoSqlColonna(valori){
+  let b=0,i=0,n=0,o=0,s=0;
+  valori.forEach(v=>{ if(typeof v==='boolean') b++; else if(typeof v==='number'){ if(Number.isInteger(v)) i++; else n++; } else if(v && typeof v==='object') o++; else s++; });
+  if(o) return 'jsonb';
+  if(s) return 'text';
+  if(b && !(i||n)) return 'boolean';
+  if(n) return 'numeric';
+  if(i && !b) return valori.some(v=>typeof v==='number' && Math.abs(v)>2147483647) ? 'bigint' : 'integer';
+  return 'text';
+}
+async function _colonneDb(table){
+  // null = tabella inesistente · undefined = non verificabile (rete) · Set = colonne note (o vuoto se tabella vuota)
+  let res;
+  try{ res=await fetch(SUPA_URL+'/rest/v1/'+table+'?limit=1',{headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY}}); }catch(e){ return undefined; }
+  if(res.status===404) return null;
+  let raw=''; try{ raw=await res.text(); }catch(_){}
+  if(!res.ok){ return /could not find the table|does not exist|PGRST205|42P01/i.test(raw) ? null : undefined; }
+  let rows=[]; try{ rows=JSON.parse(raw||'[]'); }catch(_){}
+  return Array.isArray(rows)&&rows.length ? new Set(Object.keys(rows[0])) : new Set();
+}
+async function _colonnaEsiste(table,col){
+  try{
+    const res=await fetch(SUPA_URL+'/rest/v1/'+table+'?select='+encodeURIComponent(col)+'&limit=1',{headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY}});
+    if(res.ok) return true;
+    const raw=await res.text().catch(()=>'');
+    return /column .* does not exist|could not find .* column|42703|PGRST204/i.test(raw) ? false : undefined;
+  }catch(e){ return undefined; }
+}
+let _scansioneInCorso=null;
+async function _scansionaSchema(){
+  if(!SUPA_OK || !IS_ONLINE) return false;
+  if(_scansioneInCorso) return _scansioneInCorso;
+  _scansioneInCorso=(async()=>{
+    const m=_missingCols(); const mancanti=[]; let ok=true; const aggiunte=new Set();
+    for(const [table,key] of SYNC_TABELLE){
+      try{
+        let rows=[]; try{ rows=JSON.parse(localStorage.getItem(key)||'[]'); }catch(_){}
+        if(_cache[key]) rows=_cache[key];
+        if(!Array.isArray(rows) || !rows.length) continue;
+        const valori={};
+        rows.forEach(r=>{ if(r && typeof r==='object') Object.keys(r).forEach(k=>{ const v=r[k]; if(v===undefined) return; (valori[k]=valori[k]||[]); if(v!==null && valori[k].length<200) valori[k].push(v); }); });
+        const cols=await _colonneDb(table);
+        if(cols===undefined){ ok=false; continue; }
+        if(cols===null){ mancanti.push(table); m[table]={}; Object.keys(valori).forEach(k=>{ if(k!=='id') m[table][k]=_tipoSqlColonna(valori[k]); }); continue; }
+        const tab=m[table]||{};
+        // tutti i campi dei dati locali + quelli già segnalati in precedenza
+        for(const k of new Set([...Object.keys(valori), ...Object.keys(tab)])){
+          let esiste = cols.size ? cols.has(k) : await _colonnaEsiste(table,k);
+          if(esiste===undefined){ ok=false; continue; }
+          if(esiste){ if(tab[k]) aggiunte.add(table); delete tab[k]; } else tab[k]=tab[k]||_tipoSqlColonna(valori[k]||[]);
+        }
+        if(Object.keys(tab).length) m[table]=tab; else delete m[table];
+      }catch(e){ ok=false; }
+    }
+    _tabelleMancanti=mancanti;
+    _setCache('ls_sync_missing_cols', m);
+    // FIX [INFRASTRUTTURA]: colonne appena aggiunte → quei record vanno rimandati (prima erano stati inviati senza quei campi)
+    aggiunte.forEach(tb=>_segnaTabellaDaInviare(tb));
+    if(aggiunte.size) _programmaPush();
+    _setCache('ls_schema_check', {ts:new Date().toISOString(), ok});
+    try{ updateSyncStatus(Object.keys(_SYNC_ERR).length?'err':'ok'); }catch(_){}
+    return ok;
+  })();
+  try{ return await _scansioneInCorso; } finally { _scansioneInCorso=null; }
+}
 function _sqlColonneMancanti(){
   const m=_missingCols(); const righe=[];
-  Object.keys(m).forEach(t=>Object.keys(m[t]).forEach(c=>righe.push('alter table public.'+t+' add column if not exists "'+c+'" '+m[t][c]+';')));
+  const q=c=>'"'+String(c).replace(/"/g,'""')+'"';
+  (_tabelleMancanti||[]).forEach(t=>{ if(m[t]) righe.push('create table if not exists public.'+t+' (id text primary key);'); });
+  Object.keys(m).forEach(t=>Object.keys(m[t]).forEach(c=>righe.push('alter table public.'+t+' add column if not exists '+q(c)+' '+m[t][c]+';')));
+  if(typeof _storageMancante!=='undefined' && _storageMancante){
+    righe.push("-- Archivio allegati (scansioni ordini e DDT)");
+    righe.push("insert into storage.buckets (id, name, public) values ('allegati','allegati', false) on conflict (id) do nothing;");
+    righe.push("do $$ begin if not exists (select 1 from pg_policies where schemaname='storage' and tablename='objects' and policyname='lupolab_allegati') then create policy lupolab_allegati on storage.objects for all to anon, authenticated using (bucket_id='allegati') with check (bucket_id='allegati'); end if; end $$;");
+  }
+  if(righe.length) righe.push("notify pgrst, 'reload schema';");
   return righe.join('\n');
 }
 
@@ -4018,7 +4002,7 @@ async function _supaFetchUno(table,method='GET',body=null,query=''){
   const prefer = method==='POST' ? 'return=minimal,resolution=merge-duplicates'
                : isWrite ? 'return=minimal' : 'return=representation';
   let payload = (isWrite && Array.isArray(body)) ? _stripColonneMancanti(table, body) : body;
-  for(let tentativo=0; tentativo<10; tentativo++){
+  for(let tentativo=0; tentativo<60; tentativo++){ // FIX [INFRASTRUTTURA]: prima si fermava a 10 colonne mancanti
     let res;
     try{
       res=await fetch(SUPA_URL+'/rest/v1/'+table+query,{
@@ -4053,10 +4037,16 @@ function _getCache(key,fallback='[]'){
   }
   return _cache[key];
 }
-function _setCache(key,val){
+function _setCache(key,val,opts){
+  // FIX [INFRASTRUTTURA]: tabelle sincronizzate → si registrano solo i record cambiati (vedi motore v2)
+  try{
+    const tab=_syncMappa()[key];
+    if(tab && Array.isArray(val)){ if(opts && opts.daSync) _aggiornaFP(key,val); else _tracciaModifiche(key,val); }
+  }catch(e){}
   _cache[key]=val;
   try{
     localStorage.setItem(key,JSON.stringify(val));
+    return true;
   }catch(e){
     if(e && (e.name==='QuotaExceededError' || e.code===22 || e.code===1014)){
       console.warn('[STORAGE FULL] localStorage pieno, impossibile salvare '+key);
@@ -4064,33 +4054,254 @@ function _setCache(key,val){
     } else {
       console.warn('[_setCache] errore salvataggio '+key, e);
     }
+    return false;
   }
 }
 // Helper: aggiunge/aggiorna il campo 'modificato' a ogni record di un array prima del save
-function _stampMod(arr){ const now=new Date().toISOString(); return (arr||[]).map(item=>({...item, modificato:now})); }
+// FIX [INFRASTRUTTURA]: non timbra più TUTTI i record (causa delle sovrascritture tra dispositivi):
+// la data di modifica la mette _tracciaModifiche solo sui record cambiati davvero
+function _stampMod(arr){ return arr||[]; }
 function _invalidateAll(){ Object.keys(_cache).forEach(k=>delete _cache[k]); }
+// ═══════════════════════════════════════════════════════════════════════
+// FIX [INFRASTRUTTURA]: MOTORE DI SINCRONIZZAZIONE v2 (07/10/2026)
+// Prima: ogni salvataggio rimandava al cloud l'INTERA tabella con data di modifica nuova su tutti i
+// record → con due dispositivi l'ultimo che salvava sovrascriveva le modifiche dell'altro; le
+// cancellazioni non venivano ricordate (i record tornavano); IHC e bidoni non venivano mai riletti.
+// Ora:
+//  • ogni scrittura in cache confronta i record con l'ultima versione nota (impronta per id):
+//    solo i record davvero cambiati ricevono la data di modifica e finiscono nella coda di invio;
+//  • i record spariti diventano "cancellazioni" (inviate come DELETE e ricordate per 90 giorni);
+//  • la coda è persistente: un invio fallito resta in coda e riparte da solo;
+//  • lo scaricamento è a pagine (niente limite di 500/1000 righe) e non sovrascrive mai i record
+//    modificati sul dispositivo e non ancora inviati;
+//  • tutte le tabelle passano dagli stessi percorsi (avvio, sync forzata, coda).
+// ═══════════════════════════════════════════════════════════════════════
+var LS_SYNC_OUTBOX='ls_sync_outbox', LS_SYNC_TOMB='ls_sync_tomb', LS_SYNC_V2='ls_sync_v2';
+var _SYNC_KEY2TAB=null;
+function _syncMappa(){
+  if(_SYNC_KEY2TAB) return _SYNC_KEY2TAB;
+  const m={}; try{ SYNC_TABELLE.forEach(([t,k])=>{ m[k]=t; }); }catch(e){ return {}; }
+  return (_SYNC_KEY2TAB=m);
+}
+function _jsonLS(k,fb){ try{ const v=JSON.parse(localStorage.getItem(k)||'null'); return v==null?fb:v; }catch(e){ return fb; } }
+var _syncOutbox=null, _syncTomb=null, _syncV2=null;
+function _ob(){ if(!_syncOutbox) _syncOutbox=_jsonLS(LS_SYNC_OUTBOX,{}); return _syncOutbox; }
+function _obTab(t){ const o=_ob(); if(!o[t]) o[t]={d:{},x:{}}; if(!o[t].d) o[t].d={}; if(!o[t].x) o[t].x={}; return o[t]; }
+function _tomb(){ if(!_syncTomb) _syncTomb=_jsonLS(LS_SYNC_TOMB,{}); return _syncTomb; }
+function _v2(){ if(!_syncV2) _syncV2=_jsonLS(LS_SYNC_V2,{}); return _syncV2; }
+function _salvaStatoSync(){
+  try{ localStorage.setItem(LS_SYNC_OUTBOX, JSON.stringify(_ob())); }catch(e){}
+  try{
+    const tb=_tomb(), lim=Date.now()-90*864e5;          // cancellazioni ricordate 90 giorni
+    Object.keys(tb).forEach(t=>Object.keys(tb[t]).forEach(id=>{ if(new Date(tb[t][id]).getTime()<lim) delete tb[t][id]; }));
+    localStorage.setItem(LS_SYNC_TOMB, JSON.stringify(tb));
+  }catch(e){}
+  try{ localStorage.setItem(LS_SYNC_V2, JSON.stringify(_v2())); }catch(e){}
+}
+function _contaInCoda(){
+  const o=_ob(); let n=0;
+  Object.values(o).forEach(v=>{ n+=Object.keys(v.d||{}).length+Object.keys(v.x||{}).length; });
+  return n;
+}
+// Impronta di un record (data di modifica esclusa, ordine dei campi indifferente)
+function _hashRec(r){
+  const ks=Object.keys(r).filter(k=>k!=='modificato').sort(); let s='';
+  for(const k of ks){ const v=r[k]; if(v===undefined) continue; s+=k+'\u0001'+(v!==null&&typeof v==='object'?JSON.stringify(v):typeof v+String(v))+'\u0002'; }
+  let h=5381; for(let i=0;i<s.length;i++) h=((h<<5)+h+s.charCodeAt(i))|0;
+  return h;
+}
+var _syncFP={};      // chiave LS → Map(id → impronta) dell'ultima versione nota
+function _fpDi(key){
+  if(!_syncFP) _syncFP={};
+  if(_syncFP[key]) return _syncFP[key];
+  const m=new Map(); const arr=_jsonLS(key,[]);     // localStorage = versione prima delle modifiche in memoria
+  if(Array.isArray(arr)) arr.forEach(r=>{ if(r && r.id!=null) m.set(String(r.id), _hashRec(r)); });
+  return (_syncFP[key]=m);
+}
+function _aggiornaFP(key, arr){
+  if(!_syncFP) _syncFP={};
+  const m=new Map(); arr.forEach(r=>{ if(r && r.id!=null) m.set(String(r.id), _hashRec(r)); });
+  _syncFP[key]=m;
+}
+// Confronta e mette in coda solo ciò che è cambiato davvero
+function _tracciaModifiche(key, arr){
+  const t=_syncMappa()[key]; if(!t) return;
+  const fp=_fpDi(key), ob=_obTab(t), now=new Date().toISOString(); let cambi=false;
+  const visti=new Set();
+  for(const r of arr){
+    if(!r || typeof r!=='object' || r.id==null) continue;
+    const id=String(r.id); visti.add(id);
+    const h=_hashRec(r);
+    if(fp.get(id)!==h){ r.modificato=now; fp.set(id,h); ob.d[id]=h; delete ob.x[id]; cambi=true; }
+  }
+  for(const id of [...fp.keys()]) if(!visti.has(id)){ fp.delete(id); delete ob.d[id]; ob.x[id]=now; cambi=true; }
+  if(cambi){ _salvaStatoSync(); _programmaPush(); }
+}
+function _segnaTabellaDaInviare(t){
+  const key=(SYNC_TABELLE.find(x=>x[0]===t)||[])[1]; if(!key) return;
+  const ob=_obTab(t); (_getCache(key,'[]')||[]).forEach(r=>{ if(r&&r.id!=null) ob.d[String(r.id)]=_hashRec(r); });
+  _salvaStatoSync();
+}
+// Una operazione di sync alla volta (niente invii sovrapposti)
+var _syncCatena=Promise.resolve();
+function _conLock(fn){ const p=(_syncCatena||Promise.resolve()).then(fn,fn); _syncCatena=p.catch(()=>{}); return p; }
+var _pushTimer=null;
+function _programmaPush(){
+  if(!SUPA_OK) return;
+  clearTimeout(_pushTimer);
+  _pushTimer=setTimeout(()=>{ if(IS_ONLINE) _conLock(_pushTutto); else updateSyncStatus('offline'); }, 700);
+}
+// ── INVIO ──
+function _blocchi(rows){
+  const out=[]; let cur=[], size=0;
+  rows.forEach(r=>{ const s=JSON.stringify(r).length; if(cur.length && (cur.length>=200 || size+s>1500000)){ out.push(cur); cur=[]; size=0; } cur.push(r); size+=s; });
+  if(cur.length) out.push(cur);
+  return out;
+}
+async function _pushTabella(t, key){
+  const ob=_obTab(t); const ids=Object.keys(ob.d), del=Object.keys(ob.x);
+  if(!ids.length && !del.length) return true;
+  let ok=true;
+  if(ids.length){
+    const byId=new Map(); (_getCache(key,'[]')||[]).forEach(r=>{ if(r&&r.id!=null) byId.set(String(r.id), r); });
+    const rows=[]; ids.forEach(id=>{ const r=byId.get(id); if(r) rows.push(r); else delete ob.d[id]; });
+    for(const blk of _blocchi(rows)){
+      const inviati=blk.map(r=>[String(r.id), _hashRec(r)]);
+      const res=await supaFetch(t,'POST',blk,'?on_conflict=id');
+      if(res===null){ ok=false; continue; }
+      const ora=new Map(); (_getCache(key,'[]')||[]).forEach(r=>{ if(r&&r.id!=null) ora.set(String(r.id), r); });
+      inviati.forEach(([id,h])=>{ const r=ora.get(id); if(!r || _hashRec(r)===h) delete ob.d[id]; });   // modificato di nuovo durante l'invio → resta in coda
+    }
+  }
+  for(let i=0;i<del.length;i+=80){
+    const part=del.slice(i,i+80);
+    const res=await supaFetch(t,'DELETE',null,'?id=in.('+part.map(id=>encodeURIComponent('"'+id.replace(/"/g,'')+'"')).join(',')+')');
+    if(res===null){ ok=false; continue; }
+    const tb=_tomb(); if(!tb[t]) tb[t]={};
+    part.forEach(id=>{ tb[t][id]=ob.x[id]||new Date().toISOString(); delete ob.x[id]; });
+  }
+  _salvaStatoSync();
+  if(!ok && !_SYNC_ERR[t]) _registraErroreSync(t, 0, 'invio non completato (resta in coda e riparte da solo)');
+  return ok;
+}
+var _wasteDirty=false;
+async function _pushWaste(){
+  if(!_wasteDirty && !_jsonLS('ls_sync_waste_dirty',false)) return true;
+  const W=loadW();
+  const r=await supaFetch('waste_state','POST',[{id:'waste_state',data:W}],'?on_conflict=id');
+  if(r!==null){ _wasteDirty=false; try{ localStorage.removeItem('ls_sync_waste_dirty'); }catch(e){} return true; }
+  return false;
+}
+async function _pushTutto(){
+  if(!SUPA_OK || !IS_ONLINE) return false;
+  const nPrima=_contaInCoda(); if(!nPrima && !_wasteDirty && !_jsonLS('ls_sync_waste_dirty',false)) { updateSyncStatus('ok'); return true; }
+  updateSyncStatus('sync');
+  let tutto=true;
+  for(const [t,key] of SYNC_TABELLE){ try{ if(!(await _pushTabella(t,key))) tutto=false; }catch(e){ tutto=false; } }   // errori isolati per tabella
+  try{ if(!(await _pushWaste())) tutto=false; }catch(e){ tutto=false; }
+  updateSyncStatus(tutto && !_contaInCoda() ? 'ok' : 'err');
+  return tutto;
+}
+// ── SCARICAMENTO (a pagine, senza limiti) ──
+async function _scaricaTabella(t){
+  const out=[]; const PAGE=1000;
+  for(let off=0, giri=0; giri<500; giri++){
+    const r=await _supaFetchUno(t,'GET',null,'?select=*&order=id.asc&limit='+PAGE+'&offset='+off);
+    if(r===null || !Array.isArray(r)) return null;
+    if(!r.length) break;
+    out.push(...r); off+=r.length;
+  }
+  return out;
+}
+function _unisciTabella(t, key, cloud){
+  const local=(_getCache(key,'[]')||[]).slice(); const ob=_obTab(t); const tb=(_tomb()[t]||{}); const v2=_v2();
+  const primaVolta = !v2[t] || (!cloud.length && local.length);     // prima volta (o cloud vuoto): nessuna rimozione
+  const cMap=new Map(); cloud.forEach(c=>{ if(c && c.id!=null) cMap.set(String(c.id), c); });
+  const res=[], soloLocali=[];
+  for(const r of local){
+    if(!r || typeof r!=='object' || r.id==null){ res.push(r); continue; }
+    const id=String(r.id); const c=cMap.get(id); cMap.delete(id);
+    if(ob.d[id]){ res.push(c ? {...c, ...r} : r); continue; }                 // modificato qui, non ancora inviato
+    if(c){
+      if(primaVolta){
+        const lt=new Date(r.modificato||r.creato||0).getTime(), ct=new Date(c.modificato||c.creato||0).getTime();
+        if(lt>ct){ const m={...c, ...r}; res.push(m); ob.d[id]=_hashRec(m); } else res.push({...r, ...c});
+      } else res.push({...r, ...c});                                          // cloud vince, campi solo-locali conservati
+      continue;
+    }
+    if(primaVolta){ res.push(r); ob.d[id]=_hashRec(r); } else soloLocali.push(r);
+  }
+  // Record locali non più nel cloud = cancellati su un altro dispositivo. Protezione: se sembrano troppi,
+  // non si cancella nulla e li si rimanda (meglio un doppione che un dato perso).
+  if(soloLocali.length){
+    if(soloLocali.length>5 && soloLocali.length > local.length*0.3) soloLocali.forEach(r=>{ res.push(r); ob.d[String(r.id)]=_hashRec(r); });
+  }
+  // FIX [MAGAZZINO]: i bidoni venivano creati da una migrazione su OGNI dispositivo (id diversi) e il cloud li
+  // conteneva tutti. Al primo allineamento si tengono i bidoni del dispositivo per i prodotti che ne hanno già:
+  // quelli "doppi" dell'altro dispositivo vengono scartati (e tolti dal cloud), altrimenti il conteggio raddoppia.
+  const prodConBidoni = (t==='bidoni' && primaVolta) ? new Set(local.filter(r=>r&&r.prod_id).map(r=>String(r.prod_id))) : null;
+  for(const c of cMap.values()){
+    const id=String(c.id);
+    if(tb[id] || ob.x[id]){ if(!ob.x[id]) ob.x[id]=tb[id]; continue; }    // cancellato qui: resta cancellato (e lo si ricancella nel cloud)
+    if(prodConBidoni && c.prod_id && prodConBidoni.has(String(c.prod_id))){ ob.x[id]=new Date().toISOString(); continue; }
+    res.push(c);
+  }
+  v2[t]=true;
+  // c'è qualcosa di nuovo rispetto a prima? (serve per non ridisegnare la vista inutilmente)
+  const fpPrima=_fpDi(key); let cambiato=res.length!==fpPrima.size;
+  if(!cambiato) for(const r of res){ if(r && r.id!=null && fpPrima.get(String(r.id))!==_hashRec(r)){ cambiato=true; break; } }
+  _setCache(key, res, {daSync:true});
+  _salvaStatoSync();
+  return cambiato;
+}
+async function _pullWaste(){
+  const rows=await _supaFetchUno('waste_state','GET',null,'?id=eq.waste_state');
+  if(!Array.isArray(rows) || !rows.length || !rows[0].data) return;
+  const cloudW=rows[0].data; const localW=_jsonLS(LS_W,{});
+  if(_wasteDirty || _jsonLS('ls_sync_waste_dirty',false)) return;          // modifica locale in attesa di invio
+  const lt=new Date(localW._ts||0).getTime(), ct=new Date(cloudW._ts||0).getTime();
+  const vuotoLocale=!Object.keys(localW).length;
+  if(ct>lt || (!lt && !ct && vuotoLocale)) _setCache(LS_W, cloudW, {daSync:true});
+  else if(lt>ct){ _wasteDirty=true; }
+}
+var _pullHaCambiato=false;
+async function _pullTutto(){
+  let ok=true;
+  for(const [t,key] of SYNC_TABELLE){
+    try{
+      const cloud=await _scaricaTabella(t);
+      if(cloud===null){ ok=false; continue; }                                 // tabella non raggiungibile: dati locali intatti
+      if(_unisciTabella(t, key, cloud)) _pullHaCambiato=true;
+    }catch(e){ ok=false; }                                                     // errori isolati per tabella
+  }
+  try{ await _pullWaste(); }catch(e){ ok=false; }
+  return ok;
+}
+// Sincronizzazione completa: scarica, unisce, invia
+var _ultimaSyncCompleta=0;
+async function _syncCompleta(){
+  if(!SUPA_OK || !IS_ONLINE) return false;
+  _ultimaSyncCompleta=Date.now();
+  updateSyncStatus('sync');
+  _pullHaCambiato=false;
+  const a=await _pullTutto();
+  const b=await _pushTutto();
+  // FIX [UI/UX]: si ridisegna solo se sono arrivati dati nuovi e non si sta compilando niente
+  // (prima una sync in background poteva cancellare un modulo di ricezione mentre lo si compilava)
+  const occupato = document.querySelector('.modal-overlay.open') || document.querySelector('#ordine-detail input:not([type=hidden]), #ordine-detail textarea')
+    || (document.activeElement && /INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName));
+  if(_pullHaCambiato && !occupato){ try{ _refreshCurrentView(); }catch(e){} }
+  updateSyncStatus(a&&b&&!_contaInCoda() ? 'ok' : 'err');
+  return a&&b;
+}
+
 
 const loadP=()=>_getCache(LS_P,'[]');
 const loadOrd=()=>_getCache(LS_ORD,'[]');
-async function saveP(arr, deletedId){
-  _setCache(LS_P,_stampMod(arr));
-  if(!SUPA_OK) return;
-  if(!IS_ONLINE){ enqueue({type:'products'}); return; }
-  updateSyncStatus('sync');
-  try{
-    if(deletedId) await supaFetch('products','DELETE',null,'?id=eq.'+deletedId);
-    if(arr.length) await supaFetch('products','POST',arr,'?on_conflict=id');
-    updateSyncStatus('ok');
-  }catch(e){ enqueue({type:'products'}); }
-}
+async function saveP(arr, deletedId){ _setCache(LS_P, arr); }   // FIX [INFRASTRUTTURA]: invio e cancellazioni gestiti dal motore v2
 
 const loadM=()=>_getCache(LS_M,'[]');
-function saveM(arr){
-  _setCache(LS_M,_stampMod(arr));
-  if(!SUPA_OK||!arr.length) return;
-  if(!IS_ONLINE){ enqueue({type:'movements'}); return; }
-  supaFetch('movements','POST',[arr[0]],'?on_conflict=id');
-}
+function saveM(arr){ _setCache(LS_M, arr); }   // FIX [INFRASTRUTTURA]: invio e cancellazioni gestiti dal motore v2
 
 function loadW(){
   const def={
@@ -4116,21 +4327,15 @@ function setVuoti(W, key, val){
   else { W[key].vuoti=Math.max(0,val); }
 }
 async function saveW(obj){
-  localStorage.setItem(LS_W,JSON.stringify(obj));
-  if(!SUPA_OK) return;
-  if(!IS_ONLINE){ enqueue({type:'waste'}); return; }
-  // FIX [INFRASTRUTTURA]: niente DELETE prima del POST (upsert attivo)
-  await supaFetch('waste_state','POST',[{id:'waste_state',data:obj}],'?on_conflict=id');
+  // FIX [INFRASTRUTTURA]: data di modifica sullo stato rifiuti (prima mancava → sync rotta) e invio dal motore
+  obj._ts=new Date().toISOString();
+  _setCache(LS_W, obj);
+  _wasteDirty=true; try{ localStorage.setItem('ls_sync_waste_dirty','true'); }catch(e){}
+  _programmaPush();
 }
 
 const loadWL=()=>_getCache(LS_WL,'[]');
-async function saveWL(arr){
-  _setCache(LS_WL,_stampMod(arr));
-  if(!SUPA_OK||!arr.length) return;
-  if(!IS_ONLINE){ enqueue({type:'waste'}); return; }
-  // Upsert solo nuovi movimenti (no delete-all)
-  if(arr.length) await supaFetch('waste_log','POST',arr.slice(0,5),'?on_conflict=id');
-}
+async function saveWL(arr){ _setCache(LS_WL, arr); }   // FIX [INFRASTRUTTURA]: invio e cancellazioni gestiti dal motore v2
 
 const genId=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
 function safeSet(id,html){const el=document.getElementById(id);if(el)el.innerHTML=html;}
@@ -4154,53 +4359,30 @@ async function initialSync(){
 }
 async function _initialSyncRun(){
   if(!SUPA_OK){ updateSyncStatus('off'); return; }
-  updateSyncStatus('sync');
+  if(!IS_ONLINE){ updateSyncStatus('offline'); return; }
   try{
-    const [prods,movs,wRows,wlog,ordini,arch,camp_cloud,proc_cloud,color_cloud,schede_cloud,forn_cloud]=await Promise.all([
-      supaFetch('products','GET',null,'?order=nome'),
-      supaFetch('movements','GET',null,'?order=ts.desc&limit=500'),
-      supaFetch('waste_state','GET',null,'?id=eq.waste_state'),
-      supaFetch('waste_log','GET',null,'?order=ts.desc&limit=200'),
-      supaFetch('ordini','GET',null,'?order=creato.desc&limit=200'),
-      supaFetch('archivio_ordini','GET',null,'?order=creato.desc&limit=500'),
-      supaFetch('campioni','GET',null,'?order=data.desc&limit=5000'),
-      supaFetch('processatore','GET',null,'?order=data.desc&limit=500'),
-      supaFetch('coloratore_log','GET',null,'?order=data.desc&limit=500'),
-      supaFetch('schede_tecniche','GET',null,'?order=data.desc&limit=200'),
-      supaFetch('fornitori','GET',null,'?order=nome')
-    ]);
-    // Merge per ogni tabella: ultimo modificato vince
-    const tables = [
-      [LS_P, prods], [LS_M, movs], [LS_ORD, ordini],
-      [LS_ARCH, arch], [LS_CAMP, camp_cloud], [LS_PROC, proc_cloud],
-      [LS_COLOR_REG, color_cloud], [LS_SCHEDE, schede_cloud], [LS_WL, wlog],
-      [LS_FORN, forn_cloud]
-    ];
-    tables.forEach(([key, cloud]) => {
-      const local = JSON.parse(localStorage.getItem(key)||'[]');
-      if(!local.length && cloud && cloud.length){
-        // Dispositivo pulito: prendi tutto dal cloud
-        localStorage.setItem(key, JSON.stringify(cloud));
-      } else if(local.length && cloud && cloud.length){
-        // Entrambi hanno dati: merge
-        const merged = _mergeArrays(local, cloud);
-        localStorage.setItem(key, JSON.stringify(merged));
-      }
-      // Se solo locale ha dati, non toccare
-    });
-    // Waste state: oggetto singolo
-    const localW=JSON.parse(localStorage.getItem(LS_W)||'{}');
-    const isDefault=!localW.cer_180103||localW.cer_180103.pieni===0;
-    if(wRows&&wRows.length&&isDefault) localStorage.setItem(LS_W, JSON.stringify(wRows[0].data));
-    _invalidateAll();
-    updateSyncStatus('ok');
-    _refreshCurrentView();
-    if(Object.keys(_missingCols()).length) setTimeout(()=>{ _verificaColonneMancanti(true); }, 1500); // FIX [INFRASTRUTTURA]
+    try{ localStorage.removeItem(LS_QUEUE); }catch(e){}            // vecchia coda (sostituita dal motore v2)
+    // FIX [INFRASTRUTTURA]: tutte le tabelle (anche IHC, bidoni, fornitori), a pagine, errori isolati
+    await _conLock(_syncCompleta);
+    // FIX [INFRASTRUTTURA]: controllo completo dello schema a ogni avvio (12 richieste leggere)
+    setTimeout(async ()=>{
+      const primaMancanti=Object.keys(_missingCols()).length;
+      await _scansionaSchema();
+      const ora=Object.keys(_missingCols()).length;
+      if(primaMancanti && !ora){ toast('✅ Colonne aggiunte nel database: invio i dati rimasti sul dispositivo…','success'); forceSync(); }
+      else if(ora) toast('⚠ Nel database mancano colonne: tocca il chip sync in alto per lo script SQL completo','warn');
+      _migraAllegati();   // FIX [INFRASTRUTTURA]: foto vecchie dagli ordini al cloud
+    }, 1500);
   }catch(e){ updateSyncStatus('err'); }
 }
 
 // Al rientro nella tab: sync solo se online (push locale → cloud, non cloud → locale)
-document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible'&&IS_ONLINE) flushQueue(); });
+// FIX [INFRASTRUTTURA]: al rientro si inviano le modifiche; se sono passati più di 5 minuti si scaricano
+// anche quelle fatte sugli altri dispositivi
+document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState!=='visible' || !IS_ONLINE || !SUPA_OK) return;
+  if(Date.now()-(_ultimaSyncCompleta||0) > 5*60000) _conLock(_syncCompleta); else flushQueue();
+});
 
 
 const CAT_ICON={Reagenti:'🧪',IHC:'🔬',Vetrini:'🪟',Cassette:'📁',Coloranti:'🎨',Consumabili:'🧤','Kit Colorazioni':'🔬',Lame:'⚔',Altro:'📌'};
@@ -4473,7 +4655,7 @@ function saveQuickCaso(){
     campione_id: id,
     tipo,
     sottotipo: '',
-    data: new Date().toISOString().slice(0,10),
+    data: _oggiLocale(), // FIX [TRACCIABILITÀ]: data locale
     provenienza: document.getElementById('quick-prov').value.trim(),
     desc_accettazione: document.getElementById('quick-desc').value.trim(),
     pezzi: [],
@@ -4540,7 +4722,7 @@ function renderHomeColoratore(){
 
 function renderHomeCampioniOggi(){
   const el = document.getElementById('home-tracc-oggi'); if(!el) return; // FIX [UI/UX]: guard semplificata
-  const oggi = new Date().toISOString().slice(0,10);
+  const oggi = _oggiLocale(); // FIX [TRACCIABILITÀ]: data locale
   const oggi_camp = loadCampioni().filter(c=>c.data===oggi);
   if(!oggi_camp.length){
     el.innerHTML='<div style="color:var(--text3);font-size:12px">Nessun caso registrato oggi</div>';
@@ -4561,7 +4743,7 @@ function renderDashboard(){
   if(!document.getElementById('stats-grid')) return;
   // ── Dati tracciabilità ──
   const campioni = loadCampioni();
-  const oggi = new Date().toISOString().slice(0,10);
+  const oggi = _oggiLocale(); // FIX [TRACCIABILITÀ]: data locale
   const campOggi = campioni.filter(c=>c.data===oggi);
   const campMese = campioni.filter(c=>c.data&&c.data.slice(0,7)===oggi.slice(0,7));
   const istOggi = campOggi.filter(c=>c.tipo==='istologia').length;
@@ -4654,7 +4836,7 @@ function renderDashboard(){
     </div>`;
 
   // ── Sezioni Tracciabilità / Processatore / Coloratore ──
-  const oggi2=new Date().toISOString().slice(0,10);
+  const oggi2=_oggiLocale(); // FIX [TRACCIABILITÀ]: data locale
   const mese2=oggi2.slice(0,7);
   const campOggi2=campioni.filter(x=>x.data===oggi2);
   const campMese2=campioni.filter(x=>x.data&&x.data.slice(0,7)===mese2);
@@ -5097,7 +5279,39 @@ function toggleBidoniRow(prodId, arrowEl) {
     arrowEl.style.display = 'inline-block';
   }
 }
+// FIX [MAGAZZINO]: UN SOLO modo di trovare o creare il lotto giusto (ricezione, DDT, carico manuale, scan).
+// Prima ogni percorso aveva la sua logica: lotti nuovi fusi dentro quelli vecchi (scadenza persa),
+// "senza lotto" caricato su un lotto qualsiasi, lotti "l123" e "L123 " considerati diversi.
+function _normLotto(l){ return String(l||'').trim().toUpperCase(); }
+function _trovaOCreaLotto(prods, nome, lotto, scad, modello, now){
+  const nk=String(nome||'').trim().toLowerCase(), L=_normLotto(lotto);
+  const stessi=prods.filter(x=>String(x.nome||'').trim().toLowerCase()===nk);
+  let p=stessi.find(x=>_normLotto(x.lotto)===L);
+  if(p){ if(scad && !p.scadenza) p.scadenza=scad; return {p, nuovo:false}; }
+  const m=modello || stessi[0] || {};
+  p={ id:genId(), nome:String(nome).trim(), cat:m.cat||'Reagenti', fornitore:m.fornitore||'', qty:0,
+      min:m.min||0, lotto:String(lotto||'').trim(), scadenza:scad||'', unita:m.unita||'pz',
+      pos:m.pos||'', barcode:m.barcode||'', creato:now||new Date().toISOString() };
+  if(typeof _ihcEredita==='function'){ try{ _ihcEredita(m, p); }catch(e){} }
+  prods.push(p);
+  return {p, nuovo:true};
+}
+// FIX [MAGAZZINO]: dopo ogni carico i reagenti/coloranti ricevono i bidoni chiusi mancanti
+// (prima solo il vecchio carico DDT li creava: lotti ricaricati sparivano dalla Verifica inventario)
+function _allineaBidoniDopoCarico(prodIds){
+  try{
+    if(typeof isBidoneTracked!=='function' || typeof createBidoniChiusi!=='function') return;
+    const oggi=_oggiLocale ? _oggiLocale() : new Date().toISOString().slice(0,10);
+    const ids=new Set(prodIds||[]);
+    loadP().forEach(p=>{
+      if(!ids.has(p.id) || !isBidoneTracked(p)) return;
+      const mancanti=(parseInt(p.qty,10)||0) - countBidoniProd(p.id).attivi;
+      if(mancanti>0) createBidoniChiusi(p.id, mancanti, {lotto:p.lotto, scadenza:p.scadenza, data_carico:oggi});
+    });
+  }catch(e){}
+}
 function adjQty(id,delta){
+  _takeSnapshot('Aggiustamento rapido'); // FIX [UNDO]
   const prods=loadP(), p=prods.find(x=>x.id===id); if(!p) return;
   const nq=Math.max(0,p.qty+delta); if(nq===p.qty) return;
   p.qty=nq; saveP(prods);
@@ -5106,6 +5320,7 @@ function adjQty(id,delta){
 }
 function deleteProduct(id){
   if(!confirm('Eliminare questo prodotto?')) return;
+  _takeSnapshot('Elimina prodotto'); // FIX [UNDO]
   saveP(loadP().filter(p=>p.id!==id), id); renderInv(); toast('Prodotto eliminato','info');
 }
 
@@ -5398,6 +5613,8 @@ window.saveSmaltimento = async function(){
   if(!tipo){ toast('Seleziona il codice CER','error'); return; }
   if(qty<=0){ toast('Numero contenitori deve essere > 0','error'); return; }
   if(!data){ toast('Inserisci la data di smaltimento','error'); return; }
+  { const W0=loadW(); const pieni=(W0[tipo]&&W0[tipo].pieni)||0;
+    if(qty>pieni && !confirm('Risultano solo '+pieni+' contenitori pieni di '+tipo+', ne stai smaltendo '+qty+'.\n\nRegistro comunque?')) return; }   // FIX [RIFIUTI]
   _takeSnapshot('Smaltimento '+tipo);
   const W=loadW();
   if(!W[tipo]) W[tipo]={pieni:0,smaltiti:0,vuoti:0};
@@ -5582,18 +5799,23 @@ function confirmManualMov(){
   const prodId=document.getElementById('m-prod').value;
   const qty=parseFloat(document.getElementById('m-qty').value)||0;
   if(!prodId||qty<=0){ toast('Seleziona prodotto e quantità','error'); return; }
-  const prods=loadP(), p=prods.find(x=>x.id===prodId); if(!p) return;
+  const prods=loadP(); let p=prods.find(x=>x.id===prodId); if(!p) return;
   if(manualMovType==='scarico'&&p.qty<qty){ toast('Quantità insufficiente','error'); return; }
+  _takeSnapshot((manualMovType==='carico'?'Carico':'Scarico')+' manuale '+p.nome); // FIX [UNDO]
+  const lottoDigitato=(document.getElementById('m-lotto').value||'').trim();
   if(manualMovType==='carico'){
-    p.qty=p.qty+qty;
+    // FIX [MAGAZZINO]: un lotto diverso da quello del record scelto va su un record suo (prima si sommava al vecchio)
+    if(lottoDigitato && _normLotto(lottoDigitato)!==_normLotto(p.lotto)) p=_trovaOCreaLotto(prods, p.nome, lottoDigitato, '', p).p;
+    p.qty=(parseFloat(p.qty)||0)+qty;
     if(p.qty_init===undefined) p.qty_init=qty; // prima volta: qty iniziale = quanto caricato
   } else {
     p.qty=p.qty-qty;
   }
   saveP(prods);
   const movs=loadM();
-  movs.unshift({id:genId(),ts:new Date().toISOString(),tipo:manualMovType,prod:p.nome,prodId:p.id,qty,lotto:document.getElementById('m-lotto').value,note:document.getElementById('m-note').value});
+  movs.unshift({id:genId(),ts:new Date().toISOString(),tipo:manualMovType,prod:p.nome,prodId:p.id,qty,lotto:p.lotto||lottoDigitato,note:document.getElementById('m-note').value});
   saveM(movs); closeModal('modal-mov');
+  if(manualMovType==='carico') _allineaBidoniDopoCarico([p.id]);
   renderMovimenti();
   if(currentView==='inventario') renderInv();
   toast(`${manualMovType==='carico'?'Carico':'Scarico'} registrato`,manualMovType==='carico'?'success':'info');
@@ -5602,6 +5824,28 @@ function confirmManualMov(){
 // ══════════════════════════════════════════
 // DDT MODAL (AI OCR)
 // ══════════════════════════════════════════
+// FIX [INFRASTRUTTURA]: chiave API letta da localStorage (prima era una chiave finta scritta nel codice:
+// la lettura DDT da foto non poteva funzionare). Si chiede una sola volta e si può cambiare dal menu.
+const LS_AI_KEY='ls_ai_key';
+function getAIKey(chiediSeManca){
+  let k=''; try{ k=localStorage.getItem(LS_AI_KEY)||''; }catch(e){}
+  if(!k && chiediSeManca){ k=impostaAIKey(); }
+  return k;
+}
+function impostaAIKey(){
+  const attuale=(()=>{ try{ return localStorage.getItem(LS_AI_KEY)||''; }catch(e){ return ''; } })();
+  const v=prompt('Chiave API Anthropic per la lettura dei DDT da foto (inizia con "sk-ant-").\nResta salvata solo su questo dispositivo.'+(attuale?'\n\nLascia vuoto e premi OK per rimuoverla.':''), '');
+  if(v===null) return attuale;
+  const k=v.trim();
+  try{ if(k) localStorage.setItem(LS_AI_KEY,k); else localStorage.removeItem(LS_AI_KEY); }catch(e){}
+  toast(k?'🔑 Chiave API salvata su questo dispositivo':'Chiave API rimossa', k?'success':'info');
+  return k;
+}
+function _erroreAI(status, data){
+  const msg=(data&&data.error&&data.error.message)||'';
+  if(status===401||status===403){ toast('🔑 Chiave API non valida: reimpostala dal menu (FC → Chiave API IA)','error'); }
+  else toast('Errore IA ('+status+')'+(msg?': '+msg:''),'error');
+}
 let ddtStream=null, ddtBase64=null;
 function openDDTModal(){
   ddtBase64=null;
@@ -5646,6 +5890,7 @@ function processDDTFile(file){
 }
 async function analyzeDDT(){
   if(!ddtBase64){ toast('Nessuna immagine','error'); return; }
+  if(!getAIKey(true)) return;   // FIX [INFRASTRUTTURA]
   document.getElementById('ddt-proc').style.display='block';
   document.getElementById('ddt-results').style.display='none';
   document.getElementById('ddt-confirm-btn').style.display='none';
@@ -5656,11 +5901,12 @@ Categorie valide: Reagenti, IHC, Vetrini, Cassette, Coloranti, Consumabili, Lame
 Se non leggi nulla: [{"nome":"Prodotto non riconosciuto","lotto":"","scadenza":"","qty":1,"unita":"pz","fornitore":"","barcode":"","cat":"Altro"}]`;
   try{
     const res=await fetch('https://api.anthropic.com/v1/messages',{
-      method:'POST',headers:{'Content-Type':'application/json','x-api-key':'sk-ant-api03-placeholder','anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      method:'POST',headers:{'Content-Type':'application/json','x-api-key':getAIKey(),'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
       body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:sys,
         messages:[{role:'user',content:[{type:'image',source:{type:'base64',media_type:'image/jpeg',data:ddtBase64}},{type:'text',text:'Analizza questo DDT.'}]}]})
     });
     const data=await res.json();
+    if(!res.ok){ _erroreAI(res.status, data); document.getElementById('ddt-proc').style.display='none'; return; }   // FIX [INFRASTRUTTURA]
     const raw=data.content.map(c=>c.text||'').join('');
     let items; try{ items=JSON.parse(raw.replace(/```json|```/g,'').trim()); }catch(e){ items=[]; }
     showDDTResults(items);
@@ -5704,21 +5950,23 @@ function addDDTRow(){
 function confirmDDT(){
   const rows=document.querySelectorAll('#ddt-rows .ai-row');
   if(!rows.length){ toast('Nessun prodotto da caricare','error'); return; }
-  const prods=loadP(), movs=loadM(); let count=0;
+  _takeSnapshot('Carico da DDT'); // FIX [UNDO]
+  const prods=loadP(), movs=loadM(); let count=0; const caricati=[];
   rows.forEach(row=>{
     const g=f=>row.querySelector(`[data-f="${f}"]`)?.value?.trim()||'';
     const nome=g('nome'); if(!nome) return;
-    const qty=parseFloat(g('qty'))||1, catRaw=g('cat')||'', cat=catRaw&&catRaw!=='Altro'?catRaw:smartCategorize(nome,g('fornitore')||'',''), lotto=g('lotto'), scadenza=g('scadenza'), unita=g('unita')||'pz';
-    let ex=prods.find(p=>p.nome.toLowerCase()===nome.toLowerCase()&&p.lotto===lotto);
-    if(!ex) ex=prods.find(p=>p.nome.toLowerCase()===nome.toLowerCase());
-    if(ex){ ex.qty+=qty; if(lotto) ex.lotto=lotto; if(scadenza) ex.scadenza=scadenza;
-      if(ex.qty_init===undefined) ex.qty_init=qty;
-    } else {
-      prods.push({id:genId(),nome,cat,fornitore:'',barcode:'',lotto,scadenza,qty,qty_init:qty,unita,min:0,pos:'',note:''});
-    }
-    movs.unshift({id:genId(),ts:new Date().toISOString(),tipo:'carico',prod:nome,prodId:ex?.id||'',qty,lotto,note:'Da DDT'}); count++;
+    const qty=parseFloat(String(g('qty')).replace(',','.'))||1, catRaw=g('cat')||'', cat=catRaw&&catRaw!=='Altro'?catRaw:smartCategorize(nome,g('fornitore')||'',''), lotto=g('lotto'), scadenza=g('scadenza'), unita=g('unita')||'pz';
+    // FIX [MAGAZZINO]: lotto nuovo → record nuovo (prima veniva fuso nel vecchio, sovrascrivendone lotto e scadenza)
+    const esisteNome=prods.some(p=>String(p.nome||'').trim().toLowerCase()===nome.toLowerCase());
+    const r=_trovaOCreaLotto(prods, nome, lotto, scadenza, esisteNome?null:{cat, fornitore:g('fornitore')||'', unita, barcode:g('barcode')||'', min:2});
+    const ex=r.p;
+    ex.qty=(parseFloat(ex.qty)||0)+qty;
+    if(ex.qty_init===undefined) ex.qty_init=qty;
+    caricati.push(ex.id);
+    movs.unshift({id:genId(),ts:new Date().toISOString(),tipo:'carico',prod:ex.nome,prodId:ex.id,qty,lotto:ex.lotto||lotto,note:'Da DDT'}); count++;
   });
   saveP(prods); saveM(movs); closeDDTModal();
+  _allineaBidoniDopoCarico(caricati);
   if(currentView==='inventario') renderInv();
   if(currentView==='dashboard') renderDashboard();
   if(currentView==='movimenti') renderMovimenti();
@@ -5963,11 +6211,12 @@ async function _abChiudi(conferma){
     const p=loadP().find(x=>x.id===scelto);
     // Usa un bidone 'chiuso' già esistente di quel lotto (FIFO), altrimenti lo crea già aperto
     const chiusi=all.filter(b=>b.prod_id===scelto && b.stato==='chiuso').sort((a,b)=>String(a.data_carico||'').localeCompare(String(b.data_carico||'')));
-    if(chiusi.length){ chiusi[0].stato='aperto'; chiusi[0].data_apertura=oggi; }
+    // FIX [MAGAZZINO]: "scaricato" = il flacone è già uscito dalla giacenza con lo scarico
+    if(chiusi.length){ chiusi[0].stato='aperto'; chiusi[0].data_apertura=oggi; chiusi[0].scaricato=true; }
     else if(p){
       all.push({ id:'bid_'+Date.now()+'_'+Math.random().toString(36).slice(2,8), prod_id:p.id,
         lotto:p.lotto||'', scadenza:p.scadenza||'', ddt_id:null, data_carico:oggi,
-        stato:'aperto', data_apertura:oggi, data_smaltimento:null, note:'Aperto allo scarico' });
+        stato:'aperto', data_apertura:oggi, data_smaltimento:null, note:'Aperto allo scarico', scaricato:true });
     }
     apertoLotto = p ? (p.lotto||'senza lotto') : '';
   }
@@ -6081,8 +6330,14 @@ function handleScannedCode(code){
   if(!code) return;
   document.getElementById('scan-code-val').textContent=code;
   const prods=loadP();
+  // FIX [MAGAZZINO]: codice GS1 → si sceglie il lotto letto, tra quelli con giacenza, il primo che scade
+  let _gs=null; try{ _gs=parseGS1(code); }catch(e){}
+  const _perCodice=prods.filter(p=>String(p.barcode||'').split(',').map(x=>x.trim()).some(b=>b && (b===code || (_gs&&_gs.gtin&&b===_gs.gtin))));
+  let _cand=_perCodice.filter(p=>(parseFloat(p.qty)||0)>0);
+  if(_gs && _gs.lotto){ const conLotto=_cand.filter(p=>_normLotto(p.lotto)===_normLotto(_gs.lotto)); if(conLotto.length) _cand=conLotto; }
+  _cand.sort((a,b)=>String(a.scadenza||'9999').localeCompare(String(b.scadenza||'9999')));
   // Cerca per barcode, lotto, o nome (supporta GS1-128 con lotto embedded)
-  matchedProd=prods.find(p=>p.barcode===code)
+  matchedProd=_cand[0]||prods.find(p=>p.barcode===code)
     ||prods.find(p=>p.lotto&&code.includes(p.lotto)&&p.lotto.length>=4)
     ||prods.find(p=>p.nome.toLowerCase()===code.toLowerCase());
   if(matchedProd){
@@ -6215,13 +6470,23 @@ function processCaricaScan(code){
     if(!p.barcode) return false;
     return p.barcode.split(',').map(x=>x.trim()).some(b=>b===code||b===gs1.gtin);
   });
-  if(!found&&gs1.lotto) found=prods.find(p=>p.lotto===gs1.lotto);
+  if(!found&&gs1.lotto) found=prods.find(p=>_normLotto(p.lotto)===_normLotto(gs1.lotto));
+  // FIX [MAGAZZINO]: codice prodotto riconosciuto ma lotto diverso → si carica sul lotto giusto (o su uno nuovo)
+  csScanLotto=null;
+  if(found && gs1.lotto && _normLotto(found.lotto)!==_normLotto(gs1.lotto)){
+    const stessoLotto=prods.find(p=>String(p.nome||'').trim().toLowerCase()===String(found.nome||'').trim().toLowerCase() && _normLotto(p.lotto)===_normLotto(gs1.lotto));
+    if(stessoLotto) found=stessoLotto; else csScanLotto={lotto:gs1.lotto, scadenza:gs1.scadenza||'', modelloId:found.id};
+  }
 
   if(found){
     // Prodotto trovato — mostra info e chiedi qty
     csMatchedId=found.id;
-    document.getElementById('cs-found-info').innerHTML=
-      '<strong>'+found.nome+'</strong><br>'+
+    document.getElementById('cs-found-info').innerHTML= csScanLotto
+      ? '<strong>'+esc(found.nome)+'</strong><br>'+
+        '🆕 Lotto nuovo: <span style="font-family:DM Mono,monospace">'+esc(csScanLotto.lotto)+'</span> · '+
+        'Scadenza: '+(csScanLotto.scadenza?fmtDate(csScanLotto.scadenza):'—')+'<br>'+
+        '<span style="font-size:11px;color:var(--text3)">Verrà creato un lotto a parte (il lotto '+esc(found.lotto||'—')+' resta com\'è)</span>'
+      : '<strong>'+found.nome+'</strong><br>'+
       'Lotto: <span style="font-family:DM Mono,monospace">'+( found.lotto||'—')+'</span> · '+
       'Scadenza: '+(found.scadenza?fmtDate(found.scadenza):'—')+'<br>'+
       'Qtà attuale: <span style="color:var(--green);font-weight:600">'+found.qty+'</span> '+( found.unita||'');
@@ -6248,13 +6513,16 @@ function processCaricaScan(code){
   }
 }
 
+var csScanLotto=null;
 function confirmCaricaScanFound(){
   if(!csMatchedId){ toast('Nessun prodotto selezionato','error'); return; }
   const qty=parseFloat(document.getElementById('cs-qty').value)||1;
   const note=document.getElementById('cs-note').value;
   const ddt=(document.getElementById('cs-ddt-found')||{}).value?.trim()||'';
-  const prods=loadP(), p=prods.find(x=>x.id===csMatchedId);
+  _takeSnapshot('Carico da scan'); // FIX [UNDO]
+  const prods=loadP(); let p=prods.find(x=>x.id===csMatchedId);
   if(!p){ toast('Prodotto non trovato','error'); return; }
+  if(csScanLotto) p=_trovaOCreaLotto(prods, p.nome, csScanLotto.lotto, csScanLotto.scadenza, p).p;   // FIX [MAGAZZINO]
   const _qPrima=p.qty;
   p.qty+=qty;
   _ihcEredita(null, p, _qPrima);
@@ -6264,6 +6532,8 @@ function confirmCaricaScanFound(){
   const movs=loadM();
   movs.unshift({id:genId(),ts:new Date().toISOString(),tipo:'carico',prod:p.nome,prodId:p.id,qty,lotto:p.lotto||'',ddt:ddt||'',note:note||'Carico da scan'});
   saveM(movs);
+  csScanLotto=null;
+  _allineaBidoniDopoCarico([p.id]);
   closeCaricaScanModal();
   if(currentView==='inventario') renderInv();
   if(currentView==='dashboard') renderDashboard();
@@ -6292,10 +6562,12 @@ function confirmCaricaScanNew(){
     ddt:(document.getElementById('cs-ddt')||{}).value?.trim()||'',
     note:(document.getElementById('cs-note-new')||{}).value?.trim()||''
   };
+  _takeSnapshot('Nuovo prodotto da scan'); // FIX [UNDO]
   const prods=loadP(); prods.push(p); saveP(prods);
   const movs=loadM();
   movs.unshift({id:genId(),ts:new Date().toISOString(),tipo:'carico',prod:p.nome,prodId:p.id,qty,lotto:p.lotto||'',ddt:p.ddt||'',note:p.note||'Carico da scan — nuovo prodotto'});
   saveM(movs);
+  _allineaBidoniDopoCarico([p.id]);
   closeCaricaScanModal();
   if(currentView==='inventario') renderInv();
   if(currentView==='dashboard') renderDashboard();
@@ -6307,7 +6579,7 @@ function confirmCaricaScanNew(){
 // ══════════════════════════════════════════
 // FIX [INFRASTRUTTURA]: LS_SCHEDE dichiarata in cima al file
 const loadSchede=()=>_getCache(LS_SCHEDE,'[]');
-function saveSchede(arr){ _setCache(LS_SCHEDE,arr); }
+function saveSchede(arr){ _setCache(LS_SCHEDE,arr); }   // FIX [INFRASTRUTTURA]: ora sincronizzata dal motore v2
 
 // ── A6 — DATA LAYER FORNITORI (tabella Supabase reale) ──────────────
 // Struttura record: { id, nome, tempo_consegna_medio_giorni, modificato }
@@ -6316,15 +6588,7 @@ const LS_FORN='ls_fornitori';
 const LS_FORN_DEFAULT='ls_forn_default_giorni'; // default globale configurabile
 if (Array.isArray(window._UNDO_KEYS) && !window._UNDO_KEYS.includes(LS_FORN)) window._UNDO_KEYS.push(LS_FORN);
 const loadForn=()=>_getCache(LS_FORN,'[]');
-async function saveForn(arr, deletedId){
-  _setCache(LS_FORN,_stampMod(arr));
-  if(!SUPA_OK) return;
-  if(!IS_ONLINE){ enqueue({type:'fornitori'}); return; }
-  try{
-    if(deletedId) await supaFetch('fornitori','DELETE',null,'?id=eq.'+deletedId);
-    if(arr.length) await supaFetch('fornitori','POST',arr,'?on_conflict=id');
-  }catch(e){ enqueue({type:'fornitori'}); }
-}
+async function saveForn(arr, deletedId){ _setCache(LS_FORN, arr); }   // FIX [INFRASTRUTTURA]: invio e cancellazioni gestiti dal motore v2
 // Default globale tempo consegna (giorni). Modificabile, salvato in localStorage.
 function getFornDefaultGiorni(){ const v=parseInt(localStorage.getItem(LS_FORN_DEFAULT)); return (isNaN(v)||v<=0)?7:v; }
 function setFornDefaultGiorni(g){ const n=parseInt(g); if(!isNaN(n)&&n>0) localStorage.setItem(LS_FORN_DEFAULT,String(n)); }
@@ -6450,15 +6714,7 @@ function renderSchede(){
 // ══════════════════════════════════════════
 // FIX [INFRASTRUTTURA]: LS_PROC dichiarata in cima al file
 const loadProc=()=>_getCache(LS_PROC,'[]');
-async function saveProc(arr, deletedId){
-  _setCache(LS_PROC,_stampMod(arr));
-  if(!SUPA_OK) return;
-  if(!IS_ONLINE){ enqueue({type:'processatore'}); return; }
-  try{
-    if(deletedId) await supaFetch('processatore','DELETE',null,'?id=eq.'+deletedId);
-    if(arr.length) await supaFetch('processatore','POST',arr,'?on_conflict=id');
-  }catch(e){ enqueue({type:'processatore'}); }
-}
+async function saveProc(arr, deletedId){ _setCache(LS_PROC, arr); }   // FIX [INFRASTRUTTURA]: invio e cancellazioni gestiti dal motore v2
 
 // Reagenti tipici processatore dal magazzino
 const PROC_REAGENTI_DEFAULT = ['alcool 95','alcoolpath 95','alcol 95','alcool 100','alcoolpath 100','alcol 100','xilene','xylene','alcol 70'];
@@ -6469,7 +6725,7 @@ function openNuovoProcessatore(preset){
   procCasiList = preset?.casi || [];
   document.getElementById('proc-edit-id').value = preset?.id||'';
   document.getElementById('proc-modal-title').textContent = preset ? 'Modifica Ciclo Processatore' : 'Nuovo Ciclo Processatore';
-  document.getElementById('proc-data').value = preset?.data || new Date().toISOString().slice(0,10);
+  document.getElementById('proc-data').value = preset?.data || _oggiLocale(); // FIX [TRACCIABILITÀ]: data locale
   document.getElementById('proc-ora-inizio').value = preset?.ora_inizio||'';
   document.getElementById('proc-ora-fine').value = preset?.ora_fine||'';
   document.getElementById('proc-protocollo').value = preset?.protocollo||'standard';
@@ -6764,7 +7020,7 @@ async function saveProcessatore(){
   };
   if(!editId) ciclo.creato = new Date().toISOString();
   const arr = loadProc();
-  if(editId){ const i=arr.findIndex(x=>x.id===editId); if(i>=0) arr[i]=ciclo; else arr.unshift(ciclo); }
+  if(editId){ const i=arr.findIndex(x=>x.id===editId); if(i>=0) arr[i]={...arr[i], ...ciclo}; else arr.unshift(ciclo); } // FIX [TRACCIABILITÀ]: preserva creato e campi esistenti
   else arr.unshift(ciclo);
   await saveProc(arr);
   closeModal('modal-processatore');
@@ -6862,15 +7118,7 @@ async function deleteProcCiclo(id){
 // ══════════════════════════════════════════
 // FIX [INFRASTRUTTURA]: LS_COLOR_REG dichiarata in cima al file
 const loadColoratore=()=>_getCache(LS_COLOR_REG,'[]');
-async function saveColoratoreReg(arr, deletedId){
-  _setCache(LS_COLOR_REG,_stampMod(arr));
-  if(!SUPA_OK) return;
-  if(!IS_ONLINE){ enqueue({type:'coloratore'}); return; }
-  try{
-    if(deletedId) await supaFetch('coloratore_log','DELETE',null,'?id=eq.'+deletedId);
-    if(arr.length) await supaFetch('coloratore_log','POST',arr,'?on_conflict=id');
-  }catch(e){ enqueue({type:'coloratore'}); }
-}
+async function saveColoratoreReg(arr, deletedId){ _setCache(LS_COLOR_REG, arr); }   // FIX [INFRASTRUTTURA]: invio e cancellazioni gestiti dal motore v2
 
 // ─── Casi coloratore: liste cumulabili per tipo (ist/cit/pap) ───
 // Stesso meccanismo del processatore (procCasiList) ma triplicato.
@@ -6908,7 +7156,7 @@ function _extractCasiFromPreset(preset, tipo) {
 function openNuovoColoratore(preset){
   document.getElementById('color-edit-id').value = preset?.id||'';
   document.getElementById('color-modal-title').textContent = preset ? 'Modifica Registro Coloratore' : 'Registro Coloratore';
-  document.getElementById('color-data').value = preset?.data||new Date().toISOString().slice(0,10);
+  document.getElementById('color-data').value = preset?.data||_oggiLocale(); // FIX [TRACCIABILITÀ]: data locale
   document.getElementById('color-note').value = preset?.note||'';
   document.getElementById('color-cicli-ee').value     = preset?.cicli_ee||0;
   document.getElementById('color-cicli-ee-cit').value = preset?.cicli_ee_cit||0;
@@ -7117,7 +7365,7 @@ async function saveColoratore(){
   };
   if(!editId) registro.creato = new Date().toISOString();
   const arr = loadColoratore();
-  if(editId){ const i=arr.findIndex(x=>x.id===editId); if(i>=0) arr[i]=registro; else arr.unshift(registro); }
+  if(editId){ const i=arr.findIndex(x=>x.id===editId); if(i>=0) arr[i]={...arr[i], ...registro}; else arr.unshift(registro); } // FIX [TRACCIABILITÀ]: preserva creato e campi esistenti
   else arr.unshift(registro);
   await saveColoratoreReg(arr);
   closeModal('modal-coloratore');
@@ -7324,22 +7572,7 @@ async function deleteColorCiclo(id){
 // ══════════════════════════════════════════
 // FIX [INFRASTRUTTURA]: LS_CAMP dichiarata in cima al file
 const loadCampioni=()=>_getCache(LS_CAMP,'[]');
-async function saveCampioni(arr, deletedId){
-  _setCache(LS_CAMP,_stampMod(arr));
-  if(!SUPA_OK) return;
-  if(!IS_ONLINE){ enqueue({type:'campioni'}); return; }
-  try{
-    if(deletedId) await supaFetch('campioni','DELETE',null,'?id=eq.'+deletedId);
-    if(arr.length){
-      // Invio in batch per evitare payload troppo grandi (Supabase ~1MB limit)
-      const BATCH = 100;
-      for(let i=0; i<arr.length; i+=BATCH){
-        const slice = arr.slice(i, i+BATCH);
-        await supaFetch('campioni','POST',slice,'?on_conflict=id');
-      }
-    }
-  }catch(e){ enqueue({type:'campioni'}); }
-}
+async function saveCampioni(arr, deletedId){ _setCache(LS_CAMP, arr); }   // FIX [INFRASTRUTTURA]: invio e cancellazioni gestiti dal motore v2
 
 // Protocolli colorazione
 const PROTOCOLLI_COLOR = [
@@ -7353,13 +7586,19 @@ const PROTOCOLLI_COLOR = [
   {id:'ALTRO',   label:'Altra colorazione',              metodo:''},
 ];
 
+// FIX [TRACCIABILITÀ]: anno (2 cifre) di un ID caso "N/AA", "N/AAAA", "N/AAL"; null se assente
+function _annoIdCaso(id){
+  const m = String(id||'').trim().match(/^\d+\s*\/\s*(\d{4}|\d{2})/);
+  return m ? m[1].slice(-2) : null;
+}
 // Contatori progressivi per anno
 function getNextId(tipo){
   const anno = new Date().getFullYear().toString().slice(-2);
   const campioni = loadCampioni();
   if(tipo === 'pap_l'){
     // Numerazione separata con L finale
-    const pap_l = campioni.filter(c=>c.tipo==='pap_l');
+    // FIX [TRACCIABILITÀ]: solo ID dell'anno corrente (es. "41/27L" a gennaio 2027 riparte da 1)
+    const pap_l = campioni.filter(c=>c.tipo==='pap_l' && _annoIdCaso(c.campione_id)===anno);
     const maxN = pap_l.reduce((m,c)=>{
       const raw=(c.campione_id||'').replace('L','');
       const n = parseInt(raw.split('/')[0])||0;
@@ -7368,7 +7607,7 @@ function getNextId(tipo){
     return (maxN+1) + '/' + anno + 'L';
   } else {
     // Tutti gli altri (istologia, citologia, pap, pap_priv) condividono la numerazione progressiva
-    const normali = campioni.filter(c=>c.tipo!=='pap_l');
+    const normali = campioni.filter(c=>c.tipo!=='pap_l' && _annoIdCaso(c.campione_id)===anno); // FIX [TRACCIABILITÀ]: solo anno corrente
     const maxN = normali.reduce((m,c)=>{
       const n = parseInt((c.campione_id||'').split('/')[0])||0;
       return Math.max(m,n);
@@ -7395,7 +7634,7 @@ function openNuovoCampione(tipo){
   document.getElementById('camp-id').value = getNextId(tipo||'istologia');
   document.getElementById('camp-tipo').value = tipo||'istologia';
   document.getElementById('camp-sottotipo').value = '';
-  document.getElementById('camp-data').value = new Date().toISOString().slice(0,10);
+  document.getElementById('camp-data').value = _oggiLocale(); // FIX [TRACCIABILITÀ]: data locale
   document.getElementById('camp-provenienza').value = '';
   { const cc = document.getElementById('camp-consulenza'); if(cc) cc.checked = false; }
   document.getElementById('camp-desc-acc').value = '';
@@ -7495,7 +7734,7 @@ function addColorazione(preset){
       <select style="flex:1" class="color-protocollo" onchange="toggleColorReagenti(this)">
         ${PROTOCOLLI_COLOR.map(p=>`<option value="${p.id}" ${preset&&preset.protocollo===p.id?'selected':''}>${p.label}</option>`).join('')}
       </select>
-      <input type="date" class="color-data" value="${preset?.data||new Date().toISOString().slice(0,10)}" style="width:140px">
+      <input type="date" class="color-data" value="${preset?.data||_oggiLocale()}" style="width:140px">
       <button class="btn btn-sm btn-danger" onclick="this.closest('div[style]').remove()">✕</button>
     </div>
     <div class="color-reagenti-wrap">
@@ -7590,7 +7829,9 @@ async function saveCampione(){
   const campioni = loadCampioni();
   if(editingCampioneId){
     const idx = campioni.findIndex(c=>c.id===editingCampioneId);
-    if(idx>=0) campioni[idx]=campione; else campioni.unshift(campione);
+    // FIX [TRACCIABILITÀ]: in modifica preserva creato e i campi non presenti nel form
+    if(campione.creato === undefined) delete campione.creato;
+    if(idx>=0) campioni[idx]={...campioni[idx], ...campione}; else campioni.unshift(campione);
   } else {
     campioni.unshift(campione);
   }
@@ -7618,7 +7859,7 @@ function renderTracciabilita(){
 
   // Stats
   const all = loadCampioni();
-  const oggi = new Date().toISOString().slice(0,10);
+  const oggi = _oggiLocale(); // FIX [TRACCIABILITÀ]: data locale
   const oggi_n = all.filter(c=>c.data===oggi).length;
   {const _ts=document.getElementById('tracc-stats');if(_ts)_ts.textContent= all.length+' campioni totali · '+oggi_n+' oggi';}
 
@@ -7757,15 +7998,7 @@ async function deleteCampioneDetail(){
 // ══════════════════════════════════════════
 // FIX [INFRASTRUTTURA]: LS_ARCH dichiarata in cima al file
 const loadArch=()=>_getCache(LS_ARCH,'[]');
-async function saveArch(arr, deletedId){
-  _setCache(LS_ARCH,_stampMod(arr));
-  if(!SUPA_OK) return;
-  if(!IS_ONLINE){ enqueue({type:'archivio'}); return; }
-  try{
-    if(deletedId) await supaFetch('archivio_ordini','DELETE',null,'?id=eq.'+deletedId);
-    if(arr.length) await supaFetch('archivio_ordini','POST',arr,'?on_conflict=id');
-  }catch(e){ enqueue({type:'archivio'}); }
-}
+async function saveArch(arr, deletedId){ _setCache(LS_ARCH, arr); }   // FIX [INFRASTRUTTURA]: invio e cancellazioni gestiti dal motore v2
 
 let archCamStream=null, archBase64=null;
 
@@ -7816,13 +8049,14 @@ function archFileSelected(input){
 }
 async function archAnalyze(){
   if(!archBase64){ toast('Nessuna immagine','error'); return; }
+  if(!getAIKey(true)) return;   // FIX [INFRASTRUTTURA]
   document.getElementById('arch-ai-status').style.display='';
   document.getElementById('arch-form').style.display='none';
   document.getElementById('arch-save-btn').style.display='none';
   try{
     const resp=await fetch('https://api.anthropic.com/v1/messages',{
       method:'POST',
-      headers:{'Content-Type':'application/json','x-api-key':'sk-ant-api03-placeholder','anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      headers:{'Content-Type':'application/json','x-api-key':getAIKey(),'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
       body:JSON.stringify({
         model:'claude-sonnet-4-20250514',
         max_tokens:1000,
@@ -8154,7 +8388,10 @@ function _aggregaAllerte(){
       g = gruppi[key] = { nome:p.nome, cat:p.cat, fornitore:p.fornitore, unita:p.unita, pos:p.pos,
                           qtyTot:0, min:0, lotti:0, prossimaScad:null, prossimaScadDate:null, prossimaScadLotto:null, id:p.id };
     }
-    const q = parseFloat(p.qty)||0;
+    let q = parseFloat(p.qty)||0;
+    // FIX [MAGAZZINO]: i lotti scaduti non contano come scorta (prima nascondevano esaurito/scorta bassa)
+    const _dSc = (typeof daysUntil==='function' && p.scadenza) ? daysUntil(p.scadenza) : null;
+    if(q>0 && _dSc!==null && _dSc<0 && p.cat!=='IHC'){ g.qtyScaduta=(g.qtyScaduta||0)+q; q=0; }
     g.qtyTot += q;
     if(String(p.ihc_seed||'').charAt(0)!=='X') g.vivo = true; // FIX [MAGAZZINO]: lotti IHC dismessi dall'allineamento
     g.min = Math.max(g.min, parseInt(p.min,10)||0); // min rappresentativo del prodotto
@@ -8181,7 +8418,9 @@ function _aggregaAllerte(){
       g.inScad = g.prossimaScad !== null && g.prossimaScad <= SOGLIA_SCAD_IHC; // IHC: più margine per ordinare
     }
     g.allerta  = g.esaurito || g.scorta || g.inScad;
-    if(!g.vivo && g.qtyTot <= 0) g.esaurito = g.scorta = g.inScad = g.allerta = false; // dismesso: nessuna allerta
+    g.scaduto = (g.qtyScaduta||0) > 0;                                            // FIX [MAGAZZINO]
+    g.allerta = g.allerta || g.scaduto;
+    if(!g.vivo && g.qtyTot <= 0) g.esaurito = g.scorta = g.inScad = g.allerta = g.scaduto = false; // dismesso: nessuna allerta
   });
   return list;
 }
@@ -8193,7 +8432,7 @@ function renderAllerte(){
   let filtered;
   if(allerteFilter==='esauriti')        filtered = list.filter(g=>g.esaurito);
   else if(allerteFilter==='critici')    filtered = list.filter(g=>g.scorta);
-  else if(allerteFilter==='inscadenza') filtered = list.filter(g=>g.inScad);
+  else if(allerteFilter==='inscadenza') filtered = list.filter(g=>g.inScad || g.scaduto);   // FIX [MAGAZZINO]
   else                                  filtered = list.filter(g=>g.allerta);
 
   // Ordina: esauriti → scorta bassa → scadenze imminenti (le più vicine prima)
@@ -8218,6 +8457,7 @@ function renderAllerte(){
     if(g.esaurito) stati.push('<span class="badge bg-red">Esaurito</span>');
     else if(g.scorta) stati.push('<span class="badge bg-yellow">Scorta bassa</span>');
     if(g.inScad) stati.push('<span class="badge bg-yellow">In scadenza</span>');
+    if(g.scaduto) stati.push('<span class="badge bg-red">Scaduti da smaltire: '+g.qtyScaduta+'</span>');   // FIX [MAGAZZINO]
     if(g.ihc && g.scorta) stati.unshift('<span class="badge" style="background:#faf5ff;color:#7e22ce;border-color:#e9d5ff">🔬 Test in esaurimento</span>');
     const scadCol = (g.prossimaScad!==null)
       ? `${(typeof scBadge==='function')?scBadge(g.prossimaScadDate):g.prossimaScadDate}${g.prossimaScadLotto?`<br><small style="color:var(--text3)">lotto ${g.prossimaScadLotto}</small>`:''}`
@@ -8250,15 +8490,7 @@ function precompileOrdine(prodId){
 // ══════════════════════════════════════════
 // ORDINI
 // ══════════════════════════════════════════
-async function saveOrd(arr, deletedId){
-  _setCache(LS_ORD,_stampMod(arr));
-  if(!SUPA_OK) return;
-  if(!IS_ONLINE){ enqueue({type:'ordini'}); return; }
-  try{
-    if(deletedId) await supaFetch('ordini','DELETE',null,'?id=eq.'+deletedId);
-    if(arr.length) await supaFetch('ordini','POST',arr,'?on_conflict=id');
-  }catch(e){ enqueue({type:'ordini'}); }
-}
+async function saveOrd(arr, deletedId){ _setCache(LS_ORD, arr); }   // FIX [INFRASTRUTTURA]: invio e cancellazioni gestiti dal motore v2
 
 let ordiniFilter = 'all';
 function setOrdiniFilter(f,btn){
@@ -8342,7 +8574,11 @@ function openOrdineModal(mode='new', prodId=null){
   // Ricostruisce datalist con tutti i prodotti aggiornati
   buildProdDatalist();
   document.getElementById('ordine-modal-title').textContent = 'Nuovo Ordine';
-  document.getElementById('o-num').value = 'ORD-' + new Date().getFullYear() + '-' + String(loadOrd().length+1).padStart(3,'0');
+  // FIX [ORDINI]: numero = massimo dell'anno + 1 (prima "quanti ordini ci sono + 1" si ripeteva dopo una cancellazione)
+  { const anno=new Date().getFullYear(); const re=new RegExp('^ORD-'+anno+'-(\\d+)$');
+    const tutti=[...loadOrd(), ...((typeof loadArch==='function')?loadArch():[])];
+    const max=tutti.reduce((m,x)=>{ const k=re.exec(String(x.num||'')); return k?Math.max(m,parseInt(k[1],10)):m; },0);
+    document.getElementById('o-num').value = 'ORD-' + anno + '-' + String(max+1).padStart(3,'0'); }
   document.getElementById('o-fornitore').value = '';
   document.getElementById('o-data').value = new Date().toISOString().slice(0,10);
   document.getElementById('o-urgenza').value = 'normale';
@@ -8408,19 +8644,41 @@ function saveOrdine(stato){
     });
   });
   if(!righe.length){ toast('Aggiungi almeno un prodotto','error'); return; }
-  _takeSnapshot('Salva ordine'); // FIX [UNDO]
 
   const ords = loadOrd();
+  // FIX [ORDINI]: in modifica si parte dall'ordine esistente e si conservano ricezioni, DDT, scansioni, date.
+  // Prima "Modifica + Salva" azzerava la ricezione: ricevendo di nuovo, la merce veniva caricata due volte.
+  const vecchio = ordineEditId ? ords.find(x=>x.id===ordineEditId) : null;
+  if(vecchio){
+    const usate = new Set();
+    righe.forEach(r=>{
+      const i = (vecchio.righe||[]).findIndex((v,k)=>!usate.has(k) && String(v.nome||'').trim().toLowerCase()===r.nome.toLowerCase());
+      if(i<0) return; usate.add(i); const v = vecchio.righe[i];
+      ['prodId','qtyRicevuta','ricezioni'].forEach(k=>{ if(v[k]!==undefined) r[k]=v[k]; });
+    });
+    const perse = (vecchio.righe||[]).filter((v,k)=>!usate.has(k) && (parseFloat(v.qtyRicevuta)||0)>0);
+    if(perse.length){ toast('Non puoi togliere righe già ricevute ('+perse.map(v=>v.nome).join(', ')+'): prima azzera la ricezione','error'); return; }
+  }
+  _takeSnapshot('Salva ordine'); // FIX [UNDO]
+  let statoFinale = stato;
+  if(vecchio){
+    const tutto = righe.every(r=>(parseFloat(r.qtyRicevuta)||0) >= r.qty), qualcosa = righe.some(r=>(parseFloat(r.qtyRicevuta)||0) > 0);
+    if(qualcosa) statoFinale = tutto ? 'ricevuto' : 'parziale';
+    else if(['approvato','inviato'].includes(vecchio.stato) && stato!=='bozza') statoFinale = vecchio.stato;
+  }
   const o = {
+    ...(vecchio||{}),
     id: ordineEditId||genId(),
     num: num||('ORD-'+Date.now()),
     data: document.getElementById('o-data').value,
     fornitore: document.getElementById('o-fornitore').value.trim(),
     urgenza: document.getElementById('o-urgenza').value,
     note: document.getElementById('o-note').value.trim(),
-    stato, righe,
-    creato: new Date().toISOString()
+    stato: statoFinale, righe,
+    creato: (vecchio && vecchio.creato) || new Date().toISOString()
   };
+  if(vecchio && statoFinale==='ricevuto' && !o.dataRicezione) o.dataRicezione = new Date().toISOString();
+  if(vecchio && statoFinale!=='ricevuto') o.dataRicezione = null;
   if(ordineEditId){ const i=ords.findIndex(x=>x.id===ordineEditId); if(i>=0) ords[i]=o; else ords.unshift(o); }
   else ords.unshift(o);
   saveOrd(ords);
@@ -8452,29 +8710,66 @@ function riapreOrdine(id){
   const ords = loadOrd();
   const o = ords.find(x=>x.id===id); if(!o) return;
   o.stato = 'parziale';
-  delete o.dataRicezione;
+  o.dataRicezione = null; // FIX [INFRASTRUTTURA]: null invece di delete (altrimenti il cloud lo ripristina)
   saveOrd(ords);
   closeModal('modal-ordine-detail');
   renderOrdini();
   toast('Ordine riaperto come parziale','info');
 }
 
-function resetRicezione(id){
-  if(!confirm('Azzerare tutte le ricezioni di questo ordine? Le quantità ricevute verranno riportate a 0 e lo stato tornerà ad "approvato". I movimenti di magazzino già registrati NON verranno annullati — usa Undo se vuoi annullare anche quelli.')) return;
-  _takeSnapshot('Reset ricezione ordine');
+// FIX [ORDINI]: il reset della ricezione ora TOGLIE dal magazzino la merce caricata da quelle ricezioni.
+// Prima azzerava solo l'ordine: ricevendo di nuovo, la merce veniva caricata due volte.
+function _trovaLottoRicezione(prods, r, rc){
+  if(rc.prodId){ const p=prods.find(x=>x.id===rc.prodId); if(p) return p; }
+  const nk=String(r.nome||'').trim().toLowerCase();
+  return prods.find(x=>String(x.nome||'').trim().toLowerCase()===nk && _normLotto(x.lotto)===_normLotto(rc.lotto)) || null;
+}
+function _pianoAnnulloRicezioni(o, prods){
+  const voci=[], problemi=[];
+  (o.righe||[]).forEach(r=>{
+    const storico=r.ricezioni||[]; let coperti=0;
+    storico.forEach(rc=>{
+      const q=parseFloat(rc.qty)||0; if(q<=0) return; coperti+=q;
+      const p=_trovaLottoRicezione(prods, r, rc);
+      if(!p){ problemi.push(r.nome+(rc.lotto?' (lotto '+rc.lotto+')':'')+': lotto non trovato, '+q+' da togliere a mano'); return; }
+      const disp=parseFloat(p.qty)||0, tolti=Math.min(q, disp);
+      voci.push({p, q:tolti, nome:r.nome, lotto:p.lotto||''});
+      if(tolti<q) problemi.push(r.nome+(p.lotto?' (lotto '+p.lotto+')':'')+': '+(q-tolti)+' già usati/scaricati, tolgo solo '+tolti);
+    });
+    const senzaStorico=(parseFloat(r.qtyRicevuta)||0)-coperti;
+    if(senzaStorico>0) problemi.push(r.nome+': '+senzaStorico+' ricevuti senza storico lotto, da togliere a mano se serve');
+  });
+  return {voci, problemi};
+}
+function _eseguiResetRicezione(id, dopo){
   const ords = loadOrd();
   const o = ords.find(x=>x.id===id); if(!o) return;
-  // Azzera qtyRicevuta e storico ricezioni su tutte le righe
+  const prods = loadP();
+  const piano = _pianoAnnulloRicezioni(o, prods);
+  const tot = piano.voci.reduce((s,v)=>s+v.q,0);
+  const msg = 'Azzerare tutte le ricezioni dell\'ordine '+(o.num||'')+'?\n\n'
+    + (tot ? 'Verranno TOLTI dal magazzino '+tot+' pezzi:\n· '+piano.voci.map(v=>v.nome+(v.lotto?' lotto '+v.lotto:'')+' −'+v.q).join('\n· ') : 'Nessun carico da togliere dal magazzino.')
+    + (piano.problemi.length ? '\n\n⚠ '+piano.problemi.join('\n⚠ ') : '')
+    + '\n\nL\'ordine torna ad "approvato". Puoi annullare con Undo.';
+  if(!confirm(msg)) return;
+  _takeSnapshot('Reset ricezione ordine '+(o.num||''));
+  const movs = loadM(), now = new Date().toISOString();
+  piano.voci.forEach(v=>{
+    if(v.q<=0) return;
+    v.p.qty = Math.max(0,(parseFloat(v.p.qty)||0) - v.q);
+    movs.unshift({id:genId(), ts:now, tipo:'scarico', prod:v.p.nome, prodId:v.p.id, qty:v.q, lotto:v.p.lotto||'', note:'Annullo ricezione '+(o.num||'')});
+  });
   (o.righe||[]).forEach(r=>{ r.qtyRicevuta = 0; r.ricezioni = []; });
-  // Pulisci DDT
   o.ddtList = [];
   o.stato = 'approvato';
-  delete o.dataRicezione;
-  delete o.noteRicezione;
-  saveOrd(ords);
-  closeModal('modal-ordine-detail');
-  renderOrdini();
-  toast('Ricezione azzerata — ordine riportato ad "approvato"','info');
+  o.dataRicezione = null;
+  o.noteRicezione = null;
+  saveP(prods); saveM(movs); saveOrd(ords);
+  if(dopo) dopo();
+  toast('Ricezione azzerata'+(tot?' · tolti '+tot+' pezzi dal magazzino':'')+' — ordine riportato ad "approvato"','info');
+}
+function resetRicezione(id){
+  _eseguiResetRicezione(id, ()=>{ closeModal('modal-ordine-detail'); renderOrdini(); if(currentView==='inventario') renderInv(); });
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -8733,13 +9028,15 @@ window.renderCorreggiGiacenze = function(){
 window.saveCorreggiGiacenze = function(){
   const inputs = Array.from(document.querySelectorAll('.corr-qty-input'));
   const prods = loadP();
-  let modificati = 0;
+  let modificati = 0; const _rettifiche = [];
   inputs.forEach(inp => {
     const id = inp.dataset.id;
     const nuovo = parseFloat(inp.value);
     if(isNaN(nuovo)) return;
     const p = prods.find(x => x.id === id);
     if(p && (parseFloat(p.qty)||0) !== nuovo){
+      const diff = nuovo - (parseFloat(p.qty)||0);
+      _rettifiche.push({id:genId(), ts:new Date().toISOString(), tipo:diff>0?'carico':'scarico', prod:p.nome, prodId:p.id, qty:Math.abs(diff), lotto:p.lotto||'', note:'Rettifica giacenza (correzione manuale)'});
       p.qty = nuovo;
       modificati++;
     }
@@ -8747,6 +9044,7 @@ window.saveCorreggiGiacenze = function(){
   if(!modificati){ toast('Nessuna quantità modificata','info'); return; }
   _takeSnapshot('Correzione manuale '+modificati+' giacenze');
   saveP(prods);
+  { const movs = loadM(); _rettifiche.forEach(m=>movs.unshift(m)); saveM(movs); }   // FIX [MAGAZZINO]: movimento di rettifica
   closeModal('modal-correggi-giacenze');
   if(currentView==='inventario') renderInv();
   if(currentView==='dashboard') renderDashboard();
@@ -8913,7 +9211,25 @@ function editRigaRicezione(ordId, rigaIdx){
   if(nuovaQty===null) return;
   const val = parseFloat(nuovaQty);
   if(isNaN(val) || val<0){ toast('Quantità non valida','error'); return; }
+  // FIX [ORDINI]: la correzione deve muovere anche il magazzino (prima cambiava solo il numero sull'ordine:
+  // abbassando a 0 e ricevendo di nuovo, la merce veniva caricata due volte)
+  if(val > attuale){ toast('Per aggiungere merce arrivata usa "Registra ricezione" (serve lotto e scadenza)','warn'); return; }
+  if(val === attuale) return;
   _takeSnapshot('Modifica ricezione '+r.nome);
+  let daTogliere = attuale - val; const prods = loadP(), movs = loadM(), now = new Date().toISOString(); const nonTolti = [];
+  const storico = r.ricezioni || [];
+  for(let i=storico.length-1; i>=0 && daTogliere>0; i--){
+    const rc = storico[i]; const q = Math.min(parseFloat(rc.qty)||0, daTogliere); if(q<=0) continue;
+    const p = _trovaLottoRicezione(prods, r, rc);
+    const tolti = p ? Math.min(q, parseFloat(p.qty)||0) : 0;
+    if(p && tolti>0){ p.qty = (parseFloat(p.qty)||0) - tolti; movs.unshift({id:genId(), ts:now, tipo:'scarico', prod:p.nome, prodId:p.id, qty:tolti, lotto:p.lotto||'', note:'Correzione ricezione '+(o.num||'')}); }
+    if(tolti<q) nonTolti.push((q-tolti)+(rc.lotto?' (lotto '+rc.lotto+')':''));
+    rc.qty = (parseFloat(rc.qty)||0) - q; daTogliere -= q;
+  }
+  r.ricezioni = storico.filter(rc => (parseFloat(rc.qty)||0) > 0);
+  if(daTogliere>0) nonTolti.push(daTogliere+' senza storico lotto');
+  saveP(prods); saveM(movs);
+  if(nonTolti.length) toast('⚠ Non tolti dal magazzino: '+nonTolti.join(', ')+' — correggi la giacenza a mano','warn');
   r.qtyRicevuta = val;
   // Ricalcola stato ordine
   const tuttoRicevuto = o.righe.every(ri => (ri.qtyRicevuta||0) >= ri.qty);
@@ -8923,11 +9239,11 @@ function editRigaRicezione(ordId, rigaIdx){
     o.dataRicezione = o.dataRicezione || new Date().toISOString();
   } else if(qualcosaRicevuto){
     o.stato = 'parziale';
-    delete o.dataRicezione;
+    o.dataRicezione = null; // FIX [INFRASTRUTTURA]: null invece di delete (altrimenti il cloud lo ripristina)
   } else {
     // Nulla ricevuto — torna allo stato precedente
-    o.stato = o.dataInvio ? (o.dataApprovazione ? 'approvato' : 'inviato') : 'bozza';
-    delete o.dataRicezione;
+    o.stato = (o.dataApprovazione || o.data_approvazione) ? 'approvato' : (o.dataInvio || o.data_invio) ? 'inviato' : 'approvato';   // FIX [ORDINI]: anche data_invio del pannello
+    o.dataRicezione = null; // FIX [INFRASTRUTTURA]: null invece di delete (altrimenti il cloud lo ripristina)
   }
   saveOrd(ords);
   // Aggiorna pannello o modal
@@ -9138,7 +9454,7 @@ function confirmRicezioneParziale(id){
     if(!confirm(msg)){ _unlock(); return; }
   }
 
-  let haRicevuto = false;
+  let haRicevuto = false; const _ricevutiIds = [];
   document.querySelectorAll('.recv-parz-qty').forEach(input=>{
     const idx = parseInt(input.dataset.idx);
     const qtyArrivo = parseFloat(input.value)||0;
@@ -9153,37 +9469,29 @@ function confirmRicezioneParziale(id){
     const scad  = scadEl ? scadEl.value : '';
     // Storico ricezioni per riga — associa al DDT
     if(!r.ricezioni) r.ricezioni = [];
-    r.ricezioni.push({ qty: qtyArrivo, ddt: ddt, lotto: lotto, data: now });
+    r.ricezioni.push({ qty: qtyArrivo, ddt: ddt, lotto: lotto, data: now });   // (prodId aggiunto sotto)
     ddtEntry.righe.push({nome:r.nome, qty:qtyArrivo, lotto:lotto});
     // Carica in magazzino con la STESSA logica del carico unificato:
     // stesso nome + stesso lotto → bumpa quel lotto; lotto nuovo → nuovo record
-    const stessoNome = prods.filter(x => x.nome.toLowerCase() === r.nome.toLowerCase());
-    let p = null;
-    if (lotto) p = stessoNome.find(x => (x.lotto||'') === lotto);
-    if (!p && !lotto) p = stessoNome[0]; // nessun lotto indicato → usa il primo record esistente
+    // FIX [MAGAZZINO]: stesso lotto (confronto senza spazi/maiuscole) → quel record; altrimenti record nuovo.
+    // Senza lotto → il record "senza lotto" di quel prodotto (non più un lotto qualsiasi con scadenza sovrascritta)
+    const stessoNome = prods.filter(x => String(x.nome||'').trim().toLowerCase() === String(r.nome||'').trim().toLowerCase());
+    let p = stessoNome.find(x => _normLotto(x.lotto) === _normLotto(lotto)) || null;
     if (p) {
       const _qPrima = p.qty;
-      p.qty = (p.qty||0) + qtyArrivo;
-      if (scad) p.scadenza = scad;
+      p.qty = (parseFloat(p.qty)||0) + qtyArrivo;
+      if (scad && (!p.scadenza || _normLotto(p.lotto))) p.scadenza = scad;
       if (ddt)  p.ddt = ddt;
       _ihcEredita(null, p, _qPrima);
     } else {
-      // Nuovo lotto → nuovo record che eredita i dati dal modello dello stesso nome
-      const modello = stessoNome[0] || {};
-      p = {
-        id: genId(), nome: r.nome,
-        cat: modello.cat || 'Reagenti',
-        fornitore: modello.fornitore || o.fornitore || '',
-        qty: qtyArrivo, qty_init: qtyArrivo,
-        min: modello.min || 0,
-        lotto: lotto || '', scadenza: scad || '',
-        unita: modello.unita || r.unita || '',
-        pos: modello.pos || '', barcode: modello.barcode || '',
-        ddt: ddt || '', creato: now
-      };
-      _ihcEredita(modello, p);
-      prods.push(p);
+      const modello = stessoNome[0] || { fornitore: o.fornitore || '', unita: r.unita || '' };
+      p = _trovaOCreaLotto(prods, r.nome, lotto, scad, modello, now).p;
+      p.qty = qtyArrivo; p.qty_init = qtyArrivo; if (ddt) p.ddt = ddt;
+      if (!p.fornitore) p.fornitore = o.fornitore || '';
     }
+    _ricevutiIds.push(p.id);
+    r.ricezioni[r.ricezioni.length-1].prodId = p.id;   // FIX [ORDINI]: per poter annullare esattamente questo carico
+    if (!r.prodId) r.prodId = p.id;
     movs.unshift({id:genId(),ts:now,tipo:'carico',prod:r.nome,prodId:p?.id||'',qty:qtyArrivo,lotto:lotto||'',ddt:ddt||'',note:'Ricezione '+o.num+(ddt?' — '+ddt:'')});
   });
   if(!haRicevuto){ toast('Nessuna quantità inserita','error'); _unlock(); _riabilitaBtnRicezione(); return; }
@@ -9194,6 +9502,8 @@ function confirmRicezioneParziale(id){
   // Se c'è una scan DDT, allega
   const _finalize = ()=>{
     saveP(prods); saveM(movs); saveOrd(ords);
+    _allineaBidoniDopoCarico(_ricevutiIds);   // FIX [MAGAZZINO]
+    if(scanFile) setTimeout(_migraAllegati, 1500);   // FIX [INFRASTRUTTURA]: scansione DDT nel cloud
     _unlock(); // sblocca DOPO il salvataggio
     // Aggiorna la view: usa il pannello se siamo nella view ordini, altrimenti renderOrdini
     if(document.getElementById('ordine-detail')) {
@@ -9540,12 +9850,7 @@ function cercaPerLotto(lotto){
 // ══════════════════════════════════════════
 // Sostituisci saveSchede con versione che synca su Supabase
 const _origSaveSchede = saveSchede;
-saveSchede = function(arr){
-  _setCache(LS_SCHEDE, _stampMod(arr));
-  if(!SUPA_OK) return;
-  if(!IS_ONLINE){ enqueue({type:'schede'}); return; }
-  supaFetch('schede_tecniche','POST',arr,'?on_conflict=id');
-};
+saveSchede = function(arr){ _setCache(LS_SCHEDE, arr); };   // FIX [INFRASTRUTTURA]: invio e cancellazioni dal motore v2
 
 // ══════════════════════════════════════════
 // FEATURE 6: LOTTI MULTIPLI
@@ -9625,6 +9930,7 @@ function allegaScanOrdine(ordId){
     _takeSnapshot('Allega scan ordine');
     o.scanOrdine = { data: base64, nome: fileName, ts: new Date().toISOString() };
     saveOrd(ords);
+    setTimeout(_migraAllegati, 1500);   // FIX [INFRASTRUTTURA]
     renderArchivio();
     toast('📄 Scan ordine allegato','success');
   });
@@ -9639,9 +9945,87 @@ function allegaScanDdt(ordId){
     const rif = prompt('Riferimento DDT (es. DDT n. 12345):') || fileName;
     o.ddtImages.push({ data: base64, nome: fileName, rif: rif, ts: new Date().toISOString() });
     saveOrd(ords);
+    setTimeout(_migraAllegati, 1500);   // FIX [INFRASTRUTTURA]
     renderArchivio();
     toast('📦 Scan DDT allegato ('+o.ddtImages.length+' totali)','success');
   });
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// FIX [INFRASTRUTTURA]: ALLEGATI (scansioni ordine e DDT) SU SUPABASE STORAGE
+// Prima le foto erano salvate DENTRO gli ordini (base64): riempivano la memoria del dispositivo e ogni
+// salvataggio di un ordine le rimandava tutte al cloud. Ora restano nell'ordine solo finché non vengono
+// caricate nel bucket "allegati"; nell'ordine resta il percorso. Senza rete funziona come prima.
+// ═══════════════════════════════════════════════════════════════════════
+const STORAGE_BUCKET='allegati';
+var _storageMancante=false;
+function _dataUrlToBlob(d){
+  const i=d.indexOf(','); const mime=(d.slice(0,i).match(/data:([^;,]+)/)||[])[1]||'image/jpeg';
+  const bin=atob(d.slice(i+1)); const u=new Uint8Array(bin.length); for(let k=0;k<bin.length;k++) u[k]=bin.charCodeAt(k);
+  return new Blob([u],{type:mime});
+}
+async function _caricaAllegato(dataUrl, cartella){
+  if(!SUPA_OK || !IS_ONLINE || !dataUrl || !/^data:/.test(dataUrl)) return null;
+  let blob; try{ blob=_dataUrlToBlob(dataUrl); }catch(e){ return null; }
+  const ext=/pdf/.test(blob.type)?'pdf':/png/.test(blob.type)?'png':'jpg';
+  const path=cartella+'/'+genId()+'.'+ext;
+  try{
+    const res=await fetch(SUPA_URL+'/storage/v1/object/'+STORAGE_BUCKET+'/'+path,{method:'POST',
+      headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,'Content-Type':blob.type,'x-upsert':'true'}, body:blob});
+    if(res.ok){ _storageMancante=false; return path; }
+    const raw=await res.text().catch(()=>'');
+    if(/bucket not found|row-level security|unauthorized|not allowed|403|404/i.test(raw) || res.status===403 || res.status===404){ _storageMancante=true; try{ updateSyncStatus('ok'); }catch(e){} }
+  }catch(e){}
+  return null;
+}
+var _urlAllegati={};
+async function _urlAllegato(path){
+  if(_urlAllegati[path]) return _urlAllegati[path];
+  try{
+    const res=await fetch(SUPA_URL+'/storage/v1/object/authenticated/'+STORAGE_BUCKET+'/'+path,{headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY}});
+    if(!res.ok) return null;
+    return (_urlAllegati[path]=URL.createObjectURL(await res.blob()));
+  }catch(e){ return null; }
+}
+function _imgAllegato(att, style){
+  if(!att) return '';
+  if(att.data) return '<img src="'+att.data+'" style="'+style+'">';
+  if(att.path) return '<img data-allegato="'+esc(att.path)+'" alt="Caricamento allegato…" style="'+style+';min-height:80px;min-width:120px;background:var(--bg3)">';
+  return '';
+}
+function _idrataAllegati(root){
+  (root||document).querySelectorAll('img[data-allegato]').forEach(async img=>{
+    const u=await _urlAllegato(img.dataset.allegato);
+    if(u){ img.src=u; img.removeAttribute('data-allegato'); img.style.minHeight=''; img.style.background=''; }
+    else img.alt='Allegato non disponibile (serve la connessione)';
+  });
+}
+var _migrazioneAllegati=null;
+async function _migraAllegati(){
+  if(!SUPA_OK || !IS_ONLINE) return 0;
+  if(_migrazioneAllegati) return _migrazioneAllegati;
+  _migrazioneAllegati=(async()=>{
+    let fatti=0;
+    try{
+      // un ordine alla volta: gli ordini possono cambiare nel frattempo, si rilegge ogni volta
+      const ids=loadOrd().filter(o=>(o.scanOrdine&&o.scanOrdine.data) || (o.ddtImages||[]).some(d=>d&&d.data)).map(o=>o.id);
+      for(const id of ids){
+        const o0=loadOrd().find(x=>x.id===id); if(!o0) continue;
+        const nuovi={};
+        if(o0.scanOrdine && o0.scanOrdine.data){ const p=await _caricaAllegato(o0.scanOrdine.data,'ordini/'+id); if(!p) break; nuovi.scan=p; }
+        const ddtPath=[]; let stop=false;
+        for(const d of (o0.ddtImages||[])){ if(d && d.data){ const p=await _caricaAllegato(d.data,'ddt/'+id); if(!p){ stop=true; break; } ddtPath.push([d.ts, d.data.length, p]); } }
+        const ords=loadOrd(); const o=ords.find(x=>x.id===id); if(!o) continue;
+        if(nuovi.scan && o.scanOrdine && o.scanOrdine.data){ o.scanOrdine={...o.scanOrdine, path:nuovi.scan, data:null}; fatti++; }
+        ddtPath.forEach(([ts,len,p])=>{ const d=(o.ddtImages||[]).find(x=>x && x.data && x.ts===ts && x.data.length===len); if(d){ d.path=p; d.data=null; fatti++; } });
+        if(nuovi.scan || ddtPath.length) saveOrd(ords);
+        if(stop) break;
+      }
+    }catch(e){}
+    if(fatti) toast('☁ '+fatti+' allegat'+(fatti===1?'o spostato':'i spostati')+' nel cloud (memoria del dispositivo liberata)','info');
+    return fatti;
+  })();
+  try{ return await _migrazioneAllegati; } finally { _migrazioneAllegati=null; }
 }
 
 function viewScanOrdine(ordId){
@@ -9649,12 +10033,13 @@ function viewScanOrdine(ordId){
   document.getElementById('od-title').textContent = '📄 Scan Ordine — '+(o.num||o.numero);
   document.getElementById('od-content').innerHTML = `
     <div style="text-align:center">
-      <img src="${o.scanOrdine.data}" style="max-width:100%;max-height:70vh;border-radius:var(--r);border:1px solid var(--border)">
+      ${_imgAllegato(o.scanOrdine, 'max-width:100%;max-height:70vh;border-radius:var(--r);border:1px solid var(--border)')}
       <div style="font-size:11px;color:var(--text3);margin-top:6px">${o.scanOrdine.nome} — ${new Date(o.scanOrdine.ts).toLocaleDateString('it-IT')}</div>
     </div>`;
   document.getElementById('od-footer').innerHTML = `
     <button class="btn btn-danger btn-sm" onclick="rimuoviScanOrdine('${ordId}')">🗑 Rimuovi</button>
     <button class="btn btn-primary" onclick="closeModal('modal-ordine-detail')">Chiudi</button>`;
+  _idrataAllegati(document.getElementById('od-content'));
   document.getElementById('modal-ordine-detail').classList.add('open');
 }
 
@@ -9670,10 +10055,11 @@ function viewScanDdt(ordId){
           <button class="btn btn-sm btn-danger" onclick="rimuoviScanDdt('${ordId}',${i})">✕</button>
         </div>
       </div>
-      <img src="${ddt.data}" style="max-width:100%;max-height:50vh;border-radius:var(--r);border:1px solid var(--border)">
+      ${_imgAllegato(ddt, 'max-width:100%;max-height:50vh;border-radius:var(--r);border:1px solid var(--border)')}
     </div>`).join('');
   document.getElementById('od-footer').innerHTML = `
     <button class="btn btn-primary" onclick="closeModal('modal-ordine-detail')">Chiudi</button>`;
+  _idrataAllegati(document.getElementById('od-content'));
   document.getElementById('modal-ordine-detail').classList.add('open');
 }
 
@@ -9682,7 +10068,7 @@ function rimuoviScanOrdine(ordId){
   _takeSnapshot('Rimuovi scan ordine');
   const ords = loadOrd();
   const o = ords.find(x=>x.id===ordId); if(!o) return;
-  delete o.scanOrdine;
+  o.scanOrdine = null; // FIX [INFRASTRUTTURA]: null invece di delete (altrimenti il cloud lo ripristina)
   saveOrd(ords); closeModal('modal-ordine-detail'); renderArchivio();
   toast('Scan ordine rimosso','info');
 }
@@ -9703,14 +10089,7 @@ function rimuoviScanDdt(ordId, idx){
    ════════════════════════════════════════════════════════════════ */
 
 const loadIHC=()=>_getCache(LS_IHC,'[]');
-async function saveIHCArr(arr, deletedId){
-  _setCache(LS_IHC, _stampMod(arr));
-  if(!IS_ONLINE){ enqueue({type:'ihc'}); return; }
-  try{
-    if(deletedId) await supaFetch('ihc_requests','DELETE',null,'?id=eq.'+deletedId);
-    if(arr.length) await supaFetch('ihc_requests','POST',arr,'?on_conflict=id');
-  }catch(e){ enqueue({type:'ihc'}); }
-}
+async function saveIHCArr(arr, deletedId){ _setCache(LS_IHC, arr); }   // FIX [INFRASTRUTTURA]: invio e cancellazioni gestiti dal motore v2
 
 // ═══════════════════════════════════════════════════════════════════════
 // MAGAZZINO IHC — test di anticorpi e kit di rivelazione scalati dal registro IHC
@@ -9914,7 +10293,9 @@ function _renderIhcMagHome(){
 const IHC_PROTOCOLLI = {
   // ── OptiView (dal foglio "Richiesta IHC") ──
   'BCC':'O', '34βE12+p63':'O', 'BCC (34βE12+p63)':'O',
-  'CD138':'O', 'CD20':'O', 'CD3':'O', 'CD30':'O', 'CD34':'O',
+  'CD20':'O', 'CD3':'O', 'CD30':'O', 'CD34':'O',
+  // FIX [MAGAZZINO]: CD138 corre in UltraView (indicazione di Ferdinando 07/10/2026), non OptiView
+  'CD138':'U',
   'CD68':'O', 'CD68 (KP-1)':'O', 'KP-1':'O',
   'Ciclina D1':'O', 'Cyclin D1':'O',
   'Desmina':'O', 'Desmin':'O',
@@ -10537,8 +10918,12 @@ function _ihcStatoMagazzino(){
 }
 
 // FIX [UI/UX]: chip anticorpi tappabili con stato completato
+// FIX [TRACCIABILITÀ]: parser UNICO della lista anticorpi (chip, KPI vetrini da fare)
+function _ihcParseAnticorpi(str){
+  return String(str||'').split(/[,\n]+/).map(s=>s.trim()).filter(Boolean);
+}
 function _ihcChips(r){
-  const items=(r.anticorpo||'').split(/[,\n]+/).map(s=>s.trim()).filter(Boolean);
+  const items=_ihcParseAnticorpi(r.anticorpo);
   if(!items.length) return `<div style="font-size:13px;color:var(--text3);margin-top:4px">—</div>`;
   const done=Array.isArray(r.anticorpi_done)?r.anticorpi_done:[];
   const chips=items.map(it=>{
@@ -10729,14 +11114,7 @@ if (Array.isArray(window._UNDO_KEYS) && !_UNDO_KEYS.includes(LS_BIDONI)) _UNDO_K
 
 const loadBidoni = () => _getCache(LS_BIDONI, '[]');
 
-async function saveBidoniArr(arr, deletedId) {
-  _setCache(LS_BIDONI, _stampMod(arr));
-  if (typeof IS_ONLINE !== 'undefined' && !IS_ONLINE) { enqueue({type:'bidoni'}); return; }
-  try {
-    if (deletedId) await supaFetch('bidoni', 'DELETE', null, '?id=eq.' + deletedId);
-    if (arr.length) await supaFetch('bidoni', 'POST', arr, '?on_conflict=id');
-  } catch(e) { enqueue({type:'bidoni'}); }
-}
+async function saveBidoniArr(arr, deletedId){ _setCache(LS_BIDONI, arr); }   // FIX [INFRASTRUTTURA]: invio e cancellazioni gestiti dal motore v2
 
 // Helper: serve tracciare questo prodotto a bidoni?
 function isBidoneTracked(prod) {
@@ -10772,6 +11150,7 @@ async function openBidone(bidoneId) {
   if (idx < 0) { toast('Bidone non trovato', 'err'); return false; }
   const b = all[idx];
   if (b.stato !== 'chiuso') { toast('Il bidone non è chiuso (stato: ' + b.stato + ')', 'err'); return false; }
+  _takeSnapshot('Apertura bidone'); // FIX [UNDO]
   // Controllo: c'è già un aperto per lo stesso prodotto?
   const giàAperto = all.find(x => x.prod_id === b.prod_id && x.stato === 'aperto');
   if (giàAperto) {
@@ -10796,12 +11175,22 @@ async function smaltisciBidone(bidoneId) {
   const b = all[idx];
   if (b.stato === 'smaltito') { toast('Bidone già smaltito', 'warn'); return false; }
   const wasAperto = (b.stato === 'aperto');
+  _takeSnapshot('Smaltimento bidone'); // FIX [UNDO]
+  // FIX [MAGAZZINO]: un bidone aperto con lo SCARICO ha già tolto il flacone dalla giacenza: smaltirlo
+  // non deve scalarlo una seconda volta. Bidoni vecchi senza segno: si cerca lo scarico del giorno di apertura.
+  let giaScaricato = !!b.scaricato;
+  if (wasAperto && !giaScaricato && b.data_apertura) {
+    try { const pr = loadP().find(p => p.id === b.prod_id); const nk = pr ? String(pr.nome||'').trim().toLowerCase() : null;
+      giaScaricato = loadM().some(m => m.tipo==='scarico' && String(m.ts||'').slice(0,10)===String(b.data_apertura).slice(0,10)
+        && (m.prodId===b.prod_id || (nk && String(m.prod||'').trim().toLowerCase()===nk)) && !/smaltimento bidone/i.test(m.note||''));
+    } catch(e) {}
+  }
   b.stato = 'smaltito';
   b.data_smaltimento = new Date().toISOString().slice(0,10);
   all[idx] = b;
   await saveBidoniArr(all);
-  // Decrementa qty del prodotto + log movimento
-  try {
+  // Decrementa qty del prodotto + log movimento (solo se il flacone era ancora in giacenza)
+  if (!(wasAperto && giaScaricato)) try {
     const prods = loadP();
     const pi = prods.findIndex(p => p.id === b.prod_id);
     if (pi >= 0) {
@@ -11172,6 +11561,44 @@ function _extractCasiByTipo(record, tipo) {
   return Array.from(out);
 }
 
+// FIX [TRACCIABILITÀ]: helper UNICO per il conteggio dei casi unici (dashboard, report mensile/annuale).
+// Regole:
+// - ID normalizzati con _normCasoId ("2701/26 A B" ≡ "2701/26", "2701/2026" ≡ "2701/26")
+// - ist/cit: ID unici da casi_ist / casi_cit del coloratore
+// - proc: ID unici dai cicli del processatore
+// - pap: ID unici da casi_pap; SOLO se un ciclo non ha casi_pap si usa vetri_pap di quel ciclo
+function _contaCasiUnici(records, tipo) {
+  const s = new Set();
+  let extra = 0;
+  (records || []).forEach(r => {
+    if (!r) return;
+    const ids = (tipo === 'proc') ? _trc_extractCasi(r) : _extractCasiByTipo(r, tipo);
+    let n = 0;
+    ids.forEach(id => { const k = _normCasoId(id); if (k) { s.add(k); n++; } });
+    if (tipo === 'pap' && n === 0) extra += parseInt(r.vetri_pap, 10) || 0;
+  });
+  return s.size + extra;
+}
+// FIX [TRACCIABILITÀ]: casi unici dall'anagrafica (loadCampioni) per campione_id normalizzato
+function _contaCasiRegistro(camps, pred) {
+  const s = new Set();
+  (camps || []).forEach(c => {
+    if (!c || (pred && !pred(c))) return;
+    const k = _normCasoId(c.campione_id || '');
+    if (k) s.add(k);
+  });
+  return s.size;
+}
+// FIX [TRACCIABILITÀ]: chiave di ordinamento per ID caso "N/AA[L]" → (anno, numero).
+// Evita che 1/27 finisca sotto 3500/26.
+function _casoSortKey(id) {
+  const s = String(id || '').trim();
+  const m = s.match(/^(\d+)\s*\/\s*(\d{4}|\d{2})/);
+  if (!m) return parseInt(s, 10) || 0;
+  const yr = parseInt(m[2].slice(-2), 10) || 0;
+  return yr * 1000000 + (parseInt(m[1], 10) || 0);
+}
+
 // ─── Helper: CONTA i casi di un tipo CON FALLBACK ai cicli macchina ───
 // Se l'utente non ha inserito casi/range specifici ma ha registrato N cicli macchina,
 // usa N come stima del numero di casi lavorati.
@@ -11313,16 +11740,8 @@ function renderDashAnalytics(){
     try {
       if (typeof loadColoratore !== 'function') return 0;
       const recs = loadColoratore().filter(r => r.data && String(r.data).slice(0,7) === ym);
-      if (tipo === 'pap') {
-        return recs.reduce((s, r) => s + (parseInt(r.vetri_pap, 10) || 0), 0);
-      }
-      const field = (tipo === 'ist') ? 'casi_ist' : 'casi_cit';
-      const set = new Set();
-      recs.forEach(r => {
-        const arr = Array.isArray(r[field]) ? r[field] : [];
-        arr.forEach(id => { if (id) set.add(String(id).trim()); });
-      });
-      return set.size;
+      // FIX [TRACCIABILITÀ]: ID normalizzati + regola PAP unica (helper condiviso)
+      return _contaCasiUnici(recs, tipo);
     } catch(_) { return 0; }
   };
   const _vetriniDelMese = _casiUniciMese; // alias per retrocompat (il nome è legacy)
@@ -11330,20 +11749,12 @@ function renderDashAnalytics(){
   const _vetriniDellaSettimana = (wk, tipo) => {
     try {
       if (typeof loadColoratore !== 'function') return 0;
+      // FIX [TRACCIABILITÀ]: settimana limitata ai giorni del MESE CORRENTE + helper condiviso
       const recs = loadColoratore().filter(r => {
-        if (!r.data) return false;
-        try { return isoWeek(new Date(r.data)) === wk; } catch(e) { return false; }
+        if (!r.data || String(r.data).slice(0,7) !== ymCur) return false;
+        try { return isoWeek(new Date(String(r.data).slice(0,10) + 'T12:00:00')) === wk; } catch(e) { return false; }
       });
-      if (tipo === 'pap') {
-        return recs.reduce((s, r) => s + (parseInt(r.vetri_pap, 10) || 0), 0);
-      }
-      const field = (tipo === 'ist') ? 'casi_ist' : 'casi_cit';
-      const set = new Set();
-      recs.forEach(r => {
-        const arr = Array.isArray(r[field]) ? r[field] : [];
-        arr.forEach(id => { if (id) set.add(String(id).trim()); });
-      });
-      return set.size;
+      return _contaCasiUnici(recs, tipo);
     } catch(_) { return 0; }
   };
   const _papDelMese = (ym) => _casiUniciMese(ym, 'pap');
@@ -11363,9 +11774,10 @@ function renderDashAnalytics(){
   // Versione settimanale (ISO week) per il grafico andamento
   const _procDellaSettimana = (wk) => {
     try {
+      // FIX [TRACCIABILITÀ]: settimana limitata ai giorni del MESE CORRENTE
       const recs = (typeof loadProc === 'function' ? loadProc() : []).filter(r => {
-        if (!r.data) return false;
-        try { return isoWeek(new Date(r.data)) === wk; } catch(e) { return false; }
+        if (!r.data || String(r.data).slice(0,7) !== ymCur) return false;
+        try { return isoWeek(new Date(String(r.data).slice(0,10) + 'T12:00:00')) === wk; } catch(e) { return false; }
       });
       const set = new Set();
       recs.forEach(r => {
@@ -11385,7 +11797,9 @@ function renderDashAnalytics(){
   const istPrev = _procDelMese(ymPrev);
   const citPrev = _vetriniDelMese(ymPrev, 'cit');
   const papPrev = _vetriniDelMese(ymPrev, 'pap');
-  const trend=campPrevTot>0?Math.round((campCur-campPrevTot)/campPrevTot*100):(campCur>0?100:0);
+  // FIX [TRACCIABILITÀ]: trend dalla STESSA fonte del valore (proc + coloratore), mese prec. stessa ripartizione
+  const _totCurTrend = istCur + citCur + papCur, _totPrevTrend = istPrev + citPrev + papPrev;
+  const trend=_totPrevTrend>0?Math.round((_totCurTrend-_totPrevTrend)/_totPrevTrend*100):(_totCurTrend>0?100:0);
   const ordAperti=ords.filter(o=>o.stato!=='ricevuto'&&o.stato!=='annullato').length;
   const allerteCount=prods.filter(p=>(p.min>0&&p.qty<=p.min)||daysUntil(p.scadenza)<0||(daysUntil(p.scadenza)>=0&&daysUntil(p.scadenza)<=30)).length;
   const trendCol=trend>=0?'var(--green)':'var(--red)';
@@ -12630,8 +13044,9 @@ function _railClick(item){
 const _FAB_MAP = {
   home:         null,
   dashboard:    null,
-  campioni:     {ico:'＋', run:()=>openAddModal('Istologia')},
-  tracciabilita:{ico:'＋', run:()=>openAddModal('Istologia')},
+  // FIX [UI/UX]: il FAB delle viste casi apre l'accettazione caso, non il prodotto
+  campioni:     {ico:'＋', run:()=>openNuovoCampione('istologia')},
+  tracciabilita:{ico:'＋', run:()=>openNuovoCampione('istologia')},
   processatore: {ico:'＋', run:()=>openNuovoProcessatore()},
   coloratore:   {ico:'＋', run:()=>openNuovoColoratore()},
   ihc:          {ico:'＋', run:()=>{ if(typeof openNuovaIHC==='function') openNuovaIHC(); }},
@@ -12903,14 +13318,8 @@ function renderDashboardPreview(){
       const _vetri = (ym, tipo) => {
         try {
           const recs = loadColoratore().filter(r => r.data && String(r.data).slice(0,7) === ym);
-          if (tipo === 'pap') return recs.reduce((s, r) => s + (parseInt(r.vetri_pap, 10) || 0), 0);
-          const field = (tipo === 'ist') ? 'casi_ist' : 'casi_cit';
-          const set = new Set();
-          recs.forEach(r => {
-            const arr = Array.isArray(r[field]) ? r[field] : [];
-            arr.forEach(id => { if (id) set.add(String(id).trim()); });
-          });
-          return set.size;
+          // FIX [TRACCIABILITÀ]: ID normalizzati + regola PAP unica (helper condiviso)
+          return _contaCasiUnici(recs, tipo);
         } catch(_) { return 0; }
       };
 
@@ -12970,14 +13379,8 @@ function renderDashboardPreview(){
             const giorno = parseInt(s.slice(8,10), 10) || 0;
             return giorno <= maxDay;
           });
-          if (tipo === 'pap') return recs.reduce((s, r) => s + (parseInt(r.vetri_pap, 10) || 0), 0);
-          const field = (tipo === 'ist') ? 'casi_ist' : 'casi_cit';
-          const set = new Set();
-          recs.forEach(r => {
-            const arr = Array.isArray(r[field]) ? r[field] : [];
-            arr.forEach(id => { if (id) set.add(String(id).trim()); });
-          });
-          return set.size;
+          // FIX [TRACCIABILITÀ]: ID normalizzati + regola PAP unica (helper condiviso)
+          return _contaCasiUnici(recs, tipo);
         } catch(_) { return 0; }
       };
 
@@ -13161,7 +13564,7 @@ function renderDashboardPreview(){
         .replace(/\s+/g,' ').trim();
       pending.forEach(r => {
         const nBlocc = _parseBlocchetti(r.campione_id);
-        const anticorpi = _parseAnticorpi(r.anticorpo);
+        const anticorpi = _ihcParseAnticorpi(r.anticorpo); // FIX [TRACCIABILITÀ]: stesso parser dei chip
         // Escludi anticorpi già completati per questo record
         const done = Array.isArray(r.anticorpi_done) ? r.anticorpi_done.map(a => anticNorm(a)) : [];
         const todo = anticorpi.filter(a => !done.includes(anticNorm(a)));
@@ -13729,7 +14132,7 @@ window.confirmSelectiveImport = async function() {
     processatore: 'processatore',
     coloratore: 'coloratore_log',
     schede: 'schede_tecniche',
-    ihc: 'ihc',
+    ihc: 'ihc_requests',   // FIX [INFRASTRUTTURA]: era 'ihc' (tabella inesistente)
     bidoni: 'bidoni'
     // waste_state: gestito a parte (oggetto singolo)
   };
@@ -13741,39 +14144,29 @@ window.confirmSelectiveImport = async function() {
     let val = payload[s.bk];
     if (val === undefined) val = payload[s.ls];
     if (val === undefined) continue;
-    // 1. Scrivi in LS
-    localStorage.setItem(s.ls, JSON.stringify(val));
-    imported++;
-    // 2. Sync cloud per le tabelle array
-    if (isOnline && SUPA_TABLE_MAP[s.bk] && Array.isArray(val)) {
+    // FIX [INFRASTRUTTURA]: prima si cancellava TUTTA la tabella cloud e poi si reinseriva: se l'invio falliva
+    // il cloud restava vuoto. Ora: scrittura tracciata (modifiche + cancellazioni in coda persistente),
+    // i record cloud assenti dal backup vanno in coda di cancellazione, poi il motore invia tutto.
+    if (Array.isArray(val) && SUPA_TABLE_MAP[s.bk]) {
       const table = SUPA_TABLE_MAP[s.bk];
-      try {
-        // DELETE ALL: cancella tutti i record della tabella cloud
-        // (in PostgREST: id=neq.__NEVER_MATCH__ → cancella tutto)
-        await supaFetch(table, 'DELETE', null, '?id=neq.__NEVER_MATCH__');
-        // POST tutti i record del backup
-        if (val.length > 0) {
-          // Batch (per evitare richieste troppo grandi)
-          const BATCH = 100;
-          for (let i = 0; i < val.length; i += BATCH) {
-            await supaFetch(table, 'POST', val.slice(i, i+BATCH), '?on_conflict=id');
-          }
-        }
-        cloudSynced++;
-      } catch(e) {
-        console.warn('[import cloud sync]', table, e);
-        cloudErrors++;
+      _setCache(s.ls, val);
+      _segnaTabellaDaInviare(table);
+      imported++;
+      if (isOnline) {
+        try {
+          const cloud = await _scaricaTabella(table);
+          if (cloud) { const ids = new Set(val.map(r => String(r && r.id))); const ob = _obTab(table); cloud.forEach(c => { if (!ids.has(String(c.id))) ob.x[String(c.id)] = new Date().toISOString(); }); _salvaStatoSync(); }
+        } catch(e) { cloudErrors++; }
       }
-    } else if (isOnline && s.bk === 'waste_state' && val && typeof val === 'object') {
-      // waste_state: oggetto singolo
-      try {
-        await supaFetch('waste_state', 'DELETE', null, '?id=eq.waste_state');
-        await supaFetch('waste_state', 'POST', [{id:'waste_state', data:val}], '?on_conflict=id');
-        cloudSynced++;
-      } catch(e) { cloudErrors++; }
+    } else if (s.bk === 'waste_state' && val && typeof val === 'object') {
+      saveW(val); imported++;
+    } else {
+      localStorage.setItem(s.ls, JSON.stringify(val));
+      imported++;
     }
   }
-  // Invalida la cache in memoria — al reload riparte dalla LS appena scritta
+  // FIX [INFRASTRUTTURA]: invio al cloud PRIMA del ricaricamento (la coda è comunque persistente)
+  if (isOnline) { try { const okPush = await _conLock(_pushTutto); if (okPush) cloudSynced = selected.length; else cloudErrors++; } catch(e) { cloudErrors++; } }
   if (typeof _invalidateAll === 'function') _invalidateAll();
   let msg = `${imported} sezion${imported===1?'e':'i'} importate in locale`;
   if (isOnline) msg += ` · ${cloudSynced} sincronizzate col cloud` + (cloudErrors > 0 ? ` (${cloudErrors} errori)` : '');
@@ -14021,17 +14414,7 @@ function _chiudiPanel(id){
 }
 
 function resetRicezione_panel(id){
-  if(!confirm('Azzerare tutte le ricezioni? I movimenti di magazzino già creati NON verranno annullati.')) return;
-  _takeSnapshot('Reset ricezione ordine');
-  const ords = loadOrd();
-  const o = ords.find(x => x.id === id); if(!o) return;
-  (o.righe||[]).forEach(r => { r.qtyRicevuta = 0; r.ricezioni = []; });
-  o.ddtList = [];
-  o.stato = 'approvato';
-  delete o.dataRicezione;
-  saveOrd(ords);
-  renderOrdiniPreview();
-  toast('Ricezione azzerata','info');
+  _eseguiResetRicezione(id, ()=>{ renderOrdiniPreview(); if(currentView==='inventario') renderInv(); });   // FIX [ORDINI]
 }
 
 // ─── riceviPanel: form ricezione nel pannello (non nel modal) ───
@@ -14166,7 +14549,7 @@ window.renderTracciabilita = function(){
       const t = (c.tipo||'').toLowerCase();
       if(flt === 'istologia') return t === 'istologia';
       if(flt === 'citologia') return t === 'citologia';
-      if(flt === 'pap test')   return t === 'pap test' || t === 'pap';
+      if(flt === 'pap test')   return t === 'pap test' || t === 'pap' || t === 'pap_l'; // FIX [TRACCIABILITÀ]: include Pap LupoLab
       if(flt === 'pap privato')return t === 'pap privato' || t === 'pap_priv';
       return t === flt;
     });
@@ -14184,8 +14567,9 @@ window.renderTracciabilita = function(){
 
   // Ordine DECRESCENTE per ID numerico del caso (es. 200/26 prima di 1/26)
   camps.sort((a,b) => {
-    const na = parseInt(String(a.campione_id||'').split('/')[0], 10) || 0;
-    const nb = parseInt(String(b.campione_id||'').split('/')[0], 10) || 0;
+    // FIX [TRACCIABILITÀ]: ordinamento per (anno, numero): 1/27 sopra 3500/26
+    const na = _casoSortKey(a.campione_id);
+    const nb = _casoSortKey(b.campione_id);
     if(nb !== na) return nb - na;
     // a parità, ordina per data più recente prima
     return String(b.data||'').localeCompare(String(a.data||''));
@@ -14208,14 +14592,14 @@ window.renderTracciabilita = function(){
   }
 
   // Counters per oggi (dal totale, non filtrato)
-  const today = new Date().toISOString().slice(0,10);
+  const today = _oggiLocale(); // FIX [TRACCIABILITÀ]: data di oggi locale (non UTC)
   const all = (typeof loadCampioni === 'function') ? loadCampioni() : [];
   const todayC = all.filter(c => c.data === today);
   const set = (id, n) => { const e = document.getElementById(id); if(e) e.textContent = n; };
   set('camp-c-tot', todayC.length);
   set('camp-c-ist', todayC.filter(c => (c.tipo||'').toLowerCase() === 'istologia').length);
   set('camp-c-cit', todayC.filter(c => (c.tipo||'').toLowerCase() === 'citologia').length);
-  set('camp-c-pap', todayC.filter(c => { const t=(c.tipo||'').toLowerCase(); return t==='pap test'||t==='pap'; }).length);
+  set('camp-c-pap', todayC.filter(c => { const t=(c.tipo||'').toLowerCase(); return t==='pap test'||t==='pap'||t==='pap_l'; }).length); // FIX [TRACCIABILITÀ]: include Pap LupoLab
   set('camp-c-papp', todayC.filter(c => { const t=(c.tipo||'').toLowerCase(); return t==='pap privato'||t==='pap_priv'; }).length);
 
   if(!camps.length){
@@ -14321,7 +14705,7 @@ if (_origRenderColor) {
         let from = null, to = null;
         if (tuttiICasiReali.length) {
           const parseN = s => { const m = String(s).match(/^(\d+)/); return m ? parseInt(m[1]) : null; };
-          const sorted = tuttiICasiReali.slice().sort((a,b) => (parseN(a)||0) - (parseN(b)||0));
+          const sorted = tuttiICasiReali.slice().sort((a,b) => _casoSortKey(a) - _casoSortKey(b)); // FIX [TRACCIABILITÀ]: (anno, numero)
           from = sorted[0];
           to   = sorted[sorted.length-1];
         }
@@ -14384,11 +14768,14 @@ window.renderReport = function(){
     const ms = new Set();
     const now = new Date();
     // Mese corrente sempre presente
-    ms.add(now.toISOString().slice(0,7));
+    ms.add(_oggiLocale(now).slice(0,7)); // FIX [TRACCIABILITÀ]: mese corrente locale (non UTC)
     if(typeof loadColoratore === 'function')
       loadColoratore().forEach(r => { if(r.data) ms.add(r.data.slice(0,7)); });
     if(typeof loadProc === 'function')
       loadProc().forEach(r => { if(r.data) ms.add(r.data.slice(0,7)); });
+    // FIX [TRACCIABILITÀ]: anche i mesi presenti solo in anagrafica (es. importati da Excel)
+    if(typeof loadCampioni === 'function')
+      loadCampioni().forEach(c => { if(c.data) ms.add(String(c.data).slice(0,7)); });
     const sortedMs = [...ms].sort().reverse();
     const curVal = sel.value;
     sel.innerHTML = sortedMs.map(m => {
@@ -14399,7 +14786,7 @@ window.renderReport = function(){
     if(!sel.value && sortedMs.length) sel.value = sortedMs[0];
   }
 
-  const monthKey = (sel ? sel.value : null) || new Date().toISOString().slice(0,7);
+  const monthKey = (sel ? sel.value : null) || _oggiLocale().slice(0,7); // FIX [TRACCIABILITÀ]: mese locale
   const [y, mo] = monthKey.split('-').map(x => parseInt(x));
   const ms = new Date(y, mo-1, 1);
   const me = new Date(y, mo, 1);
@@ -14410,8 +14797,10 @@ window.renderReport = function(){
 
   // ── Dati del mese ──
   // Campioni: usiamo _derivedCampioni (da coloratore/processatore) come il dashboard
-  const allCamp = (typeof _derivedCampioni === 'function') ? _derivedCampioni() : [];
-  const camps = allCamp.filter(c => c.data && new Date(c.data) >= ms && new Date(c.data) < me);
+  // FIX [TRACCIABILITÀ]: come il report annuale — ist/cit = casi unici dall'anagrafica del mese,
+  // PAP = casi_pap unici dei cicli coloratore del mese (non più _derivedCampioni, che conta
+  // lo stesso caso una volta per ogni ciclo di colorazione).
+  const camps = ((typeof loadCampioni === 'function') ? loadCampioni() : []).filter(c => c.data && String(c.data).slice(0,7) === monthKey);
 
   const proc  = (typeof loadProc === 'function') ? loadProc().filter(r => r.data && new Date(r.data) >= ms && new Date(r.data) < me) : [];
   const color = (typeof loadColoratore === 'function') ? loadColoratore().filter(r => r.data && new Date(r.data) >= ms && new Date(r.data) < me) : [];
@@ -14424,17 +14813,20 @@ window.renderReport = function(){
   // ── 5 metriche ──
   const metricsEl = document.getElementById('report-metrics');
   if(metricsEl){
-    const istN = camps.filter(c => (c.tipo||'') === 'istologia').length;
-    const citN = camps.filter(c => (c.tipo||'') === 'citologia').length;
-    const papN = camps.filter(c => (c.tipo||'') === 'pap').length;
+    // FIX [TRACCIABILITÀ]: casi UNICI (ID normalizzati), stessa logica del report annuale
+    const _tlM = t => String(t||'').toLowerCase();
+    const istN = _contaCasiRegistro(camps, c => _tlM(c.tipo) === 'istologia');
+    const citN = _contaCasiRegistro(camps, c => _tlM(c.tipo) === 'citologia');
+    const papN = _contaCasiUnici(color, 'pap');
+    const casiTotN = istN + citN + papN;
     const cicliProc  = proc.reduce((s,r) => s + (r.casi?.length || r.n_cassette || 0), 0);
     const cicliColor = color.reduce((s,r) => s + (r.cicli_ee||0) + (r.cicli_ee_cit||0) + (r.cicli_pap||0), 0);
     const vetriTot   = color.reduce((s,r) => s + (r.vetri_ist||0) + (r.vetri_cit||0) + (r.vetri_pap||0), 0);
     metricsEl.innerHTML = `
-      <div class="cnt-card" data-tip="Totale casi elaborati nel mese (istologia + citologia + PAP)"><div class="cnt-lbl">Casi totali</div><div class="cnt-val" style="color:var(--accent)">${camps.length}</div></div>
+      <div class="cnt-card" data-tip="Totale casi unici del mese: istologia + citologia (anagrafica) + PAP (ID nei cicli coloratore)"><div class="cnt-lbl">Casi totali</div><div class="cnt-val" style="color:var(--accent)">${casiTotN}</div></div>
       <div class="cnt-card" data-tip="Campioni di tessuto solido: biopsie, pezzi operatori"><div class="cnt-lbl">Istologia</div><div class="cnt-val" style="color:var(--blue)">${istN}</div></div>
       <div class="cnt-card" data-tip="Campioni liquidi: brushing, agoaspirati, BAL, versamenti"><div class="cnt-lbl">Citologia</div><div class="cnt-val" style="color:var(--teal)">${citN}</div></div>
-      <div class="cnt-card" data-tip="Papanicolau LupoLab su campioni cervico-vaginali"><div class="cnt-lbl">PAP</div><div class="cnt-val" style="color:var(--purple)">${papN}</div></div>
+      <div class="cnt-card" data-tip="Casi PAP unici del mese, dagli ID registrati nei cicli del coloratore (vetrini PAP se il ciclo non ha ID)"><div class="cnt-lbl">PAP</div><div class="cnt-val" style="color:var(--purple)">${papN}</div></div>
       <div class="cnt-card" data-tip="Cicli del processatore tissutale completati nel mese"><div class="cnt-lbl">Cicli proc.</div><div class="cnt-val" style="color:var(--orange)">${proc.length}</div></div>
       <div class="cnt-card" data-tip="Passaggi macchina nel coloratore (EE ist. + EE cit. + PAP)"><div class="cnt-lbl">Cicli color.</div><div class="cnt-val" style="color:var(--blue)">${cicliColor}</div></div>
       ${vetriTot > 0 ? `<div class="cnt-card" data-tip="Totale vetrini colorati nel mese (ist. + cit. + PAP)"><div class="cnt-lbl">Vetrini</div><div class="cnt-val" style="color:var(--text2)">${vetriTot}</div></div>` : ''}
@@ -14484,10 +14876,11 @@ window.renderReport = function(){
     const lastDay = new Date(y, mo, 0).getDate();
     const data = {ist:[], cit:[], pap:[]};
     for(let d=1; d<=lastDay; d++){
-      const ds = new Date(y, mo-1, d).toISOString().slice(0,10);
-      data.ist.push(camps.filter(c => c.data === ds && c.tipo === 'istologia').length);
-      data.cit.push(camps.filter(c => c.data === ds && c.tipo === 'citologia').length);
-      data.pap.push(camps.filter(c => c.data === ds && c.tipo === 'pap').length);
+      // FIX [TRACCIABILITÀ]: data costruita dai componenti locali (toISOString spostava di un giorno)
+      const ds = y + '-' + String(mo).padStart(2,'0') + '-' + String(d).padStart(2,'0');
+      data.ist.push(_contaCasiRegistro(camps, c => String(c.data).slice(0,10) === ds && String(c.tipo||'').toLowerCase() === 'istologia'));
+      data.cit.push(_contaCasiRegistro(camps, c => String(c.data).slice(0,10) === ds && String(c.tipo||'').toLowerCase() === 'citologia'));
+      data.pap.push(_contaCasiUnici(color.filter(r => String(r.data||'').slice(0,10) === ds), 'pap'));
     }
     const W=600, H=100, pad={t:8,r:8,b:14,l:24};
     const maxV = Math.max(1, ...data.ist, ...data.cit, ...data.pap);
@@ -14578,7 +14971,7 @@ window.renderReportAnnuale = function() {
   // NON dall'anagrafica (dove i PAP non vengono registrati) e NON come vetrini.
   const _papSet = new Set();
   color.forEach(r => (Array.isArray(r.casi_pap)?r.casi_pap:[]).forEach(id => { if (id) _papSet.add(_normId(id)); }));
-  const papN = _papSet.size;
+  const papN = _contaCasiUnici(color, 'pap'); // FIX [TRACCIABILITÀ]: regola PAP unica (casi_pap unici, fallback vetri_pap)
   const cicliColor = color.reduce((s,r) => s + (r.cicli_ee||0) + (r.cicli_ee_cit||0) + (r.cicli_pap||0), 0);
   const vetriTot   = color.reduce((s,r) => s + (r.vetri_ist||0) + (r.vetri_cit||0) + (r.vetri_pap||0), 0);
 
@@ -14623,7 +15016,7 @@ window.renderReportAnnuale = function() {
     // PAP dai casi_pap dei cicli coloratore del mese
     const _pSet = new Set();
     color.filter(r => (r.data||'').startsWith(ym)).forEach(r => (Array.isArray(r.casi_pap)?r.casi_pap:[]).forEach(id => { if(id) _pSet.add(_normId(id)); }));
-    data.pap.push(_pSet.size);
+    data.pap.push(_contaCasiUnici(color.filter(r => (r.data||'').startsWith(ym)), 'pap')); // FIX [TRACCIABILITÀ]: regola PAP unica
   }
   // A9 — serie TOTALE anno corrente e anno precedente (per linea YoY)
   const totCur = data.ist.map((v,i)=>v+data.cit[i]+data.pap[i]);
@@ -14637,7 +15030,7 @@ window.renderReportAnnuale = function() {
     const ci = _uniqMese(prevYearCamp, ym, c => tlA(c.tipo)==='citologia');
     const _pSet = new Set();
     prevColorY.filter(r => (r.data||'').startsWith(ym)).forEach(r => (Array.isArray(r.casi_pap)?r.casi_pap:[]).forEach(id => { if(id) _pSet.add(_normId(id)); }));
-    totPrev.push(i + ci + _pSet.size);
+    totPrev.push(i + ci + _contaCasiUnici(prevColorY.filter(r => (r.data||'').startsWith(ym)), 'pap')); // FIX [TRACCIABILITÀ]: regola PAP unica
   }
   const hasPrevYear = totPrev.some(v => v > 0);
   const svgEl = document.getElementById('report-annual-line');
@@ -14669,12 +15062,27 @@ window.renderReportAnnuale = function() {
     if (sub) {
       // A9 — Δ% YoY annuale
       const sumCur = totCur.reduce((a,b)=>a+b,0);
-      const sumPrev = totPrev.reduce((a,b)=>a+b,0);
+      let sumPrev = totPrev.reduce((a,b)=>a+b,0);
+      // FIX [TRACCIABILITÀ]: anno in corso (parziale) → confronto con lo STESSO PERIODO dell'anno
+      // precedente (mesi completi fino al mese scorso + mese corrente fino al giorno di oggi)
+      let _periodoLbl = '';
+      const _nowY = new Date();
+      if (year === _nowY.getFullYear()) {
+        const mCur = _nowY.getMonth(), gCur = _nowY.getDate();
+        sumPrev = totPrev.slice(0, mCur).reduce((a,b)=>a+b,0);
+        const ymP = String(prevYear) + '-' + String(mCur+1).padStart(2,'0');
+        const cutP = ymP + '-' + String(gCur).padStart(2,'0');
+        const inPer = d => { const s = String(d||'').slice(0,10); return s.slice(0,7) === ymP && s <= cutP; };
+        sumPrev += _contaCasiRegistro(prevYearCamp, c => inPer(c.data) && tlA(c.tipo)==='istologia')
+                 + _contaCasiRegistro(prevYearCamp, c => inPer(c.data) && tlA(c.tipo)==='citologia')
+                 + _contaCasiUnici(prevColorY.filter(r => inPer(r.data)), 'pap');
+        _periodoLbl = ' (stesso periodo 1/1–' + gCur + '/' + (mCur+1) + ')';
+      }
       if (hasPrevYear && sumPrev > 0) {
         const delta = Math.round((sumCur - sumPrev) / sumPrev * 100);
         const segno = delta >= 0 ? '+' : '';
         const col = delta >= 0 ? 'var(--green)' : 'var(--red)';
-        sub.innerHTML = String(year) + ' vs ' + prevYear + ': <span style="color:'+col+';font-weight:700">' + segno + delta + '%</span> (linea tratteggiata = ' + prevYear + ')';
+        sub.innerHTML = String(year) + ' vs ' + prevYear + _periodoLbl + ': <span style="color:'+col+';font-weight:700">' + segno + delta + '%</span> (linea tratteggiata = ' + prevYear + ')';
       } else {
         sub.textContent = String(year) + (hasPrevYear ? ' · ' + prevYear + ' parziale' : ' · nessuno storico ' + prevYear);
       }
@@ -14940,8 +15348,8 @@ document.addEventListener('DOMContentLoaded', () => {
 /* ─── Hook: dopo ogni save aggiorna badge rail ─── */
 const _origSetCache = (typeof _setCache === 'function') ? _setCache : null;
 if(_origSetCache){
-  window._setCache = function(key, val){
-    const r = _origSetCache(key, val);
+  window._setCache = function(key, val, opts){   // FIX [INFRASTRUTTURA]: passa le opzioni (daSync) al motore
+    const r = _origSetCache(key, val, opts);
     setTimeout(updateRailBadges, 50);
     return r;
   };
@@ -15415,7 +15823,9 @@ function _trc_extractCasi(reg, prefisso) {
 
 function _trc_caseInRegister(reg, idCaso) {
   const lista = _trc_extractCasi(reg);
-  return lista.includes(idCaso);
+  // FIX [TRACCIABILITÀ]: confronto normalizzato ("2701/26 A B" ≡ "2701/26")
+  const k = _normCasoId(idCaso);
+  return lista.some(x => x === idCaso || _normCasoId(x) === k);
 }
 
 function _trc_richiedente(c) {
@@ -15540,6 +15950,28 @@ function _computeStatoCaso(campione, opts = {}) {
     out.consulenza = true;
     out.data_chiusura_lab = d;
     out.data_chiusura_finale = d;
+    // FIX [TRACCIABILITÀ]: la consulenza resta fuori dal TAT, ma se ha IHC richieste
+    // lo stato deve riflettere quelle ancora aperte (in_attesa_ihc con conteggio corretto)
+    const idC = _normCasoId(campione.campione_id || '');
+    if (idC) {
+      let ihcC;
+      if (opts.index && opts.index.ihcByCaso) ihcC = opts.index.ihcByCaso.get(idC) || [];
+      else {
+        const ihcRegC = opts.ihcCache || (typeof loadIHC === 'function' ? loadIHC() : []);
+        ihcC = (ihcRegC || []).filter(i => _normCasoId(i.campione_id || '') === idC);
+      }
+      const aperteC = ihcC.filter(i => i.stato !== 'completata');
+      out.ihc_totali_count = ihcC.length;
+      out.ihc_aperte_count = aperteC.length;
+      if (aperteC.length > 0) {
+        out.stato = 'in_attesa_ihc';
+        out.data_chiusura_finale = null;
+      } else if (ihcC.length > 0) {
+        let maxC = null;
+        ihcC.forEach(i => { const dc = i.data_completamento || i.modificato || null; if (dc && (!maxC || dc > maxC)) maxC = dc; });
+        if (maxC) out.data_chiusura_finale = String(maxC).slice(0,10);
+      }
+    }
     return out;
   }
   // L'ID caso visibile è campione_id (es. "1747/26"); è ciò che compare nei cicli coloratore
@@ -15588,7 +16020,7 @@ function _computeStatoCaso(campione, opts = {}) {
     }
     // Dal go-live in poi: ciclo vita reale.
     // Non colorato ma troppo vecchio per essere in sospeso → chiuso presunto
-    const oggi = opts.oggi || new Date().toISOString().slice(0,10);
+    const oggi = opts.oggi || _oggiLocale(); // FIX [TRACCIABILITÀ]: oggi locale (non UTC)
     const giorni = (typeof _trc_diffDays === 'function') ? _trc_diffDays(dataAcc, oggi) : null;
     if (giorni != null && giorni > _APERTO_MAX_GIORNI) {
       out.stato = 'chiuso';
@@ -15631,7 +16063,9 @@ function _computeStatoCaso(campione, opts = {}) {
 function _statoCasoBadge(info) {
   if (!info) return '';
   if (info.consulenza)
-    return '<span class="badge" style="background:#f5f3ff;color:#6d28d9;border-color:#ddd6fe">📋 Consulenza</span>';
+    return '<span class="badge" style="background:#f5f3ff;color:#6d28d9;border-color:#ddd6fe">📋 Consulenza</span>' +
+      // FIX [UI/UX]: consulenza con IHC aperte mostra anche lo stato di attesa
+      (info.stato === 'in_attesa_ihc' ? ` <span class="badge" style="background:#fff7ed;color:#9a3412;border-color:#fed7aa">🟡 In attesa IHC${info.ihc_aperte_count?' ('+info.ihc_aperte_count+')':''}</span>` : '');
   if (info.stato === 'storico')
     return '<span class="badge" style="background:#f1f5f9;color:#64748b;border-color:#e2e8f0">⚪ Storico</span>';
   if (info.stato === 'aperto')
@@ -15655,11 +16089,12 @@ function cercaSchedaCaso() {
   const id = (document.getElementById('trac-caso-input').value || '').trim();
   if (!id) { toast('Inserisci un ID caso', 'error'); return; }
   // Match sull'ID caso visibile (campione_id), con fallback su id GUID
-  const camp = loadCampioni().find(c => String(c.campione_id||'').trim() === id) || loadCampioni().find(c => c.id === id);
+  // FIX [TRACCIABILITÀ]: match esatto, poi normalizzato, poi id interno
+  const camp = loadCampioni().find(c => String(c.campione_id||'').trim() === id) || loadCampioni().find(c => _normCasoId(c.campione_id||'') === _normCasoId(id)) || loadCampioni().find(c => c.id === id);
   const procCicli = loadProc().filter(p => _trc_caseInRegister(p, id));
   const colorCicli = loadColoratore().filter(r => _trc_caseInRegister(r, id));
   let ihcList = [];
-  try { ihcList = (loadIHC ? loadIHC() : []).filter(i => (i.campione_id || i.campione || '').trim() === id); } catch(_){}
+  try { ihcList = (loadIHC ? loadIHC() : []).filter(i => _normCasoId(i.campione_id || i.campione || '') === _normCasoId(id)); } catch(_){} // FIX [TRACCIABILITÀ]: confronto normalizzato
 
   // Calcolo stato ciclo vita
   let statoInfo = null;
@@ -15727,9 +16162,11 @@ function cercaSchedaCaso() {
       const reag = (reg.reagenti || []).map(r =>
         `<span class="trac-lotto-chip">${esc(r.nome || '?')} · ${esc(r.lotto || '—')} ${r.stato === 'cambiato' ? '🔄' : r.stato === 'rabboccato' ? '➕' : '✅'}</span>`
       ).join('');
-      const tipoCit = (reg.casi_ist||[]).includes(id) ? 'EE Istologia' :
-                      (reg.casi_cit||[]).includes(id) ? 'EE Citologia' :
-                      (reg.casi_pap||[]).includes(id) ? 'PAP' : '?';
+      // FIX [TRACCIABILITÀ]: confronto normalizzato anche per il tipo di ciclo
+      const _inArr = arr => (arr||[]).some(x => _normCasoId(x) === _normCasoId(id));
+      const tipoCit = _inArr(reg.casi_ist) ? 'EE Istologia' :
+                      _inArr(reg.casi_cit) ? 'EE Citologia' :
+                      _inArr(reg.casi_pap) ? 'PAP' : '?';
       html += `<div style="background:var(--bg2);padding:10px;border-radius:6px;margin-bottom:6px">
         <div style="display:flex;justify-content:space-between;margin-bottom:6px">
           <strong>${fmtDate(reg.data)}</strong>
@@ -16155,13 +16592,13 @@ function renderTATSection() {
   // Indice rapido: id caso (campione_id) → primo ciclo proc/color
   const procByCaso = new Map();
   proc.forEach(c => _trc_extractCasi(c).forEach(id => {
-    const k = String(id).trim();
+    const k = _normCasoId(id); // FIX [TRACCIABILITÀ]: chiave normalizzata
     const existing = procByCaso.get(k);
     if (!existing || (c.data && c.data < existing.data)) procByCaso.set(k, c);
   }));
   const colorByCaso = new Map();
   color.forEach(r => _trc_extractCasi(r).forEach(id => {
-    const k = String(id).trim();
+    const k = _normCasoId(id); // FIX [TRACCIABILITÀ]: chiave normalizzata
     const existing = colorByCaso.get(k);
     if (!existing || (r.data && r.data < existing.data)) colorByCaso.set(k, r);
   }));
@@ -16182,15 +16619,16 @@ function renderTATSection() {
     const dataAcc = String(c.data).slice(0,10);
     // Escludi gli storici (accettati prima dell'inizio tracciamento)
     if (epoch && dataAcc < epoch) { nStorici++; return; }
-    const p = procByCaso.get(idCaso);
-    const col = colorByCaso.get(idCaso);
+    const p = procByCaso.get(_normCasoId(idCaso));   // FIX [TRACCIABILITÀ]: lookup normalizzato
+    const col = colorByCaso.get(_normCasoId(idCaso));
     const tatAccProc = p ? _trc_diffDays(c.data, p.data) : null;
     const tatProcColor = (p && col) ? _trc_diffDays(p.data, col.data) : null;
     const tatTot = col ? _trc_diffDays(c.data, col.data) : null;
     tats.push({ id: idCaso, tatAccProc, tatProcColor, tatTot });
     // TAT chiusura tecnica
     const st = _computeStatoCaso(c, { index: _tatIdx, trackingEpoch: epoch });
-    if ((st.stato === 'chiuso' || st.stato === 'in_attesa_ihc') && st.data_chiusura_lab) {
+    // FIX [TRACCIABILITÀ]: esclusi chiusi presunti (data chiusura = accettazione → 0 gg) e consulenze
+    if ((st.stato === 'chiuso' || st.stato === 'in_attesa_ihc') && st.data_chiusura_lab && !st.presunto && !st.consulenza) {
       const d = _trc_diffDays(c.data, st.data_chiusura_lab);
       if (d != null && d >= 0) tatChiusura.push(d);
     }
@@ -16617,6 +17055,7 @@ window.mostraCasiPerStato = function(stato){
       const s = _computeStatoCaso(c, { index: _mIdx, trackingEpoch: epoch });
       if (s.stato !== stato) return;
       if (stato === 'chiuso') {
+        if (s.presunto || s.consulenza) return; // FIX [TRACCIABILITÀ]: come il widget "Chiusi del mese"
         const d = s.data_chiusura_finale || s.data_chiusura_lab || '';
         if (String(d).slice(0,7) !== curYm) return; // solo chiusi nel mese
       }
@@ -16625,8 +17064,9 @@ window.mostraCasiPerStato = function(stato){
 
     // Ordina per ID caso decrescente
     lista.sort((a,b) => {
-      const na = parseInt(String(a.camp.campione_id||'').split('/')[0],10)||0;
-      const nb = parseInt(String(b.camp.campione_id||'').split('/')[0],10)||0;
+      // FIX [TRACCIABILITÀ]: ordinamento per (anno, numero)
+      const na = _casoSortKey(a.camp.campione_id);
+      const nb = _casoSortKey(b.camp.campione_id);
       return nb - na;
     });
 
@@ -16943,16 +17383,19 @@ function renderC5TATCliente(topCli, cutoff) {
   const camp = loadCampioni().filter(c => c.data && c.data >= cutoff);
   const proc = loadProc();
   const procByCaso = new Map();
+  // FIX [TRACCIABILITÀ]: indice per numero caso normalizzato (non per id interno del record)
   proc.forEach(c => _trc_extractCasi(c).forEach(id => {
-    const existing = procByCaso.get(id);
-    if (!existing || (c.data && c.data < existing.data)) procByCaso.set(id, c);
+    const k = _normCasoId(id);
+    const existing = procByCaso.get(k);
+    if (!existing || (c.data && c.data < existing.data)) procByCaso.set(k, c);
   }));
 
   const tatByCli = new Map();
   camp.forEach(c => {
     const r = _trc_richiedente(c);
     if (!r) return;
-    const p = procByCaso.get(c.id);
+    if (c.consulenza) return; // FIX [TRACCIABILITÀ]: consulenze fuori dal TAT
+    const p = procByCaso.get(_normCasoId(c.campione_id || ''));
     if (!p) return;
     const tat = _trc_diffDays(c.data, p.data);
     if (tat == null || tat < 0) return;
