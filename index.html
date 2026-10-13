@@ -5487,12 +5487,31 @@ function renderRifiuti(){
   if(!wl.length){ tb.innerHTML=`<tr><td colspan="6"><div class="empty"><div class="e-ico">🗑</div><p>Nessun movimento rifiuti registrato</p></div></td></tr>`; return; }
   tb.innerHTML=wl.slice(0,100).map(e=>{
     const cfg=WASTE_CONFIG[e.tipo]||{icon:'📌',label:e.tipo};
-    const badgeMap={pieno:`<span class="badge bg-orange">+ Pieno</span>`,smaltito:`<span class="badge bg-green">✓ Smaltito</span>`,vuoto_add:`<span class="badge bg-blue">+ Vuoto</span>`,vuoto_sub:`<span class="badge bg-yellow">− Vuoto</span>`};
+    const badgeMap={pieno:`<span class="badge bg-orange">+ Pieno</span>`,smaltito:`<span class="badge bg-green">✓ Smaltito</span>`,vuoto_add:`<span class="badge bg-blue">+ Vuoto</span>`,vuoto_sub:`<span class="badge bg-yellow">− Vuoto</span>`,rettifica:`<span class="badge bg-blue">✏️ Correzione</span>`};
     const peso = e.kg ? e.kg+' kg' : '—';
     return `<tr><td class="mono" style="font-size:12px">${fmtTs(e.ts)}</td><td>${cfg.icon} ${cfg.label}</td><td>${badgeMap[e.azione]||e.azione}</td><td class="mono" style="text-align:center">${e.qty}</td><td class="mono" style="text-align:center">${peso}</td><td style="color:var(--text2);font-size:12px">${e.note||'—'}</td></tr>`;
   }).join('');
 }
 
+// FIX [RIFIUTI]: correzione del numero di contenitori pieni in deposito (dato rimasto sbagliato:
+// una vecchia sincronizzazione sostituiva lo stato locale con quello del cloud quando i 180103 pieni erano 0)
+async function rifCorreggiPieni(k){
+  const W=loadW(); const cfg=(WASTE_CONFIG[k]||{}); const att=(W[k]&&W[k].pieni)||0;
+  const v=prompt('Contenitori PIENI in deposito per '+(cfg.label||k)+' (da ritirare):', att);
+  if(v===null) return;
+  const n=parseInt(String(v).trim(),10);
+  if(isNaN(n) || n<0){ toast('Numero non valido','error'); return; }
+  if(n===att) return;
+  _takeSnapshot('Correzione pieni '+k);
+  W[k].pieni=n;
+  await saveW(W);
+  const wl=loadWL();
+  wl.unshift({id:genId(),ts:new Date().toISOString(),tipo:k,azione:'rettifica',qty:Math.abs(n-att),note:'Correzione pieni in deposito: '+att+' → '+n});
+  saveWL(wl);
+  if(typeof renderDashboardPreview==='function') try{ renderDashboardPreview(); }catch(e){}
+  if(currentView==='rifiuti' && typeof renderRifiuti==='function') renderRifiuti();
+  toast('✏️ '+(cfg.label||k)+': pieni '+att+' → '+n,'success');
+}
 // FIX [RIFIUTI]: "+" dalla home — un contenitore pieno in più (scala un vuoto), annullabile con Undo
 async function rifHomePieno(k){
   const W=loadW(); const disp=getVuotiDisp(W,k);
@@ -13483,7 +13502,7 @@ function renderDashboardPreview(){
         return `<div class="rifh-r">
           <span class="cer-chip ${col}">${k.replace('cer_','')}*</span>
           <span class="rifh-n">${nome}</span>
-          <span class="rifh-p" style="color:${p?'var(--orange)':'var(--text3)'}" title="Pieni in deposito">${p}</span>
+          <span class="rifh-p" style="color:${p?'var(--orange)':'var(--text3)'};cursor:pointer;text-decoration:underline dotted" title="Pieni in deposito — tocca per correggere" onclick="event.stopPropagation();rifCorreggiPieni('${k}')">${p}</span>
           <button class="rifh-b add" title="+1 contenitore pieno" onclick="event.stopPropagation();rifHomePieno('${k}')">＋</button>
           <button class="rifh-b ok" title="Registra smaltimento (data, kg)" ${p?'':'disabled'} onclick="event.stopPropagation();openSmaltimentoModal('${k}')">✓</button>
         </div>`;
