@@ -190,6 +190,26 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
 .kpi-card.k-orange::before{background:var(--orange)}
 .kpi-card.k-purple::before{background:var(--purple)}
 .kpi-card.k-green::before{background:var(--green)}
+/* FIX [UI/UX]: card Rifiuti in home */
+.rifh{container-type:inline-size}
+@container (max-width:250px){ .rifh-r .rifh-n{display:none} .rifh-r .cer-chip{flex:1;justify-content:flex-start} .rifh-tot span{font-size:9px} }
+.rifh-tot{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:6px 0 8px}
+.rifh-tot>div{background:var(--sunken);border:1px solid var(--border);border-radius:6px;padding:5px 8px;display:flex;align-items:baseline;gap:6px;min-width:0}
+.rifh-tot b{font-family:'DM Mono',monospace;font-size:20px;font-weight:700;line-height:1}
+.rifh-tot span{font-size:10px;color:var(--text3);line-height:1.2}
+.rifh-righe{display:flex;flex-direction:column;gap:4px}
+.rifh-r{display:flex;align-items:center;gap:6px;font-size:11px;min-width:0}
+.rifh-r .cer-chip{font-size:9px;padding:2px 5px;flex-shrink:0}
+.rifh-r .rifh-n{flex:1;min-width:0;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rifh-r .rifh-p{font-family:'DM Mono',monospace;font-weight:700;min-width:22px;text-align:right}
+.rifh-b{width:32px;height:28px;border-radius:6px;border:1px solid var(--border2);background:var(--surface);font-size:14px;font-weight:700;color:var(--text2);cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;padding:0}
+.rifh-b.add{color:var(--orange);border-color:var(--orange-bd);background:var(--orange-bg)}
+.rifh-b.ok{color:var(--green);border-color:var(--green-bd);background:var(--green-bg)}
+.rifh-b:disabled{opacity:.35;cursor:not-allowed}
+.rifh-vuoti{display:flex;gap:4px;flex-wrap:wrap;margin-top:8px;padding-top:7px;border-top:1px solid var(--border-faint);font-size:10px;color:var(--text3);align-items:center}
+.rifh-vuoti .v{padding:2px 6px;border-radius:10px;background:var(--bg3);border:1px solid var(--border);font-family:'DM Mono',monospace;white-space:nowrap}
+.rifh-vuoti .v.zero{background:var(--red-bg);border-color:var(--red-bd);color:var(--red)}
+.rifh-vuoti .v.poco{background:var(--yellow-bg);border-color:var(--yellow-bd);color:var(--yellow)}
 .kpi-lbl{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--text3);margin-bottom:5px}
 .kpi-val{font-family:'Libre Baskerville',serif;font-size:40px;font-weight:700;color:var(--accent);line-height:1;margin-bottom:4px}
 .kpi-val.red{color:var(--red)}.kpi-val.blue{color:var(--blue)}.kpi-val.orange{color:var(--orange)}.kpi-val.green{color:var(--green)}
@@ -1013,24 +1033,15 @@ input[type=number]{font-size:16px}
           <div class="kpi-delta up" id="kpi-casi-delta"></div>
         </div>
 
-        <!-- 2. RIFIUTI ATTIVI -->
-        <div class="kpi-card" onclick="showView('rifiuti')">
-          <div class="kpi-lbl">Rifiuti attivi</div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:7px;margin-bottom:8px">
-            <div style="background:var(--sunken);border:1px solid var(--border);border-radius:6px;padding:6px 8px">
-              <div style="font-size:8px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin-bottom:4px">Pieni</div>
-              <div style="display:flex;gap:6px;align-items:baseline">
-                <span style="font-family:'DM Mono',monospace;font-size:20px;font-weight:700;color:var(--orange)" id="rif-sol-p">0</span><span style="font-size:11px;color:var(--text3)">bidoni CER</span>
-              </div>
-            </div>
-            <div style="background:var(--sunken);border:1px solid var(--border);border-radius:6px;padding:6px 8px">
-              <div style="font-size:8px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin-bottom:4px">Vuoti</div>
-              <div style="display:flex;gap:6px;align-items:baseline">
-                <span style="font-family:'DM Mono',monospace;font-size:20px;font-weight:700;color:var(--green)" id="rif-sol-v">0</span><span style="font-size:9px;color:var(--text3)">disp.</span>
-              </div>
-            </div>
+        <!-- 2. RIFIUTI — FIX [UI/UX]: card compatta con conteggi e azioni rapide per CER -->
+        <div class="kpi-card rifh" onclick="showView('rifiuti')">
+          <div class="kpi-lbl">🗑 Rifiuti</div>
+          <div class="rifh-tot">
+            <div><b id="rif-sol-p" style="color:var(--orange)">0</b><span>pieni da ritirare</span></div>
+            <div><b id="rif-sol-v" style="color:var(--green)">0</b><span>vuoti disponibili</span></div>
           </div>
-          <div style="display:flex;flex-direction:column;gap:3px" id="rif-cer-mini"></div>
+          <div id="rif-cer-mini" class="rifh-righe"></div>
+          <div id="rif-vuoti-mini" class="rifh-vuoti"></div>
         </div>
 
         <!-- 3. ORDINI APERTI -->
@@ -5482,6 +5493,15 @@ function renderRifiuti(){
   }).join('');
 }
 
+// FIX [RIFIUTI]: "+" dalla home — un contenitore pieno in più (scala un vuoto), annullabile con Undo
+async function rifHomePieno(k){
+  const W=loadW(); const disp=getVuotiDisp(W,k);
+  const cfg=(WASTE_CONFIG[k]||{});
+  if(disp<=0 && !confirm('Non risultano '+(cfg.contenitoreLabel||'contenitori').toLowerCase()+' vuoti per '+(cfg.label||k)+'.\n\nRegistro comunque il contenitore pieno?')) return;
+  await quickWaste(k,'pieno',1);
+  if(typeof renderDashboardPreview==='function') try{ renderDashboardPreview(); }catch(e){}
+  toast('🗑 '+(cfg.label||k)+': +1 pieno (Undo per annullare)','info');
+}
 async function quickWaste(tipo,azione,qty){
   _takeSnapshot('Rifiuti: '+azione+' '+tipo); // FIX [UNDO]
   const W=loadW(), w=W[tipo];
@@ -13451,30 +13471,27 @@ function renderDashboardPreview(){
     if (typeof loadW === 'function') {
       const w = loadW();
       // loadW() ritorna {cer_180103:{pieni,vuoti,smaltiti}, cer_150110:{...}, ...}
-      const cerKeys = Object.keys(w).filter(k => k.startsWith('cer_'));
-      const totPieni    = cerKeys.reduce((s,k) => s + (w[k].pieni||0), 0);
-      const totVuoti    = cerKeys.reduce((s,k) => s + (w[k].vuoti||0), 0);
-      const totSmaltiti = cerKeys.reduce((s,k) => s + (w[k].smaltiti||0), 0);
+      // FIX [RIFIUTI]: i vuoti di 150110/150202 sono nel deposito comune (prima risultavano sempre 0)
+      const CER_HOME=[['cer_180103','Infetti','red'],['cer_150110','Imballaggi','yellow'],['cer_150202','Assorbenti/DPI','gray'],['cer_180106','Liquidi','yellow']];
+      const totPieni = CER_HOME.reduce((s,[k]) => s + ((w[k]&&w[k].pieni)||0), 0);
+      const vScat = (w.cer_180103&&w.cer_180103.vuoti)||0, vComuni = (w.bidoni_solidi_comuni&&w.bidoni_solidi_comuni.vuoti)||0, vTan = (w.cer_180106&&w.cer_180106.vuoti)||0;
       set('rif-sol-p', totPieni);
-      set('rif-sol-v', totVuoti);
-      set('rif-liq-p', totSmaltiti);
-      set('rif-liq-v', cerKeys.length);
-      // Lista CER aggregata
+      set('rif-sol-v', vScat+vComuni+vTan);
       const cerEl = document.getElementById('rif-cer-mini');
-      if (cerEl) {
-        const cls = (k) => {
-          if (k.includes('180103') || k.includes('180108')) return 'red';
-          if (k.includes('150110') || k.includes('180106')) return 'yellow';
-          return 'gray';
-        };
-        cerEl.innerHTML = cerKeys.length ? cerKeys.map(k => {
-          const cerNum = k.replace('cer_','');
-          const d = w[k];
-          return `<div style="display:flex;align-items:center;justify-content:space-between;font-size:10px">
-            <span class="cer-chip ${cls(k)}" style="font-size:9px">${cerNum}*</span>
-            <span style="font-family:'DM Mono',monospace;color:var(--text3)">${d.pieni||0}P / ${d.vuoti||0}V</span>
-          </div>`;
-        }).join('') : '<div style="font-size:10px;color:var(--text3);font-style:italic">Nessun bidone</div>';
+      if (cerEl) cerEl.innerHTML = CER_HOME.map(([k,nome,col]) => {
+        const p = (w[k]&&w[k].pieni)||0;
+        return `<div class="rifh-r">
+          <span class="cer-chip ${col}">${k.replace('cer_','')}*</span>
+          <span class="rifh-n">${nome}</span>
+          <span class="rifh-p" style="color:${p?'var(--orange)':'var(--text3)'}" title="Pieni in deposito">${p}</span>
+          <button class="rifh-b add" title="+1 contenitore pieno" onclick="event.stopPropagation();rifHomePieno('${k}')">＋</button>
+          <button class="rifh-b ok" title="Registra smaltimento (data, kg)" ${p?'':'disabled'} onclick="event.stopPropagation();openSmaltimentoModal('${k}')">✓</button>
+        </div>`;
+      }).join('');
+      const vEl = document.getElementById('rif-vuoti-mini');
+      if (vEl) {
+        const chip = (ico, lbl, n) => `<span class="v ${n<=0?'zero':n===1?'poco':''}" title="${lbl} vuoti">${ico} ${n}</span>`;
+        vEl.innerHTML = '<span>Vuoti:</span>' + chip('📦','Scatole 180103',vScat) + chip('🗑','Bidoni comuni 150110/150202',vComuni) + chip('🧪','Taniche 180106',vTan);
       }
     }
   } catch(e) { console.warn('[KPI rifiuti]', e); }
