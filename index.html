@@ -797,6 +797,51 @@ input[type=number]{font-size:16px}
   .modal .modal-footer{flex-wrap:wrap}
 }
 
+/* FIX [TRACCIABILITÀ]: pianificazione corsa IHC */
+.ihcc-sum{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.ihcc-sum span{padding:5px 11px;border-radius:20px;font-size:12px;font-weight:700;border:1px solid}
+.ihcc-sum .c-ok{background:var(--green-bg);border-color:var(--green-bd);color:var(--green)}
+.ihcc-sum .c-pa{background:var(--yellow-bg);border-color:var(--yellow-bd);color:var(--yellow)}
+.ihcc-sum .c-bl{background:var(--red-bg);border-color:var(--red-bd);color:var(--red)}
+.ihcc-sum .c-u{background:var(--blue-bg);border-color:var(--blue-bd);color:var(--blue)}
+.ihcc-corsa{border:1.5px solid var(--accent2);border-radius:12px;padding:12px 14px;margin-bottom:12px}
+.ihcc-corsa.succ{border:1px solid var(--border);background:var(--bg3)}
+.ihcc-h{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap;font-size:14px}
+.ihcc-h span{font-size:12px;color:var(--text3)}
+.ihcc-slots{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin-bottom:10px}
+.ihcc-slot{border:1px solid var(--border);border-radius:8px;padding:6px 8px;display:flex;flex-direction:column;gap:2px;background:var(--surface);min-height:58px}
+.ihcc-slot b{font-size:13px;line-height:1.15;word-break:break-word}
+.ihcc-slot small{font-size:11px;color:var(--text3)}
+.ihcc-slot .k{align-self:flex-start;font-size:9px;font-weight:800;letter-spacing:.06em;padding:1px 5px;border-radius:4px;background:var(--bg4);color:var(--text3)}
+.ihcc-slot .k.o{background:var(--purple-bg);color:var(--purple)}
+.ihcc-slot .k.u{background:var(--teal-bg);color:var(--teal)}
+.ihcc-slot.vuoto{border-style:dashed;color:var(--text3);font-size:11px;align-items:center;justify-content:center}
+.ihcc-caso{display:flex;align-items:baseline;gap:8px;padding:5px 0;border-top:1px solid var(--border-faint);font-size:13px;flex-wrap:wrap}
+.ihcc-caso:first-child{border-top:0}
+.ihcc-caso .v{flex:1;min-width:140px;color:var(--text2);font-size:12px}
+.ihcc-caso small{color:var(--text3);font-size:11px}
+.ihcc-caso .ok{color:var(--green);font-weight:800}.ihcc-caso .pa{color:var(--yellow);font-weight:800}.ihcc-caso .bl{color:var(--red)}
+.ihcc-caso .u{font-size:10px;font-weight:700;color:var(--red);background:var(--red-bg);border-radius:4px;padding:0 5px}
+.ihcc-caso.blocco{padding:7px 0}
+.ihcc-nota{font-size:11px;color:var(--text3);margin:8px 0 2px}
+.ihcc-kit{font-size:11px;color:var(--text3);margin-top:8px}
+.ihcc-slot .d{font-style:normal;font-size:10px;line-height:1.2}
+.ihcc-slot .d.ok{color:var(--green)}
+.ihcc-slot .d.sw{color:var(--orange);font-weight:700}
+.ihcc-slot.cambio{border-color:var(--orange)}
+.ihcc-cambi{margin-top:8px;padding:8px 10px;border:1px solid var(--orange);border-radius:8px;background:var(--orange-bg);font-size:12px;color:var(--text2);display:flex;flex-direction:column;gap:3px}
+.ihcc-cambi>b{color:var(--orange)}
+.ihcc-cambi small{color:var(--text3);font-size:10.5px}
+/* FIX [UI/UX]: specchietto corsa IHC nella home */
+.ihch{margin-top:6px;padding:6px 8px;border:1px solid var(--accent2);border-radius:8px;background:var(--surface);font-size:11px;color:var(--text2);cursor:pointer}
+.ihch-h{display:flex;flex-wrap:wrap;justify-content:space-between;column-gap:6px;row-gap:1px;align-items:baseline}
+.ihch-h b{font-size:11.5px;color:var(--text);white-space:nowrap}
+.ihch-h span{font-family:'DM Mono',monospace;font-size:10.5px;color:var(--text3);white-space:nowrap}
+.ihch-c{margin-top:3px;line-height:1.35;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.ihch-w{margin-top:3px;color:var(--orange);font-weight:600}
+.ihch-x{margin-top:2px;color:var(--text3)}
+.ihcc-sez{font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin:14px 0 4px}
+@media(max-width:520px){.ihcc-slots{grid-template-columns:repeat(2,minmax(0,1fr))}}
 /* FIX [UI/UX]: Magazzino IHC a tessere */
 .ihcm-filtri{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:10px;flex-shrink:0}
 .ihcm-chip{border:1px solid var(--border);border-radius:10px;padding:8px 10px;background:var(--surface);cursor:pointer;text-align:left;font:inherit;color:var(--text3);-webkit-tap-highlight-color:transparent}
@@ -1061,6 +1106,7 @@ input[type=number]{font-size:16px}
             <span style="color:var(--text3)">Vetrini:</span> <span id="kpi-ihc-vetrini" style="font-family:'DM Mono',monospace;font-weight:700;color:#a855f7">0</span>
           </div>
           <div id="kpi-ihc-antic" style="margin-top:5px;display:flex;flex-wrap:wrap;gap:3px;max-height:60px;overflow:hidden"></div>
+          <div id="kpi-ihc-corsa"></div>
           <div id="kpi-ihc-mag" style="margin-top:6px"></div>
         </div>
 
@@ -1432,6 +1478,7 @@ input[type=number]{font-size:16px}
         <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
           <button class="hbtn2 primary" onclick="openNuovaIHC()">＋ Nuova richiesta</button>
           <button class="hbtn2" onclick="openIhcMag()" title="Dispenser in uso e chiusi pronti">📦 Magazzino IHC</button>
+          <button class="hbtn2" onclick="openIhcCorsa()" title="Quali casi possono partire e corsa consigliata (max 9 anticorpi, 20 vetrini)">🧪 Pianifica corsa</button>
           <button class="hbtn2" id="ihc-corsa-btn" onclick="toggleCorsaUltra()" title="Corsa grande: OptiView tolto, tutti gli anticorpi su UltraView">⚡ Corsa solo UltraView</button>
           <div class="search-wrap">
             <span class="s-ico">🔍</span>
@@ -3080,6 +3127,18 @@ input[type=number]{font-size:16px}
     <div id="ihcm-tabs" class="ihcm-tabs"></div>
     <div id="ihcm-body" style="flex:1;overflow-y:auto"></div>
     <div class="modal-footer"><button class="btn" onclick="closeModal('modal-ihc-mag')">Chiudi</button></div>
+  </div>
+</div>
+
+<!-- FIX [TRACCIABILITÀ]: pianificazione corsa IHC -->
+<div class="modal-overlay" id="modal-ihc-corsa">
+  <div class="modal" style="width:min(720px,97vw);max-width:97vw;max-height:94vh;display:flex;flex-direction:column">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+      <div class="modal-title" style="margin:0;flex:1">🧪 Pianifica corsa IHC</div>
+      <button class="btn btn-sm" onclick="renderIhcCorsa()" title="Ricalcola">↻</button>
+    </div>
+    <div id="ihcc-body" style="flex:1;overflow-y:auto"></div>
+    <div class="modal-footer"><button class="btn" onclick="closeModal('modal-ihc-corsa')">Chiudi</button></div>
   </div>
 </div>
 
@@ -10315,6 +10374,27 @@ function _ihcEredita(modello, p, qtyPrima){
   const tot=parseInt(p.test_tot,10)||0;
   if(tot && (qtyPrima===undefined || (parseFloat(qtyPrima)||0)<=0)) p.test_residui=tot;
 }
+// FIX [UI/UX]: Home → specchietto della prossima corsa IHC (tocco = apre "Pianifica corsa")
+function _renderIhcCorsaHome(){
+  const el=document.getElementById('kpi-ihc-corsa'); if(!el) return;
+  let piano=null; try{ piano=_ihcPianoCorse(); }catch(e){ el.innerHTML=''; return; }
+  const casi=piano.sit.casi; if(!casi.length){ el.innerHTML=''; return; }
+  const c=piano.corse[0]; const fuori=casi.filter(x=>x.stato!=='pronto'||x.troppoGrande).length;
+  const apri='event.stopPropagation();openIhcCorsa()';
+  if(!c || !c.scelti.length){
+    el.innerHTML='<div class="ihch" onclick="'+apri+'"><div class="ihch-h"><b>🧪 Prossima corsa</b></div><div class="ihch-w">Nessun caso può partire'+(fuori?' ('+fuori+' bloccat'+(fuori===1?'o':'i')+' dal magazzino)':'')+'</div></div>';
+    return;
+  }
+  const cc=_ihcCambiCorsa(piano.sit, c);
+  const pos=Object.keys(cc.slot).reduce((s,g)=>{ const l=(piano.sit.dispAb||{})[g]||[]; return s+_ihcPosizioni(l.length?l:[{test:Infinity}], cc.slot[g]); },0);
+  const urg=c.scelti.some(x=>x.urgente);
+  el.innerHTML='<div class="ihch" onclick="'+apri+'">'
+    +'<div class="ihch-h"><b>🧪 Corsa: '+c.scelti.length+' cas'+(c.scelti.length===1?'o':'i')+(urg?' <span style="color:var(--red)">⚡</span>':'')+'</b><span>'+pos+'/'+IHC_CORSA_MAX_AB+' AB · '+c.vetrini+'/'+IHC_CORSA_MAX_VETRINI+' vetr.</span></div>'
+    +'<div class="ihch-c">'+c.scelti.map(x=>esc(String(x.caso).split(/\s/)[0])).join(', ')+'</div>'
+    +(cc.cambi.length?'<div class="ihch-w">↻ '+cc.cambi.length+' dispenser da caricare: '+cc.cambi.map(x=>esc(x.nome)).join(', ')+'</div>':'')
+    +(fuori?'<div class="ihch-x">'+fuori+(fuori===1?' caso non può partire':' casi non possono partire')+'</div>':'')
+    +'</div>';
+}
 // Home: anticorpi/kit IHC in esaurimento (max 3, prima i più urgenti)
 function _renderIhcMagHome(){
   const el=document.getElementById('kpi-ihc-mag'); if(!el) return;
@@ -10429,9 +10509,9 @@ async function _ihcControlloCorsaGrande(){
   if(_getCache(LS_IHC_AVV8,'null')===oggi) return;   // già chiesto oggi
   const diversi=new Set();
   loadIHC().forEach(r=>Object.entries(r.consumi||{}).forEach(([item,v])=>{ if(v && v.ts && _dataLocaleDa(v.ts)===oggi) diversi.add(_ihcNorm(item)); }));
-  if(diversi.size<=8) return;
+  if(diversi.size<=9) return;   // FIX [TRACCIABILITÀ]: 9 anticorpi a bordo oltre ai 2 kit
   _setCache(LS_IHC_AVV8, oggi);
-  const ok=confirm('Oggi hai segnato '+diversi.size+' anticorpi diversi: più degli 8 che stanno a bordo.\n\nEra una corsa con solo UltraView (OptiView tolto)?\n\nOK = attiva la modalità e sposta su UltraView i test di oggi scalati da OptiView\nAnnulla = no, erano più corse (non lo chiedo più oggi)');
+  const ok=confirm('Oggi hai segnato '+diversi.size+' anticorpi diversi: più dei 9 che stanno a bordo.\n\nEra una corsa con solo UltraView (OptiView tolto)?\n\nOK = attiva la modalità e sposta su UltraView i test di oggi scalati da OptiView\nAnnulla = no, erano più corse (non lo chiedo più oggi)');
   if(!ok) return;
   toggleCorsaUltra(true);
   await _ihcRiassegnaKitOggi('UltraView');
@@ -11057,6 +11137,262 @@ function renderIHC(){
         </div>
       </div>
     </div>`).join('');
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// FIX [TRACCIABILITÀ]: PIANIFICAZIONE CORSA IHC
+// In base al Magazzino IHC dice quali casi possono partire e quali no (e perché), e propone la corsa
+// che chiude il maggior numero di casi COMPLETI rispettando i limiti della BenchMark:
+// max 9 posizioni anticorpo (oltre ai 2 kit) e max 20 vetrini per corsa. Gli urgenti valgono di più.
+// FIX [TRACCIABILITÀ] 13/10/2026: 9 anticorpi a bordo oltre ai 2 kit (indicazione di Ferdinando);
+// solo casi COMPLETI; i kit contano sul singolo kit caricabile (non sulla somma del magazzino).
+// FIX [TRACCIABILITÀ] 14/10/2026: stessa logica dei kit per i dispenser degli anticorpi: un anticorpo
+// = una posizione; se il dispenser in macchina non basta, la corsa dice quale caricare e "Corsa
+// eseguita" registra il cambio (il dispenser tolto resta da parte con i suoi test). 2 posizioni
+// solo se nessun dispenser da solo basta.
+// ═══════════════════════════════════════════════════════════════════════
+const IHC_CORSA_MAX_AB_BASE=9, IHC_CORSA_MAX_VETRINI=20;
+function _ihcMaxAb(){ return IHC_CORSA_MAX_AB_BASE; }
+var IHC_CORSA_MAX_AB=IHC_CORSA_MAX_AB_BASE;   // aggiornato a ogni calcolo
+// Dispenser utilizzabili (non scaduti) di un prodotto: prima quello in uso, poi per scadenza; test di ciascuno
+function _ihcDispenserLista(lotti){
+  const aperto=_ihcApertoDelGruppo(lotti); const out=[];
+  if(aperto) out.push({test:_ihcResiduo(aperto), lotto:aperto.lotto||'', inUso:true, id:aperto.id, scad:aperto.scadenza||''});
+  _ihcFefo(_ihcVivi(lotti)).forEach(p=>{
+    let q=Math.floor(parseFloat(p.qty)||0); if(p===aperto) q-=1;
+    const tot=parseInt(p.test_tot,10)||0;
+    for(let i=0;i<q;i++) out.push({test:(p.ihc_vss && i===0 && p!==aperto) ? _ihcResiduo(p) : tot, lotto:p.lotto||'', inUso:false, id:p.id, scad:p.scadenza||''});
+  });
+  return out.filter(d=>d.test>0);
+}
+// quante posizioni servono per fare "need" test: 1 se un dispenser da solo basta (si carica quello),
+// altrimenti i più pieni affiancati
+function _ihcPosizioni(lista, need){
+  if(need<=0) return 0;
+  const ord=lista.map(d=>d.test).sort((a,b)=>b-a); let s=0;
+  for(let i=0;i<ord.length;i++){ s+=ord[i]; if(s>=need) return i+1; }
+  return Infinity;
+}
+// Quale dispenser deve stare in macchina per fare "need" test (stessa regola per anticorpi e kit):
+// quello in uso se basta, altrimenti il primo che basta in ordine di scadenza, altrimenti il più pieno
+function _ihcScegliDispenser(lista, need){
+  const inUso=(lista||[]).find(d=>d.inUso)||null;
+  if(inUso && inUso.test>=need) return {inUso, carica:null, basta:true};
+  const altri=(lista||[]).filter(d=>!d.inUso);
+  const carica=altri.find(d=>d.test>=need) || altri.reduce((m,d)=>(!m||d.test>m.test)?d:m, null);
+  return {inUso, carica, basta:!!(carica && carica.test>=need)};
+}
+// Cambi di dispenser (anticorpi e kit) necessari per la corsa
+function _ihcCambiCorsa(sit, corsa){
+  const slot={}; corsa.scelti.forEach(cs=>cs.voci.forEach(v=>{ slot[v.gruppo]=(slot[v.gruppo]||0)+v.n; }));
+  const kitUso={}; Object.keys(slot).forEach(g=>{ const k=(sit.infoAb[g]||{}).kit; if(k) kitUso[k]=(kitUso[k]||0)+slot[g]; });
+  const cambi=[];
+  Object.keys(slot).forEach(g=>{ const s=_ihcScegliDispenser((sit.dispAb||{})[g], slot[g]); const i=sit.infoAb[g]||{};
+    if(s.carica && (!s.inUso || s.inUso.test<slot[g])) cambi.push({tipo:'ab', chiave:g, nome:i.breve||i.nome||g, serve:slot[g], inUso:s.inUso, carica:s.carica, basta:s.basta, ids:(sit.lottiAb||{})[g]||[]}); });
+  Object.keys(kitUso).forEach(k=>{ const ki=(sit.kitInfo||{})[k]||{}; const s=_ihcScegliDispenser(ki.lista, kitUso[k]);
+    if(s.carica && (!s.inUso || s.inUso.test<kitUso[k])) cambi.push({tipo:'kit', chiave:k, nome:k, serve:kitUso[k], inUso:s.inUso, carica:s.carica, basta:s.basta, ids:ki.ids||[]}); });
+  return {slot, kitUso, cambi};
+}
+// Registra il cambio: il dispenser tolto resta da parte con i suoi test (se è lo stesso lotto non si
+// può tenere separato → terminato); quello caricato diventa "in uso"
+function _ihcApplicaCambio(prods, cambio, movs, now){
+  const lotti=prods.filter(p=>cambio.ids.includes(p.id));
+  const nuovo=lotti.find(p=>p.id===cambio.carica.id); if(!nuovo) return '';
+  const aperto=_ihcApertoDelGruppo(lotti);
+  if(aperto && aperto===nuovo){
+    const res=_ihcResiduo(aperto), tot=parseInt(aperto.test_tot,10)||0;
+    aperto.qty=Math.max(0,(parseFloat(aperto.qty)||0)-1); aperto.test_residui=tot; aperto.ihc_vss=false; aperto.modificato=now;
+    movs.unshift({id:genId(), ts:now, tipo:'scarico', prod:aperto.nome, prodId:aperto.id, qty:1, lotto:aperto.lotto||'', note:'Dispenser sostituito per la corsa IHC ('+res+' test residui)'});
+    _ihcSetInUso(lotti, nuovo, now);
+    return cambio.nome+': nuovo dispenser lotto '+(nuovo.lotto||'—');
+  }
+  if(aperto){ aperto.ihc_in_uso=false; aperto.ihc_vss=true; aperto.test_residui=_ihcResiduo(aperto); aperto.modificato=now; }
+  _ihcSetInUso(lotti, nuovo, now); nuovo.test_residui=_ihcResApertura(nuovo);
+  return cambio.nome+': caricato lotto '+(nuovo.lotto||'—')+(aperto?' (tolto lotto '+(aperto.lotto||'—')+', '+_ihcResiduo(aperto)+' test da parte)':'');
+}
+function _ihcTestDisponibili(lotti){
+  // test utilizzabili (non scaduti): dispenser in uso/registrato in macchina col residuo, gli altri pieni
+  const aperto=_ihcApertoDelGruppo(lotti); let t=0;
+  _ihcVivi(lotti).forEach(p=>{ const q=parseFloat(p.qty)||0, tot=parseInt(p.test_tot,10)||0; t += (p===aperto || p.ihc_vss) ? (q-1)*tot + _ihcResiduo(p) : q*tot; });
+  return Math.max(0,t);
+}
+// Situazione di partenza: richieste in attesa, voce per voce, con il fabbisogno e la scorta
+function _ihcSituazioneCorsa(){
+  const prods=loadP(); const corsaUltra=corsaUltraAttiva();
+  IHC_CORSA_MAX_AB=_ihcMaxAb();
+  const scorta={};        // chiave risorsa → test disponibili
+  const infoAb={};        // gruppo anticorpo → {nome, kit}
+  const dispAb={};        // gruppo anticorpo → dispenser utilizzabili
+  const lottiAb={};       // gruppo anticorpo → id dei lotti
+  const kitInfo={};       // kit → {lista, ids, inUso, migliore}
+  const keyKit=k=>'kit:'+k, keyAcc=a=>'acc:'+a.id;
+  // kit: in macchina ce n'è UNO per tipo → capacità = il kit migliore che si può caricare
+  const kitTest=k=>{ const kk=keyKit(k); if(scorta[kk]===undefined){ const lk=_ihcLottiKit(k, prods); const l=_ihcDispenserLista(lk); const best=l.reduce((m,d)=>(!m||d.test>m.test)?d:m,null); kitInfo[k]={lista:l, ids:lk.map(p=>p.id), inUso:l.find(d=>d.inUso)||null, migliore:best}; scorta[kk]=best?best.test:0; } return scorta[kk]; };
+  const accAttivi=IHC_ACCESSORI.map(ac=>{ const lotti=_ihcLottiAccessorio(ac, prods); const conf=lotti.some(p=>(parseInt(p.test_tot,10)||0)>0); if(conf) scorta[keyAcc(ac)]=_ihcTestDisponibili(lotti); return conf?ac:null; }).filter(Boolean);
+  const oggi=Date.now();
+  const casi=[];
+  loadIHC().filter(r=>r.stato!=='completata').forEach(r=>{
+    const done=Array.isArray(r.anticorpi_done)?r.anticorpi_done:[];
+    const voci=_ihcParseAnticorpi(r.anticorpo).filter(it=>!done.includes(it));
+    if(!voci.length) return;
+    const n=_ihcBlocchetti(r.campione_id);
+    const caso={id:r.id, caso:r.campione_id||'—', urgente:r.priorita==='urgente', n, voci:[],
+      giorni: r.data_richiesta ? Math.max(0, Math.floor((oggi-new Date(r.data_richiesta).getTime())/864e5)) : 0};
+    voci.forEach(item=>{
+      const lotti=_ihcLottiAnticorpo(item, prods);
+      const v={item, n, gruppo:null, kit:'', risorse:{}, problema:''};
+      if(!lotti.length){ v.problema='non in magazzino'; caso.voci.push(v); return; }
+      const g=String(lotti[0].nome||item).trim().toLowerCase();
+      v.gruppo=g; v.nomeAb=lotti[0].nome;
+      if(scorta['ab:'+g]===undefined){ scorta['ab:'+g]=_ihcTestDisponibili(lotti); dispAb[g]=_ihcDispenserLista(lotti); lottiAb[g]=lotti.map(p=>p.id); }
+      const kit = corsaUltra ? 'UltraView' : _ihcKitPredefinito(item, lotti);
+      v.kit=kit;
+      infoAb[g]={nome:lotti[0].nome, breve:_ihcNomeBreve(lotti), kit};
+      v.risorse['ab:'+g]=n;
+      if(kit){ kitTest(kit); v.risorse[keyKit(kit)]=n; }
+      const flag=_ihcVoceProtocollo(item, lotti);
+      accAttivi.forEach(ac=>{ if(ac.regola==='vetrino' || flag.includes(ac.regola)) v.risorse[keyAcc(ac)]=n; });
+      // controllo voce da sola
+      if(!kit) v.problema='kit di rivelazione non impostato';
+      else if(scorta['ab:'+g]<=0) v.problema=(lotti.some(p=>(parseFloat(p.qty)||0)>0 && _ihcScaduto(p))?'solo lotti scaduti':'esaurito');
+      else if(scorta['ab:'+g]<n) v.problema='test insufficienti ('+scorta['ab:'+g]+' su '+n+')';
+      else if(scorta[keyKit(kit)]<n) v.problema='kit '+kit+' insufficiente ('+scorta[keyKit(kit)]+' test)';
+      else { const acc=accAttivi.find(ac=>v.risorse[keyAcc(ac)] && scorta[keyAcc(ac)]<n); if(acc) v.problema=acc.nome+' insufficiente'; }
+      caso.voci.push(v);
+    });
+    const ok=caso.voci.filter(v=>!v.problema);
+    caso.stato = ok.length===caso.voci.length ? 'pronto' : ok.length ? 'parziale' : 'bloccato';
+    caso.gruppi=[...new Set(caso.voci.map(v=>v.gruppo).filter(Boolean))];
+    caso.vetrini=caso.voci.length*n;
+    { const fabG={}; caso.voci.forEach(v=>{ if(v.gruppo) fabG[v.gruppo]=(fabG[v.gruppo]||0)+v.n; });
+      caso.posizioni=Object.keys(fabG).reduce((s,g)=>s+_ihcPosizioni(dispAb[g]||[], fabG[g]),0); }
+    if(caso.stato==='pronto' && (caso.posizioni>IHC_CORSA_MAX_AB || caso.vetrini>IHC_CORSA_MAX_VETRINI)) caso.troppoGrande=true;
+    casi.push(caso);
+  });
+  return {casi, scorta, infoAb, corsaUltra, dispAb, kitInfo, lottiAb};
+}
+// Sceglie la corsa: massimo numero di casi completi (urgenti ×3), poi più vetrini, poi i più vecchi
+function _ihcScegliCorsa(casi, scorta, dispAb){
+  dispAb = dispAb || {};
+  const cand=casi.filter(c=>c.stato==='pronto' && !c.troppoGrande);
+  cand.sort((a,b)=>(b.urgente-a.urgente) || (a.vetrini-b.vetrini) || (b.giorni-a.giorni));
+  const peso=c=>(c.urgente?3:1)*1e6 + c.vetrini*1e3 + Math.min(c.giorni,999);
+  let best={score:-1, scelti:[]}, nodi=0;
+  const usa=(ris,stock,segno)=>{ for(const k in ris) stock[k]-=segno*ris[k]; };
+  const stock={...scorta};
+  const slide={};   // gruppo → vetrini già nella corsa
+  const posiz=()=>Object.keys(slide).reduce((s,g)=>s+(slide[g]>0?_ihcPosizioni(dispAb[g]||[{test:Infinity}], slide[g]):0),0);
+  const ok=(c,gruppi,vetrini)=>{
+    if(vetrini+c.vetrini>IHC_CORSA_MAX_VETRINI) return false;
+    c.voci.forEach(v=>{ slide[v.gruppo]=(slide[v.gruppo]||0)+v.n; });
+    const pos=posiz();
+    c.voci.forEach(v=>{ slide[v.gruppo]-=v.n; });
+    if(pos>IHC_CORSA_MAX_AB) return false;
+    const fab={}; c.voci.forEach(v=>{ for(const k in v.risorse) fab[k]=(fab[k]||0)+v.risorse[k]; });
+    for(const k in fab) if((stock[k]||0)<fab[k]) return false;
+    return fab;
+  };
+  const resto=new Array(cand.length+1).fill(0); for(let i=cand.length-1;i>=0;i--) resto[i]=resto[i+1]+peso(cand[i]);
+  (function dfs(i, scelti, gruppi, vetrini, score){
+    if(++nodi>300000) return;
+    if(score>best.score){ best={score, scelti:scelti.slice()}; }
+    if(i>=cand.length || score+resto[i]<=best.score) return;
+    const c=cand[i]; const fab=ok(c,gruppi,vetrini);
+    if(fab){
+      const aggiunti=c.gruppi.filter(g=>!gruppi.has(g)); aggiunti.forEach(g=>gruppi.add(g));
+      for(const k in fab) stock[k]-=fab[k]; scelti.push(c); c.voci.forEach(v=>{ slide[v.gruppo]=(slide[v.gruppo]||0)+v.n; });
+      dfs(i+1, scelti, gruppi, vetrini+c.vetrini, score+peso(c));
+      scelti.pop(); for(const k in fab) stock[k]+=fab[k]; aggiunti.forEach(g=>gruppi.delete(g)); c.voci.forEach(v=>{ slide[v.gruppo]-=v.n; });
+    }
+    dfs(i+1, scelti, gruppi, vetrini, score);
+  })(0, [], new Set(), 0, 0);
+  // FIX [TRACCIABILITÀ]: solo casi completi (scelta di Ferdinando): niente riempimento con anticorpi sparsi
+  const gruppi=new Set(); let vetrini=0; const st={...scorta}; const extra=[];
+  best.scelti.forEach(c=>{ c.gruppi.forEach(g=>gruppi.add(g)); vetrini+=c.vetrini; c.voci.forEach(v=>{ for(const k in v.risorse) st[k]-=v.risorse[k]; }); });
+  return {scelti:best.scelti, extra, gruppi:[...gruppi], vetrini, stockDopo:st};
+}
+function _ihcPianoCorse(){
+  const sit=_ihcSituazioneCorsa();
+  const corse=[]; let rimasti=sit.casi.map(c=>({...c, voci:c.voci.slice()})); let scorta={...sit.scorta};
+  for(let k=0;k<3;k++){
+    const c=_ihcScegliCorsa(rimasti, scorta, sit.dispAb);
+    if(!c.scelti.length && !c.extra.length) break;
+    corse.push(c);
+    const fatti=new Set(c.scelti.map(x=>x.id)); const vociExtra=new Set(c.extra.map(e=>e.caso.id+'|'+e.voce.item));
+    rimasti=rimasti.filter(x=>!fatti.has(x.id)).map(x=>{ const voci=x.voci.filter(v=>!vociExtra.has(x.id+'|'+v.item)); return {...x, voci, vetrini:voci.length*x.n, gruppi:[...new Set(voci.map(v=>v.gruppo).filter(Boolean))]}; }).filter(x=>x.voci.length);
+    rimasti.forEach(x=>{ const okv=x.voci.filter(v=>!v.problema); x.stato= okv.length===x.voci.length?'pronto':okv.length?'parziale':'bloccato'; });
+    scorta=c.stockDopo;
+  }
+  return {sit, corse};
+}
+function openIhcCorsa(){ renderIhcCorsa(); const m=document.getElementById('modal-ihc-corsa'); if(m) m.classList.add('open'); }
+function renderIhcCorsa(){
+  const body=document.getElementById('ihcc-body'); if(!body) return;
+  let piano; try{ piano=_ihcPianoCorse(); }catch(e){ body.innerHTML='<div style="padding:20px;color:var(--red)">Errore nel calcolo: '+esc(e.message)+'</div>'; return; }
+  const {sit, corse}=piano; const casi=sit.casi;
+  if(!casi.length){ body.innerHTML='<div style="padding:28px;text-align:center;color:var(--text3)">✅ Nessuna richiesta IHC in attesa.</div>'; return; }
+  const nPr=casi.filter(c=>c.stato==='pronto').length, nPa=casi.filter(c=>c.stato==='parziale').length, nBl=casi.filter(c=>c.stato==='bloccato').length;
+  const kitLbl=k=>k==='OptiView'?'OPTI':k==='UltraView'?'ULTRA':'—';
+  const kitCls=k=>k==='OptiView'?'o':k==='UltraView'?'u':'';
+  let html=`<div class="ihcc-sum"><span class="c-ok">${nPr} pront${nPr===1?'o':'i'}</span><span class="c-pa">${nPa} parzial${nPa===1?'e':'i'}</span><span class="c-bl">${nBl} bloccat${nBl===1?'o':'i'}</span>${sit.corsaUltra?'<span class="c-u">⚡ Corsa solo UltraView attiva</span>':''}</div>`;
+  if(!corse.length){
+    html+=`<div class="ihcd-box" style="color:var(--text2)">Nessuna corsa possibile con la scorta attuale.</div>`;
+  }
+  corse.forEach((c,idx)=>{
+    const slot={}; // gruppo → vetrini
+    c.scelti.forEach(cs=>cs.voci.forEach(v=>{ slot[v.gruppo]=(slot[v.gruppo]||0)+v.n; }));
+    c.extra.forEach(e=>{ slot[e.voce.gruppo]=(slot[e.voce.gruppo]||0)+e.voce.n; });
+    let posUsate=0;
+    const tiles=Object.keys(slot).map(g=>{ const i=sit.infoAb[g]||{}; const lista=(sit.dispAb||{})[g]||[]; const nd=_ihcPosizioni(lista.length?lista:[{test:Infinity}], slot[g]); posUsate+=nd;
+      const s=_ihcScegliDispenser(lista, slot[g]);
+      const stato = s.inUso && s.inUso.test>=slot[g] ? `<em class="d ok">in macchina ${s.inUso.test} ✓</em>`
+        : s.carica ? `<em class="d sw">↻ lotto ${esc(s.carica.lotto||'—')} (${s.carica.test})${nd>1?' + altro':''}</em>` : '';
+      return `<div class="ihcc-slot${stato.includes(' sw')?' cambio':''}"><b>${esc(i.breve||i.nome||g)}</b><span class="k ${kitCls(i.kit)}">${kitLbl(i.kit)}</span><small>${slot[g]} vetrin${slot[g]===1?'o':'i'}${nd>1?' · '+nd+' posizioni':''}</small>${idx===0?stato:''}</div>`; });
+    for(let k=posUsate;k<IHC_CORSA_MAX_AB;k++) tiles.push('<div class="ihcc-slot vuoto">libero</div>');
+    const kitUso={}; Object.keys(slot).forEach(g=>{ const k=(sit.infoAb[g]||{}).kit; if(k) kitUso[k]=(kitUso[k]||0)+slot[g]; });
+    const pct=Math.round(c.vetrini/IHC_CORSA_MAX_VETRINI*100);
+    html+=`<div class="ihcc-corsa${idx?' succ':''}">
+      <div class="ihcc-h"><b>${idx===0?'Corsa consigliata':'Corsa '+(idx+1)}</b><span>${posUsate}/${IHC_CORSA_MAX_AB} posizioni · ${c.vetrini}/${IHC_CORSA_MAX_VETRINI} vetrini</span></div>
+      <div class="ihcm-bar" style="height:6px;margin:4px 0 10px"><i style="width:${pct}%;background:var(--accent2)"></i></div>
+      ${idx===0?`<div class="ihcc-slots">${tiles.join('')}</div>`:''}
+      <div class="ihcc-casi">${c.scelti.map(cs=>`<div class="ihcc-caso"><span class="ok">✓</span><b>${esc(cs.caso)}</b>${cs.urgente?'<span class="u">urgente</span>':''}<span class="v">${cs.voci.map(v=>esc(v.item)).join(', ')}</span><small>${cs.vetrini} vetr.</small></div>`).join('')}
+      ${c.extra.length?`<div class="ihcc-nota">Con il posto rimasto, anche (caso non completo):</div>`+c.extra.map(e=>`<div class="ihcc-caso"><span class="pa">+</span><b>${esc(e.caso.caso)}</b><span class="v">${esc(e.voce.item)}</span><small>${e.voce.n} vetr.</small></div>`).join(''):''}</div>
+      ${idx===0?`<div class="ihcc-kit">${Object.keys(kitUso).map(k=>{ const ki=(sit.kitInfo||{})[k]||{}; const uso=ki.inUso;
+        if(uso && uso.test>=kitUso[k]) return `${esc(k)}: ${kitUso[k]} test · in macchina ${uso.test} ✓`;
+        return `${esc(k)}: ${kitUso[k]} test`; }).join(' · ')}</div>
+      ${(()=>{ const cc=_ihcCambiCorsa(sit, c).cambi; if(!cc.length) return '';
+        return `<div class="ihcc-cambi"><b>↻ Prima di partire carica:</b>${cc.map(x=>`<div>• <b>${esc(x.nome)}</b>${x.tipo==='kit'?' (kit)':''}: servono ${x.serve} test, ${x.inUso?'in macchina solo '+x.inUso.test:'nessuno in macchina'} → <b>lotto ${esc(x.carica.lotto||'—')}</b> (${x.carica.test} test${x.carica.scad?', scad. '+esc(_ihcFmtD(x.carica.scad)):''})${x.basta?'':' + un secondo dispenser'}</div>`).join('')}<small>"Corsa eseguita" registra anche i cambi: il dispenser tolto resta da parte con i suoi test.</small></div>`; })()}
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><button class="btn btn-ok" onclick="ihcCorsaFatta()">✓ Corsa eseguita: segna tutto come fatto</button></div>`:''}
+    </div>`;
+  });
+  const fuori=casi.filter(c=>c.stato!=='pronto' || c.troppoGrande);
+  if(fuori.length){
+    html+=`<div class="ihcc-sez">Non possono partire (o solo in parte)</div>`;
+    html+=fuori.map(c=>`<div class="ihcc-caso blocco"><span class="${c.stato==='bloccato'?'bl':'pa'}">${c.stato==='bloccato'?'⛔':'◐'}</span><b>${esc(c.caso)}</b><span class="v">${c.troppoGrande?'da solo supera '+IHC_CORSA_MAX_AB+' posizioni o '+IHC_CORSA_MAX_VETRINI+' vetrini: va diviso in due corse':c.voci.filter(v=>v.problema).map(v=>esc(v.item)+': '+esc(v.problema)).join(' · ')}</span></div>`).join('');
+  }
+  html+=`<div style="font-size:11px;color:var(--text3);margin-top:12px">Limiti: ${IHC_CORSA_MAX_AB} posizioni anticorpo e ${IHC_CORSA_MAX_VETRINI} vetrini per corsa · solo casi completi · un anticorpo = una posizione: se il dispenser in macchina non basta si carica quello indicato (2 posizioni solo se nessun dispenser da solo basta) · vetrini per anticorpo = blocchetti del caso · gli urgenti contano come 3 casi.</div>`;
+  body.innerHTML=html;
+}
+// Segna come fatte tutte le voci della corsa consigliata (scala il magazzino come le spunte una a una)
+async function ihcCorsaFatta(){
+  let piano; try{ piano=_ihcPianoCorse(); }catch(e){ return; }
+  const c=piano.corse[0]; if(!c) return;
+  const voci=[]; c.scelti.forEach(cs=>cs.voci.forEach(v=>voci.push([cs.id, v.item]))); c.extra.forEach(e=>voci.push([e.caso.id, e.voce.item]));
+  const cambi=_ihcCambiCorsa(piano.sit, c).cambi.filter(x=>x.basta);
+  if(!confirm('Segnare come eseguiti '+voci.length+' anticorpi ('+c.vetrini+' vetrini)?\n\n'
+    +(cambi.length?'Registro anche i dispenser caricati:\n• '+cambi.map(x=>x.nome+' → lotto '+(x.carica.lotto||'—')).join('\n• ')+'\n\n':'')
+    +'Il magazzino IHC viene scalato come per le spunte singole.')) return;
+  _takeSnapshot('Corsa IHC eseguita');
+  // FIX [TRACCIABILITÀ]: prima i cambi di dispenser, poi lo scalo dei test sui dispenser caricati
+  if(cambi.length){
+    const prods=loadP(), movs=loadM(), now=new Date().toISOString(); const fatti=[];
+    cambi.forEach(x=>{ try{ const m=_ihcApplicaCambio(prods, x, movs, now); if(m) fatti.push(m); }catch(e){} });
+    await saveP(prods); saveM(movs);
+    if(fatti.length) toast('↻ '+fatti.join(' · '),'info');
+  }
+  for(const [id,item] of voci){ try{ await toggleIHCAnticorpo(id, item); }catch(e){} }
+  toast('✓ Corsa registrata: '+voci.length+' anticorpi','success');
+  renderIhcCorsa();
 }
 
 function openNuovaIHC(preset){
@@ -13703,6 +14039,7 @@ function renderDashboardPreview(){
   // Widget stato casi (ciclo vita)
   try { if (typeof renderStatoCasiWidget === 'function') renderStatoCasiWidget(); } catch(e) { console.warn('[statoCasi]', e); }
   try { if (typeof _renderIhcMagHome === 'function') _renderIhcMagHome(); } catch(e) { console.warn('[ihcMag]', e); }
+  try { if (typeof _renderIhcCorsaHome === 'function') _renderIhcCorsaHome(); } catch(e) { console.warn('[ihcCorsa]', e); }   // FIX [UI/UX]
 
   updateRailBadges();
 }
