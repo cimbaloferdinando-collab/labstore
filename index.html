@@ -1690,7 +1690,6 @@ input[type=number]{font-size:16px}
           <button class="hbtn2 ok" onclick="apriCaricoScan()">⬆ Carico Scan</button>
           <button class="hbtn2 warn" onclick="openModalScarica()">⬇ Scarico</button>
           <button class="hbtn2" onclick="openManualMovModal('carico')">＋ Carico man.</button>
-          <button class="hbtn2" onclick="openManualMovModal('scarico')">− Scarico man.</button>
         </div>
       </div>
       <div class="card">
@@ -2242,7 +2241,6 @@ input[type=number]{font-size:16px}
     <button class="fab-opt" onclick="closeFabSheet();apriCaricoScan()"><span>⬆</span>Carico con scanner</button>
     <button class="fab-opt" onclick="closeFabSheet();openManualMovModal('carico')"><span>＋</span>Carico manuale</button>
     <button class="fab-opt" onclick="closeFabSheet();openModalScarica()"><span>⬇</span>Scarico (scanner o ricerca)</button>
-    <button class="fab-opt" onclick="closeFabSheet();openManualMovModal('scarico')"><span>−</span>Scarico manuale</button>
     <button class="fab-opt" onclick="closeFabSheet();openProductModal()"><span>📦</span>Nuovo prodotto</button>
   </div>
 
@@ -5957,6 +5955,9 @@ function saveProduct(){
 // MODAL: MOVIMENTO MANUALE
 // ══════════════════════════════════════════
 function openManualMovModal(tipo){
+  // FIX [MAGAZZINO]: lo scarico passa sempre dalla finestra con ricerca e soli lotti con giacenza
+  // (la vecchia lista elencava anche i lotti esauriti)
+  if(tipo==='scarico'){ openScaricaModal(); return; }
   manualMovType=tipo;
   document.getElementById('mov-modal-title').textContent=tipo==='carico'?'Carico Manuale':'Scarico Manuale';
   const sel=document.getElementById('m-prod');
@@ -6155,11 +6156,17 @@ function openScaricaModal(){
   const prods=loadP();
   // Mostra solo i prodotti che hanno almeno un lotto con flaconi residui (qty>0).
   // I lotti esauriti (anche con bidone aperto) restano in magazzino ma NON qui.
-  const _haDispon = (nome) => loadP().filter(p=>p.nome===nome).some(p => (parseInt(p.qty,10)||0) > 0);
-  _scNomi=[...new Set(prods.map(p=>p.nome))].filter(_haDispon).sort();
+  // FIX [MAGAZZINO]: stesso criterio dei lotti (parseFloat), una sola lettura dei prodotti
+  const _conGiacenza=new Set(prods.filter(p=>_scQty(p)>0).map(p=>p.nome));
+  _scNomi=[...new Set(prods.map(p=>p.nome))].filter(n=>_conGiacenza.has(n)).sort((a,b)=>String(a).localeCompare(String(b),'it'));
   document.getElementById('sc-prod').value='';
   document.getElementById('sc-prod-search').value='';
   document.getElementById('sc-prod-chosen').style.display='none';
+  // FIX [UI/UX]: dopo uno scarico la ricerca restava nascosta (la scelta del prodotto la nasconde) → si rimette sempre
+  { const fg=document.getElementById('sc-prod-search').closest('.fg'); if(fg) fg.style.display=''; }
+  { const ll=document.getElementById('sc-lotti-list'); if(ll) ll.innerHTML=''; }
+  { const nt=document.getElementById('sc-man-note'); if(nt) nt.value=''; }
+  { const q=document.getElementById('sc-man-qty'); if(q){ q.value='1'; q.removeAttribute('max'); } }
   scFiltraProdotti();
   setTimeout(()=>document.getElementById('sc-prod-search')?.focus(), 120);
   document.getElementById('sc-lotti-wrap').style.display='none';
@@ -6169,6 +6176,8 @@ function openScaricaModal(){
   scaricaTab('manuale');
   document.getElementById('modal-scarica').classList.add('open');
 }
+// giacenza di un lotto (numero; i lotti a zero o negativi sono esauriti)
+function _scQty(p){ const q=parseFloat(p&&p.qty); return isFinite(q) ? Math.round(q*1000)/1000 : 0; }
 // F3 — lista prodotti filtrata: sostituisce la select nativa
 function scFiltraProdotti(){
   const q=(document.getElementById('sc-prod-search').value||'').toLowerCase().trim();
@@ -6179,8 +6188,9 @@ function scFiltraProdotti(){
     list.innerHTML='<div style="font-size:13px;color:var(--text3);padding:10px">Nessun prodotto disponibile con questo nome</div>';
     return;
   }
+  const _P=loadP();
   list.innerHTML=match.slice(0,40).map(n=>{
-    const tot=loadP().filter(x=>x.nome===n).reduce((s,x)=>s+(parseInt(x.qty,10)||0),0);
+    const tot=_P.filter(x=>x.nome===n).reduce((s,x)=>s+Math.max(0,_scQty(x)),0);
     return '<button type="button" class="sc-prod-opt" onclick="scScegliProdotto(this.dataset.n)" data-n="'+
       n.replace(/"/g,'&quot;')+'" style="display:flex;width:100%;align-items:center;gap:10px;min-height:48px;'+
       'padding:8px 12px;margin-bottom:5px;background:var(--surface);border:1px solid var(--border);'+
@@ -6270,13 +6280,17 @@ function scaricaSelProd(){
   if(!nome){ document.getElementById('sc-lotti-wrap').style.display='none'; document.getElementById('sc-man-qty-wrap').style.display='none'; document.getElementById('sc-man-confirm-btn').style.display='none'; return; }
   // F3 — ordine per scadenza crescente: il lotto da consumare prima sta in cima.
   // I lotti senza scadenza vanno in fondo (non sono confrontabili).
-  const prods=loadP().filter(p=>p.nome===nome).filter(p => (parseInt(p.qty,10)||0) > 0)
+  // FIX [MAGAZZINO]: solo lotti con giacenza (> 0); gli scaduti in fondo, segnalati e mai preselezionati
+  const _scad=p=>!!(p.scadenza && typeof daysUntil==='function' && daysUntil(p.scadenza)<0);
+  const prods=loadP().filter(p=>p.nome===nome).filter(p => _scQty(p) > 0)
     .sort((a,b)=>{
+      const sa=_scad(a), sb=_scad(b); if(sa!==sb) return sa?1:-1;
       if(!a.scadenza && !b.scadenza) return 0;
       if(!a.scadenza) return 1;
       if(!b.scadenza) return -1;
       return String(a.scadenza).localeCompare(String(b.scadenza));
     });
+  const _primoBuono=prods.findIndex(p=>!_scad(p));
   const wrap=document.getElementById('sc-lotti-list');
   wrap.innerHTML='';
   if(!prods.length){
@@ -6289,21 +6303,22 @@ function scaricaSelProd(){
   prods.forEach((p,i)=>{
     const div=document.createElement('div');
     div.style.cssText='display:flex;align-items:center;gap:10px;min-height:52px;padding:10px 12px;border:1px solid var(--border);border-radius:6px;margin-bottom:6px;cursor:pointer;transition:all .12s;flex-wrap:wrap';
-    const consigliato = (i===0 && prods.length>1 && p.scadenza)
-      ? '<span class="badge bg-green" style="font-size:10px">Consigliato</span>' : '';
-    div.innerHTML=`<span style="font-family:'DM Mono',monospace;font-weight:600;font-size:15px">${p.lotto||'—'}</span>${consigliato}<span style="color:var(--text3);font-size:13px">${p.scadenza?'scade '+fmtDate(p.scadenza):'senza scadenza'}</span><span style="margin-left:auto;font-family:'DM Mono',monospace;color:var(--green);font-weight:700;font-size:15px">${p.qty} ${p.unita||''}</span>`;
+    const scaduto=_scad(p);
+    const consigliato = scaduto ? '<span class="badge bg-red" style="font-size:10px">Scaduto</span>'
+      : (i===_primoBuono && prods.length>1 && p.scadenza) ? '<span class="badge bg-green" style="font-size:10px">Consigliato</span>' : '';
+    div.innerHTML=`<span style="font-family:'DM Mono',monospace;font-weight:600;font-size:15px">${esc(p.lotto||'—')}</span>${consigliato}<span style="color:${scaduto?'var(--red)':'var(--text3)'};font-size:13px">${p.scadenza?(scaduto?'scaduto il ':'scade ')+fmtDate(p.scadenza):'senza scadenza'}</span><span style="margin-left:auto;font-family:'DM Mono',monospace;color:var(--green);font-weight:700;font-size:15px">${_scQty(p)} ${esc(p.unita||'')}</span>`;
     div.onclick=function(){
       document.querySelectorAll('#sc-lotti-list div').forEach(d=>{ d.style.background=''; d.style.borderColor='var(--border)'; });
       div.style.background='rgba(26,90,154,.08)'; div.style.borderColor='var(--accent2)';
       scaricaSelectedId=p.id;
       document.getElementById('sc-man-qty-wrap').style.display='';
       document.getElementById('sc-man-confirm-btn').style.display='';
-      document.getElementById('sc-man-qty').max=p.qty;
-      document.getElementById('sc-man-info').innerHTML=`<div style="font-size:12px;color:var(--text3)">Disponibili: <strong style="color:var(--green)">${p.qty}</strong> ${p.unita||''}</div>`;
+      document.getElementById('sc-man-qty').max=_scQty(p);
+      document.getElementById('sc-man-info').innerHTML=`<div style="font-size:12px;color:var(--text3)">Disponibili: <strong style="color:var(--green)">${_scQty(p)}</strong> ${esc(p.unita||'')}${scaduto?' · <strong style="color:var(--red)">lotto scaduto</strong>':''}</div>`;
     };
     wrap.appendChild(div);
-    // F3 — preseleziona il primo (scadenza più vicina): un tocco in meno nel caso tipico
-    if(i===0) setTimeout(()=>div.onclick(), 0);
+    // F3 — preseleziona il primo NON scaduto (scadenza più vicina): un tocco in meno nel caso tipico
+    if(i===(_primoBuono<0?-1:_primoBuono)) setTimeout(()=>div.onclick(), 0);
   });
   document.getElementById('sc-lotti-wrap').style.display='';
 }
@@ -6412,7 +6427,7 @@ function confirmScaricaManuale(){
   const note=document.getElementById('sc-man-note').value;
   const prods=loadP(), p=prods.find(x=>x.id===scaricaSelectedId);
   if(!p){ toast('Prodotto non trovato','error'); return; }
-  if(p.qty<qty){ toast('Quantità insufficiente — disponibili: '+p.qty,'error'); return; }
+  if(_scQty(p)<qty){ toast('Quantità insufficiente — disponibili: '+_scQty(p),'error'); return; }
   _takeSnapshot('Scarico '+qty+' '+p.nome); // FIX [UNDO]
   p.qty-=qty; saveP(prods);
   const movs=loadM(); movs.unshift({id:genId(),ts:new Date().toISOString(),tipo:'scarico',prod:p.nome,prodId:p.id,qty,lotto:p.lotto||'',note:note||'Scarico manuale'}); saveM(movs);
