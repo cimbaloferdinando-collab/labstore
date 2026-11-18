@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#1a2f5e">
+<title>Richieste IHC · LupoLab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<!--
+  LupoLab · RICHIESTE IHC DEL PATOLOGO — file separato dal gestionale (index.html)
+  Legge e scrive SOLO la tabella ihc_requests dello stesso database Supabase.
+  Il gestionale vede le richieste con il badge "🆕 dal patologo"; questa pagina si aggiorna da sola
+  con l'avanzamento del laboratorio (anticorpi spuntati / corsa eseguita).
+  Dati sul dispositivo: solo pat_nome, pat_visto, pat_cache (prefisso diverso dal gestionale).
+-->
+<style>
+:root{
+  --accent:#1a2f5e;--accent2:#2563eb;--bg:#f0f2f7;--surface:#fff;--bg3:#f6f8fc;
+  --border:#e2e8f0;--border2:#cbd5e1;--border-faint:#eef2f7;
+  --text:#0f172a;--text2:#374151;--text3:#6b7280;
+  --green:#047857;--green-bg:#ecfdf5;--green-bd:#a7f3d0;
+  --red:#b91c1c;--red-bg:#fef2f2;--yellow:#b45309;
+  --blue:#1d4ed8;--blue-bg:#eff6ff;--orange:#c2410c;--orange-bg:#fff7ed;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;font-size:14px;line-height:1.5;color:var(--text2);background:var(--bg);min-height:100vh;-webkit-font-smoothing:antialiased}
+button{font-family:inherit;cursor:pointer}
+.pat-top{position:sticky;top:0;z-index:5;display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 16px;padding-top:max(12px,env(safe-area-inset-top));background:var(--accent);color:#fff}
+.pat-top b{font-size:16px;display:block}.pat-top span{font-size:12px;opacity:.85}
+.pat-top a{color:#fff;opacity:.85;text-decoration:underline;cursor:pointer}
+.pat-top-r button{background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.35);border-radius:8px;padding:7px 11px;font-size:13px}
+.pat-avv{background:var(--orange-bg);color:var(--orange);font-size:12.5px;padding:8px 16px}
+.pat-tabs{display:flex;gap:6px;padding:12px 16px 0;max-width:820px;margin:0 auto}
+.pat-tabs button{flex:1;padding:11px 8px;border:1px solid var(--border2);background:var(--surface);border-radius:10px;font-size:14px;font-weight:600;color:var(--text2)}
+.pat-tabs button.on{background:var(--accent2);border-color:var(--accent2);color:#fff}
+.pat-tabs i{font-style:normal;display:inline-block;min-width:18px;padding:0 5px;border-radius:9px;background:rgba(0,0,0,.18);font-size:11px;margin-left:4px}
+.pat-tabs i.g{background:var(--green);color:#fff}
+.pat-main{max-width:820px;margin:0 auto;padding:12px 16px 60px}
+.pat-form{display:flex;flex-direction:column;gap:12px}
+.pat-row2{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:10px}
+.pat-row2 label,.pat-row2 input{min-width:0;width:100%}
+.pat-form label{display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.04em}
+.pat-form input,.pat-form textarea,.pat-cerca{padding:11px;border:1px solid var(--border2);border-radius:10px;font-size:15px;font-family:inherit;background:var(--surface);color:var(--text);text-transform:none;letter-spacing:0;font-weight:400;width:100%}
+.pat-lbl{font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.04em;display:flex;justify-content:space-between}
+.pat-lbl span{color:var(--accent2);text-transform:none}
+.pat-ab{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:6px}
+.pat-chip{padding:10px 6px;border:1px solid var(--border2);border-radius:10px;background:var(--surface);color:var(--text2);font-size:13.5px;user-select:none;-webkit-user-select:none}
+.pat-chip.on{background:var(--accent2);border-color:var(--accent2);color:#fff;font-weight:700}
+.pat-chip.nasc{display:none}
+.pat-form .pat-check{flex-direction:row;align-items:center;gap:8px;font-size:15px;text-transform:none;letter-spacing:0;color:var(--text);font-weight:600}
+.pat-check input{width:20px;height:20px}
+.pat-btns{display:flex;gap:8px;margin-top:4px}
+.pat-invia{flex:1;padding:14px;border:0;border-radius:12px;background:var(--green);color:#fff;font-size:16px;font-weight:800}
+.pat-invia:disabled{opacity:.6}
+.pat-sec{padding:14px 16px;border:1px solid var(--border2);border-radius:12px;background:var(--surface);color:var(--text2);font-size:14px}
+.pat-filtri{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.pat-filtri button{padding:7px 12px;border:1px solid var(--border2);border-radius:18px;background:var(--surface);font-size:13px;color:var(--text2)}
+.pat-filtri button.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.pat-vuoto{padding:30px;text-align:center;color:var(--text3)}
+.pat-card{background:var(--surface);border:1px solid var(--border);border-left:4px solid var(--blue);border-radius:12px;padding:11px 13px;margin-bottom:10px}
+.pat-card.corso{border-left-color:var(--orange)}.pat-card.fatta{border-left-color:var(--green)}
+.pat-card.nov{box-shadow:0 0 0 2px var(--green-bd)}
+.pat-card-h{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.pat-card-h b{font-family:'DM Mono',monospace;font-size:15px;color:var(--text)}
+.pat-urg{font-size:10.5px;font-weight:700;color:#fff;background:var(--red);border-radius:5px;padding:1px 6px}
+.pat-nov{font-size:10.5px;font-weight:700;color:#fff;background:var(--green);border-radius:5px;padding:1px 6px}
+.pat-st{margin-left:auto;font-size:11.5px;font-weight:700;border-radius:6px;padding:2px 8px;background:var(--blue-bg);color:var(--blue)}
+.pat-st.corso{background:var(--orange-bg);color:var(--orange)}.pat-st.fatta{background:var(--green-bg);color:var(--green)}
+.pat-card-d{font-size:11.5px;color:var(--text3);margin:3px 0 6px}
+.pat-rip{font-size:12px;color:var(--orange);margin:-2px 0 6px}
+.pat-bar{height:5px;border-radius:3px;background:var(--bg3);overflow:hidden;margin:2px 0 6px}
+.pat-bar i{display:block;height:100%;background:var(--orange);border-radius:3px}
+.pat-card.fatta .pat-bar i{background:var(--green)}
+.pat-abr{display:flex;align-items:center;gap:8px;padding:4px 0;font-size:14px;border-top:1px solid var(--border-faint)}
+.pat-abr .n{flex:1;color:var(--text2)}.pat-abr.fatto .n{color:var(--text);font-weight:600}
+.pat-abr .s{font-size:11.5px;color:var(--text3);white-space:nowrap}
+.pat-abr.fatto .s{color:var(--green);font-weight:700}
+.pat-card-n{font-size:12.5px;color:var(--text2);margin-top:6px}
+.pat-card-a{display:flex;gap:8px;margin-top:8px}
+.pat-card-a button{padding:8px 12px;border:1px solid var(--border2);border-radius:8px;background:var(--surface);font-size:13px}
+.pat-card-a button.del{color:var(--red)}
+.pat-benv{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px 16px}
+.pat-benv h2{margin:0 0 4px;font-size:19px;color:var(--text)}.pat-benv p{margin:0;color:var(--text3);font-size:13px}
+.pat-nomi{display:flex;flex-direction:column;gap:8px;margin:12px 0}
+.pat-nomi button{padding:13px;border:1px solid var(--border2);border-radius:10px;background:var(--surface);font-size:15px;font-weight:600;color:var(--text);text-align:left}
+.toast-container{position:fixed;bottom:calc(20px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);z-index:2000;display:flex;flex-direction:column;gap:8px;pointer-events:none;align-items:center;width:max-content;max-width:92vw}
+.toast{background:var(--accent);color:#fff;padding:10px 20px;border-radius:8px;font-size:13px;font-weight:500;opacity:0;transform:translateY(20px);transition:opacity .25s,transform .25s;box-shadow:0 6px 20px rgba(0,0,0,.18)}
+.toast.show{opacity:1;transform:translateY(0)}
+.toast.t-success{background:var(--green)}.toast.t-error{background:var(--red)}.toast.t-warn{background:var(--yellow)}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="toast-container" class="toast-container"></div>
+<script>
+'use strict';
+// ── stesso database del gestionale ──
+const SUPA_URL='https://vaxiuupqxdrgpldgweuw.supabase.co';
+const SUPA_KEY='sb_publishable_mWRTRNJwcIRcEIYLtJqJ5A_YvdM9iYH';
+const TAB='ihc_requests';
+// chiavi sul dispositivo: prefisso pat_ (il gestionale usa ls_*)
+const K_NOME='pat_nome', K_VISTO='pat_visto', K_CACHE='pat_cache';
+
+// Anticorpi del modulo di richiesta IHC-01
+const IHC_MODULO_AB=['34βE12','Actina (ASM)','AFP','BCC (34βE12+p63)','BCL2','BCL6','Caldesmone','Calponina','CD10','CD138','CD20','CD23','CD3','CD30','CD34','CD45 (LCA)','CD5','CD56','CD68 (KP-1)','CDX-2','Ciclina D1','CK19','CK20','CK5/6','CK7','Cromogranina A','Desmina','E-caderina','EMA','ER','HBME-1','HepPar-1','HER2/neu','HMB-45','H. pylori','Ki67','Melan A','p16','p53','p63','PanCK (AE1-AE3)','PAX-5','PLAP','PR','PRAME','PSA','S100','Sinaptofisina','SOX-10','TTF-1','Vimentina','WT1'];
+
+// ── utilità ──
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const genId=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+function oggi(){ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function fmtDate(ds){ if(!ds) return '—'; const [y,m,d]=String(ds).slice(0,10).split('-'); return d+'/'+m+'/'+y; }
+function leggi(k,def){ try{ const v=localStorage.getItem(k); return v==null?def:JSON.parse(v); }catch(e){ return def; } }
+function scrivi(k,v){ try{ if(v==null) localStorage.removeItem(k); else localStorage.setItem(k,JSON.stringify(v)); }catch(e){} }
+function toast(msg,type){
+  const c=document.getElementById('toast-container'); const t=document.createElement('div');
+  t.className='toast t-'+(type||'info'); t.textContent=msg; c.appendChild(t);
+  requestAnimationFrame(()=>t.classList.add('show'));
+  setTimeout(()=>{ t.classList.remove('show'); setTimeout(()=>t.remove(),300); }, type==='error'?6000:3500);
+}
+function parseAb(str){ return String(str||'').split(/[,\n]+/).map(s=>s.trim()).filter(Boolean); }
+
+// ── database ──
+async function api(method, query, body){
+  const headers={'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,'Content-Type':'application/json'};
+  if(method!=='GET') headers['Prefer']='return=minimal';
+  const res=await fetch(SUPA_URL+'/rest/v1/'+TAB+query,{method, headers, body:body?JSON.stringify(body):undefined});
+  const raw=await res.text();
+  if(!res.ok){
+    if(/column|PGRST204|42703/i.test(raw)) throw new Error('Nel database manca una colonna delle richieste: avvisa il laboratorio.');
+    throw new Error('Errore del database ('+res.status+')');
+  }
+  return raw ? JSON.parse(raw) : true;
+}
+let _lista=leggi(K_CACHE,[])||[], _online=true, _caricando=false;
+async function carica(){
+  if(_caricando) return; _caricando=true;
+  try{
+    let tutte=[], off=0;
+    for(;;){ const rows=await api('GET','?select=*&order=data_richiesta.desc.nullslast,id.desc&limit=1000&offset='+off);
+      tutte=tutte.concat(rows); if(rows.length<1000 || tutte.length>=5000) break; off+=1000; }
+    _lista=tutte; _online=true;
+    scrivi(K_CACHE, _mie(tutte).slice(0,150));   // offline si vedono le ultime (solo le sue)
+  }catch(e){ _online=false; }
+  finally{ _caricando=false; }
+}
+async function rileggi(id){ const r=await api('GET','?select=*&id=eq.'+encodeURIComponent(id)); return Array.isArray(r)?r[0]:null; }
+
+// ── nome del patologo ──
+function nome(){ const n=leggi(K_NOME,''); return typeof n==='string'?n:''; }
+// "Dott. Mario Rossi", "dr rossi", "Rossi" → stesso patologo
+function normNome(n){ return String(n||'').toLowerCase().replace(/\b(dott|dr|prof)(\.?ssa|essa)?\.?(?=\s|$)/g,' ').replace(/[^a-zàèéìòù' ]/g,' ').replace(/\s+/g,' ').trim(); }
+function stessoNome(a,b){
+  const x=normNome(a), y=normNome(b); if(!x||!y) return false; if(x===y) return true;
+  const tx=x.split(' ').filter(t=>t.length>1), ty=y.split(' ').filter(t=>t.length>1);
+  const [corto,lungo]=tx.length<=ty.length?[tx,ty]:[ty,tx];
+  return corto.length>0 && corto.every(t=>lungo.includes(t));
+}
+function _mie(arr){ const n=nome(); return n ? (arr||_lista).filter(r=>stessoNome(r.patologo,n)) : []; }
+
+// ── stato letto dall'avanzamento del laboratorio ──
+function stato(r){
+  const items=parseAb(r.anticorpo); const done=(Array.isArray(r.anticorpi_done)?r.anticorpi_done:[]).filter(x=>items.includes(x));
+  if(r.stato==='completata' || (items.length && done.length===items.length)) return {k:'fatta', t:'✓ Pronta', done, items};
+  if(done.length || r.stato==='in_lavorazione') return {k:'corso', t:'In lavorazione · '+done.length+'/'+items.length, done, items};
+  if(r.creato_da==='patologo' && !r.visto_lab) return {k:'attesa', t:'Inviata', done, items};
+  return {k:'attesa', t:'Presa in carico', done, items};
+}
+function firma(r){ const s=stato(r); return s.k+'|'+s.done.join(',')+'|'+(r.anticorpo||'')+'|'+(r.visto_lab?1:0); }
+function cambiate(mie){
+  let visto=leggi(K_VISTO,null);
+  if(!visto || typeof visto!=='object'){ visto={}; mie.forEach(r=>{ visto[r.id]=firma(r); }); scrivi(K_VISTO,visto); return new Set(); }
+  const ch=new Set();
+  mie.forEach(r=>{ const f=firma(r);
+    if(!(r.id in visto)){ if(r.creato_da!=='patologo') ch.add(r.id); }
+    else if(visto[r.id]!==f) ch.add(r.id); });
+  return ch;
+}
+function segnaViste(mie){ const v={}; mie.forEach(r=>{ v[r.id]=firma(r); }); scrivi(K_VISTO,v); }
+
+// ── interfaccia ──
+let _tab='nuova', _sel=new Set(), _edit=null, _filtro='aperte', _q='', _novita=new Set(), _cambioNome=false, _invio=false;
+function occupato(){ const a=document.activeElement; return a && /INPUT|TEXTAREA|SELECT/.test(a.tagName); }
+function render(){
+  const box=document.getElementById('app'); const n=nome();
+  const top=`<header class="pat-top"><div><b>LupoLab · Richieste IHC</b><span>${n&&!_cambioNome?esc(n)+' · <a onclick="cambiaNome()">cambia</a>':'Laboratorio di Anatomia Patologica'}</span></div>
+    <div class="pat-top-r"><button type="button" onclick="aggiorna()" title="Aggiorna">↻</button></div></header>
+    ${_online?'':'<div class="pat-avv">⚠ Nessuna connessione con il laboratorio: quello che vedi potrebbe non essere aggiornato e per ora non si possono inviare richieste.</div>'}`;
+  if(!n || _cambioNome){ box.innerHTML=top+'<main class="pat-main">'+htmlNome()+'</main>'; return; }
+  const mie=_mie();
+  const ch=cambiate(mie);
+  if(_tab==='mie'){ ch.forEach(id=>_novita.add(id)); segnaViste(mie); }
+  const nAperte=mie.filter(r=>stato(r).k!=='fatta').length;
+  let h=top+`<nav class="pat-tabs"><button type="button" class="${_tab==='nuova'?'on':''}" onclick="tab('nuova')">${_edit?'✏️ Modifica richiesta':'＋ Nuova richiesta'}</button>
+      <button type="button" class="${_tab==='mie'?'on':''}" onclick="tab('mie')">Le mie richieste${nAperte?' <i>'+nAperte+'</i>':''}${_tab!=='mie'&&ch.size?' <i class="g" title="aggiornate dal laboratorio">'+ch.size+' nuov'+(ch.size===1?'a':'e')+'</i>':''}</button></nav>
+    <main class="pat-main">`;
+  h+=_tab==='nuova' ? htmlNuova() : htmlMie(mie);
+  box.innerHTML=h+'</main>';
+}
+function tab(t){ if(t!=='mie') _novita=new Set(); _tab=t; if(t==='mie' && _edit){ _edit=null; _sel=new Set(); } render(); window.scrollTo(0,0); }
+async function aggiorna(){ toast('Aggiornamento…','info'); await carica(); render(); if(!_online) toast('Nessuna connessione','warn'); }
+
+function htmlNome(){
+  const gruppi=[];
+  _lista.forEach(r=>{ const n=String(r.patologo||'').trim(); if(!n) return;
+    let g=gruppi.find(x=>stessoNome(x.nome,n)); if(!g){ g={nome:n, conti:{}, tot:0}; gruppi.push(g); }
+    g.conti[n]=(g.conti[n]||0)+1; g.tot++; });
+  gruppi.forEach(g=>{ g.nome=Object.keys(g.conti).sort((a,b)=>g.conti[b]-g.conti[a]||b.length-a.length)[0]; });
+  gruppi.sort((a,b)=>b.tot-a.tot);
+  return `<div class="pat-benv"><h2>Chi sei?</h2><p>Scegli il tuo nome: vedrai le richieste IHC a tuo nome, anche quelle registrate dal laboratorio.</p>
+    ${gruppi.length?`<div class="pat-nomi">${gruppi.slice(0,8).map(g=>`<button type="button" data-n="${esc(g.nome)}" onclick="scegliNome(this.dataset.n)">👤 ${esc(g.nome)} <small style="color:var(--text3);font-weight:400">· ${g.tot} richiest${g.tot===1?'a':'e'}</small></button>`).join('')}</div><p>Non sei in elenco?</p>`:''}
+    <form class="pat-form" style="margin-top:10px" onsubmit="event.preventDefault();scegliNome(document.getElementById('pat-nome').value)">
+      <label>Il tuo nome (come lo scrive il laboratorio)<input id="pat-nome" autocomplete="off" placeholder="es. Dott. Rossi" value="${esc(nome())}"></label>
+      <div class="pat-btns"><button type="submit" class="pat-invia">Continua</button>${_cambioNome?'<button type="button" class="pat-sec" onclick="_cambioNome=false;render()">Annulla</button>':''}</div>
+    </form></div>`;
+}
+function scegliNome(n){
+  n=String(n||'').trim(); if(!n){ toast('Scrivi il tuo nome','error'); return; }
+  scrivi(K_NOME,n); scrivi(K_VISTO,null); _cambioNome=false; _novita=new Set();
+  _tab=_mie().length?'mie':'nuova'; render(); window.scrollTo(0,0);
+}
+function cambiaNome(){ _cambioNome=true; render(); }
+
+function htmlNuova(){
+  const r=_edit ? _lista.find(x=>x.id===_edit) : null;
+  const val=id=>(document.getElementById(id)||{}).value||'';
+  const caso=r ? String(r.campione_id||'').split(/\s+/)[0] : val('pat-caso');
+  const blocchi=r ? String(r.campione_id||'').split(/\s+/).slice(1).join(' ') : val('pat-blocchi');
+  const urg=r ? r.priorita==='urgente' : !!(document.getElementById('pat-urg')||{}).checked;
+  const note=r ? (r.note_pat||'') : val('pat-note');
+  const altri=[..._sel].filter(a=>!IHC_MODULO_AB.includes(a));
+  const q=_q.trim().toLowerCase();
+  return `<form class="pat-form" onsubmit="event.preventDefault();invia()">
+    <div class="pat-row2">
+      <label>Caso n°<input id="pat-caso" autocomplete="off" placeholder="es. 3215/26" value="${esc(caso)}"></label>
+      <label>Blocchi<input id="pat-blocchi" autocomplete="off" placeholder="es. A B" value="${esc(blocchi)}"></label>
+    </div>
+    <div class="pat-lbl">Anticorpi <span id="pat-n">${_sel.size?_sel.size+' scelt'+(_sel.size===1?'o':'i'):''}</span></div>
+    <input id="pat-cerca" class="pat-cerca" placeholder="🔍 Cerca anticorpo…" value="${esc(_q)}" oninput="cerca(this.value)" autocomplete="off">
+    <div class="pat-ab" id="pat-ab">${IHC_MODULO_AB.map(a=>`<button type="button" class="pat-chip${_sel.has(a)?' on':''}${q&&!a.toLowerCase().includes(q)?' nasc':''}" data-a="${esc(a)}" onclick="chip(this)">${esc(a)}</button>`).join('')}</div>
+    <label>Altro (non in elenco, separati da virgola)<input id="pat-altro" autocomplete="off" placeholder="es. MUM1, CD99" value="${esc(altri.join(', '))}"></label>
+    <label class="pat-check"><input type="checkbox" id="pat-urg" ${urg?'checked':''}> 🔴 Urgente</label>
+    <label>Note per il laboratorio<textarea id="pat-note" rows="2" placeholder="facoltative">${esc(note)}</textarea></label>
+    <div class="pat-btns"><button type="submit" class="pat-invia" ${_invio?'disabled':''}>${_edit?'✓ Salva modifiche':'➤ Invia richiesta'}</button>
+      ${_edit?'<button type="button" class="pat-sec" onclick="annullaModifica()">Annulla</button>':(_sel.size?'<button type="button" class="pat-sec" onclick="svuota()">Svuota</button>':'')}</div>
+  </form>`;
+}
+function cerca(v){ _q=v; const q=v.trim().toLowerCase(); document.querySelectorAll('#pat-ab .pat-chip').forEach(b=>b.classList.toggle('nasc', !!q && !b.dataset.a.toLowerCase().includes(q))); }
+function chip(b){ const a=b.dataset.a; if(_sel.has(a)) _sel.delete(a); else _sel.add(a); b.classList.toggle('on',_sel.has(a));
+  const n=document.getElementById('pat-n'); if(n) n.textContent=_sel.size?_sel.size+' scelt'+(_sel.size===1?'o':'i'):''; }
+function svuota(){ _sel=new Set(); render(); }
+function annullaModifica(){ _edit=null; _sel=new Set(); _tab='mie'; render(); }
+
+async function invia(){
+  if(_invio) return;
+  const n=nome(); if(!n){ render(); return; }
+  const val=id=>(document.getElementById(id)||{}).value||'';
+  const caso=val('pat-caso').trim().toUpperCase().replace(/\s+/g,'');
+  const blocchi=val('pat-blocchi').trim().toUpperCase().replace(/[,;]+/g,' ').replace(/\s+/g,' ');
+  const altri=val('pat-altro').split(/[,;\n]+/).map(x=>x.trim()).filter(Boolean);
+  const urg=!!(document.getElementById('pat-urg')||{}).checked;
+  const note=val('pat-note').trim();
+  const ab=[...IHC_MODULO_AB.filter(a=>_sel.has(a)), ...altri.filter(a=>!IHC_MODULO_AB.includes(a))];
+  if(!caso){ toast('Scrivi il numero del caso','error'); document.getElementById('pat-caso').focus(); return; }
+  if(!/^\d{1,6}\/\d{2}/.test(caso) && !confirm('Il numero del caso "'+caso+'" non ha la forma solita (es. 3215/26). Inviare lo stesso?')) return;
+  if(!ab.length){ toast('Scegli almeno un anticorpo','error'); return; }
+  const campione=caso+(blocchi?' '+blocchi:''); const now=new Date().toISOString();
+  _invio=true;
+  try{
+    if(_edit){
+      const r=await rileggi(_edit);
+      if(!r){ toast('La richiesta non esiste più','error'); _edit=null; await carica(); render(); return; }
+      if(stato(r).k!=='attesa'){ toast('Il laboratorio ha già iniziato: la richiesta non si può più modificare','error'); _edit=null; await carica(); render(); return; }
+      await api('PATCH','?id=eq.'+encodeURIComponent(_edit),{campione_id:campione, anticorpo:ab.join(', '), priorita:urg?'urgente':'normale', note_pat:note, visto_lab:false, modificato:now});
+    } else {
+      const gia=_lista.find(x=>String(x.campione_id||'').split(/\s+/)[0]===caso && stato(x).k!=='fatta');
+      if(gia && !confirm('Per il caso '+caso+' c\'è già una richiesta aperta ('+gia.anticorpo+'). Inviarne un\'altra?')){ return; }
+      await api('POST','',[{id:genId(), campione_id:campione, patologo:n, anticorpo:ab.join(', '), anticorpi_done:[],
+        priorita:urg?'urgente':'normale', stato:'da_fare', data_richiesta:oggi(), data_completamento:null,
+        note_pat:note, creato_da:'patologo', visto_lab:false, creato:now, modificato:now}]);
+    }
+    toast(_edit?'Richiesta aggiornata':'Richiesta inviata: '+campione+' · '+ab.length+' anticorp'+(ab.length===1?'o':'i'),'success');
+    _edit=null; _sel=new Set(); _q='';
+    ['pat-caso','pat-blocchi','pat-altro','pat-note'].forEach(i=>{ const e=document.getElementById(i); if(e) e.value=''; });
+    await carica(); _tab='mie'; render(); window.scrollTo(0,0);
+  }catch(e){
+    toast(/fetch|network|load/i.test(String(e.message))?'Nessuna connessione: la richiesta NON è stata inviata, riprova':e.message,'error');
+  }finally{ _invio=false; const b=document.querySelector('.pat-invia'); if(b) b.disabled=false; }
+}
+
+function htmlMie(mie){
+  let lista=mie.slice().sort((a,b)=>String(b.data_richiesta||b.creato||'').localeCompare(String(a.data_richiesta||a.creato||'')) || String(b.creato||'').localeCompare(String(a.creato||'')));
+  if(_filtro==='aperte') lista=lista.filter(r=>stato(r).k!=='fatta' || _novita.has(r.id));
+  else if(_filtro==='fatte') lista=lista.filter(r=>stato(r).k==='fatta');
+  let h=`<div class="pat-filtri">${[['aperte','In corso'],['fatte','Pronte'],['tutte','Tutte']].map(([k,t])=>`<button type="button" class="${_filtro===k?'on':''}" onclick="_filtro='${k}';render()">${t}</button>`).join('')}</div>`;
+  if(!lista.length) return h+'<div class="pat-vuoto">Nessuna richiesta qui.</div>';
+  return h+lista.slice(0,80).map(r=>{
+    const st=stato(r); const rid=esc(r.id); const cons=(r.consumi&&typeof r.consumi==='object')?r.consumi:{};
+    const modificabile=st.k==='attesa' && r.creato_da==='patologo';
+    const nov=_novita.has(r.id);
+    const perc=st.items.length?Math.round(100*st.done.length/st.items.length):0;
+    return `<div class="pat-card ${st.k}${nov?' nov':''}">
+      <div class="pat-card-h"><b>${esc(r.campione_id||'—')}</b>${r.priorita==='urgente'?'<span class="pat-urg">urgente</span>':''}${nov?'<span class="pat-nov">aggiornata</span>':''}<span class="pat-st ${st.k}">${st.t}</span></div>
+      <div class="pat-card-d">richiesta del ${esc(fmtDate(r.data_richiesta))}${st.k==='fatta'&&r.data_completamento?' · pronta il '+esc(fmtDate(r.data_completamento)):''}${r.creato_da==='patologo'?'':' · registrata dal laboratorio'}</div>
+      ${r.ripetizione_di?`<div class="pat-rip">↻ Ripetizione${r.ripeti_motivo?': '+esc(String(r.ripeti_motivo).split(' — ')[0]):''}</div>`:''}
+      ${st.k!=='attesa'?`<div class="pat-bar"><i style="width:${st.k==='fatta'?100:perc}%"></i></div>`:''}
+      <div>${st.items.map(it=>{ const fatto=st.done.includes(it)||st.k==='fatta'; const ts=cons[it]&&cons[it].ts;
+        return `<div class="pat-abr${fatto?' fatto':''}"><span class="n">${esc(it)}</span><span class="s">${fatto?'✓ pronto'+(ts?' '+esc(fmtDate(ts)):''):'da fare'}</span></div>`; }).join('')}</div>
+      ${r.note_pat?`<div class="pat-card-n">📝 ${esc(r.note_pat)}</div>`:''}
+      ${modificabile?`<div class="pat-card-a"><button type="button" onclick="modifica('${rid}')">✏️ Modifica</button><button type="button" class="del" onclick="elimina('${rid}')">Annulla richiesta</button></div>`:''}
+    </div>`; }).join('');
+}
+function modifica(id){ const r=_lista.find(x=>x.id===id); if(!r) return; _edit=id; _sel=new Set(parseAb(r.anticorpo)); _tab='nuova'; render(); window.scrollTo(0,0); }
+async function elimina(id){
+  const r=_lista.find(x=>x.id===id); if(!r) return;
+  if(!confirm('Annullare la richiesta per '+r.campione_id+'?')) return;
+  try{
+    const cur=await rileggi(id);
+    if(cur && stato(cur).k!=='attesa'){ toast('Il laboratorio ha già iniziato: non si può più annullare','error'); await carica(); render(); return; }
+    if(cur) await api('DELETE','?id=eq.'+encodeURIComponent(id));
+    toast('Richiesta annullata','info'); await carica(); render();
+  }catch(e){ toast('Nessuna connessione: la richiesta non è stata annullata','error'); }
+}
+
+// ── avvio e aggiornamento automatico ──
+(async()=>{
+  render();
+  await carica(); render();
+  setInterval(async()=>{ if(document.visibilityState!=='visible' || occupato() || _invio) return; await carica(); if(!occupato()) render(); }, 60000);
+  document.addEventListener('visibilitychange', async()=>{ if(document.visibilityState==='visible' && !occupato()){ await carica(); render(); } });
+})();
+</script>
+</body>
+</html>
