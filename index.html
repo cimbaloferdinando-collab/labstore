@@ -10958,8 +10958,9 @@ function _renderIhcDettaglio(){
     const selId='ihcd-sel';
     html+=`<div class="ihcd-box"><div style="font-weight:600;margin-bottom:4px">🔒 Scorta: ${s.nCh}</div>`
       +(s.chiusi.length ? s.chiusi.map(x=>`<div class="ihcd-lot">
-          <span style="flex:1">${x.p.lotto?'lotto <b>'+esc(x.p.lotto)+'</b>':'senza lotto'} · scad ${_ihcFmtD(x.p.scadenza)}${x.p.ihc_vss?' · <span style="color:var(--blue)">già in macchina, '+_ihcResiduo(x.p)+' test</span>':''}</span>
-          <b>×${x.n}</b></div>`).join('')
+          <span style="flex:1">${x.p.lotto?'lotto <b>'+esc(x.p.lotto)+'</b>':'senza lotto'} · scad ${_ihcFmtD(x.p.scadenza)}${x.p.ihc_vss?' · <span style="color:var(--blue)">già aperto, '+_ihcResiduo(x.p)+' test</span>':''}</span>
+          <b>×${x.n}</b>
+          <button class="btn btn-sm" title="Correggi i test rimasti in questo dispenser" onclick="ihcCorreggiResidui('${esc(x.p.id)}')">✏️</button></div>`).join('')
         + `<div style="display:flex;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap">
             <select id="${selId}" style="padding:6px;font-size:12px;flex:1;min-width:0">${s.chiusi.map(x=>`<option value="${esc(x.p.id)}">${x.p.lotto?'lotto '+esc(x.p.lotto):'senza lotto'} · scad ${_ihcFmtD(x.p.scadenza)}</option>`).join('')}</select>
             <button class="btn btn-sm btn-ok" onclick="ihcApri(${kj}, document.getElementById('${selId}').value)">🔓 Apri${s.aperto?' (sostituisce)':''}</button></div>`
@@ -11145,18 +11146,36 @@ async function ihcTermina(key){
   toast('🔒 '+aperto.nome+': dispenser terminato'+(next&&next.ihc_in_uso?' · aperto il successivo':''),'success');
   renderIhcMag();
 }
-// Corregge i test residui del dispenser in uso
+// Corregge i test residui di un dispenser: quello in uso o uno messo da parte / di scorta
+// FIX [MAGAZZINO] 18/11/2026: prima si poteva correggere solo quello in uso (es. UltraView da 4 test
+// rimasto fuori macchina e in realtà a 2). Su un dispenser non in uso: 0 = finito (−1, scarico),
+// pieno = torna chiuso, altro = aperto/messo da parte con quei test.
 async function ihcCorreggiResidui(id){
   const prods=loadP(); const p=prods.find(x=>x.id===id); if(!p) return;
   const tot=parseInt(p.test_tot,10)||0;
-  const v=prompt('Test residui nel dispenser in uso di '+p.nome+' (0–'+tot+'):', _ihcResiduo(p));
+  const inUso=p.ihc_in_uso===true || _ihcApertoDelGruppo(prods.filter(x=>x.nome===p.nome))===p;
+  const att = inUso || p.ihc_vss ? _ihcResiduo(p) : tot;
+  const v=prompt('Test rimasti nel dispenser di '+p.nome+(p.lotto?' lotto '+p.lotto:'')+(inUso?' (in uso)':'')+' (0–'+tot+'):'
+    +(!inUso?'\n\n0 = finito · '+tot+' = chiuso/pieno':''), att);
   if(v===null) return;
   const n=parseInt(String(v).replace(',','.'),10);
   if(isNaN(n)||n<0||n>tot){ toast('Valore non valido (0–'+tot+')','error'); return; }
-  if(n===0){ toast('Con 0 test usa "Termina"','info'); return; }
-  _takeSnapshot('Magazzino IHC: correzione test '+p.nome);
-  p.test_residui = n; p.modificato=new Date().toISOString();
-  await saveP(prods); toast('✏️ '+p.nome+': '+n+' test residui','success'); renderIhcMag();
+  if(n===0 && inUso){ toast('Con 0 test usa "Termina"','info'); return; }
+  _takeSnapshot('Magazzino IHC: correzione test '+p.nome+(p.lotto?' '+p.lotto:''));
+  const now=new Date().toISOString(); p.modificato=now;
+  if(inUso){ p.test_residui=n; }
+  else if(n===0){
+    const movs=loadM();
+    p.qty=Math.max(0,(parseFloat(p.qty)||0)-1); p.test_residui=tot; p.ihc_vss=false;
+    movs.unshift({id:genId(), ts:now, tipo:'scarico', prod:p.nome, prodId:p.id, qty:1, lotto:p.lotto||'', note:'Dispenser finito (correzione test residui)'});
+    saveM(movs);
+  }
+  else if(n>=tot){ p.test_residui=tot; p.ihc_vss=false; }
+  else { p.test_residui=n; p.ihc_vss=true; }
+  await saveP(prods);
+  toast('✏️ '+p.nome+(p.lotto?' '+p.lotto:'')+': '+(n===0&&!inUso?'dispenser finito':n+' test rimasti'),'success');
+  renderIhcMag();
+  try{ if(document.getElementById('modal-ihc-corsa').classList.contains('open')) _ihcRidisegnaCorsa(); }catch(e){}
 }
 
 function _ihcIgnorati(){ const v=_getCache(LS_IHC_IGNORA,'[]'); return Array.isArray(v)?v:[]; }
