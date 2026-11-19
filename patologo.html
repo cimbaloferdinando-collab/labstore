@@ -50,6 +50,10 @@ button{font-family:inherit;cursor:pointer}
 .pat-chip{padding:10px 6px;border:1px solid var(--border2);border-radius:10px;background:var(--surface);color:var(--text2);font-size:13.5px;user-select:none;-webkit-user-select:none}
 .pat-chip.on{background:var(--accent2);border-color:var(--accent2);color:#fff;font-weight:700}
 .pat-chip.nasc{display:none}
+.pat-chip.sp.on{background:#6d28d9;border-color:#6d28d9}
+.pat-sp{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.pat-hint{font-size:12.5px;color:var(--accent2);margin-top:-4px;font-weight:600}
+.pat-abr .n .ico{margin-right:4px}
 .pat-form .pat-check{flex-direction:row;align-items:center;gap:8px;font-size:15px;text-transform:none;letter-spacing:0;color:var(--text);font-weight:600}
 .pat-check input{width:20px;height:20px}
 .pat-btns{display:flex;gap:8px;margin-top:4px}
@@ -103,6 +107,9 @@ const K_VISTO='pat_visto', K_CACHE='pat_cache';
 const PATOLOGO='Manusia';
 
 // Anticorpi del modulo di richiesta IHC-01
+// Colorazioni istochimiche richiedibili (nel gestionale restano nella richiesta ma non vanno sul BenchMark)
+const SPECIALI=['PAS','Giemsa','Reticolo argentico'];
+const SPECIALI_RE=/^(d-?pas|pas\b|giemsa|reticol|argent|grocott|alcian|masson|tricromic|ziehl|gram\b|perls|congo|rosso congo|van gieson|orceina|weigert|mucicarmin|warthin|von kossa)/i;
 const IHC_MODULO_AB=['34βE12','Actina (ASM)','AFP','BCC (34βE12+p63)','BCL2','BCL6','Caldesmone','Calponina','CD10','CD138','CD20','CD23','CD3','CD30','CD34','CD45 (LCA)','CD5','CD56','CD68 (KP-1)','CDX-2','Ciclina D1','CK19','CK20','CK5/6','CK7','Cromogranina A','Desmina','E-caderina','EMA','ER','HBME-1','HepPar-1','HER2/neu','HMB-45','H. pylori','Ki67','Melan A','p16','p53','p63','PanCK (AE1-AE3)','PAX-5','PLAP','PR','PRAME','PSA','S100','Sinaptofisina','SOX-10','TTF-1','Vimentina','WT1'];
 
 // ── utilità ──
@@ -118,6 +125,8 @@ function toast(msg,type){
   requestAnimationFrame(()=>t.classList.add('show'));
   setTimeout(()=>{ t.classList.remove('show'); setTimeout(()=>t.remove(),300); }, type==='error'?6000:3500);
 }
+// blocchi scritti dalla patologa → uno per richiesta ("A, B" · "A1 A2" · "1 2")
+function parseBlocchi(str){ return String(str||'').toUpperCase().split(/[\s,;+]+/).map(x=>x.trim()).filter(Boolean).filter((x,i,a)=>a.indexOf(x)===i); }
 function parseAb(str){ return String(str||'').split(/[,\n]+/).map(s=>s.trim()).filter(Boolean); }
 
 // ── database ──
@@ -206,16 +215,19 @@ function htmlNuova(){
   const blocchi=r ? String(r.campione_id||'').split(/\s+/).slice(1).join(' ') : val('pat-blocchi');
   const urg=r ? r.priorita==='urgente' : !!(document.getElementById('pat-urg')||{}).checked;
   const note=r ? (r.note_pat||'') : val('pat-note');
-  const altri=[..._sel].filter(a=>!IHC_MODULO_AB.includes(a));
+  const altri=[..._sel].filter(a=>!IHC_MODULO_AB.includes(a) && !SPECIALI.includes(a));
   const q=_q.trim().toLowerCase();
   return `<form class="pat-form" onsubmit="event.preventDefault();invia()">
     <div class="pat-row2">
       <label>Caso n°<input id="pat-caso" autocomplete="off" placeholder="es. 3215/26" value="${esc(caso)}"></label>
-      <label>Blocchi<input id="pat-blocchi" autocomplete="off" placeholder="es. A B" value="${esc(blocchi)}"></label>
+      <label>Blocchi<input id="pat-blocchi" autocomplete="off" placeholder="es. A B" value="${esc(blocchi)}" oninput="blocchiHint()"></label>
     </div>
-    <div class="pat-lbl">Anticorpi <span id="pat-n">${_sel.size?_sel.size+' scelt'+(_sel.size===1?'o':'i'):''}</span></div>
+    <div class="pat-hint" id="pat-bl-hint">${htmlBlocchiHint(blocchi)}</div>
+    <div class="pat-lbl">Anticorpi <span id="pat-n">${testoScelti()}</span></div>
     <input id="pat-cerca" class="pat-cerca" placeholder="🔍 Cerca anticorpo…" value="${esc(_q)}" oninput="cerca(this.value)" autocomplete="off">
     <div class="pat-ab" id="pat-ab">${IHC_MODULO_AB.map(a=>`<button type="button" class="pat-chip${_sel.has(a)?' on':''}${q&&!a.toLowerCase().includes(q)?' nasc':''}" data-a="${esc(a)}" onclick="chip(this)">${esc(a)}</button>`).join('')}</div>
+    <div class="pat-lbl">Colorazioni istochimiche</div>
+    <div class="pat-sp">${SPECIALI.map(a=>`<button type="button" class="pat-chip sp${_sel.has(a)?' on':''}" data-a="${esc(a)}" onclick="chip(this)">🧪 ${esc(a)}</button>`).join('')}</div>
     <label>Altro (non in elenco, separati da virgola)<input id="pat-altro" autocomplete="off" placeholder="es. MUM1, CD99" value="${esc(altri.join(', '))}"></label>
     <label class="pat-check"><input type="checkbox" id="pat-urg" ${urg?'checked':''}> 🔴 Urgente</label>
     <label>Note per il laboratorio<textarea id="pat-note" rows="2" placeholder="facoltative">${esc(note)}</textarea></label>
@@ -224,8 +236,12 @@ function htmlNuova(){
   </form>`;
 }
 function cerca(v){ _q=v; const q=v.trim().toLowerCase(); document.querySelectorAll('#pat-ab .pat-chip').forEach(b=>b.classList.toggle('nasc', !!q && !b.dataset.a.toLowerCase().includes(q))); }
+function testoScelti(){ const nA=[..._sel].filter(a=>!SPECIALI.includes(a)).length, nS=_sel.size-nA;
+  return [nA?nA+' scelt'+(nA===1?'o':'i'):'', nS?nS+' istochimic'+(nS===1?'a':'he'):''].filter(Boolean).join(' + '); }
 function chip(b){ const a=b.dataset.a; if(_sel.has(a)) _sel.delete(a); else _sel.add(a); b.classList.toggle('on',_sel.has(a));
-  const n=document.getElementById('pat-n'); if(n) n.textContent=_sel.size?_sel.size+' scelt'+(_sel.size===1?'o':'i'):''; }
+  const n=document.getElementById('pat-n'); if(n) n.textContent=testoScelti(); }
+function htmlBlocchiHint(v){ const b=parseBlocchi(v); return b.length>1 ? '→ '+b.length+' richieste separate, una per blocco ('+b.map(esc).join(', ')+')' : ''; }
+function blocchiHint(){ const h=document.getElementById('pat-bl-hint'); if(h) h.innerHTML=htmlBlocchiHint(document.getElementById('pat-blocchi').value); }
 function svuota(){ _sel=new Set(); render(); }
 function annullaModifica(){ _edit=null; _sel=new Set(); _tab='mie'; render(); }
 
@@ -234,30 +250,33 @@ async function invia(){
   const n=nome(); if(!n){ render(); return; }
   const val=id=>(document.getElementById(id)||{}).value||'';
   const caso=val('pat-caso').trim().toUpperCase().replace(/\s+/g,'');
-  const blocchi=val('pat-blocchi').trim().toUpperCase().replace(/[,;]+/g,' ').replace(/\s+/g,' ');
+  const blocchi=parseBlocchi(val('pat-blocchi'));   // un blocco = una richiesta (conta giusta dei vetrini)
   const altri=val('pat-altro').split(/[,;\n]+/).map(x=>x.trim()).filter(Boolean);
   const urg=!!(document.getElementById('pat-urg')||{}).checked;
   const note=val('pat-note').trim();
-  const ab=[...IHC_MODULO_AB.filter(a=>_sel.has(a)), ...altri.filter(a=>!IHC_MODULO_AB.includes(a))];
+  const ab=[...IHC_MODULO_AB.filter(a=>_sel.has(a)), ...altri.filter(a=>!IHC_MODULO_AB.includes(a) && !SPECIALI.includes(a)), ...SPECIALI.filter(a=>_sel.has(a))];
   if(!caso){ toast('Scrivi il numero del caso','error'); document.getElementById('pat-caso').focus(); return; }
   if(!/^\d{1,6}\/\d{2}/.test(caso) && !confirm('Il numero del caso "'+caso+'" non ha la forma solita (es. 3215/26). Inviare lo stesso?')) return;
-  if(!ab.length){ toast('Scegli almeno un anticorpo','error'); return; }
-  const campione=caso+(blocchi?' '+blocchi:''); const now=new Date().toISOString();
+  if(!ab.length){ toast('Scegli almeno un anticorpo o una colorazione','error'); return; }
+  const campioni=blocchi.length ? blocchi.map(b=>caso+' '+b) : [caso]; const now=new Date().toISOString();
+  const nuovaRic=(campione_id)=>({id:genId(), campione_id, patologo:n, anticorpo:ab.join(', '), anticorpi_done:[],
+    priorita:urg?'urgente':'normale', stato:'da_fare', data_richiesta:oggi(), data_completamento:null,
+    note_pat:note, creato_da:'patologo', visto_lab:false, creato:now, modificato:now});
   _invio=true;
   try{
     if(_edit){
       const r=await rileggi(_edit);
       if(!r){ toast('La richiesta non esiste più','error'); _edit=null; await carica(); render(); return; }
       if(stato(r).k!=='attesa'){ toast('Il laboratorio ha già iniziato: la richiesta non si può più modificare','error'); _edit=null; await carica(); render(); return; }
-      await api('PATCH','?id=eq.'+encodeURIComponent(_edit),{campione_id:campione, anticorpo:ab.join(', '), priorita:urg?'urgente':'normale', note_pat:note, visto_lab:false, modificato:now});
+      await api('PATCH','?id=eq.'+encodeURIComponent(_edit),{campione_id:campioni[0], anticorpo:ab.join(', '), priorita:urg?'urgente':'normale', note_pat:note, visto_lab:false, modificato:now});
+      if(campioni.length>1) await api('POST','',campioni.slice(1).map(nuovaRic));   // blocchi aggiunti → richieste nuove
     } else {
       const gia=_lista.find(x=>String(x.campione_id||'').split(/\s+/)[0]===caso && stato(x).k!=='fatta');
       if(gia && !confirm('Per il caso '+caso+' c\'è già una richiesta aperta ('+gia.anticorpo+'). Inviarne un\'altra?')){ return; }
-      await api('POST','',[{id:genId(), campione_id:campione, patologo:n, anticorpo:ab.join(', '), anticorpi_done:[],
-        priorita:urg?'urgente':'normale', stato:'da_fare', data_richiesta:oggi(), data_completamento:null,
-        note_pat:note, creato_da:'patologo', visto_lab:false, creato:now, modificato:now}]);
+      await api('POST','',campioni.map(nuovaRic));
     }
-    toast(_edit?'Richiesta aggiornata':'Richiesta inviata: '+campione+' · '+ab.length+' anticorp'+(ab.length===1?'o':'i'),'success');
+    toast(_edit?(campioni.length>1?'Richiesta aggiornata + '+(campioni.length-1)+' nuov'+(campioni.length===2?'a':'e')+' per gli altri blocchi':'Richiesta aggiornata')
+      :(campioni.length>1?campioni.length+' richieste inviate: '+campioni.join(' · '):'Richiesta inviata: '+campioni[0]),'success');
     _edit=null; _sel=new Set(); _q='';
     ['pat-caso','pat-blocchi','pat-altro','pat-note'].forEach(i=>{ const e=document.getElementById(i); if(e) e.value=''; });
     await carica(); _tab='mie'; render(); window.scrollTo(0,0);
@@ -283,7 +302,7 @@ function htmlMie(mie){
       ${r.ripetizione_di?`<div class="pat-rip">↻ Ripetizione${r.ripeti_motivo?': '+esc(String(r.ripeti_motivo).split(' — ')[0]):''}</div>`:''}
       ${st.k!=='attesa'?`<div class="pat-bar"><i style="width:${st.k==='fatta'?100:perc}%"></i></div>`:''}
       <div>${st.items.map(it=>{ const fatto=st.done.includes(it)||st.k==='fatta'; const ts=cons[it]&&cons[it].ts;
-        return `<div class="pat-abr${fatto?' fatto':''}"><span class="n">${esc(it)}</span><span class="s">${fatto?'✓ pronto'+(ts?' '+esc(fmtDate(ts)):''):'da fare'}</span></div>`; }).join('')}</div>
+        return `<div class="pat-abr${fatto?' fatto':''}"><span class="n">${SPECIALI_RE.test(it)?'<span class="ico">🧪</span>':''}${esc(it)}</span><span class="s">${fatto?'✓ pronto'+(ts?' '+esc(fmtDate(ts)):''):'da fare'}</span></div>`; }).join('')}</div>
       ${r.note_pat?`<div class="pat-card-n">📝 ${esc(r.note_pat)}</div>`:''}
       ${modificabile?`<div class="pat-card-a"><button type="button" onclick="modifica('${rid}')">✏️ Modifica</button><button type="button" class="del" onclick="elimina('${rid}')">Annulla richiesta</button></div>`:''}
     </div>`; }).join('');

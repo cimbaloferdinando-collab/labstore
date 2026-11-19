@@ -10504,8 +10504,13 @@ function _ihcBlocchetti(campioneId){
   const m=s.match(/^[\d]+\/\d{2}[A-Za-zLPp]*\s*(.*)$/);
   if(!m || !m[1] || !m[1].trim()) return 1;
   const parts=m[1].trim().split(/[\s,;\-\/\+]+/).filter(Boolean);
-  return Math.max(1, parts.filter(p=>/^\d+$/.test(p)||/^[A-Za-z]{1,3}$/.test(p)).length);
+  // FIX [TRACCIABILITÀ] 19/11/2026: contano anche i blocchi con lettera+numero (A1, 1A, B12)
+  return Math.max(1, parts.filter(p=>/^\d{1,3}[A-Za-z]{0,2}$/.test(p)||/^[A-Za-z]{1,3}\d{0,3}$/.test(p)).length);
 }
+// FIX [TRACCIABILITÀ] 19/11/2026: colorazioni istochimiche (PAS, Giemsa, reticolo…) scritte nella richiesta IHC:
+// restano nella richiesta (spunta e stato) ma NON sono vetrini del BenchMark → fuori da pianificazione, KPI e magazzino IHC
+const IHC_SPECIALI_RE=/^(d-?pas|pas(-?d|\s*\+?\s*diastasi)?|giemsa|reticol\w*|(impregnazione\s+)?argent\w*|gomori|gordon|grocott|alcian\w*|masson|tricromic\w*|ziehl\w*|gram|perls|blu\s+di\s+prussia|rosso\s+congo|congo|van\s+gieson|orceina|weigert|mucicarmin\w*|warthin\w*|sirius\w*|blu\s+di\s+toluidina|von\s+kossa)\b/i;
+function _ihcSpeciale(item){ return IHC_SPECIALI_RE.test(String(item||'').trim()); }
 // Lotti di magazzino che corrispondono al nome scritto nella richiesta
 function _ihcLottiAnticorpo(nomeAnt, prods){
   prods = prods || loadP();
@@ -11671,7 +11676,8 @@ function _ihcChips(r){
   const chips=items.map(it=>{
     const isDone=done.includes(it);
     const onclick=`event.stopPropagation();toggleIHCAnticorpo(${JSON.stringify(r.id)},${JSON.stringify(it)})`.replace(/"/g,'&quot;');
-    return `<span onclick="${onclick}" style="display:inline-block;padding:5px 11px;border-radius:20px;cursor:pointer;font-size:12px;font-weight:600;margin:2px;border:1px solid;user-select:none;-webkit-user-select:none;${isDone?'background:#dcfce7;border-color:#86efac;color:#166534;text-decoration:line-through;':'background:var(--bg3);border-color:var(--border2);color:var(--text2);'}">${esc(it)}</span>`;
+    const sp=_ihcSpeciale(it);   // FIX [UI/UX]: colorazione istochimica → chip viola con 🧪
+    return `<span onclick="${onclick}" title="${sp?'Colorazione istochimica: non va sul BenchMark':''}" style="display:inline-block;padding:5px 11px;border-radius:20px;cursor:pointer;font-size:12px;font-weight:600;margin:2px;border:1px solid;user-select:none;-webkit-user-select:none;${isDone?'background:#dcfce7;border-color:#86efac;color:#166534;text-decoration:line-through;':(sp?'background:var(--purple-bg);border-color:var(--purple-bd);color:var(--purple);':'background:var(--bg3);border-color:var(--border2);color:var(--text2);')}">${sp?'🧪 ':''}${esc(it)}</span>`;
   }).join('');
   const nDone=done.filter(d=>items.includes(d)).length;
   const manca=items.filter(it=>!done.includes(it)).map(it=>esc(it));
@@ -11701,7 +11707,7 @@ async function toggleIHCAnticorpo(id, item){
   // FIX [TRACCIABILITÀ]: spunta → scala i test di anticorpo e kit; togli spunta → li restituisce
   const rec={...r};
   let sconosciuti=[];
-  try{ sconosciuti = await _ihcAggiornaMagazzino(rec, idx<0?[item]:[], idx>=0?[item]:[]); }
+  if(!_ihcSpeciale(item)) try{ sconosciuti = await _ihcAggiornaMagazzino(rec, idx<0?[item]:[], idx>=0?[item]:[]); }   // FIX [MAGAZZINO]: le speciali non scalano test IHC
   catch(e){ console.warn('[IHC magazzino]', e); }
   arr[i]={...rec, anticorpi_done:done, stato:nuovoStato, data_completamento:dataCompl, modificato:new Date().toISOString()};
   await saveIHCArr(arr);
@@ -11876,7 +11882,7 @@ function _ihcSituazioneCorsa(){
   const casi=[];
   loadIHC().filter(r=>r.stato!=='completata').forEach(r=>{
     const done=Array.isArray(r.anticorpi_done)?r.anticorpi_done:[];
-    const voci=_ihcParseAnticorpi(r.anticorpo).filter(it=>!done.includes(it));
+    const voci=_ihcParseAnticorpi(r.anticorpo).filter(it=>!done.includes(it) && !_ihcSpeciale(it));   // FIX [TRACCIABILITÀ]: le speciali non vanno sul BenchMark
     if(!voci.length) return;
     const n=_ihcBlocchetti(r.campione_id);
     const caso={id:r.id, caso:r.campione_id||'—', urgente:r.priorita==='urgente', n, voci:[],
@@ -12036,7 +12042,7 @@ function _ihcVerificaConsumi(){
   // stesso caso + stesso anticorpo eseguito in più richieste (non collegate come ripetizione)
   const visti={};
   arr.forEach(r=>{ const done=Array.isArray(r.anticorpi_done)?r.anticorpi_done:[];
-    done.forEach(it=>{ const k=(typeof _normCasoId==='function'?_normCasoId(r.campione_id):String(r.campione_id||'').split(/\s/)[0])+'|'+_ihcNorm(it); (visti[k]=visti[k]||[]).push(r); }); });
+    done.forEach(it=>{ const k=String(r.campione_id||'').trim().toUpperCase().replace(/[\s,;]+/g,' ')+'|'+_ihcNorm(it); (visti[k]=visti[k]||[]).push(r); }); });   // FIX [TRACCIABILITÀ]: blocchi diversi = richieste diverse
   Object.keys(visti).forEach(k=>{ const l=visti[k]; if(l.length<2) return;
     const collegate=l.some(r=>r.ripetizione_di && l.some(o=>o.id===r.ripetizione_di));
     if(!collegate) out.push({tipo:'doppio', id:l[0].id, item:k.split('|')[1], r:l[0], lista:l, info:true}); });
@@ -12490,7 +12496,7 @@ async function saveIHC(){
     const items=anticorpo.split(/[,\n]+/).map(x=>x.trim()).filter(Boolean);
     const nuovi=items.filter(it=>!rec.anticorpi_done.includes(it));
     rec.anticorpi_done=[...rec.anticorpi_done, ...nuovi];
-    try{ _sconosciuti = await _ihcAggiornaMagazzino(rec, nuovi, []); }catch(e){ console.warn('[IHC magazzino]', e); }
+    try{ _sconosciuti = await _ihcAggiornaMagazzino(rec, nuovi.filter(it=>!_ihcSpeciale(it)), []); }catch(e){ console.warn('[IHC magazzino]', e); }
   }
   if(editId){ const i=arr.findIndex(x=>x.id===editId); if(i>=0) arr[i]=rec; else arr.unshift(rec); }
   else arr.unshift(rec);
@@ -15024,21 +15030,7 @@ function renderDashboardPreview(){
       // - campione_id può contenere blocchetti: "345/26 2, 3" → 2 blocchetti
       // - anticorpo può contenere lista: "PanCK, P16, CD45" → 3 anticorpi
       // - Vetrini per record = numero blocchetti × numero anticorpi
-      const _parseBlocchetti = (campioneId) => {
-        if (!campioneId) return 1;
-        // Cerca pattern dopo l'ID base "NUM/YY" - es. "345/26 2, 3" o "345/26-A,B"
-        const s = String(campioneId).trim();
-        // Tutto ciò che viene DOPO il primo /YY
-        const m = s.match(/^[\d]+\/\d{2}[A-Za-zLPp]*\s*(.*)$/);
-        if (!m || !m[1]) return 1;
-        const extra = m[1].trim();
-        if (!extra) return 1;
-        // Estrai numeri o lettere separati da spazi/virgole/trattini
-        const parts = extra.split(/[\s,;\-\/\+]+/).filter(Boolean);
-        // Conta gli identificatori validi (numeri, lettere singole o brevi)
-        const valid = parts.filter(p => /^[\d]+$/.test(p) || /^[A-Za-z]{1,3}$/.test(p));
-        return Math.max(1, valid.length);
-      };
+      const _parseBlocchetti = (campioneId) => _ihcBlocchetti(campioneId);   // FIX [TRACCIABILITÀ]: un solo conteggio dei blocchi
       const _parseAnticorpi = (anticorpoStr) => {
         if (!anticorpoStr) return [];
         const s = String(anticorpoStr).trim();
@@ -15057,7 +15049,7 @@ function renderDashboardPreview(){
         const anticorpi = _ihcParseAnticorpi(r.anticorpo); // FIX [TRACCIABILITÀ]: stesso parser dei chip
         // Escludi anticorpi già completati per questo record
         const done = Array.isArray(r.anticorpi_done) ? r.anticorpi_done.map(a => anticNorm(a)) : [];
-        const todo = anticorpi.filter(a => !done.includes(anticNorm(a)));
+        const todo = anticorpi.filter(a => !done.includes(anticNorm(a)) && !_ihcSpeciale(a));   // FIX [TRACCIABILITÀ]: PAS, Giemsa… non sono vetrini IHC
         vetriniTot += nBlocc * todo.length;
         todo.forEach(a => {
           const key = anticNorm(a);
